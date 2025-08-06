@@ -121,7 +121,7 @@ execute_release() {
     pnpm run build
     pnpm run lint
     
-    # 2. 更新版本
+    # 2. 更新版本号
     if [ "$version_type" != "skip" ]; then
         print_info "更新版本号..."
         new_version=$(pnpm version $version_type --no-git-tag-version)
@@ -132,11 +132,12 @@ execute_release() {
         print_info "跳过版本更新，使用当前版本: $new_version"
     fi
     
-    # 3. 创建提交和标签
+    # 3. 先创建tag，再提交（按你的需求顺序）
+    tag_name="v$new_version"
+    
     if [ "$version_type" != "skip" ]; then
-        print_info "创建提交和标签..."
-        git add .
-        git commit -m "chore: 发布版本 v$new_version
+        print_info "创建标签: $tag_name"
+        git tag -a "$tag_name" -m "Release v$new_version
 
 🚀 智能发布 $version_type 版本
 ⏰ $(date '+%Y-%m-%d %H:%M:%S')
@@ -144,15 +145,19 @@ execute_release() {
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
-    fi
-    
-    # 确保标签存在
-    tag_name="v$new_version"
-    if ! git tag -l | grep -q "^$tag_name$"; then
-        git tag -a "$tag_name" -m "Release v$new_version"
-        print_success "标签 $tag_name 已创建"
-    else
-        print_warning "标签 $tag_name 已存在，将重新推送"
+        
+        print_info "提交版本更改..."
+        git add .
+        git commit -m "chore: 发布版本 v$new_version
+
+🚀 智能发布 $version_type 版本，标签 $tag_name 已创建
+⏰ $(date '+%Y-%m-%d %H:%M:%S')
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+        
+        print_success "标签 $tag_name 已创建，更改已提交"
     fi
     
     # 4. 推送
@@ -161,6 +166,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
     git push origin "$tag_name"
     
     print_success "版本 v$new_version 已推送，GitHub Actions 已触发"
+    
+    # 输出监控链接（按你的需求）
+    print_info "📊 监控链接："
+    echo "   🔗 GitHub Actions: https://github.com/2ue/ccm/actions"
+    echo "   🔗 NPM Registry: https://www.npmjs.com/package/ccman"  
+    echo "   🔗 GitHub Releases: https://github.com/2ue/ccm/releases"
 }
 
 # 监控发布状态
