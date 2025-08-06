@@ -18,6 +18,7 @@
     "release:patch": "./scripts/quick-release.sh patch",
     "release:minor": "./scripts/quick-release.sh minor",
     "release:major": "./scripts/quick-release.sh major",
+    "release:interactive": "./scripts/quick-release.sh",
     "publish:local": "./scripts/publish-local.sh",
     "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run lint"
   },

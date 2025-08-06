@@ -7,21 +7,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
 const chalk_1 = __importDefault(require("chalk"));
 const inquirer_1 = __importDefault(require("inquirer"));
-const fs_1 = require("fs");
-const path_1 = require("path");
 const EnvironmentManager_1 = require("./config/EnvironmentManager");
-// 动态读取版本号
-const getPackageVersion = () => {
-    try {
-        const packageJsonPath = (0, path_1.join)(__dirname, '../package.json');
-        const packageJson = JSON.parse((0, fs_1.readFileSync)(packageJsonPath, 'utf8'));
-        return packageJson.version;
-    }
-    catch (error) {
-        console.warn(chalk_1.default.yellow('⚠️  无法读取版本信息，使用默认版本'));
-        return '0.0.1';
-    }
-};
+const version_1 = require("./utils/version");
 const program = new commander_1.Command();
 const envManager = new EnvironmentManager_1.EnvironmentManager();
 /**
@@ -91,7 +78,7 @@ async function performUseEnvironment(name, options) {
 program
     .name('ccm')
     .description('Claude Code Manager - Manage Claude Code API configurations')
-    .version(getPackageVersion());
+    .version((0, version_1.getCurrentVersion)());
 // 列出所有环境
 program
     .command('list')

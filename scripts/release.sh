@@ -96,44 +96,123 @@ get_current_version() {
 
 # 选择版本类型
 select_version_type() {
+    print_info "当前版本: $current_version"
+    
+    # 获取建议的版本类型（基于 git 历史分析）
+    local suggested_type="patch"
+    local commits=$(git log --oneline -10 2>/dev/null | tr '[:upper:]' '[:lower:]' || echo "")
+    
+    if [[ $commits == *"breaking"* ]] || [[ $commits == *"major"* ]]; then
+        suggested_type="major"
+    elif [[ $commits == *"feat"* ]] || [[ $commits == *"feature"* ]] || [[ $commits == *"add"* ]]; then
+        suggested_type="minor"
+    fi
+    
+    # 计算各种版本预览
+    local patch_version=$(pnpm version patch --dry-run 2>/dev/null | cut -d'v' -f2 2>/dev/null || echo "计算失败")
+    local minor_version=$(pnpm version minor --dry-run 2>/dev/null | cut -d'v' -f2 2>/dev/null || echo "计算失败")  
+    local major_version=$(pnpm version major --dry-run 2>/dev/null | cut -d'v' -f2 2>/dev/null || echo "计算失败")
+    local beta_version=$(pnpm version prerelease --preid=beta --dry-run 2>/dev/null | cut -d'v' -f2 2>/dev/null || echo "计算失败")
+    
     echo ""
-    print_info "选择版本升级类型:"
-    echo "1) patch (修订版本): $current_version -> $(npm version patch --dry-run | cut -d'v' -f2)"
-    echo "2) minor (次版本): $current_version -> $(npm version minor --dry-run | cut -d'v' -f2)"
-    echo "3) major (主版本): $current_version -> $(npm version major --dry-run | cut -d'v' -f2)"
-    echo "4) prerelease (预发布): $current_version -> $(npm version prerelease --preid=beta --dry-run | cut -d'v' -f2)"
-    echo "5) custom (自定义版本)"
+    print_info "📦 版本升级选项:"
     echo ""
     
-    read -p "请选择 (1-5): " version_choice
+    local marker1=" "
+    local marker2=" "
+    local marker3=" "
+    local marker4=" "
+    
+    # 标记建议的选项
+    case $suggested_type in
+        "patch") marker1="✨ [推荐] " ;;
+        "minor") marker2="✨ [推荐] " ;;
+        "major") marker3="✨ [推荐] " ;;
+    esac
+    
+    echo "${marker1}1) 🔧 patch (修订版本)    $current_version → $patch_version"
+    echo "   └─ 适用于：bug 修复、小改进"
+    echo ""
+    echo "${marker2}2) ✨ minor (次版本)     $current_version → $minor_version"  
+    echo "   └─ 适用于：新功能、向后兼容的改动"
+    echo ""
+    echo "${marker3}3) 🚀 major (主版本)     $current_version → $major_version"
+    echo "   └─ 适用于：破坏性更改、重大重构"
+    echo ""
+    echo "${marker4}4) 🧪 prerelease (预发布) $current_version → $beta_version"
+    echo "   └─ 适用于：测试版本、预发布"
+    echo ""
+    echo " 5) 📝 custom (自定义版本)"
+    echo "   └─ 手动输入版本号"
+    echo ""
+    
+    # 显示建议原因
+    case $suggested_type in
+        "major")
+            print_warning "💡 检测到破坏性更改提交，建议使用主版本升级"
+            ;;
+        "minor")
+            print_warning "💡 检测到新功能提交，建议使用次版本升级"
+            ;;
+        "patch")
+            print_info "💡 建议使用修订版本升级"
+            ;;
+    esac
+    
+    echo ""
+    read -p "请选择版本类型 (1-5, 回车默认选择推荐项): " version_choice
+    
+    # 如果用户直接回车，使用推荐的选项
+    if [[ -z "$version_choice" ]]; then
+        case $suggested_type in
+            "patch") version_choice=1 ;;
+            "minor") version_choice=2 ;;
+            "major") version_choice=3 ;;
+        esac
+        print_info "使用推荐选项: $suggested_type"
+    fi
     
     case $version_choice in
         1)
             version_type="patch"
+            print_success "选择: 修订版本 ($current_version → $patch_version)"
             ;;
         2)
             version_type="minor"
+            print_success "选择: 次版本 ($current_version → $minor_version)"
             ;;
         3)
             version_type="major"
+            print_success "选择: 主版本 ($current_version → $major_version)"
             ;;
         4)
             version_type="prerelease"
             version_args="--preid=beta"
+            print_success "选择: 预发布版本 ($current_version → $beta_version)"
             ;;
         5)
-            read -p "输入版本号 (例: 1.2.3): " custom_version
+            echo ""
+            read -p "输入自定义版本号 (格式: x.y.z 或 x.y.z-tag): " custom_version
             if [[ ! $custom_version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[0-9]+)?)?$ ]]; then
-                print_error "版本号格式不正确"
+                print_error "版本号格式不正确，应为 x.y.z 或 x.y.z-tag 格式"
                 exit 1
             fi
             version_type="$custom_version"
+            print_success "选择: 自定义版本 ($current_version → $custom_version)"
             ;;
         *)
-            print_error "无效选择"
+            print_error "无效选择，请重新运行脚本"
             exit 1
             ;;
     esac
+    
+    echo ""
+    read -p "确认进行版本升级？ (Y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        print_warning "已取消版本升级"
+        exit 0
+    fi
 }
 
 # 创建发布分支
