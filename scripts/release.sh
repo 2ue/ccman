@@ -392,10 +392,10 @@ show_release_summary() {
     print_info "🔗 相关链接:"
     echo "   GitHub Release: https://github.com/2ue/ccm/releases/tag/$tag_name"
     echo "   GitHub Actions: https://github.com/2ue/ccm/actions"
-    echo "   NPM 包 (稍后发布): https://www.npmjs.com/package/ccm"
+    echo "   NPM 包 (稍后发布): https://www.npmjs.com/package/ccman"
     echo ""
     print_info "📦 安装命令 (发布完成后):"
-    echo "   npm install -g ccm@$new_version"
+    echo "   npm install -g ccman@$new_version"
     echo ""
 }
 
