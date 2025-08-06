@@ -38,20 +38,39 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
           
-      # 3. 安装依赖
+      # 3. 设置 pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          
+      # 4. 设置 pnpm 缓存
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
+      # 5. 安装依赖
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
         
-      # 4. 运行测试和代码检查
+      # 6. 运行测试和代码检查
       - name: Run tests and linting
         run: |
-          npm run lint
-          npm run build
+          pnpm run lint
+          pnpm run build
         continue-on-error: false
         
-      # 5. 获取版本信息
+      # 7. 获取版本信息
       - name: Get version info
         id: version
         run: |
@@ -69,7 +88,7 @@ jobs:
           fi
           echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           
-      # 6. 验证版本一致性（仅对 tag 触发的构建）
+      # 8. 验证版本一致性（仅对 tag 触发的构建）
       - name: Validate version consistency
         if: github.event_name == 'push'
         run: |
@@ -81,13 +100,13 @@ jobs:
           fi
           echo "✅ Version validation passed: $PACKAGE_VERSION"
           
-      # 7. 生成构建产物
+      # 9. 生成构建产物
       - name: Build project
         run: |
-          npm run clean
-          npm run build
+          pnpm run clean
+          pnpm run build
           
-      # 8. 创建发布包
+      # 10. 创建发布包
       - name: Create release archive
         run: |
           # 创建临时目录用于打包
@@ -106,7 +125,7 @@ jobs:
           
           echo "✅ Release archive created: ccm-v${{ steps.version.outputs.version }}.tar.gz"
           
-      # 9. 配置 NPM 认证
+      # 11. 配置 NPM 认证
       - name: Configure NPM authentication
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
@@ -116,13 +135,13 @@ jobs:
           echo "NPM configuration:"
           cat ~/.npmrc
           
-      # 10. 验证 NPM 认证
+      # 12. 验证 NPM 认证
       - name: Verify NPM authentication
         run: |
           npm whoami
           echo "✅ NPM authentication verified"
           
-      # 11. 发布到 NPM
+      # 13. 发布到 NPM
       - name: Publish to NPM
         run: |
           echo "Publishing to NPM..."
@@ -139,7 +158,7 @@ jobs:
           
           echo "✅ Published to NPM successfully"
           
-      # 12. 创建 GitHub Release
+      # 14. 创建 GitHub Release
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
@@ -173,7 +192,7 @@ jobs:
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'rc') }}
           
-      # 13. 上传发布文件到 Release
+      # 15. 上传发布文件到 Release
       - name: Upload release assets
         uses: actions/upload-release-asset@v1
         env:
@@ -184,7 +203,7 @@ jobs:
           asset_name: ccm-v${{ steps.version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
           
-      # 14. 发布结果通知
+      # 16. 发布结果通知
       - name: Release Summary
         run: |
           echo "## 🎉 发布成功 v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY

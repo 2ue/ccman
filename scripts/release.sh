@@ -49,8 +49,8 @@ check_prerequisites() {
         exit 1
     fi
     
-    if ! command -v npm &> /dev/null; then
-        print_error "NPM 未安装"
+    if ! command -v pnpm &> /dev/null; then
+        print_error "pnpm 未安装，请运行: npm install -g pnpm"
         exit 1
     fi
     
@@ -140,7 +140,7 @@ select_version_type() {
 create_release_branch() {
     # 获取新版本号用于分支名
     if [ "$version_type" = "patch" ] || [ "$version_type" = "minor" ] || [ "$version_type" = "major" ] || [ "$version_type" = "prerelease" ]; then
-        new_version=$(npm version $version_type --dry-run $version_args | cut -d'v' -f2)
+        new_version=$(pnpm version $version_type --dry-run $version_args | cut -d'v' -f2)
     else
         new_version="$version_type"
     fi
@@ -166,11 +166,11 @@ update_version() {
     
     # 更新 package.json 中的版本
     if [ "$version_type" = "patch" ] || [ "$version_type" = "minor" ] || [ "$version_type" = "major" ] || [ "$version_type" = "prerelease" ]; then
-        new_version=$(npm version $version_type --no-git-tag-version $version_args)
+        new_version=$(pnpm version $version_type --no-git-tag-version $version_args)
         new_version=${new_version#v}  # 移除前面的 v
     else
         # 自定义版本
-        npm version $version_type --no-git-tag-version
+        pnpm version $version_type --no-git-tag-version
         new_version="$version_type"
     fi
     
@@ -182,10 +182,10 @@ run_build_and_test() {
     print_info "运行构建和测试..."
     
     # 安装依赖
-    npm ci
+    pnpm install
     
     # 运行 lint
-    if npm run lint > /dev/null 2>&1; then
+    if pnpm run lint > /dev/null 2>&1; then
         print_success "代码检查通过"
     else
         print_error "代码检查失败"
@@ -193,11 +193,11 @@ run_build_and_test() {
     fi
     
     # 运行构建
-    npm run build
+    pnpm run build
     print_success "构建成功"
     
     # 运行测试（如果存在）
-    if npm run test > /dev/null 2>&1; then
+    if pnpm run test > /dev/null 2>&1; then
         print_success "测试通过"
     else
         print_warning "测试脚本不存在或失败，跳过测试"

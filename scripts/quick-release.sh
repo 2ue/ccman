@@ -37,11 +37,11 @@ echo
 print_success "开始发布流程..."
 
 # 1. 构建和测试
-npm run build
-npm run lint
+pnpm run build
+pnpm run lint
 
 # 2. 更新版本
-new_version=$(npm version $version_type --no-git-tag-version)
+new_version=$(pnpm version $version_type --no-git-tag-version)
 new_version=${new_version#v}
 
 # 3. 提交和打标签

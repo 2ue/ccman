@@ -53,8 +53,8 @@ print_success "版本检查通过"
 
 # 运行预发布检查
 print_info "运行预发布检查..."
-npm run lint
-npm run build
+pnpm run lint
+pnpm run build
 
 print_success "预发布检查通过"
 

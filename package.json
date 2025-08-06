@@ -18,7 +18,7 @@
     "release:minor": "./scripts/quick-release.sh minor",
     "release:major": "./scripts/quick-release.sh major",
     "publish:local": "./scripts/publish-local.sh",
-    "prepublishOnly": "npm run clean && npm run build && npm run lint"
+    "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run lint"
   },
   "keywords": [
     "claude",
