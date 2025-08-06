@@ -20,7 +20,7 @@
 
 ```bash
 # 从 NPM 安装
-npm install -g cc-manager
+npm install -g ccman
 
 # 或者开发环境安装依赖
 npm install && npm run build

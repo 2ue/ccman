@@ -14,49 +14,49 @@ on:
         type: choice
         options:
           - patch
-          - minor  
+          - minor
           - major
 
 jobs:
   release:
     name: Release and Publish to NPM
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: write  # 需要写入权限来创建 release
       id-token: write  # NPM 发布需要
-      
+
     steps:
       # 1. 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 获取完整历史记录用于生成 changelog
-          
+
       # 2. 设置 pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 8.15.1  # 固定版本保证稳定性
-          
+
       # 3. 设置 Node.js 和缓存
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'pnpm'
-          
+
       # 4. 安装依赖
       - name: Install dependencies
         run: pnpm install
-        
+
       # 5. 运行测试和代码检查
       - name: Run tests and linting
         run: |
           pnpm run lint
           pnpm run build
         continue-on-error: false
-        
+
       # 6. 获取版本信息
       - name: Get version info
         id: version
@@ -74,7 +74,7 @@ jobs:
             echo "tag=v$VERSION" >> $GITHUB_OUTPUT
           fi
           echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-          
+
       # 7. 验证版本一致性（仅对 tag 触发的构建）
       - name: Validate version consistency
         if: github.event_name == 'push'
@@ -86,53 +86,51 @@ jobs:
             exit 1
           fi
           echo "✅ Version validation passed: $PACKAGE_VERSION"
-          
+
       # 8. 生成构建产物
       - name: Build project
         run: |
           pnpm run clean
           pnpm run build
-          
+
       # 9. 创建发布包
       - name: Create release archive
         run: |
           # 创建临时目录用于打包
           mkdir -p release-temp
-          
+
           # 复制必要文件到临时目录
           cp -r dist release-temp/
           cp package.json release-temp/
           cp README.md release-temp/
           cp LICENSE release-temp/ 2>/dev/null || echo "No LICENSE file found"
-          
+
           # 创建压缩包
           cd release-temp
           tar -czf ../ccm-v${{ steps.version.outputs.version }}.tar.gz .
           cd ..
-          
+
           echo "✅ Release archive created: ccm-v${{ steps.version.outputs.version }}.tar.gz"
-          
+
       # 10. 配置 NPM 认证
       - name: Configure NPM authentication
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
-          echo "always-auth=true" >> ~/.npmrc
           ls -la ~/
           echo "NPM configuration:"
           cat ~/.npmrc
-          
+
       # 11. 验证 NPM 认证
       - name: Verify NPM authentication
         run: |
           npm whoami
           echo "✅ NPM authentication verified"
-          
+
       # 12. 发布到 NPM（使用 npm 确保兼容性）
       - name: Publish to NPM
         run: |
           echo "Publishing to NPM..."
-          
+
           # 检查是否为预发布版本
           VERSION="${{ steps.version.outputs.version }}"
           if [[ "$VERSION" =~ -beta\.|alpha\.|rc\. ]]; then
@@ -142,9 +140,9 @@ jobs:
             echo "📦 Publishing stable version $VERSION"
             npm publish --access public
           fi
-          
+
           echo "✅ Published to NPM successfully"
-          
+
       # 13. 创建 GitHub Release
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -155,30 +153,30 @@ jobs:
           release_name: "CCM v${{ steps.version.outputs.version }}"
           body: |
             ## CCM (Claude Code Manager) v${{ steps.version.outputs.version }}
-            
+
             🚀 **新版本发布！**
-            
+
             ### 📦 安装方式
             ```bash
             npm install -g ccm@${{ steps.version.outputs.version }}
             ```
-            
+
             ### 🔗 相关链接
             - [NPM 包](https://www.npmjs.com/package/ccm)
             - [GitHub 仓库](https://github.com/2ue/ccm)
             - [中文文档](./README_zh.md)
-            
+
             ### 📋 发布信息
             - **发布时间**: ${{ github.event.head_commit.timestamp }}
             - **提交哈希**: ${{ github.sha }}
             - **构建环境**: GitHub Actions (ubuntu-latest)
-            
+
             ---
-            
+
             *该版本通过 GitHub Actions 自动构建和发布*
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'rc') }}
-          
+
       # 14. 上传发布文件到 Release
       - name: Upload release assets
         uses: actions/upload-release-asset@v1
@@ -189,7 +187,7 @@ jobs:
           asset_path: ./ccm-v${{ steps.version.outputs.version }}.tar.gz
           asset_name: ccm-v${{ steps.version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
-          
+
       # 15. 发布结果通知
       - name: Release Summary
         run: |
@@ -197,17 +195,17 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📋 发布详情" >> $GITHUB_STEP_SUMMARY
           echo "- **版本**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **NPM**: https://www.npmjs.com/package/ccm/v/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY  
+          echo "- **NPM**: https://www.npmjs.com/package/ccm/v/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **GitHub Release**: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- **安装命令**: \`npm install -g ccm@${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          
+
   # 可选：部署文档或通知其他系统
   post-release:
-    name: Post-release tasks  
+    name: Post-release tasks
     needs: release
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: Post-release cleanup
         run: |

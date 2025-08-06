@@ -57,7 +57,7 @@ pnpm run publish:local
 
 ### 403 Forbidden  
 - 包名已存在：修改 package.json 中的 name
-- 检查发布权限：`npm owner ls cc-manager`
+- 检查发布权限：`npm owner ls ccman`
 
 ### 测试发布权限
 ```bash

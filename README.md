@@ -20,7 +20,7 @@ A TypeScript-based command-line tool to manage Claude Code API configurations wi
 
 ```bash
 # Install from NPM
-npm install -g cc-manager
+npm install -g ccman
 
 # Or install dependencies for development
 npm install && npm run build
