@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
 import { ShellEnvVars, ShellWriteResult, ShellType } from '../types';
@@ -20,25 +20,125 @@ export class ShellManager {
    */
   async writeToShell(envVars: ShellEnvVars, envName?: string): Promise<ShellWriteResult> {
     try {
-      // 1. 写入环境变量到独立的 ccmanrc 文件
+      // 1. 写入环境变量到独立的 ccmanrc 文件（通常不会有权限问题）
       await this.writeCCMANRC(envVars, envName);
       
-      // 2. 确保 shell 配置文件中有对 ccmanrc 的引用
-      const shellUpdateResult = await this.ensureShellReference();
+      // 2. 检查shell配置文件权限
+      const shellPermissionCheck = this.checkShellWritePermissions();
       
-      return {
-        success: true,
-        filePath: this.ccmanrcPath,
-        message: `Environment variables written to ${this.ccmanrcPath}${shellUpdateResult.updated ? ` and shell reference ${shellUpdateResult.action}` : ''}`
-      };
+      // 3. 尝试更新 shell 配置文件引用
+      if (shellPermissionCheck.hasWritableShellConfig) {
+        try {
+          const shellUpdateResult = await this.ensureShellReference();
+          return {
+            success: true,
+            filePath: this.ccmanrcPath,
+            message: `环境变量已写入 ${this.ccmanrcPath}${shellUpdateResult.updated ? ` 并${shellUpdateResult.action}shell引用` : ''}`
+          };
+        } catch (error) {
+          // Shell引用失败但有可写配置文件时，提供具体的手动指导
+          return this.createManualConfigResult(shellPermissionCheck, String(error));
+        }
+      } else {
+        // 没有可写的shell配置文件，提供完整的手动配置指导
+        return this.createManualConfigResult(shellPermissionCheck);
+      }
     } catch (error) {
       return {
         success: false,
         filePath: this.ccmanrcPath,
-        message: 'Failed to write environment variables',
+        message: '写入环境变量失败',
         error: String(error)
       };
     }
+  }
+
+  /**
+   * 创建手动配置结果
+   */
+  private createManualConfigResult(
+    shellPermissionCheck: { shellConfigAccess: { file: string; writable: boolean; error?: string }[] }, 
+    shellError?: string
+  ): ShellWriteResult {
+    const reference = this.generateShellReference().trim();
+    const writableFiles = shellPermissionCheck.shellConfigAccess.filter(f => f.writable);
+    const nonWritableFiles = shellPermissionCheck.shellConfigAccess.filter(f => !f.writable);
+    
+    let message = `环境变量已写入 ${this.ccmanrcPath}，但需要手动配置shell引用。\n\n`;
+    
+    if (writableFiles.length > 0) {
+      message += `推荐添加到以下文件之一：\n`;
+      writableFiles.forEach(f => {
+        message += `  ✅ ${f.file}\n`;
+      });
+    }
+    
+    if (nonWritableFiles.length > 0) {
+      message += `以下文件无写入权限：\n`;
+      nonWritableFiles.forEach(f => {
+        message += `  ❌ ${f.file} (${f.error})\n`;
+      });
+      message += `\n可尝试修复权限：\n`;
+      nonWritableFiles.forEach(f => {
+        if (f.error === '无写入权限') {
+          message += `  chmod 644 ${f.file}\n`;
+        }
+      });
+    }
+    
+    message += `\n需要手动添加的内容：\n${reference}`;
+    
+    return {
+      success: true, // ccmanrc写入成功，只是需要手动配置
+      filePath: this.ccmanrcPath,
+      message,
+      error: shellError ? `Shell配置自动更新失败: ${shellError}` : '所有shell配置文件都无写入权限'
+    };
+  }
+
+  /**
+   * 检查shell配置文件写入权限
+   */
+  private checkShellWritePermissions(): {
+    hasWritableShellConfig: boolean;
+    shellConfigAccess: { file: string; writable: boolean; error?: string }[];
+  } {
+    const result = {
+      hasWritableShellConfig: false,
+      shellConfigAccess: [] as { file: string; writable: boolean; error?: string }[]
+    };
+
+    const shellType = this.detectShell();
+    const configFiles = this.getShellConfigFiles(shellType);
+    
+    for (const configFile of configFiles) {
+      const fileCheck = { file: configFile, writable: false, error: undefined as string | undefined };
+      
+      try {
+        if (fse.pathExistsSync(configFile)) {
+          // 文件存在，检查写入权限
+          fse.accessSync(configFile, fse.constants.W_OK);
+          fileCheck.writable = true;
+          result.hasWritableShellConfig = true;
+        } else {
+          // 文件不存在，检查父目录权限（能否创建文件）
+          const dir = path.dirname(configFile);
+          if (fse.pathExistsSync(dir)) {
+            fse.accessSync(dir, fse.constants.W_OK);
+            fileCheck.writable = true;
+            result.hasWritableShellConfig = true;
+          } else {
+            fileCheck.error = '目录不存在';
+          }
+        }
+      } catch (error: any) {
+        fileCheck.error = `无写入权限`;
+      }
+      
+      result.shellConfigAccess.push(fileCheck);
+    }
+
+    return result;
   }
 
   /**
@@ -46,12 +146,10 @@ export class ShellManager {
    */
   private async writeCCMANRC(envVars: ShellEnvVars, envName?: string): Promise<void> {
     // 确保 .ccman 目录存在
-    if (!fs.existsSync(this.ccmanDir)) {
-      fs.mkdirSync(this.ccmanDir, { recursive: true });
-    }
+    fse.ensureDirSync(this.ccmanDir);
 
     const content = this.generateExportStatements(envVars, envName);
-    fs.writeFileSync(this.ccmanrcPath, content);
+    await fse.writeFile(this.ccmanrcPath, content, 'utf8');
   }
 
   /**
@@ -63,8 +161,8 @@ export class ShellManager {
     
     // 检查是否已经有引用
     for (const configFile of configFiles) {
-      if (fs.existsSync(configFile)) {
-        const content = fs.readFileSync(configFile, 'utf8');
+      if (fse.pathExistsSync(configFile)) {
+        const content = fse.readFileSync(configFile, 'utf8');
         if (this.hasShellReference(content)) {
           return { updated: false, action: 'already exists' };
         }
@@ -104,20 +202,32 @@ export class ShellManager {
   private async addShellReference(configFilePath: string): Promise<void> {
     // 确保目录存在
     const dir = path.dirname(configFilePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    fse.ensureDirSync(dir);
 
     let content = '';
-    if (fs.existsSync(configFilePath)) {
-      content = fs.readFileSync(configFilePath, 'utf8');
+    if (fse.pathExistsSync(configFilePath)) {
+      try {
+        content = fse.readFileSync(configFilePath, 'utf8');
+      } catch (error: any) {
+        if (error.code === 'EACCES' || error.code === 'EPERM') {
+          throw new Error(`无权限读取shell配置文件 ${configFilePath}`);
+        }
+        throw error;
+      }
     }
 
     // 添加对 ccmanrc 的引用
     const reference = this.generateShellReference();
     content += reference;
 
-    fs.writeFileSync(configFilePath, content);
+    try {
+      await fse.writeFile(configFilePath, content, 'utf8');
+    } catch (error: any) {
+      if (error.code === 'EACCES' || error.code === 'EPERM') {
+        throw new Error(`无权限修改shell配置文件 ${configFilePath}。\n建议：\n  1. 检查文件权限：chmod 644 ${configFilePath}\n  2. 或手动添加以下内容到该文件：\n${reference.trim()}`);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -148,9 +258,9 @@ export class ShellManager {
     let lastError: string | undefined;
     
     // 1. 删除 ccmanrc 文件
-    if (fs.existsSync(this.ccmanrcPath)) {
+    if (fse.pathExistsSync(this.ccmanrcPath)) {
       try {
-        fs.unlinkSync(this.ccmanrcPath);
+        fse.removeSync(this.ccmanrcPath);
         clearedAny = true;
       } catch (error) {
         lastError = String(error);
@@ -163,7 +273,7 @@ export class ShellManager {
     
     for (const configFile of configFiles) {
       try {
-        if (fs.existsSync(configFile)) {
+        if (fse.pathExistsSync(configFile)) {
           await this.removeShellReference(configFile);
           clearedAny = true;
         }
@@ -192,14 +302,14 @@ export class ShellManager {
    * 从配置文件中移除 shell 引用
    */
   private async removeShellReference(filePath: string): Promise<void> {
-    if (!fs.existsSync(filePath)) {
+    if (!fse.pathExistsSync(filePath)) {
       return;
     }
 
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fse.readFileSync(filePath, 'utf8');
     const cleanedContent = this.removeShellReferenceFromContent(content);
     
-    fs.writeFileSync(filePath, cleanedContent);
+    await fse.writeFile(filePath, cleanedContent, 'utf8');
   }
 
   /**
@@ -311,9 +421,9 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
   /**
    * 检查是否已经写入了环境变量
    */
-  hasEnvVarsInShell(): boolean {
+  async hasEnvVarsInShell(): Promise<boolean> {
     // 检查 ccmanrc 文件是否存在
-    if (fs.existsSync(this.ccmanrcPath)) {
+    if (await fse.pathExists(this.ccmanrcPath)) {
       return true;
     }
     
@@ -322,8 +432,8 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
     const configFiles = this.getShellConfigFiles(shellType);
     
     for (const configFile of configFiles) {
-      if (fs.existsSync(configFile)) {
-        const content = fs.readFileSync(configFile, 'utf8');
+      if (await fse.pathExists(configFile)) {
+        const content = await fse.readFile(configFile, 'utf8');
         if (this.hasShellReference(content)) {
           return true;
         }
@@ -341,7 +451,13 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
     const configFiles = this.getShellConfigFiles(shellType);
     
     // 找到第一个存在的配置文件
-    const activeConfigFile = configFiles.find(file => fs.existsSync(file));
+    let activeConfigFile: string | undefined;
+    for (const file of configFiles) {
+      if (await fse.pathExists(file)) {
+        activeConfigFile = file;
+        break;
+      }
+    }
     
     if (!activeConfigFile) {
       return {
@@ -394,17 +510,23 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
   /**
    * 获取当前 shell 信息
    */
-  getShellInfo(): {
+  async getShellInfo(): Promise<{
     shellType: ShellType;
     shellPath: string;
     configFiles: string[];
     activeConfigFile?: string;
-  } {
+  }> {
     const shellType = this.detectShell();
     const configFiles = this.getShellConfigFiles(shellType);
     
     // 找到第一个存在的配置文件作为活动配置文件
-    const activeConfigFile = configFiles.find(file => fs.existsSync(file));
+    let activeConfigFile: string | undefined;
+    for (const file of configFiles) {
+      if (await fse.pathExists(file)) {
+        activeConfigFile = file;
+        break;
+      }
+    }
     
     return {
       shellType,
