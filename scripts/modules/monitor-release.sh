@@ -177,6 +177,16 @@ check_github_release() {
     return 2
 }
 
+# 状态图标映射函数
+get_status_icon() {
+    case $1 in
+        0) echo "✅" ;;
+        1) echo "❌" ;;
+        2) echo "⏳" ;;
+        *) echo "❓" ;;
+    esac
+}
+
 # 生成发布总结
 generate_summary() {
     local version=$1
@@ -187,16 +197,6 @@ generate_summary() {
     echo ""
     echo "📋 发布监控总结"
     echo "================"
-    
-    # 状态图标映射
-    local get_status_icon() {
-        case $1 in
-            0) echo "✅" ;;
-            1) echo "❌" ;;
-            2) echo "⏳" ;;
-            *) echo "❓" ;;
-        esac
-    }
     
     echo "   版本: v$version"
     echo "   GitHub Actions: $(get_status_icon $actions_status)"

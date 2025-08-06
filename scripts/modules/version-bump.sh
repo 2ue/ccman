@@ -64,7 +64,7 @@ version_bump() {
     echo ""
     
     # 如果已指定版本类型，直接执行
-    if [ -n "$version_type" ]; then
+    if [ -n "$version_type" ] && [ "$version_type" != "test" ]; then
         execute_version_bump "$version_type" "$current_version"
         return $?
     fi
