@@ -12,7 +12,7 @@ CCM (Claude Code Manager) is a TypeScript-based command-line tool for managing C
 - **src/types/index.ts**: TypeScript type definitions for all interfaces
 - **src/config/ConfigManager.ts**: Core configuration management with JSON storage
 - **src/config/EnvironmentManager.ts**: High-level environment group operations
-- **src/shell/ShellManager.ts**: Safe shell configuration file management using ccmrc approach
+- **src/shell/ShellManager.ts**: Safe shell configuration file management using ..ccmanrc approach
 - **src/cli.ts**: Command-line interface with Commander.js and unified interaction logic
 
 ### Project Structure
@@ -29,10 +29,10 @@ src/
 ## Key Features Implemented
 
 ### 1. Safe Shell Integration Architecture
-- **Independent ccmrc file**: `~/.ccm/ccmrc` contains all environment variables
-- **Minimal shell reference**: Single line added to `.bashrc`/`.zshrc` to source ccmrc
+- **Independent .ccmanrc file**: `~/.ccman/.ccmanrc` contains all environment variables
+- **Minimal shell reference**: Single line added to `.bashrc`/`.zshrc` to source .ccmanrc
 - **Non-invasive approach**: User's shell config remains largely untouched
-- **Easy cleanup**: Remove reference line and delete ccmrc file
+- **Easy cleanup**: Remove reference line and delete .ccmanrc file
 
 ### 2. Interactive Source Control
 - After environment switching, user chooses source method:
@@ -71,23 +71,23 @@ npm run lint          # Run ESLint on TypeScript files (requires config)
 
 ### Basic Usage
 ```bash
-ccm ls                # List all environment groups (* = current)
-ccm add <name> <url>  # Add environment group with interactive flow
-ccm use <name>        # Switch environment with source interaction
-ccm remove <name>     # Delete environment group
-ccm current           # Show current environment
-ccm status            # Show CCM statistics
-ccm config            # Interactive configuration menu
-ccm clear             # Clear all environments and shell integration (DESTRUCTIVE)
+ccman ls                # List all environment groups (* = current)
+ccman add <name> <url>  # Add environment group with interactive flow
+ccman use <name>        # Switch environment with source interaction
+ccman remove <name>     # Delete environment group
+ccman current           # Show current environment
+ccman status            # Show CCM statistics
+ccman config            # Interactive configuration menu
+ccman clear             # Clear all environments and shell integration (DESTRUCTIVE)
 ```
 
 ### Advanced Features
 ```bash
-ccm env               # Generate shell script for manual sourcing
-ccm test [name]       # Test environment configuration
-ccm add <name> <url> --no-auto-write    # Add without shell integration
-ccm use <name> --no-auto-write          # Switch without shell integration
-ccm use <name> --auto-source            # Force auto-source with risk warning
+ccman env               # Generate shell script for manual sourcing
+ccman test [name]       # Test environment configuration
+ccman add <name> <url> --no-auto-write    # Add without shell integration
+ccman use <name> --no-auto-write          # Switch without shell integration
+ccman use <name> --auto-source            # Force auto-source with risk warning
 ```
 
 ## Implementation Details
@@ -99,8 +99,8 @@ ccm use <name> --auto-source            # Force auto-source with risk warning
 - Interactive API key input if not provided
 
 ### 2. Shell Integration Process
-1. **Write ccmrc**: Environment variables written to `~/.ccm/ccmrc`
-2. **Add reference**: Shell config updated to source ccmrc if not already present
+1. **Write .ccmanrc**: Environment variables written to `~/.ccman/.ccmanrc`
+2. **Add reference**: Shell config updated to source .ccmanrc if not already present
 3. **User choice**: Interactive prompt for sourcing method
 4. **Auto-source**: Optional automatic sourcing with error handling
 
@@ -122,27 +122,27 @@ ccm use <name> --auto-source            # Force auto-source with risk warning
 
 ## Configuration Storage
 
-- Config directory: `~/.ccm/`
-- Main config: `~/.ccm/config.json`
-- Environment variables: `~/.ccm/ccmrc`
+- Config directory: `~/.ccman/`
+- Main config: `~/.ccman/config.json`
+- Environment variables: `~/.ccman/.ccmanrc`
 - Structure includes environments, current selection, and global settings
 
 ## Shell Integration Technical Details
 
 ### File Locations
-- **Configuration**: `~/.ccm/ccmrc` - Contains current environment variables
+- **Configuration**: `~/.ccman/.ccmanrc` - Contains current environment variables
 - **Shell reference**: Added to `.bashrc`, `.zshrc`, or `config.fish`
 - **Detection order**: zsh → bash → fish → fallback
 
 ### Shell Reference Format
 ```bash
 # CCM (Claude Code Manager) - Auto Generated Reference
-# This line sources CCM environment variables from /home/user/.ccm/ccmrc
-[ -f "/home/user/.ccm/ccmrc" ] && source "/home/user/.ccm/ccmrc"
+# This line sources CCM environment variables from /home/user/.ccman/.ccmanrc
+[ -f "/home/user/.ccman/.ccmanrc" ] && source "/home/user/.ccman/.ccmanrc"
 # End CCM Reference
 ```
 
-### ccmrc File Format
+### .ccmanrc File Format
 ```bash
 # CCM (Claude Code Manager) Environment Variables - Auto Generated
 # Generated at: 2025-08-06 11:45:30
@@ -168,7 +168,7 @@ export ANTHROPIC_AUTH_TOKEN="your-api-key"
 - **Error handling**: Consistent error reporting and process exit codes
 
 ### Shell Manager (`src/shell/ShellManager.ts`)
-- **ccmrc management**: Independent file creation and updates
+- **.ccmanrc management**: Independent file creation and updates
 - **Shell reference management**: Minimal invasive approach
 - **Auto-source capability**: Subprocess execution with error handling
 - **Multi-shell support**: bash, zsh, fish detection and handling
@@ -181,7 +181,7 @@ export ANTHROPIC_AUTH_TOKEN="your-api-key"
 
 ## Recent Major Changes
 
-1. **Shell Architecture Redesign**: From direct modification to ccmrc + reference approach
+1. **Shell Architecture Redesign**: From direct modification to .ccmanrc + reference approach
 2. **Environment Variable Renaming**: Updated to ANTHROPIC_BASE_URL and ANTHROPIC_AUTH_TOKEN
 3. **Interactive Source Control**: Added user choice for manual vs automatic sourcing
 4. **Unified Use Logic**: Single function for consistent behavior across all use scenarios
@@ -199,7 +199,7 @@ export ANTHROPIC_AUTH_TOKEN="your-api-key"
 
 ## Important Notes for Development
 
-- **Always test shell integration**: Verify ccmrc creation and shell reference addition
+- **Always test shell integration**: Verify .ccmanrc creation and shell reference addition
 - **Test interactive flows**: Ensure prompts work correctly in different scenarios
 - **Validate file operations**: Check permissions and error handling
 - **Cross-shell compatibility**: Test with bash, zsh, and fish when possible

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnvironmentManager = void 0;
 const ConfigManager_1 = require("../config/ConfigManager");
 const ShellManager_1 = require("../shell/ShellManager");
+const constants_1 = require("./constants");
 class EnvironmentManager {
     constructor() {
         this.configManager = new ConfigManager_1.ConfigManager();
@@ -137,8 +138,8 @@ class EnvironmentManager {
 # CCM Environment Variables for: ${currentEnv.name}
 # Generated at: ${timestamp}
 
-export ANTHROPIC_BASE_URL="${envVars.ANTHROPIC_BASE_URL}"
-export ANTHROPIC_AUTH_TOKEN="${envVars.ANTHROPIC_AUTH_TOKEN}"
+export ${constants_1.CONFIG.ENV_VARS.BASE_URL}="${envVars.ANTHROPIC_BASE_URL}"
+export ${constants_1.CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
 
 echo "Environment variables set for: ${currentEnv.name}"
 `;
@@ -194,8 +195,8 @@ echo "Environment variables set for: ${currentEnv.name}"
      */
     getEnvVars(env) {
         return {
-            ANTHROPIC_BASE_URL: env.baseUrl,
-            ANTHROPIC_AUTH_TOKEN: env.apiKey
+            [constants_1.CONFIG.ENV_VARS.BASE_URL]: env.baseUrl,
+            [constants_1.CONFIG.ENV_VARS.AUTH_TOKEN]: env.apiKey
         };
     }
     /**

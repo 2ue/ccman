@@ -1,19 +1,19 @@
 import { ShellEnvVars, ShellWriteResult, ShellType } from '../types';
 export declare class ShellManager {
     private readonly homeDir;
-    private readonly ccmDir;
-    private readonly ccmrcPath;
+    private readonly ccmanDir;
+    private readonly ccmanrcPath;
     constructor();
     /**
-     * 写入环境变量到 CCM 配置文件并更新 shell 引用
+     * 写入环境变量到 CCMan 配置文件并更新 shell 引用
      */
     writeToShell(envVars: ShellEnvVars, envName?: string): Promise<ShellWriteResult>;
     /**
-     * 写入 ccmrc 文件
+     * 写入 ccmanrc 文件
      */
-    private writeCCMRC;
+    private writeCCMANRC;
     /**
-     * 确保 shell 配置文件中有对 ccmrc 的引用
+     * 确保 shell 配置文件中有对 ccmanrc 的引用
      */
     private ensureShellReference;
     /**
@@ -29,7 +29,7 @@ export declare class ShellManager {
      */
     private hasShellReference;
     /**
-     * 从 shell 配置文件中清除 ccmrc 引用和 ccmrc 文件
+     * 从 shell 配置文件中清除 ccmanrc 引用和 ccmanrc 文件
      */
     clearFromShell(): Promise<ShellWriteResult>;
     /**

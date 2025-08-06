@@ -2,38 +2,39 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { ShellEnvVars, ShellWriteResult, ShellType } from '../types';
+import { CONFIG, getConfigDir, getShellRCFile } from '../config/constants';
 
 export class ShellManager {
   private readonly homeDir: string;
-  private readonly ccmDir: string;
-  private readonly ccmrcPath: string;
+  private readonly ccmanDir: string;
+  private readonly ccmanrcPath: string;
   
   constructor() {
     this.homeDir = os.homedir();
-    this.ccmDir = path.join(this.homeDir, '.ccm');
-    this.ccmrcPath = path.join(this.ccmDir, 'ccmrc');
+    this.ccmanDir = getConfigDir();
+    this.ccmanrcPath = getShellRCFile();
   }
 
   /**
-   * 写入环境变量到 CCM 配置文件并更新 shell 引用
+   * 写入环境变量到 CCMan 配置文件并更新 shell 引用
    */
   async writeToShell(envVars: ShellEnvVars, envName?: string): Promise<ShellWriteResult> {
     try {
-      // 1. 写入环境变量到独立的 ccmrc 文件
-      await this.writeCCMRC(envVars, envName);
+      // 1. 写入环境变量到独立的 ccmanrc 文件
+      await this.writeCCMANRC(envVars, envName);
       
-      // 2. 确保 shell 配置文件中有对 ccmrc 的引用
+      // 2. 确保 shell 配置文件中有对 ccmanrc 的引用
       const shellUpdateResult = await this.ensureShellReference();
       
       return {
         success: true,
-        filePath: this.ccmrcPath,
-        message: `Environment variables written to ${this.ccmrcPath}${shellUpdateResult.updated ? ` and shell reference ${shellUpdateResult.action}` : ''}`
+        filePath: this.ccmanrcPath,
+        message: `Environment variables written to ${this.ccmanrcPath}${shellUpdateResult.updated ? ` and shell reference ${shellUpdateResult.action}` : ''}`
       };
     } catch (error) {
       return {
         success: false,
-        filePath: this.ccmrcPath,
+        filePath: this.ccmanrcPath,
         message: 'Failed to write environment variables',
         error: String(error)
       };
@@ -41,20 +42,20 @@ export class ShellManager {
   }
 
   /**
-   * 写入 ccmrc 文件
+   * 写入 ccmanrc 文件
    */
-  private async writeCCMRC(envVars: ShellEnvVars, envName?: string): Promise<void> {
-    // 确保 .ccm 目录存在
-    if (!fs.existsSync(this.ccmDir)) {
-      fs.mkdirSync(this.ccmDir, { recursive: true });
+  private async writeCCMANRC(envVars: ShellEnvVars, envName?: string): Promise<void> {
+    // 确保 .ccman 目录存在
+    if (!fs.existsSync(this.ccmanDir)) {
+      fs.mkdirSync(this.ccmanDir, { recursive: true });
     }
 
     const content = this.generateExportStatements(envVars, envName);
-    fs.writeFileSync(this.ccmrcPath, content);
+    fs.writeFileSync(this.ccmanrcPath, content);
   }
 
   /**
-   * 确保 shell 配置文件中有对 ccmrc 的引用
+   * 确保 shell 配置文件中有对 ccmanrc 的引用
    */
   private async ensureShellReference(): Promise<{ updated: boolean; action: string; filePath?: string }> {
     const shellType = this.detectShell();
@@ -112,7 +113,7 @@ export class ShellManager {
       content = fs.readFileSync(configFilePath, 'utf8');
     }
 
-    // 添加对 ccmrc 的引用
+    // 添加对 ccmanrc 的引用
     const reference = this.generateShellReference();
     content += reference;
 
@@ -124,10 +125,10 @@ export class ShellManager {
    */
   private generateShellReference(): string {
     return `
-# CCM (Claude Code Manager) - Auto Generated Reference
-# This line sources CCM environment variables from ${this.ccmrcPath}
-[ -f "${this.ccmrcPath}" ] && source "${this.ccmrcPath}"
-# End CCM Reference
+# ${CONFIG.APP_FULL_NAME} - Auto Generated Reference
+# This line sources ${CONFIG.APP_NAME} environment variables from ${this.ccmanrcPath}
+[ -f "${this.ccmanrcPath}" ] && source "${this.ccmanrcPath}"
+# End ${CONFIG.APP_NAME} Reference
 `;
   }
 
@@ -135,21 +136,21 @@ export class ShellManager {
    * 检查是否已经有 shell 引用
    */
   private hasShellReference(content: string): boolean {
-    return content.includes('# CCM (Claude Code Manager) - Auto Generated Reference') || 
-           content.includes(this.ccmrcPath);
+    return content.includes(`# ${CONFIG.APP_FULL_NAME} - Auto Generated Reference`) || 
+           content.includes(this.ccmanrcPath);
   }
 
   /**
-   * 从 shell 配置文件中清除 ccmrc 引用和 ccmrc 文件
+   * 从 shell 配置文件中清除 ccmanrc 引用和 ccmanrc 文件
    */
   async clearFromShell(): Promise<ShellWriteResult> {
     let clearedAny = false;
     let lastError: string | undefined;
     
-    // 1. 删除 ccmrc 文件
-    if (fs.existsSync(this.ccmrcPath)) {
+    // 1. 删除 ccmanrc 文件
+    if (fs.existsSync(this.ccmanrcPath)) {
       try {
-        fs.unlinkSync(this.ccmrcPath);
+        fs.unlinkSync(this.ccmanrcPath);
         clearedAny = true;
       } catch (error) {
         lastError = String(error);
@@ -174,13 +175,13 @@ export class ShellManager {
     if (clearedAny) {
       return {
         success: true,
-        filePath: this.ccmrcPath,
+        filePath: this.ccmanrcPath,
         message: 'Environment variables and shell references cleared'
       };
     } else {
       return {
         success: false,
-        filePath: this.ccmrcPath,
+        filePath: this.ccmanrcPath,
         message: 'Failed to clear environment variables',
         error: lastError
       };
@@ -205,8 +206,8 @@ export class ShellManager {
    * 从内容中移除 shell 引用部分
    */
   private removeShellReferenceFromContent(content: string): string {
-    const startMarker = '# CCM (Claude Code Manager) - Auto Generated Reference';
-    const endMarker = '# End CCM Reference';
+    const startMarker = `# ${CONFIG.APP_FULL_NAME} - Auto Generated Reference`;
+    const endMarker = `# End ${CONFIG.APP_NAME} Reference`;
     
     const lines = content.split('\n');
     const filteredLines: string[] = [];
@@ -299,11 +300,11 @@ export class ShellManager {
     const nameComment = envName ? `# Environment: ${envName}` : '';
     
     return `
-# CCM (Claude Code Manager) Environment Variables - Auto Generated
+# ${CONFIG.APP_FULL_NAME} Environment Variables - Auto Generated
 # Generated at: ${timestamp}${nameComment ? '\n' + nameComment : ''}
-export ANTHROPIC_BASE_URL="${envVars.ANTHROPIC_BASE_URL}"
-export ANTHROPIC_AUTH_TOKEN="${envVars.ANTHROPIC_AUTH_TOKEN}"
-# End CCM Environment Variables
+export ${CONFIG.ENV_VARS.BASE_URL}="${envVars.ANTHROPIC_BASE_URL}"
+export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
+# End ${CONFIG.APP_NAME} Environment Variables
 `;
   }
 
@@ -311,8 +312,8 @@ export ANTHROPIC_AUTH_TOKEN="${envVars.ANTHROPIC_AUTH_TOKEN}"
    * 检查是否已经写入了环境变量
    */
   hasEnvVarsInShell(): boolean {
-    // 检查 ccmrc 文件是否存在
-    if (fs.existsSync(this.ccmrcPath)) {
+    // 检查 ccmanrc 文件是否存在
+    if (fs.existsSync(this.ccmanrcPath)) {
       return true;
     }
     

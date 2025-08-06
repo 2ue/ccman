@@ -71,15 +71,15 @@ async function performUseEnvironment(name: string, options?: {
     }
   } else if (options?.autoWrite !== false) {
     console.log(chalk.yellow('Environment variables have been set, but may not persist.'));
-    console.log(chalk.cyan('Consider running: source <(ccm env)'));
+    console.log(chalk.cyan('Consider running: source <(ccman env)'));
   } else {
     console.log(chalk.yellow('To set environment variables manually, run:'));
-    console.log(chalk.cyan('source <(ccm env)'));
+    console.log(chalk.cyan('source <(ccman env)'));
   }
 }
 
 program
-  .name('ccm')
+  .name('ccman')
   .description('Claude Code Manager - Manage Claude Code API configurations')
   .version(getCurrentVersion());
 
@@ -92,7 +92,7 @@ program
     const environments = envManager.listEnvironments();
     
     if (environments.length === 0) {
-      console.log(chalk.yellow('No environment groups found. Use "ccm add" to create one.'));
+      console.log(chalk.yellow('No environment groups found. Use "ccman add" to create one.'));
       return;
     }
 
@@ -228,7 +228,7 @@ program
     
     if (!currentEnv) {
       console.log(chalk.yellow('No environment is currently active.'));
-      console.log('Use "ccm use <name>" to activate an environment.');
+      console.log('Use "ccman use <name>" to activate an environment.');
       return;
     }
 
@@ -358,7 +358,7 @@ program
 
       console.log();
       console.log(chalk.cyan('CCM has been reset to initial state.'));
-      console.log(chalk.cyan('You can start fresh with: ccm config'));
+      console.log(chalk.cyan('You can start fresh with: ccman config'));
 
     } catch (error) {
       console.error(chalk.red(`✗ Error: ${error}`));

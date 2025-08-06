@@ -1,6 +1,7 @@
 import { ConfigManager } from '../config/ConfigManager';
 import { ShellManager } from '../shell/ShellManager';
 import { ClaudeEnv, ShellEnvVars, AddEnvOptions, EnvironmentListItem } from '../types';
+import { CONFIG } from './constants';
 
 export class EnvironmentManager {
   private configManager: ConfigManager;
@@ -168,8 +169,8 @@ export class EnvironmentManager {
 # CCM Environment Variables for: ${currentEnv.name}
 # Generated at: ${timestamp}
 
-export ANTHROPIC_BASE_URL="${envVars.ANTHROPIC_BASE_URL}"
-export ANTHROPIC_AUTH_TOKEN="${envVars.ANTHROPIC_AUTH_TOKEN}"
+export ${CONFIG.ENV_VARS.BASE_URL}="${envVars.ANTHROPIC_BASE_URL}"
+export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
 
 echo "Environment variables set for: ${currentEnv.name}"
 `;
@@ -237,8 +238,8 @@ echo "Environment variables set for: ${currentEnv.name}"
    */
   private getEnvVars(env: ClaudeEnv): ShellEnvVars {
     return {
-      ANTHROPIC_BASE_URL: env.baseUrl,
-      ANTHROPIC_AUTH_TOKEN: env.apiKey
+      [CONFIG.ENV_VARS.BASE_URL]: env.baseUrl,
+      [CONFIG.ENV_VARS.AUTH_TOKEN]: env.apiKey
     };
   }
 

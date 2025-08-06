@@ -35,12 +35,11 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConfigManager = void 0;
 const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const os = __importStar(require("os"));
+const constants_1 = require("./constants");
 class ConfigManager {
     constructor() {
-        this.configDir = path.join(os.homedir(), '.ccm');
-        this.configFile = path.join(this.configDir, 'config.json');
+        this.configDir = (0, constants_1.getConfigDir)();
+        this.configFile = (0, constants_1.getConfigFile)();
         this.ensureConfigDir();
     }
     /**

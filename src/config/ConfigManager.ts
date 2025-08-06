@@ -2,14 +2,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { Config, ClaudeEnv, GlobalSettings, AddEnvOptions, EnvironmentListItem } from '../types';
+import { getConfigDir, getConfigFile } from './constants';
 
 export class ConfigManager {
   private readonly configDir: string;
   private readonly configFile: string;
   
   constructor() {
-    this.configDir = path.join(os.homedir(), '.ccm');
-    this.configFile = path.join(this.configDir, 'config.json');
+    this.configDir = getConfigDir();
+    this.configFile = getConfigFile();
     this.ensureConfigDir();
   }
 

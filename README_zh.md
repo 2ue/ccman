@@ -7,7 +7,7 @@
 ## ✨ 特性
 
 ✅ **环境组管理** - 添加、删除、切换 Claude Code 环境  
-✅ **安全的 Shell 集成** - 使用独立的 `~/.ccm/ccmrc` 文件避免修改用户配置  
+✅ **安全的 Shell 集成** - 使用独立的 `~/.ccman/.ccmanrc` 文件避免修改用户配置  
 ✅ **交互式 Source 控制** - 选择手动或自动 source，附带风险警告  
 ✅ **类型安全** - 完整的 TypeScript 实现，严格类型检查  
 ✅ **交互式 CLI** - 用户友好的命令，彩色输出和 inquirer 提示  
@@ -20,7 +20,7 @@
 
 ```bash
 # 从 NPM 安装
-npm install -g claude-env
+npm install -g cc-manager
 
 # 或者开发环境安装依赖
 npm install && npm run build
@@ -30,36 +30,36 @@ npm install && npm run build
 
 ```bash
 # 交互式设置（推荐）
-ccm config
+ccman config
 
 # 或直接添加环境
-ccm add default https://api.anthropic.com your-api-key
+ccman add default https://api.anthropic.com your-api-key
 
 # 列出所有环境
-ccm ls
+ccman ls
 
 # 切换环境（支持 source 选项）
-ccm use default
+ccman use default
 
 # 显示当前环境
-ccm current
+ccman current
 ```
 
 ## 📖 命令参考
 
 ### 核心环境管理
 ```bash
-ccm add <name> <baseUrl> [apiKey]     # 添加环境（未提供 API key 时交互输入）
-ccm remove <name>                     # 删除环境组
-ccm use <name>                        # 切换环境（支持 source 交互）
-ccm list|ls                           # 列出所有环境（* = 当前环境）
-ccm current                           # 显示当前环境详情
-ccm clear|clearall                    # 清除所有环境和 Shell 集成（危险操作）
+ccman add <name> <baseUrl> [apiKey]     # 添加环境（未提供 API key 时交互输入）
+ccman remove <name>                     # 删除环境组
+ccman use <name>                        # 切换环境（支持 source 交互）
+ccman list|ls                           # 列出所有环境（* = 当前环境）
+ccman current                           # 显示当前环境详情
+ccman clear|clearall                    # 清除所有环境和 Shell 集成（危险操作）
 ```
 
 ### 交互式配置
 ```bash
-ccm config                            # 完整交互式配置向导
+ccman config                            # 完整交互式配置向导
                                      # - 添加/切换/编辑/删除环境
                                      # - 无环境时引导设置
                                      # - 完整菜单驱动界面
@@ -67,19 +67,19 @@ ccm config                            # 完整交互式配置向导
 
 ### 高级操作
 ```bash
-ccm status                            # 显示详细 CCM 统计信息
-ccm test [name]                       # 测试环境配置
-ccm env                               # 生成 shell 导出脚本
+ccman status                            # 显示详细 CCM 统计信息
+ccman test [name]                       # 测试环境配置
+ccman env                               # 生成 shell 导出脚本
 ```
 
 ### Shell 集成选项
 ```bash
 # 禁用自动 shell 写入
-ccm add <name> <url> --no-auto-write  
-ccm use <name> --no-auto-write        
+ccman add <name> <url> --no-auto-write  
+ccman use <name> --no-auto-write        
 
 # 强制自动 source（有风险）
-ccm use <name> --auto-source          
+ccman use <name> --auto-source          
 ```
 
 ## 🔧 交互式工作流
@@ -87,14 +87,14 @@ ccm use <name> --auto-source
 ### 1. 添加环境的智能使用流程
 
 ```bash
-$ ccm add myenv https://api.example.com
+$ ccman add myenv https://api.example.com
 ? 输入 API Key: ****************
 ✓ 已添加环境组 "myenv"
   Base URL: https://api.example.com
   创建时间: 2025-08-06 11:45:30
 
 ? 将 "myenv" 设为当前环境? 是
-✓ 环境变量已写入 /home/user/.ccm/ccmrc
+✓ 环境变量已写入 /home/user/.ccman/.ccmanrc
 
 ? 如何应用环境变量?
 ❯ 手动 - 我将重启终端或手动 source（推荐）
@@ -108,7 +108,7 @@ source ~/.bashrc (或 ~/.zshrc)
 ### 2. 交互式配置菜单
 
 ```bash
-$ ccm config
+$ ccman config
 ? 你想做什么?
 ❯ 切换环境
   添加新环境  
@@ -126,10 +126,10 @@ $ ccm config
 ### 3. 环境切换与 Source 控制
 
 ```bash
-$ ccm use production  
+$ ccman use production  
 ✓ 已切换到环境 "production"
   Base URL: https://api.anthropic.com
-✓ 环境变量已写入 /home/user/.ccm/ccmrc
+✓ 环境变量已写入 /home/user/.ccman/.ccmanrc
 
 ? 如何应用环境变量?
   手动 - 我将重启终端或手动 source（推荐）
@@ -146,7 +146,7 @@ $ ccm use production
 
 CCM 使用**双层架构**进行安全的 shell 集成：
 
-1. **独立配置文件**：`~/.ccm/ccmrc`
+1. **独立配置文件**：`~/.ccman/.ccmanrc`
    ```bash
    # CCM (Claude Code Manager) Environment Variables - Auto Generated
    # Generated at: 2025-08-06 11:45:30
@@ -159,7 +159,7 @@ CCM 使用**双层架构**进行安全的 shell 集成：
 2. **最小 Shell 引用**：在 `.bashrc`/`.zshrc` 中添加一行引用
    ```bash
    # CCM (Claude Code Manager) - Auto Generated Reference
-   [ -f "/home/user/.ccm/ccmrc" ] && source "/home/user/.ccm/ccmrc"
+   [ -f "/home/user/.ccman/.ccmanrc" ] && source "/home/user/.ccman/.ccmanrc"
    # End CCM Reference
    ```
 
@@ -175,7 +175,7 @@ CCM 使用**双层架构**进行安全的 shell 集成：
 
 ## 📊 配置结构
 
-CCM 在 `~/.ccm/config.json` 中存储配置：
+CCM 在 `~/.ccman/config.json` 中存储配置：
 
 ```json
 {
@@ -208,23 +208,23 @@ CCM 在 `~/.ccm/config.json` 中存储配置：
 ### 完整设置工作流
 ```bash
 # 从交互式设置开始
-ccm config
+ccman config
 # → 引导添加第一个环境
 # → 自动提示设为当前环境
 # → 选择 source 方法（手动/自动）
 
 # 添加更多环境
-ccm add staging https://staging.example.com
-ccm add dev https://dev.example.com
+ccman add staging https://staging.example.com
+ccman add dev https://dev.example.com
 
 # 完整交互切换
-ccm use dev
-# → 写入到 ~/.ccm/ccmrc
+ccman use dev
+# → 写入到 ~/.ccman/.ccmanrc
 # → 询问 source 方法
 # → 提供清晰指导
 
 # 检查状态
-ccm status
+ccman status
 # CCM 状态:
 # 总环境数: 3
 # 当前环境: dev
@@ -234,24 +234,24 @@ ccm status
 ### 手动环境变量设置
 ```bash
 # 如果你偏好手动控制
-ccm use prod --no-auto-write
-ccm env  # 显示导出脚本
-source <(ccm env)  # 手动应用
+ccman use prod --no-auto-write
+ccman env  # 显示导出脚本
+source <(ccman env)  # 手动应用
 ```
 
 ### 高级用法
 ```bash
 # 测试环境连接性
-ccm test production
+ccman test production
 
 # 强制自动 source（有风险警告）
-ccm use staging --auto-source
+ccman use staging --auto-source
 
 # 编辑现有环境
-ccm config  # → 编辑环境 → 选择 → 更新值
+ccman config  # → 编辑环境 → 选择 → 更新值
 
 # 完全重置（删除所有内容 - 环境、shell 配置）
-ccm clear   # 需要交互确认
+ccman clear   # 需要交互确认
 ```
 
 ## ⚙️ 开发
@@ -279,7 +279,7 @@ npm start
 
 ### Add 命令选项
 ```bash
-ccm add <name> <baseUrl> [apiKey] [选项]
+ccman add <name> <baseUrl> [apiKey] [选项]
 
 选项:
   --no-auto-write    不自动写入 shell 配置
@@ -287,7 +287,7 @@ ccm add <name> <baseUrl> [apiKey] [选项]
 
 ### Use 命令选项  
 ```bash
-ccm use <name> [选项]
+ccman use <name> [选项]
 
 选项:
   --no-auto-write    不自动写入 shell 配置
@@ -298,27 +298,27 @@ ccm use <name> [选项]
 
 ### 环境变量未应用
 ```bash
-# 检查 ccmrc 是否存在
-ls -la ~/.ccm/ccmrc
+# 检查 .ccmanrc 是否存在
+ls -la ~/.ccman/.ccmanrc
 
 # 检查 shell 引用
-grep "ccm" ~/.bashrc ~/.zshrc
+grep "ccman" ~/.bashrc ~/.zshrc
 
 # 手动应用
-source ~/.ccm/ccmrc
+source ~/.ccman/.ccmanrc
 
 # 或重新生成
-ccm use <当前环境>
+ccman use <当前环境>
 ```
 
 ### Shell 集成问题
 ```bash
 # 检查 shell 类型检测
-ccm status
+ccman status
 
 # 强制手动设置
-ccm use <环境> --no-auto-write
-source <(ccm env)
+ccman use <环境> --no-auto-write
+source <(ccman env)
 ```
 
 ## 📋 要求
@@ -338,20 +338,20 @@ MIT 许可证 - 详见 LICENSE 文件。
 
 ```bash
 # 1. 交互式首次设置
-ccm config
+ccman config
   → 无环境？引导创建
   → 设为当前环境？是
   → Source 方法？手动/自动
 
 # 2. 添加更多环境  
-ccm add dev https://dev.api.com
+ccman add dev https://dev.api.com
   → 交互式 API key 输入
   → 设为当前环境？是/否
   → 如选是则完整 source 交互
 
 # 3. 随时切换，完全控制
-ccm use production
-  → 安全 ccmrc 更新
+ccman use production
+  → 安全 .ccmanrc 更新
   → Source 方法选择
   → 清晰指导
 

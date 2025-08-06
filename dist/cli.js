@@ -68,15 +68,15 @@ async function performUseEnvironment(name, options) {
     }
     else if (options?.autoWrite !== false) {
         console.log(chalk_1.default.yellow('Environment variables have been set, but may not persist.'));
-        console.log(chalk_1.default.cyan('Consider running: source <(ccm env)'));
+        console.log(chalk_1.default.cyan('Consider running: source <(ccman env)'));
     }
     else {
         console.log(chalk_1.default.yellow('To set environment variables manually, run:'));
-        console.log(chalk_1.default.cyan('source <(ccm env)'));
+        console.log(chalk_1.default.cyan('source <(ccman env)'));
     }
 }
 program
-    .name('ccm')
+    .name('ccman')
     .description('Claude Code Manager - Manage Claude Code API configurations')
     .version((0, version_1.getCurrentVersion)());
 // 列出所有环境
@@ -87,7 +87,7 @@ program
     .action(() => {
     const environments = envManager.listEnvironments();
     if (environments.length === 0) {
-        console.log(chalk_1.default.yellow('No environment groups found. Use "ccm add" to create one.'));
+        console.log(chalk_1.default.yellow('No environment groups found. Use "ccman add" to create one.'));
         return;
     }
     console.log();
@@ -213,7 +213,7 @@ program
     const currentEnv = envManager.getCurrentEnvironment();
     if (!currentEnv) {
         console.log(chalk_1.default.yellow('No environment is currently active.'));
-        console.log('Use "ccm use <name>" to activate an environment.');
+        console.log('Use "ccman use <name>" to activate an environment.');
         return;
     }
     console.log();
@@ -334,7 +334,7 @@ program
         }
         console.log();
         console.log(chalk_1.default.cyan('CCM has been reset to initial state.'));
-        console.log(chalk_1.default.cyan('You can start fresh with: ccm config'));
+        console.log(chalk_1.default.cyan('You can start fresh with: ccman config'));
     }
     catch (error) {
         console.error(chalk_1.default.red(`✗ Error: ${error}`));
