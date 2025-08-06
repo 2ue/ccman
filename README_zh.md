@@ -1,4 +1,4 @@
-# CCM - Claude Code Manager v2.0
+# CCM - Claude Code Manager
 
 基于 TypeScript 的命令行工具，通过**独立配置文件进行安全的 Shell 集成**，管理 Claude Code API 配置。
 
@@ -361,4 +361,4 @@ ccm use production
 # 4. 一切正常工作！ ✨
 ```
 
-*CCM v2.0 - 让 Claude Code API 配置管理变得安全、交互式且用户友好。*
+*CCM - 让 Claude Code API 配置管理变得安全、交互式且用户友好。*

@@ -1,4 +1,4 @@
-# CCM - Claude Code Manager v2.0
+# CCM - Claude Code Manager
 
 A TypeScript-based command-line tool to manage Claude Code API configurations with **safe shell integration** through independent configuration files.
 
@@ -361,4 +361,4 @@ ccm use production
 # 4. Everything just works! ✨
 ```
 
-*CCM v2.0 - Making Claude Code API configuration management safe, interactive, and user-friendly.*
+*CCM - Making Claude Code API configuration management safe, interactive, and user-friendly.*

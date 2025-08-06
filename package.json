@@ -1,6 +1,6 @@
 {
   "name": "ccm",
-  "version": "2.0.0",
+  "version": "0.0.1",
   "description": "Claude Code Manager - A TypeScript tool to manage Claude Code API configurations",
   "main": "dist/index.js",
   "bin": {
@@ -12,7 +12,13 @@
     "start": "node dist/cli.js",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "release": "./scripts/release.sh",
+    "release:patch": "./scripts/quick-release.sh patch",
+    "release:minor": "./scripts/quick-release.sh minor",
+    "release:major": "./scripts/quick-release.sh major",
+    "publish:local": "./scripts/publish-local.sh",
+    "prepublishOnly": "npm run clean && npm run build && npm run lint"
   },
   "keywords": [
     "claude",

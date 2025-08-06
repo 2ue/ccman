@@ -80,7 +80,7 @@ async function performUseEnvironment(name: string, options?: {
 program
   .name('ccm')
   .description('Claude Code Manager - Manage Claude Code API configurations')
-  .version('2.0.0');
+  .version('0.0.1');
 
 // 列出所有环境
 program

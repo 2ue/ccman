@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CCM (Claude Code Manager) v2.0 is a TypeScript-based command-line tool for managing Claude Code API configurations. It provides structured, modular environment management with **safe shell integration** through independent configuration files.
+CCM (Claude Code Manager) is a TypeScript-based command-line tool for managing Claude Code API configurations. It provides structured, modular environment management with **safe shell integration** through independent configuration files.
 
 ## Architecture
 
