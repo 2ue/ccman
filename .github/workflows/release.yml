@@ -1,211 +1,90 @@
 name: Release and Publish
 
-# 触发条件：推送 tag 或手动触发
+# 触发条件：推送 tag
 on:
   push:
     tags:
-      - 'v*.*.*'  # 匹配语义化版本标签 (v1.0.0, v1.2.3, etc.)
-  workflow_dispatch:  # 支持手动触发
-    inputs:
-      version:
-        description: 'Release version (e.g., 1.0.0)'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+      - 'v*.*.*'  # 匹配语义化版本标签
 
 jobs:
   release:
-    name: Release and Publish to NPM
+    name: Build, Test and Release
     runs-on: ubuntu-latest
-
+    
     permissions:
-      contents: write  # 需要写入权限来创建 release
-      id-token: write  # NPM 发布需要
+      contents: write  # 创建 release
+      id-token: write  # NPM 发布
 
     steps:
       # 1. 检出代码
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 获取完整历史记录用于生成 changelog
+          fetch-depth: 0
 
       # 2. 设置 pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8.15.1  # 固定版本保证稳定性
+          version: 8.15.1
 
-      # 3. 设置 Node.js 和缓存
+      # 3. 设置 Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
 
-      # 4. 安装依赖
-      - name: Install dependencies
-        run: pnpm install
-
-      # 5. 运行测试和代码检查
-      - name: Run tests and linting
+      # 4. 安装依赖和构建
+      - name: Install and Build
         run: |
+          pnpm install
           pnpm run lint
           pnpm run build
-        continue-on-error: false
 
-      # 6. 获取版本信息
-      - name: Get version info
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
-            # 从 tag 中提取版本
-            VERSION=${GITHUB_REF#refs/tags/v}
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          else
-            # 手动触发时使用输入的版本
-            VERSION=$(npm version ${{ github.event.inputs.version }} --no-git-tag-version --preid=beta)
-            VERSION=${VERSION#v}
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-          fi
-          echo "package_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      # 7. 验证版本一致性（仅对 tag 触发的构建）
-      - name: Validate version consistency
-        if: github.event_name == 'push'
-        run: |
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION="${{ steps.version.outputs.version }}"
-          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-            echo "❌ Version mismatch: package.json($PACKAGE_VERSION) != tag($TAG_VERSION)"
-            exit 1
-          fi
-          echo "✅ Version validation passed: $PACKAGE_VERSION"
-
-      # 8. 生成构建产物
-      - name: Build project
-        run: |
-          pnpm run clean
-          pnpm run build
-
-      # 9. 创建发布包
+      # 5. 创建发布包
       - name: Create release archive
         run: |
-          # 创建临时目录用于打包
           mkdir -p release-temp
+          cp -r dist package.json README.md release-temp/
+          cd release-temp && tar -czf ../ccman-${GITHUB_REF#refs/tags/}.tar.gz .
 
-          # 复制必要文件到临时目录
-          cp -r dist release-temp/
-          cp package.json release-temp/
-          cp README.md release-temp/
-          cp LICENSE release-temp/ 2>/dev/null || echo "No LICENSE file found"
-
-          # 创建压缩包
-          cd release-temp
-          tar -czf ../ccman-v${{ steps.version.outputs.version }}.tar.gz .
-          cd ..
-
-          echo "✅ Release archive created: ccman-v${{ steps.version.outputs.version }}.tar.gz"
-
-      # 10. 配置 NPM 认证
-      - name: Configure NPM authentication
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-
-      # 11. 验证 NPM 认证
-      - name: Verify NPM authentication
-        run: |
-          npm whoami
-          echo "✅ NPM authentication verified"
-
-      # 12. 发布到 NPM（使用 npm 确保兼容性）
+      # 6. 发布到 NPM
       - name: Publish to NPM
-        run: |
-          echo "Publishing to NPM..."
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
 
-          # 检查是否为预发布版本
-          VERSION="${{ steps.version.outputs.version }}"
-          if [[ "$VERSION" =~ -beta\.|alpha\.|rc\. ]]; then
-            echo "📦 Publishing pre-release version $VERSION with 'beta' tag"
-            npm publish --tag beta --access public
-          else
-            echo "📦 Publishing stable version $VERSION"
-            npm publish --access public
-          fi
-
-          echo "✅ Published to NPM successfully"
-
-      # 13. 创建 GitHub Release (使用现代化的 GitHub CLI)
+      # 7. 创建 GitHub Release  
       - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "CCMan ${GITHUB_REF#refs/tags/}"
+          body: |
+            ## CCMan (Claude Code Manager) ${GITHUB_REF#refs/tags/}
+
+            🚀 **新版本发布！**
+
+            ### 📦 安装方式
+            ```bash
+            npm install -g ccman@${GITHUB_REF#refs/tags/v}
+            ```
+
+            ### 🔗 相关链接
+            - [NPM 包](https://www.npmjs.com/package/ccman)
+            - [GitHub 仓库](https://github.com/${{ github.repository }})
+
+            ### 📋 发布信息
+            - **提交哈希**: ${{ github.sha }}
+            - **构建环境**: GitHub Actions
+
+            ---
+            *通过 GitHub Actions 自动构建发布*
+          files: |
+            ccman-*.tar.gz
+          draft: false
+          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') || contains(github.ref, '-rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # 生成 Release Notes
-          cat > release_notes.md << 'EOF'
-          ## CCMan (Claude Code Manager) v${{ steps.version.outputs.version }}
-
-          🚀 **新版本发布！**
-
-          ### 📦 安装方式
-          ```bash
-          npm install -g ccman@${{ steps.version.outputs.version }}
-          ```
-
-          ### 🔗 相关链接
-          - [NPM 包](https://www.npmjs.com/package/ccman)
-          - [GitHub 仓库](https://github.com/2ue/ccm)
-          - [中文文档](./README_zh.md)
-
-          ### 📋 发布信息
-          - **发布时间**: ${{ github.event.head_commit.timestamp }}
-          - **提交哈希**: ${{ github.sha }}
-          - **构建环境**: GitHub Actions (ubuntu-latest)
-
-          ---
-
-          *该版本通过 GitHub Actions 自动构建和发布*
-          EOF
-
-          # 检查是否为预发布版本
-          PRERELEASE_FLAG=""
-          if [[ "${{ steps.version.outputs.version }}" =~ -beta\.|alpha\.|rc\. ]]; then
-            PRERELEASE_FLAG="--prerelease"
-          fi
-
-          # 创建 Release 并上传文件
-          gh release create ${{ steps.version.outputs.tag }} \
-            --title "CCMan v${{ steps.version.outputs.version }}" \
-            --notes-file release_notes.md \
-            $PRERELEASE_FLAG \
-            ./ccman-v${{ steps.version.outputs.version }}.tar.gz
-
-          echo "✅ GitHub Release created successfully"
-
-      # 14. 发布结果通知
-      - name: Release Summary
-        run: |
-          echo "## 🎉 发布成功 v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📋 发布详情" >> $GITHUB_STEP_SUMMARY
-          echo "- **版本**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **NPM**: https://www.npmjs.com/package/ccman/v/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **GitHub Release**: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **安装命令**: \`npm install -g ccman@${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-
-  # 可选：部署文档或通知其他系统
-  post-release:
-    name: Post-release tasks
-    needs: release
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: Post-release cleanup
-        run: |
-          echo "✅ Release workflow completed"
-          echo "Version ${{ needs.release.outputs.version }} has been published"
