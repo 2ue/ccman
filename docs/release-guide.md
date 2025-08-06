@@ -8,10 +8,40 @@
 
 ## 🚀 发布方式
 
-> 💡 **推荐**: 使用项目提供的Scripts进行发布，详见 [Scripts使用指南](./scripts-guide.md)
+> 💡 **强烈推荐**: 使用新的模块化智能发布脚本，详见 [Scripts使用指南](./scripts-guide.md)
 
-### 方式一：Scripts发布（推荐）
+### 🌟 方式一：智能发布脚本（强烈推荐）
 
+#### 使用 smart-release-v3.sh
+```bash
+# 完整智能发布流程（推荐）
+./scripts/smart-release-v3.sh
+# 或使用 npm script
+pnpm run release:smart
+
+# 跳过版本升级，使用当前版本
+./scripts/smart-release-v3.sh --skip-version
+
+# 直接指定版本类型
+./scripts/smart-release-v3.sh --version-type minor
+
+# 不监控发布状态（快速完成）
+./scripts/smart-release-v3.sh --no-monitor
+
+# 查看帮助
+./scripts/smart-release-v3.sh --help
+```
+
+#### ✨ 智能发布特性
+- **智能未提交代码处理**: 3种处理选项（提交/暂存/取消）
+- **智能版本推荐**: 基于git提交历史分析  
+- **实时发布监控**: 5分钟监控GitHub Actions、NPM、Release
+- **完整链接输出**: 自动生成所有相关链接
+- **模块化架构**: 每个步骤可独立测试和调试
+
+### 方式二：经典发布脚本
+
+#### Scripts发布
 ```bash
 # 快速发布（日常推荐）
 ./scripts/quick-release.sh patch   # 修订版本
@@ -22,8 +52,7 @@
 ./scripts/release.sh               # 交互式完整流程
 ```
 
-### 方式二：NPM Scripts发布
-
+#### NPM Scripts发布
 ```bash
 # 交互选择版本类型
 pnpm run release:interactive
@@ -43,6 +72,24 @@ pnpm run release
 pnpm run publish:local
 # 或
 ./scripts/publish-local.sh
+```
+
+## 🔧 独立模块使用
+
+模块化脚本支持独立使用，便于测试和调试：
+
+```bash
+# 仅检查代码状态
+./scripts/modules/check-uncommitted.sh
+
+# 仅进行版本升级
+./scripts/modules/version-bump.sh minor
+
+# 仅创建tag并推送
+./scripts/modules/create-tag.sh
+
+# 仅监控发布状态
+./scripts/modules/monitor-release.sh
 ```
 
 ## 📊 发布后验证
