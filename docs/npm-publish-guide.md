@@ -41,32 +41,43 @@ GitHub 仓库 → Settings → Secrets and variables → Actions → New reposit
 - Name: `NPM_TOKEN`
 - Secret: 你的 NPM token
 
-## 🔧 优化后的认证方式
+## 🔧 优化后的工作流程
 
-### 原始方式（可能失败）
+### pnpm 和 npm 混合策略
+
 ```yaml
-- uses: actions/setup-node@v4
+# 设置 pnpm（固定版本确保稳定性）
+- name: Setup pnpm
+  uses: pnpm/action-setup@v4
   with:
-    registry-url: 'https://registry.npmjs.org'
-- run: npm publish
-  env:
-    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    version: 8.15.1
+
+# 使用 setup-node 内置缓存
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: '18'
+    cache: 'pnpm'  # 内置缓存，无需额外配置
+
+# 构建使用 pnpm（更快）
+- run: pnpm install --frozen-lockfile
+- run: pnpm run build
+
+# 发布使用 npm（更稳定）  
+- run: npm publish --access public
 ```
 
-### 优化后方式（更可靠）
-```yaml
-- name: Configure NPM authentication
-  run: |
-    echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-    echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
-    echo "always-auth=true" >> ~/.npmrc
+### 优势分析
 
-- name: Verify NPM authentication
-  run: npm whoami
+1. **pnpm 用于构建**
+   - ⚡ 更快的依赖安装
+   - 💾 更少的磁盘空间占用
+   - 🔒 更严格的依赖管理
 
-- name: Publish to NPM
-  run: npm publish --access public
-```
+2. **npm 用于发布**
+   - 🛡️ 更成熟稳定的发布机制
+   - 🔧 更好的 registry 兼容性
+   - 📚 更多的文档和最佳实践
 
 ## 🚀 发布方式选择
 
@@ -121,9 +132,10 @@ npm publish --dry-run
 
 ### GitHub Actions 流程
 1. 推送 tag → 触发 Actions
-2. 配置 `.npmrc` → 认证 NPM
-3. 验证认证 → 构建项目
-4. 发布到 NPM → 创建 Release
+2. 设置 pnpm (固定版本) → 安装依赖
+3. pnpm 构建项目 → 运行测试  
+4. 配置 `.npmrc` → 认证 NPM
+5. npm 发布包 → 创建 Release
 
 ### 本地发布流程
 1. 检查登录状态
@@ -131,8 +143,19 @@ npm publish --dry-run
 3. 运行构建和检查
 4. 确认后发布
 
-## ⚠️ 安全注意事项
+## 🎯 最佳实践
 
+### 版本管理
+- ✅ 所有版本号从 `package.json` 动态读取
+- ✅ CLI 版本自动同步
+- ✅ 固定 pnpm 版本 (`packageManager: "pnpm@8.15.1"`)
+
+### 构建和发布分离
+- 🔨 **构建**: 使用 pnpm（速度优势）
+- 📦 **发布**: 使用 npm（稳定性优势）
+- 🗄️ **缓存**: 使用 setup-node 内置缓存
+
+### 安全措施
 1. **Token 安全**
    - 只在 GitHub Secrets 中存储
    - 定期轮换 token
@@ -143,16 +166,4 @@ npm publish --dry-run
    - 检查版本号唯一性
    - 运行完整的测试套件
 
-3. **权限管理**
-   - 只给信任的贡献者发布权限
-   - 使用 GitHub 分支保护规则
-   - 启用两步验证
-
-## 🎯 最佳实践
-
-1. **使用 `.npmrc` 方式**（已采用）
-2. **验证认证状态**（已包含）
-3. **多层权限检查**（已实现）
-4. **本地备用方案**（已提供）
-
-现在的配置应该能够完美解决 NPM 发布权限问题！
+现在的配置已经是最优实践，结合了 pnpm 的构建优势和 npm 的发布稳定性！

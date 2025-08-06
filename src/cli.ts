@@ -3,8 +3,22 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { EnvironmentManager } from './config/EnvironmentManager';
 import { AddEnvOptions } from './types';
+
+// 动态读取版本号
+const getPackageVersion = (): string => {
+  try {
+    const packageJsonPath = join(__dirname, '../package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+    return packageJson.version;
+  } catch (error) {
+    console.warn(chalk.yellow('⚠️  无法读取版本信息，使用默认版本'));
+    return '0.0.1';
+  }
+};
 
 const program = new Command();
 const envManager = new EnvironmentManager();
@@ -80,7 +94,7 @@ async function performUseEnvironment(name: string, options?: {
 program
   .name('ccm')
   .description('Claude Code Manager - Manage Claude Code API configurations')
-  .version('0.0.1');
+  .version(getPackageVersion());
 
 // 列出所有环境
 program
