@@ -48,7 +48,7 @@ jobs:
           
       # 4. 安装依赖
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
         
       # 5. 运行测试和代码检查
       - name: Run tests and linting
