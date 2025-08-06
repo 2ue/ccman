@@ -184,7 +184,6 @@ Thumbs.db
 # NPM package-lock alternatives
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 
 # Release artifacts
 *.tar.gz
