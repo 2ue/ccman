@@ -421,9 +421,9 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
   /**
    * 检查是否已经写入了环境变量
    */
-  async hasEnvVarsInShell(): Promise<boolean> {
+  hasEnvVarsInShell(): boolean {
     // 检查 ccmanrc 文件是否存在
-    if (await fse.pathExists(this.ccmanrcPath)) {
+    if (fse.pathExistsSync(this.ccmanrcPath)) {
       return true;
     }
     
@@ -432,8 +432,8 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
     const configFiles = this.getShellConfigFiles(shellType);
     
     for (const configFile of configFiles) {
-      if (await fse.pathExists(configFile)) {
-        const content = await fse.readFile(configFile, 'utf8');
+      if (fse.pathExistsSync(configFile)) {
+        const content = fse.readFileSync(configFile, 'utf8');
         if (this.hasShellReference(content)) {
           return true;
         }
@@ -451,13 +451,7 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
     const configFiles = this.getShellConfigFiles(shellType);
     
     // 找到第一个存在的配置文件
-    let activeConfigFile: string | undefined;
-    for (const file of configFiles) {
-      if (await fse.pathExists(file)) {
-        activeConfigFile = file;
-        break;
-      }
-    }
+    const activeConfigFile = configFiles.find(file => fse.pathExistsSync(file));
     
     if (!activeConfigFile) {
       return {
@@ -510,23 +504,17 @@ export ${CONFIG.ENV_VARS.AUTH_TOKEN}="${envVars.ANTHROPIC_AUTH_TOKEN}"
   /**
    * 获取当前 shell 信息
    */
-  async getShellInfo(): Promise<{
+  getShellInfo(): {
     shellType: ShellType;
     shellPath: string;
     configFiles: string[];
     activeConfigFile?: string;
-  }> {
+  } {
     const shellType = this.detectShell();
     const configFiles = this.getShellConfigFiles(shellType);
     
     // 找到第一个存在的配置文件作为活动配置文件
-    let activeConfigFile: string | undefined;
-    for (const file of configFiles) {
-      if (await fse.pathExists(file)) {
-        activeConfigFile = file;
-        break;
-      }
-    }
+    const activeConfigFile = configFiles.find(file => fse.pathExistsSync(file));
     
     return {
       shellType,
