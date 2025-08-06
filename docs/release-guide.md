@@ -2,36 +2,47 @@
 
 ## 📋 发布前准备
 
-1. **设置 NPM Token**：参见 [setup-github-secrets.md](./setup-github-secrets.md)
+1. **设置 NPM Token**：参见 [npm-publish-guide.md](./npm-publish-guide.md)
 2. **确保工作目录干净**：`git status`
 3. **确保在主分支**：`git checkout main`
 
 ## 🚀 发布方式
 
-### 方式一：交互式发布（推荐）
+> 💡 **推荐**: 使用项目提供的Scripts进行发布，详见 [Scripts使用指南](./scripts-guide.md)
+
+### 方式一：Scripts发布（推荐）
+
+```bash
+# 快速发布（日常推荐）
+./scripts/quick-release.sh patch   # 修订版本
+./scripts/quick-release.sh minor   # 次版本  
+./scripts/quick-release.sh major   # 主版本
+
+# 完整发布流程（重要版本）
+./scripts/release.sh               # 交互式完整流程
+```
+
+### 方式二：NPM Scripts发布
+
 ```bash
 # 交互选择版本类型
 pnpm run release:interactive
-```
 
-### 方式二：快速发布
-```bash
 # 指定版本类型
 pnpm run release:patch   # 0.0.1 → 0.0.2
 pnpm run release:minor   # 0.0.1 → 0.1.0  
 pnpm run release:major   # 0.0.1 → 1.0.0
-```
 
-### 方式三：完整发布流程
-```bash
-# 包含分支管理的完整流程
+# 完整发布流程
 pnpm run release
 ```
 
-### 方式四：本地发布（备用）
+### 方式三：本地发布（备用）
 ```bash
 # 直接发布到 NPM（跳过 GitHub Actions）
 pnpm run publish:local
+# 或
+./scripts/publish-local.sh
 ```
 
 ## 📊 发布后验证
