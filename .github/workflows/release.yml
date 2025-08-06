@@ -43,33 +43,42 @@ jobs:
           pnpm run lint
           pnpm run build
 
-      # 5. 创建发布包
+      # 5. 获取版本信息
+      - name: Get version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      # 6. 创建发布包
       - name: Create release archive
         run: |
           mkdir -p release-temp
           cp -r dist package.json README.md release-temp/
-          cd release-temp && tar -czf ../ccman-${GITHUB_REF#refs/tags/}.tar.gz .
+          cd release-temp && tar -czf ../ccman-${{ steps.version.outputs.tag }}.tar.gz .
 
-      # 6. 发布到 NPM
+      # 7. 发布到 NPM
       - name: Publish to NPM
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           access: public
 
-      # 7. 创建 GitHub Release  
+      # 8. 创建 GitHub Release  
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "CCMan ${GITHUB_REF#refs/tags/}"
+          name: "CCMan ${{ steps.version.outputs.tag }}"
           body: |
-            ## CCMan (Claude Code Manager) ${GITHUB_REF#refs/tags/}
+            ## CCMan (Claude Code Manager) ${{ steps.version.outputs.tag }}
 
             🚀 **新版本发布！**
 
             ### 📦 安装方式
             ```bash
-            npm install -g ccman@${GITHUB_REF#refs/tags/v}
+            npm install -g ccman@${{ steps.version.outputs.version }}
             ```
 
             ### 🔗 相关链接
