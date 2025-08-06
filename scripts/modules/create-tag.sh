@@ -113,7 +113,22 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
     fi
 }
 
-# 推送tag和提交到远程
+# 推送tag和提交到远程（静默模式）
+push_to_remote_quiet() {
+    local tag_name=$1
+    local has_commit=$2
+    
+    # 推送提交（如果有）
+    if [ "$has_commit" = "true" ]; then
+        local current_branch=$(git branch --show-current)
+        git push origin "$current_branch" 2>/dev/null
+    fi
+    
+    # 推送tag
+    git push origin "$tag_name" 2>/dev/null || git push origin "$tag_name" --force 2>/dev/null
+}
+
+# 推送tag和提交到远程（交互模式）
 push_to_remote() {
     local tag_name=$1
     local has_commit=$2
@@ -134,7 +149,39 @@ push_to_remote() {
     print_success "推送完成，GitHub Actions 已触发"
 }
 
-# 主函数: 创建tag并提交
+# 静默创建tag并推送（供其他脚本调用）
+create_tag_quietly() {
+    # 获取当前版本
+    local version=$(get_current_version)
+    local tag_name="v$version"
+    
+    # 检查tag是否已存在
+    if check_tag_exists "$tag_name"; then
+        # 如果tag存在，删除并重新创建
+        git tag -d "$tag_name" 2>/dev/null
+        git push origin --delete "$tag_name" 2>/dev/null
+    fi
+    
+    # 创建tag
+    local tag_message="Release v$version
+
+🏷️  CCM版本: v$version
+⏰ 发布时间: $(date '+%Y-%m-%d %H:%M:%S')
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+    
+    git tag -a "$tag_name" -m "$tag_message" 2>/dev/null
+    
+    # 静默推送
+    push_to_remote_quiet "$tag_name" "false"
+    
+    # 输出tag名称
+    echo "$tag_name"
+}
+
+# 主函数: 创建tag并提交（交互模式）
 create_tag_and_commit() {
     echo "🏷️  CCM Tag创建器"
     echo "================"
@@ -180,5 +227,10 @@ create_tag_and_commit() {
 
 # 如果直接运行此脚本
 if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
-    create_tag_and_commit "$@"
+    # 检查是否为静默调用
+    if [ "$1" = "--quiet" ]; then
+        create_tag_quietly
+    else
+        create_tag_and_commit "$@"
+    fi
 fi

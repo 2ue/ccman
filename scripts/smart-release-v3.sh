@@ -129,8 +129,12 @@ step_version_bump() {
         case ${version_choice:-1} in
             1)
                 print_info "启动版本升级流程..."
-                source "$MODULE_DIR/version-bump.sh"
-                NEW_VERSION=$(version_bump "$VERSION_TYPE")
+                # 静默调用版本升级模块，捕获输出
+                NEW_VERSION=$("$MODULE_DIR/version-bump.sh" "$VERSION_TYPE" 2>/dev/null | tail -1)
+                if [ -z "$NEW_VERSION" ]; then
+                    print_error "版本升级失败"
+                fi
+                print_success "版本升级成功: v$NEW_VERSION"
                 ;;
             2)
                 local current_version=$(node -p "require('./package.json').version")
@@ -155,9 +159,11 @@ step_create_tag() {
     print_info "将为版本 v$NEW_VERSION 创建tag并提交..."
     echo ""
     
-    # 调用模块脚本
-    source "$MODULE_DIR/create-tag.sh"
-    TAG_NAME=$(create_tag_and_commit | tail -1)  # 获取最后一行的tag名称
+    # 静默调用tag创建模块，避免颜色代码泄露
+    TAG_NAME=$("$MODULE_DIR/create-tag.sh" --quiet)
+    if [ -z "$TAG_NAME" ]; then
+        print_error "tag创建失败"
+    fi
     
     echo ""
     print_success "步骤3完成: tag $TAG_NAME 已创建并推送"
@@ -182,9 +188,8 @@ step_monitor_release() {
     print_info "等待 GitHub Actions 启动... (10秒)"
     sleep 10
     
-    # 调用模块脚本
-    source "$MODULE_DIR/monitor-release.sh"
-    monitor_release
+    # 直接执行监控模块
+    "$MODULE_DIR/monitor-release.sh"
     local monitor_status=$?
     
     echo ""

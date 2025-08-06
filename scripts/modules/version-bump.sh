@@ -36,7 +36,12 @@ get_current_version() {
 # 计算版本预览
 calculate_version_preview() {
     local version_type=$1
-    pnpm version $version_type --dry-run 2>/dev/null | cut -d'v' -f2 2>/dev/null || echo "计算失败"
+    local preview=$(pnpm version $version_type --dry-run 2>/dev/null)
+    if [ $? -eq 0 ] && [ -n "$preview" ]; then
+        echo "$preview" | sed 's/^v//' 2>/dev/null || echo "计算失败"
+    else
+        echo "计算失败"
+    fi
 }
 
 # 分析git提交推荐版本类型
@@ -57,6 +62,19 @@ analyze_commit_history() {
 version_bump() {
     local current_version=$(get_current_version)
     local version_type=${1:-""}
+    
+    # 安静模式检测：如果被其他脚本调用，则静默运行
+    if [ "$0" != "${BASH_SOURCE[0]}" ] || [ "$version_type" = "test" ]; then
+        # 静默模式：只返回结果，不显示菜单
+        if [ -n "$version_type" ] && [ "$version_type" != "test" ]; then
+            execute_version_bump_quiet "$version_type" "$current_version"
+            return $?
+        else
+            # 测试模式，只返回当前版本
+            echo "$current_version"
+            return 0
+        fi
+    fi
     
     echo "📦 CCM 版本管理器"
     echo "=================="
@@ -193,7 +211,29 @@ confirm_version_bump() {
     fi
 }
 
-# 执行版本升级
+# 执行版本升级（静默模式）
+execute_version_bump_quiet() {
+    local version_type=$1
+    local current_version=$2
+    
+    # 执行版本升级
+    if [[ "$version_type" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+        # 自定义版本
+        new_version=$(pnpm version "$version_type" --no-git-tag-version 2>/dev/null)
+    else
+        # 标准版本类型
+        new_version=$(pnpm version "$version_type" --no-git-tag-version 2>/dev/null)
+    fi
+    
+    if [ $? -eq 0 ]; then
+        new_version=${new_version#v}
+        echo "$new_version"  # 输出新版本号供其他脚本使用
+    else
+        exit 1
+    fi
+}
+
+# 执行版本升级（交互模式）
 execute_version_bump() {
     local version_type=$1
     local current_version=$2
