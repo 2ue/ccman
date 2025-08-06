@@ -107,18 +107,15 @@ jobs:
 
           # 创建压缩包
           cd release-temp
-          tar -czf ../ccm-v${{ steps.version.outputs.version }}.tar.gz .
+          tar -czf ../ccman-v${{ steps.version.outputs.version }}.tar.gz .
           cd ..
 
-          echo "✅ Release archive created: ccm-v${{ steps.version.outputs.version }}.tar.gz"
+          echo "✅ Release archive created: ccman-v${{ steps.version.outputs.version }}.tar.gz"
 
       # 10. 配置 NPM 认证
       - name: Configure NPM authentication
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-          ls -la ~/
-          echo "NPM configuration:"
-          cat ~/.npmrc
 
       # 11. 验证 NPM 认证
       - name: Verify NPM authentication
@@ -143,61 +140,62 @@ jobs:
 
           echo "✅ Published to NPM successfully"
 
-      # 13. 创建 GitHub Release
+      # 13. 创建 GitHub Release (使用现代化的 GitHub CLI)
       - name: Create GitHub Release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          release_name: "CCM v${{ steps.version.outputs.version }}"
-          body: |
-            ## CCM (Claude Code Manager) v${{ steps.version.outputs.version }}
+        run: |
+          # 生成 Release Notes
+          cat > release_notes.md << 'EOF'
+          ## CCMan (Claude Code Manager) v${{ steps.version.outputs.version }}
 
-            🚀 **新版本发布！**
+          🚀 **新版本发布！**
 
-            ### 📦 安装方式
-            ```bash
-            npm install -g ccm@${{ steps.version.outputs.version }}
-            ```
+          ### 📦 安装方式
+          ```bash
+          npm install -g ccman@${{ steps.version.outputs.version }}
+          ```
 
-            ### 🔗 相关链接
-            - [NPM 包](https://www.npmjs.com/package/ccm)
-            - [GitHub 仓库](https://github.com/2ue/ccm)
-            - [中文文档](./README_zh.md)
+          ### 🔗 相关链接
+          - [NPM 包](https://www.npmjs.com/package/ccman)
+          - [GitHub 仓库](https://github.com/2ue/ccm)
+          - [中文文档](./README_zh.md)
 
-            ### 📋 发布信息
-            - **发布时间**: ${{ github.event.head_commit.timestamp }}
-            - **提交哈希**: ${{ github.sha }}
-            - **构建环境**: GitHub Actions (ubuntu-latest)
+          ### 📋 发布信息
+          - **发布时间**: ${{ github.event.head_commit.timestamp }}
+          - **提交哈希**: ${{ github.sha }}
+          - **构建环境**: GitHub Actions (ubuntu-latest)
 
-            ---
+          ---
 
-            *该版本通过 GitHub Actions 自动构建和发布*
-          draft: false
-          prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'rc') }}
+          *该版本通过 GitHub Actions 自动构建和发布*
+          EOF
 
-      # 14. 上传发布文件到 Release
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ccm-v${{ steps.version.outputs.version }}.tar.gz
-          asset_name: ccm-v${{ steps.version.outputs.version }}.tar.gz
-          asset_content_type: application/gzip
+          # 检查是否为预发布版本
+          PRERELEASE_FLAG=""
+          if [[ "${{ steps.version.outputs.version }}" =~ -beta\.|alpha\.|rc\. ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
 
-      # 15. 发布结果通知
+          # 创建 Release 并上传文件
+          gh release create ${{ steps.version.outputs.tag }} \
+            --title "CCMan v${{ steps.version.outputs.version }}" \
+            --notes-file release_notes.md \
+            $PRERELEASE_FLAG \
+            ./ccman-v${{ steps.version.outputs.version }}.tar.gz
+
+          echo "✅ GitHub Release created successfully"
+
+      # 14. 发布结果通知
       - name: Release Summary
         run: |
           echo "## 🎉 发布成功 v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📋 发布详情" >> $GITHUB_STEP_SUMMARY
           echo "- **版本**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **NPM**: https://www.npmjs.com/package/ccm/v/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **NPM**: https://www.npmjs.com/package/ccman/v/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **GitHub Release**: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **安装命令**: \`npm install -g ccm@${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **安装命令**: \`npm install -g ccman@${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
 
   # 可选：部署文档或通知其他系统
   post-release:
