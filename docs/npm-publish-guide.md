@@ -1,6 +1,6 @@
-# NPM 发布权限配置指南
+# NPM 发布配置指南
 
-## 🔐 获取 NPM Token
+## 🔐 步骤一：获取 NPM Token
 
 ```bash
 # 1. 登录 NPM
@@ -12,7 +12,7 @@ npm token create --read-only=false
 
 复制生成的 token（格式：`npm_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`）
 
-## 🔧 设置 GitHub Secrets
+## 🔧 步骤二：设置 GitHub Secrets
 
 1. 访问：`https://github.com/2ue/ccm/settings/secrets/actions`
 2. 点击 **"New repository secret"**
@@ -21,7 +21,17 @@ npm token create --read-only=false
    - **Secret**: 粘贴你的 NPM token
 4. 点击 **"Add secret"**
 
-## 🚀 发布流程
+### 验证设置
+设置完成后，应看到：
+```
+Repository secrets:
+• NPM_TOKEN  ••••••••••••••••••••••••••••••••••••••••
+```
+
+### 关于 GITHUB_TOKEN
+**无需手动设置** - GitHub Actions 自动提供此 token
+
+## 🚀 步骤三：发布
 
 ### 自动发布（推荐）
 ```bash
@@ -47,7 +57,7 @@ pnpm run publish:local
 
 ### 403 Forbidden  
 - 包名已存在：修改 package.json 中的 name
-- 检查发布权限：`npm owner ls package-name`
+- 检查发布权限：`npm owner ls claude-env`
 
 ### 测试发布权限
 ```bash
@@ -58,4 +68,4 @@ npm publish --dry-run
 
 - NPM token 只存储在 GitHub Secrets 中
 - 定期轮换 token（建议 90 天）
-- 使用 Automation 类型的 token
+- Token 泄露时立即删除并重新创建

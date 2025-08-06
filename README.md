@@ -19,14 +19,11 @@ A TypeScript-based command-line tool to manage Claude Code API configurations wi
 ### Installation
 
 ```bash
-# Install dependencies
-npm install
+# Install from NPM
+npm install -g claude-env
 
-# Build the project
-npm run build
-
-# Link globally (optional)
-npm link
+# Or install dependencies for development
+npm install && npm run build
 ```
 
 ### Basic Usage

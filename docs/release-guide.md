@@ -42,9 +42,9 @@ pnpm run publish:local
 - 确认状态为 ✅ 成功
 
 ### 2. 验证结果
-- **NPM 包**：https://www.npmjs.com/package/claude-env-manager
+- **NPM 包**：https://www.npmjs.com/package/claude-env
 - **GitHub Release**：https://github.com/2ue/ccm/releases
-- **测试安装**：`npm install -g claude-env-manager`
+- **测试安装**：`npm install -g claude-env`
 
 ## 🔧 故障排查
 
@@ -56,7 +56,7 @@ pnpm run publish:local
 ### 版本冲突
 ```bash
 # 检查已存在的版本
-npm view claude-env-manager versions --json
+npm view claude-env versions --json
 
 # 使用新版本号重新发布
 pnpm run release:patch

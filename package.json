@@ -1,5 +1,5 @@
 {
-  "name": "ccm",
+  "name": "claude-env",
   "version": "0.0.1",
   "description": "Claude Code Manager - A TypeScript tool to manage Claude Code API configurations",
   "main": "dist/index.js",

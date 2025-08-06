@@ -19,14 +19,11 @@
 ### 安装
 
 ```bash
-# 安装依赖
-npm install
+# 从 NPM 安装
+npm install -g claude-env
 
-# 构建项目
-npm run build
-
-# 全局链接（可选）
-npm link
+# 或者开发环境安装依赖
+npm install && npm run build
 ```
 
 ### 基本用法
