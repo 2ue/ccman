@@ -119,32 +119,26 @@ step_version_bump() {
         print_info "当前版本: v$current_version"
         NEW_VERSION="$current_version"
     else
-        print_info "是否需要版本升级?"
-        echo "1) 是，需要升级版本"
-        echo "2) 否，使用当前版本"
-        echo ""
-        
-        read -p "请选择 (1-2, 默认1): " version_choice
-        
-        case ${version_choice:-1} in
-            1)
-                print_info "启动版本升级流程..."
-                # 静默调用版本升级模块，捕获输出
-                NEW_VERSION=$("$MODULE_DIR/version-bump.sh" "$VERSION_TYPE" 2>/dev/null | tail -1)
-                if [ -z "$NEW_VERSION" ]; then
-                    print_error "版本升级失败"
-                fi
-                print_success "版本升级成功: v$NEW_VERSION"
-                ;;
-            2)
-                local current_version=$(node -p "require('./package.json').version")
-                print_info "使用当前版本: v$current_version"
-                NEW_VERSION="$current_version"
-                ;;
-            *)
-                print_error "无效选择"
-                ;;
-        esac
+        print_info "启动版本升级流程..."
+        # 如果指定了版本类型，静默调用
+        if [ -n "$VERSION_TYPE" ]; then
+            # 使用source方式调用，然后直接调用静默函数
+            source "$MODULE_DIR/version-bump.sh"
+            NEW_VERSION=$(execute_version_bump_quiet "$VERSION_TYPE" "$(get_current_version)")
+            if [ -z "$NEW_VERSION" ]; then
+                print_error "版本升级失败"
+            fi
+        else
+            # 没有指定版本类型，调用交互模式
+            "$MODULE_DIR/version-bump.sh"
+            local version_result=$?
+            if [ $version_result -eq 0 ]; then
+                NEW_VERSION=$(node -p "require('./package.json').version")
+            else
+                print_error "版本升级失败"
+            fi
+        fi
+        print_success "版本升级成功: v$NEW_VERSION"
     fi
     
     echo ""

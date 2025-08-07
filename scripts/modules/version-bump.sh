@@ -66,9 +66,9 @@ version_bump() {
     local version_type=${1:-""}
     
     # 安静模式检测：如果被其他脚本调用，则静默运行
-    if [ "$0" != "${BASH_SOURCE[0]}" ] || [ "$version_type" = "test" ]; then
+    if [ "$0" != "${BASH_SOURCE[0]}" ] || [ "$version_type" = "test" ] || [ "$version_type" = "--quiet" ]; then
         # 静默模式：只返回结果，不显示菜单
-        if [ -n "$version_type" ] && [ "$version_type" != "test" ]; then
+        if [ -n "$version_type" ] && [ "$version_type" != "test" ] && [ "$version_type" != "--quiet" ]; then
             execute_version_bump_quiet "$version_type" "$current_version"
             return $?
         else
