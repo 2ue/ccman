@@ -148,11 +148,11 @@ push_to_remote_quiet() {
     # 推送提交（如果有）
     if [ "$has_commit" = "true" ]; then
         local current_branch=$(git branch --show-current)
-        git push origin "$current_branch" 2>/dev/null
+        git push origin "$current_branch" >/dev/null 2>&1
     fi
     
     # 推送tag
-    git push origin "$tag_name" 2>/dev/null || git push origin "$tag_name" --force 2>/dev/null
+    git push origin "$tag_name" >/dev/null 2>&1 || git push origin "$tag_name" --force >/dev/null 2>&1
 }
 
 # 推送tag和提交到远程（交互模式）
@@ -185,8 +185,8 @@ create_tag_quietly() {
     # 检查tag是否已存在
     if check_tag_exists "$tag_name"; then
         # 如果tag存在，删除并重新创建
-        git tag -d "$tag_name" 2>/dev/null
-        git push origin --delete "$tag_name" 2>/dev/null
+        git tag -d "$tag_name" >/dev/null 2>&1
+        git push origin --delete "$tag_name" >/dev/null 2>&1
     fi
     
     # 创建tag
@@ -199,10 +199,10 @@ create_tag_quietly() {
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
     
-    git tag -a "$tag_name" -m "$tag_message" 2>/dev/null
+    git tag -a "$tag_name" -m "$tag_message" >/dev/null 2>&1
     
-    # 静默推送
-    push_to_remote_quiet "$tag_name" "false"
+    # 静默推送（始终推送当前分支和tag）
+    push_to_remote_quiet "$tag_name" "true"
     
     # 输出tag名称
     echo "$tag_name"

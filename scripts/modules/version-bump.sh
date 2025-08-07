@@ -37,8 +37,10 @@ get_current_version() {
 calculate_version_preview() {
     local version_type=$1
     local preview=$(pnpm version $version_type --dry-run 2>/dev/null)
-    if [ $? -eq 0 ] && [ -n "$preview" ]; then
-        echo "$preview" | sed 's/^v//' 2>/dev/null || echo "计算失败"
+    
+    if [ -n "$preview" ]; then
+        # 移除前缀v并返回
+        echo "$preview" | sed 's/^v//'
     else
         echo "计算失败"
     fi
@@ -94,23 +96,18 @@ version_bump() {
     show_version_menu "$current_version" "$suggested_type"
     
     # 获取用户选择
-    read -p "请选择版本升级类型 (1-5, 回车默认选择推荐): " choice
+    read -p "请选择版本升级类型 (1-4, 回车默认选择推荐): " choice
     
     # 处理用户选择
     case ${choice:-""} in
-        1|"")
-            if [ "$suggested_type" == "patch" ]; then
-                version_type="patch"
-            elif [ "$suggested_type" == "minor" ]; then
-                version_type="minor"  
-            else
-                version_type="major"
-            fi
+        "")
+            # 回车默认选择推荐版本
+            version_type="$suggested_type"
             ;;
-        2) version_type="patch" ;;
-        3) version_type="minor" ;;
-        4) version_type="major" ;;
-        5) handle_custom_version ;;
+        1) version_type="patch" ;;
+        2) version_type="minor" ;;
+        3) version_type="major" ;;
+        4) handle_custom_version ;;
         *) 
             print_error "无效选择"
             exit 1
