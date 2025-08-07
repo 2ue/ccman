@@ -43,11 +43,39 @@ check_tag_exists() {
     fi
 }
 
-# 创建tag
+# 创建tag（静默模式，只返回tag名称）
 create_tag() {
     local version=$1
     local tag_name="v$version"
     local force_flag=""
+    
+    # 静默检查tag是否存在
+    if check_tag_exists "$tag_name"; then
+        # 静默删除现有tag
+        git tag -d "$tag_name" >/dev/null 2>&1
+        force_flag="--force"
+    fi
+    
+    # 静默创建tag
+    local tag_message="Release v$version
+
+📦 发布版本 v$version
+⏰ $(date '+%Y-%m-%d %H:%M:%S')
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+    
+    git tag -a "$tag_name" -m "$tag_message" >/dev/null 2>&1
+    
+    # 只输出tag名称
+    echo "$tag_name"
+}
+
+# 创建tag（交互模式，带打印信息）
+create_tag_interactive() {
+    local version=$1
+    local tag_name="v$version"
     
     print_info "检查tag: $tag_name"
     
@@ -59,7 +87,6 @@ create_tag() {
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             print_info "删除现有tag: $tag_name"
             git tag -d "$tag_name"
-            force_flag="--force"
         else
             print_info "跳过tag创建，使用现有tag"
             echo "$tag_name"  # 返回tag名称
@@ -199,8 +226,24 @@ create_tag_and_commit() {
         exit 0
     fi
     
-    # 创建tag
+    # 创建tag（显示交互信息）
+    print_info "检查tag: v$version"
+    if check_tag_exists "v$version"; then
+        print_warning "tag v$version 已存在"
+        read -p "是否要重新创建此tag? (y/N): " -n 1 -r
+        echo
+        
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            print_info "删除现有tag: v$version"
+            git tag -d "v$version"
+        else
+            print_info "跳过tag创建，使用现有tag"
+        fi
+    fi
+    
+    print_info "创建tag: v$version"
     local tag_name=$(create_tag "$version")
+    print_success "tag $tag_name 创建成功"
     
     # 提交更改（如果有）
     local has_commit="false"
