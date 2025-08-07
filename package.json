@@ -1,6 +1,6 @@
 {
   "name": "ccman",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Claude Code Manager - A TypeScript tool to manage Claude Code API configurations",
   "main": "dist/index.js",
   "packageManager": "pnpm@8.15.1",
