@@ -74,12 +74,13 @@ check_github_actions() {
         # 检查最新的workflow运行状态
         local api_response=$(curl -s "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/runs?per_page=1" 2>/dev/null || echo "")
         
-        if [ -n "$api_response" ]; then
+        if [ -n "$api_response" ] && ! echo "$api_response" | grep -q '"message"'; then
             local run_status=$(echo "$api_response" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4 2>/dev/null || echo "unknown")
             local run_conclusion=$(echo "$api_response" | grep -o '"conclusion":"[^"]*"' | head -1 | cut -d'"' -f4 2>/dev/null || echo "null")
             
             case "$run_status" in
                 "completed")
+                    echo  # 换行
                     if [ "$run_conclusion" = "success" ]; then
                         print_success "GitHub Actions 构建成功! ✨"
                         return 0
@@ -156,9 +157,13 @@ check_github_release() {
         
         if [ -n "$release_response" ] && ! echo "$release_response" | grep -q '"message":"Not Found"'; then
             # 检查release状态
-            local release_draft=$(echo "$release_response" | grep -o '"draft":[^,}]*' | cut -d':' -f2 2>/dev/null || echo "true")
+            local release_draft=$(echo "$release_response" | grep -o '"draft":[^,}]*' | cut -d':' -f2 | tr -d ' ' 2>/dev/null || echo "true")
+            
+            # 调试输出
+            # echo "[DEBUG] release_draft = '$release_draft'" >&2
             
             if [ "$release_draft" = "false" ]; then
+                echo  # 换行
                 print_success "GitHub Release v$version 创建成功! 🎉"
                 return 0
             else
@@ -220,7 +225,7 @@ generate_summary() {
     fi
 }
 
-# 主函数: 监控发布状态
+# 主函数: 监控发布状态（只监控NPM和Release）
 monitor_release() {
     local version=$(get_version_info)
     local commit_id=$(get_latest_commit)
@@ -232,8 +237,12 @@ monitor_release() {
     print_info "超时: ${MAX_WAIT_MINUTES} 分钟"
     echo ""
     
-    # 显示监控链接
-    show_monitoring_links "$version" "$commit_id"
+    # 显示监控链接（只显示需要的）
+    print_info "📊 监控链接:"
+    echo "   🔗 NPM Package: https://www.npmjs.com/package/${PACKAGE_NAME}"
+    echo "   🔗 NPM Version: https://www.npmjs.com/package/${PACKAGE_NAME}/v/${version}"
+    echo "   🔗 GitHub Release: https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/v${version}"
+    echo ""
     
     # 检查curl是否可用
     if ! command -v curl &> /dev/null; then
@@ -242,16 +251,11 @@ monitor_release() {
         return 1
     fi
     
-    # 并行监控各个状态
     print_info "开始监控发布状态... (最长等待 ${MAX_WAIT_MINUTES} 分钟)"
     echo ""
     
-    # 检查GitHub Actions
-    check_github_actions
-    local actions_status=$?
-    
     # 检查NPM包发布
-    check_npm_package "$version"  
+    check_npm_package "$version"
     local npm_status=$?
     
     # 检查GitHub Release
@@ -259,7 +263,31 @@ monitor_release() {
     local release_status=$?
     
     # 生成总结报告
-    generate_summary "$version" $actions_status $npm_status $release_status
+    echo ""
+    echo "📋 发布监控总结"
+    echo "================"
+    echo "   版本: v$version"
+    echo "   NPM 包发布: $(get_status_icon $npm_status)"
+    echo "   GitHub Release: $(get_status_icon $release_status)"
+    echo ""
+    
+    # 结果判断
+    if [ $npm_status -eq 0 ] && [ $release_status -eq 0 ]; then
+        print_success "🎉 发布完成！NPM包和GitHub Release都已正常发布"
+        return 0
+    elif [ $npm_status -eq 2 ] || [ $release_status -eq 2 ]; then
+        print_warning "⚠️ 发布监控超时 (${MAX_WAIT_MINUTES}分钟)，请手动检查:"
+        if [ $npm_status -eq 2 ]; then
+            echo "   • NPM包状态: https://www.npmjs.com/package/${PACKAGE_NAME}/v/${version}"
+        fi
+        if [ $release_status -eq 2 ]; then
+            echo "   • GitHub Release: https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/v${version}"
+        fi
+        return 2
+    else
+        print_warning "⚠️ 发布部分失败，请手动检查上述链接"
+        return 1
+    fi
 }
 
 # 如果直接运行此脚本
