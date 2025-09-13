@@ -1,18 +1,16 @@
-# CCM - Claude Code Manager
+# CCM - Claude Code Manager v2.0
 
-基于 TypeScript 的命令行工具，通过**独立配置文件进行安全的 Shell 集成**，管理 Claude Code API 配置。
+基于 TypeScript 的命令行工具，通过**直接 settings.json 集成**和**智能语言支持**管理多个 Claude Code API 供应商配置。
 
 > [English Documentation](./README.md) | **中文文档**
 
-## ✨ 特性
+## ✨ v2.0 新特性
 
-✅ **环境组管理** - 添加、删除、切换 Claude Code 环境  
-✅ **安全的 Shell 集成** - 使用独立的 `~/.ccman/.ccmanrc` 文件避免修改用户配置  
-✅ **交互式 Source 控制** - 选择手动或自动 source，附带风险警告  
-✅ **类型安全** - 完整的 TypeScript 实现，严格类型检查  
-✅ **交互式 CLI** - 用户友好的命令，彩色输出和 inquirer 提示  
-✅ **多 Shell 支持** - 支持 bash、zsh 和 fish  
-✅ **完整工作流** - 从设置到使用的无缝流程  
+🌍 **智能语言支持** - 自动检测系统语言或引导首次运行设置  
+🔧 **直接 Claude 集成** - 直接修改 `~/.claude/settings.json`，无需 shell 变量  
+📁 **供应商管理** - 存储和切换多个 API 供应商配置  
+🎯 **交互式菜单系统** - 支持连续操作的导航选项  
+⚡ **零配置体验** - 开箱即用的智能默认设置  
 
 ## 🚀 快速开始
 
@@ -26,307 +24,347 @@ npm install -g ccman
 npm install && npm run build
 ```
 
+### 首次运行体验
+
+```bash
+# 启动 CCM（首次运行）
+ccman
+
+🌍 Welcome to CCM! / 欢迎使用 CCM!
+
+This is your first time running CCM.
+这是您首次运行 CCM。
+
+? Please choose your preferred language:
+? 请选择您偏好的语言：
+❯ 🇨🇳 中文 (Chinese)  
+  🇺🇸 English
+  🌐 基于系统自动检测 (Auto-detect based on system)
+
+✓ 语言已设置为中文
+✓ 您可以稍后使用以下命令更改：ccman lang set <zh|en|auto>
+```
+
 ### 基本用法
 
 ```bash
-# 交互式设置（推荐）
-ccman config
+# 交互式主菜单（推荐）
+ccman
 
-# 或直接添加环境
-ccman add default https://api.anthropic.com your-api-key
-
-# 列出所有环境
+# 列出所有供应商
 ccman ls
 
-# 切换环境（支持 source 选项）
-ccman use default
+# 直接添加供应商  
+ccman add <id> <name> <baseUrl> [apiKey]
 
-# 显示当前环境
-ccman current
+# 切换供应商
+ccman use <id>
+
+# 删除供应商
+ccman rm <id>
 ```
+
+## 🌐 语言管理
+
+### 语言命令
+```bash
+ccman lang                    # 显示当前语言设置
+ccman lang set zh             # 设置为中文
+ccman lang set en             # 设置为英文  
+ccman lang set auto           # 基于系统自动检测
+ccman lang reset              # 重置为首次运行状态
+```
+
+### 支持的语言
+- **中文 (zh)** - 完整中文界面
+- **英文 (en)** - Full English interface
+- **自动检测** - 基于系统 `LANG` 环境变量
+
+### 语言检测逻辑
+- 英文环境 (`en-*`) → 英文界面
+- 其他环境（包括 `zh-*`、未设置等）→ 中文界面
+- 随时可手动覆盖
 
 ## 📖 命令参考
 
-### 核心环境管理
+### 核心供应商管理
 ```bash
-ccman add <name> <baseUrl> [apiKey]     # 添加环境（未提供 API key 时交互输入）
-ccman remove <name>                     # 删除环境组
-ccman use <name>                        # 切换环境（支持 source 交互）
-ccman list|ls                           # 列出所有环境（* = 当前环境）
-ccman current                           # 显示当前环境详情
-ccman clear|clearall                    # 清除所有环境和 Shell 集成（危险操作）
+ccman                              # 交互式菜单（默认）
+ccman add <id> <name> <url> [key]  # 添加新供应商
+ccman use <id>                     # 切换到供应商
+ccman ls                           # 列出所有供应商
+ccman ls --current                 # 显示当前供应商详情
+ccman ls --brief                   # 简洁供应商列表
+ccman rm <id>                      # 删除供应商
+ccman clear                        # 删除所有供应商（危险操作）
 ```
 
-### 交互式配置
+### 语言管理
 ```bash
-ccman config                            # 完整交互式配置向导
-                                     # - 添加/切换/编辑/删除环境
-                                     # - 无环境时引导设置
-                                     # - 完整菜单驱动界面
+ccman lang                         # 显示当前语言
+ccman lang set <zh|en|auto>        # 设置语言偏好
+ccman lang reset                   # 重置为首次运行状态
 ```
 
-### 高级操作
+## 🎯 交互式体验
+
+### 主菜单导航
 ```bash
-ccman status                            # 显示详细 CCM 统计信息
-ccman test [name]                       # 测试环境配置
-ccman env                               # 生成 shell 导出脚本
+$ ccman
+
+? 您想要执行什么操作？
+❯ 切换供应商
+  添加新供应商
+  更新供应商  
+  删除供应商
+  显示详细状态
+  退出
+
+# 每次操作后：
+? 是否要执行其他操作？ (Y/n)
 ```
 
-### Shell 集成选项
+### 供应商添加流程
 ```bash
-# 禁用自动 shell 写入
-ccman add <name> <url> --no-auto-write  
-ccman use <name> --no-auto-write        
+$ ccman add
 
-# 强制自动 source（有风险）
-ccman use <name> --auto-source          
+? 供应商ID（唯一标识符）: my-provider
+? 供应商名称: 我的自定义API
+? 描述: 我的自定义Claude API
+? 基础URL: https://api.mycustom.com
+? API密钥: ****************
+
+✓ 供应商添加成功
+? 将"我的自定义API"设为当前供应商？ (Y/n)
+✓ 供应商切换成功
+Claude Code 配置已成功更新！
 ```
 
-## 🔧 交互式工作流
+## 🔧 架构概览
 
-### 1. 添加环境的智能使用流程
+### 直接 Claude 集成
+CCM v2.0 直接修改您的 Claude Code 设置文件：
 
-```bash
-$ ccman add myenv https://api.example.com
-? 输入 API Key: ****************
-✓ 已添加环境组 "myenv"
-  Base URL: https://api.example.com
-  创建时间: 2025-08-06 11:45:30
-
-? 将 "myenv" 设为当前环境? 是
-✓ 环境变量已写入 /home/user/.ccman/.ccmanrc
-
-? 如何应用环境变量?
-❯ 手动 - 我将重启终端或手动 source（推荐）
-  自动 source - 尝试自动 source（可能在某些环境下不工作）
-
-> 手动
-要应用更改，请重启终端或运行:
-source ~/.bashrc (或 ~/.zshrc)
-```
-
-### 2. 交互式配置菜单
-
-```bash
-$ ccman config
-? 你想做什么?
-❯ 切换环境
-  添加新环境  
-  编辑环境
-  删除环境
-  显示当前状态
-
-> 添加新环境
-? 环境名称: staging
-? Base URL: https://staging-api.example.com
-? API Key: ****************
-✓ 已添加环境 "staging"
-```
-
-### 3. 环境切换与 Source 控制
-
-```bash
-$ ccman use production  
-✓ 已切换到环境 "production"
-  Base URL: https://api.anthropic.com
-✓ 环境变量已写入 /home/user/.ccman/.ccmanrc
-
-? 如何应用环境变量?
-  手动 - 我将重启终端或手动 source（推荐）
-❯ 自动 source - 尝试自动 source（可能在某些环境下不工作）
-
-> 自动 source
-⚠️  尝试自动 source - 这可能在某些终端环境下不工作
-✓ Shell 配置已成功 source
-```
-
-## 🛡️ 安全的 Shell 集成架构
-
-### 工作原理
-
-CCM 使用**双层架构**进行安全的 shell 集成：
-
-1. **独立配置文件**：`~/.ccman/.ccmanrc`
-   ```bash
-   # CCM (Claude Code Manager) Environment Variables - Auto Generated
-   # Generated at: 2025-08-06 11:45:30
-   # Environment: production
-   export ANTHROPIC_BASE_URL="https://api.anthropic.com"
-   export ANTHROPIC_AUTH_TOKEN="your-api-key"
-   # End CCM Environment Variables
-   ```
-
-2. **最小 Shell 引用**：在 `.bashrc`/`.zshrc` 中添加一行引用
-   ```bash
-   # CCM (Claude Code Manager) - Auto Generated Reference
-   [ -f "/home/user/.ccman/.ccmanrc" ] && source "/home/user/.ccman/.ccmanrc"
-   # End CCM Reference
-   ```
-
-### 优势
-- ✅ **非侵入性**：只在 shell 配置中添加一行引用
-- ✅ **安全**：用户现有的 shell 配置保持不变
-- ✅ **清洁**：易于完全移除
-- ✅ **隔离**：所有 CCM 变量在单独文件中
-
-### 管理的环境变量
-- `ANTHROPIC_BASE_URL` - API 基础 URL
-- `ANTHROPIC_AUTH_TOKEN` - API 认证令牌
-
-## 📊 配置结构
-
-CCM 在 `~/.ccman/config.json` 中存储配置：
-
+**修改前（CCM 管理）**：
 ```json
 {
-  "current": "production",
-  "environments": {
-    "production": {
-      "name": "production",
-      "baseUrl": "https://api.anthropic.com",
-      "apiKey": "your-key",
-      "createdAt": "2025-08-06T03:45:30.000Z",
-      "lastUsed": "2025-08-06T03:50:15.000Z"
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "old-token",
+    "ANTHROPIC_BASE_URL": "https://old-api.com"
+  }
+}
+```
+
+**修改后（CCM 更新）**：
+```json
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "new-token", 
+    "ANTHROPIC_BASE_URL": "https://new-api.com",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1
+  },
+  "permissions": {
+    "allow": [],
+    "deny": []
+  },
+  "apiKeyHelper": "echo 'new-token'"
+}
+```
+
+### 供应商存储结构
+供应商存储在 `~/.ccman/providers/`：
+
+```
+~/.ccman/
+├── config.json          # CCM 主配置
+├── providers/            # 单独的供应商配置
+│   ├── anthropic.json
+│   ├── my-provider.json
+│   └── staging.json
+```
+
+### 配置合并
+CCM 只更新 Claude 相关的键，保留您的现有设置：
+- ✅ 保留：`mcpServers`、`model`、`customUserConfig` 等
+- 🔄 更新：`env.ANTHROPIC_*`、`permissions`、`apiKeyHelper`
+
+## 📊 供应商配置
+
+### 供应商结构
+```json
+{
+  "name": "Anthropic Official",
+  "description": "Anthropic 官方 API 配置", 
+  "config": {
+    "env": {
+      "ANTHROPIC_AUTH_TOKEN": "your-token",
+      "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1
     },
-    "staging": {
-      "name": "staging", 
-      "baseUrl": "https://staging-api.example.com",
-      "apiKey": "staging-key",
-      "createdAt": "2025-08-06T03:46:00.000Z"
+    "permissions": { "allow": [], "deny": [] },
+    "apiKeyHelper": "echo 'your-token'"
+  },
+  "metadata": {
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z", 
+    "usageCount": 5
+  }
+}
+```
+
+### 主配置
+```json
+{
+  "currentProvider": "anthropic",
+  "claudeConfigPath": "/Users/user/.claude/settings.json",
+  "providers": {
+    "anthropic": {
+      "name": "Anthropic Official",
+      "configFile": "anthropic.json",
+      "lastUsed": "2025-01-15T10:30:00.000Z"
     }
   },
   "settings": {
-    "autoWriteShell": true,
-    "preferredShell": "auto",
-    "shellConfigPath": null
+    "language": "zh",
+    "firstRun": false
+  },
+  "metadata": {
+    "version": "2.0.0",
+    "createdAt": "2025-01-15T10:00:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z"
   }
 }
 ```
 
 ## 💡 使用示例
 
-### 完整设置工作流
+### 完整首次设置
 ```bash
-# 从交互式设置开始
-ccman config
-# → 引导添加第一个环境
-# → 自动提示设为当前环境
-# → 选择 source 方法（手动/自动）
+# 首次运行 - 语言选择
+ccman
+# → 语言选择向导
+# → 未找到供应商，引导创建
+# → 自动更新 Claude 设置
 
-# 添加更多环境
-ccman add staging https://staging.example.com
-ccman add dev https://dev.example.com
+# 添加其他供应商
+ccman add staging "测试API" https://staging-api.com
+ccman add dev "开发环境" https://dev-api.com
 
-# 完整交互切换
+# 在供应商间切换
+ccman use staging
 ccman use dev
-# → 写入到 ~/.ccman/.ccmanrc
-# → 询问 source 方法
-# → 提供清晰指导
-
-# 检查状态
-ccman status
-# CCM 状态:
-# 总环境数: 3
-# 当前环境: dev
-# Shell 集成: 已启用
+ccman use anthropic
 ```
 
-### 手动环境变量设置
+### 多供应商工作流
 ```bash
-# 如果你偏好手动控制
-ccman use prod --no-auto-write
-ccman env  # 显示导出脚本
-source <(ccman env)  # 手动应用
+# 列出所有供应商的详情
+ccman ls
+# * Anthropic Official (anthropic) - https://api.anthropic.com
+#   测试API (staging) - https://staging-api.com  
+#   开发环境 (dev) - https://dev-api.com
+
+# 切换到测试环境
+ccman use staging
+# ✓ 供应商切换成功
+# ✓ Claude Code 配置已成功更新！
+
+# 检查当前供应商
+ccman ls --current
+# 当前供应商: 测试API (staging)
+# 基础URL: https://staging-api.com
+# 使用次数: 3 次
+# 最后更新: 2025-01-15 10:30:15
 ```
 
-### 高级用法
+### 语言切换
 ```bash
-# 测试环境连接性
-ccman test production
+# 检查当前语言
+ccman lang
+# 当前语言： 中文 (Chinese)
 
-# 强制自动 source（有风险警告）
-ccman use staging --auto-source
+# 切换到英文
+ccman lang set en
+# ✓ 语言切换成功
+# Current language: English
 
-# 编辑现有环境
-ccman config  # → 编辑环境 → 选择 → 更新值
-
-# 完全重置（删除所有内容 - 环境、shell 配置）
-ccman clear   # 需要交互确认
+# 设置自动检测
+ccman lang set auto
+# ✓ 语言切换成功  
+# 当前语言： 自动检测 (Auto-detect)
+# 自动检测结果: English
 ```
 
-## ⚙️ 开发
+## 🛠️ 开发设置
+
+### 开发环境
+CCM 支持隔离的开发环境：
 
 ```bash
-# 开发模式（文件监听）
+# 设置开发路径
+export CCM_CONFIG_DIR=".ccman-dev"
+export CLAUDE_CONFIG_PATH="$HOME/.claude/settings-dev.json"
+
+# 使用开发模式
 npm run dev
 
-# 构建 TypeScript
+# 生产环境构建
 npm run build
 
-# 清理构建产物  
-npm run clean
-
-# 运行构建后的 CLI
+# 测试构建版本
 npm start
 ```
 
-## 🎯 命令行选项
-
-### 全局选项
-所有命令都支持标准 CLI 约定：
-- `-h, --help` - 显示命令帮助
-- `-V, --version` - 显示版本
-
-### Add 命令选项
+### 开发命令
 ```bash
-ccman add <name> <baseUrl> [apiKey] [选项]
-
-选项:
-  --no-auto-write    不自动写入 shell 配置
-```
-
-### Use 命令选项  
-```bash
-ccman use <name> [选项]
-
-选项:
-  --no-auto-write    不自动写入 shell 配置
-  --auto-source      自动 source shell 配置（有风险）
+npm run dev                 # 使用 tsx 的开发模式
+npm run build              # TypeScript 编译  
+npm run start              # 运行构建后的 CLI
+npm run clean              # 删除 dist/ 目录
+npm run lint               # ESLint TypeScript 文件检查
+npm test                   # 运行测试（passWithNoTests）
 ```
 
 ## 🔍 故障排除
 
-### 环境变量未应用
+### 供应商问题
 ```bash
-# 检查 .ccmanrc 是否存在
-ls -la ~/.ccman/.ccmanrc
+# 供应商不工作？
+ccman ls --current         # 检查当前供应商详情
+ccman use <供应商id>        # 重新应用供应商配置
 
-# 检查 shell 引用
-grep "ccman" ~/.bashrc ~/.zshrc
-
-# 手动应用
-source ~/.ccman/.ccmanrc
-
-# 或重新生成
-ccman use <当前环境>
+# 设置未应用？
+# 检查 ~/.claude/settings.json 的更新
+cat ~/.claude/settings.json | grep ANTHROPIC
 ```
 
-### Shell 集成问题
+### 语言问题  
 ```bash
-# 检查 shell 类型检测
-ccman status
+# 语言未切换？
+ccman lang                 # 检查当前设置
+ccman lang set zh          # 强制中文
+ccman lang set en          # 强制英文
 
-# 强制手动设置
-ccman use <环境> --no-auto-write
-source <(ccman env)
+# 首次运行问题？
+ccman lang reset           # 重置为首次运行状态
+ccman                      # 重新启动进行语言选择
+```
+
+### 配置问题
+```bash  
+# 配置损坏？
+ccman clear                # 删除所有（需确认）
+ccman                      # 重新开始
+
+# 开发环境隔离
+export CCM_CONFIG_DIR=".ccman-dev"  # 独立开发配置
 ```
 
 ## 📋 要求
 
-- Node.js >= 16.0.0  
-- TypeScript 5.0+
-- 支持的 shell: bash, zsh, fish
-- 操作系统: Linux, macOS, Windows (WSL)
+- **Node.js** >= 16.0.0
+- **Claude Code** 已安装且支持 settings.json
+- **操作系统**: Linux, macOS, Windows (WSL)
 
 ## 📄 许可证
 
@@ -334,28 +372,23 @@ MIT 许可证 - 详见 LICENSE 文件。
 
 ---
 
-## 🚀 从设置到使用 - 完整流程
+## 🚀 从 v1.x 迁移
 
-```bash
-# 1. 交互式首次设置
-ccman config
-  → 无环境？引导创建
-  → 设为当前环境？是
-  → Source 方法？手动/自动
+CCM v2.0 使用完全不同的架构：
 
-# 2. 添加更多环境  
-ccman add dev https://dev.api.com
-  → 交互式 API key 输入
-  → 设为当前环境？是/否
-  → 如选是则完整 source 交互
+### v1.x（Shell 集成）
+- 修改 shell 配置文件
+- 使用环境变量
+- 复杂的 shell 集成
 
-# 3. 随时切换，完全控制
-ccman use production
-  → 安全 .ccmanrc 更新
-  → Source 方法选择
-  → 清晰指导
+### v2.0（直接集成）  
+- 直接修改 `~/.claude/settings.json`
+- 基于供应商的配置
+- 语言支持
+- 简化、更安全的方法
 
-# 4. 一切正常工作！ ✨
-```
+**迁移**：v1.x 和 v2.x 不兼容。如果升级，请使用 `ccman clear` 重新开始。
 
-*CCM - 让 Claude Code API 配置管理变得安全、交互式且用户友好。*
+---
+
+*CCM v2.0 - 智能、多语言、无缝的 Claude Code 供应商管理。*

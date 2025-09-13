@@ -46,6 +46,10 @@ export interface CCMConfig {
       lastUsed: string;
     };
   };
+  settings: {
+    language: 'zh' | 'en' | 'auto' | null;
+    firstRun: boolean;
+  };
   metadata: {
     version: string;
     createdAt: string;
@@ -85,4 +89,13 @@ export interface OperationResult {
   success: boolean;
   message: string;
   error?: string;
+}
+
+/**
+ * 语言配置统计
+ */
+export interface LanguageStats {
+  current: 'zh' | 'en' | 'auto';
+  isFirstRun: boolean;
+  autoDetected?: string;
 }

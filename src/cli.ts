@@ -5,17 +5,22 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { ProviderManager } from './providers/ProviderManager';
 import { AddProviderOptions } from './types';
+import { LanguageManager } from './i18n/LanguageManager';
+import { createLanguageCommands } from './commands/lang';
+import { getPackageVersion } from './utils/version';
 
 const program = new Command();
 const providerManager = new ProviderManager();
+const languageManager = new LanguageManager();
 
 // 询问是否继续操作
 async function askToContinue(): Promise<boolean> {
+  const messages = await languageManager.getMessages();
   const answer = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'continue',
-      message: 'Would you like to perform another operation?',
+      message: messages.forms.continueOperation,
       default: true
     }
   ]);
@@ -24,10 +29,16 @@ async function askToContinue(): Promise<boolean> {
 
 // 交互式配置菜单
 async function showInteractiveMenu(): Promise<void> {
+  // 处理首次运行语言设置
+  await languageManager.handleFirstRun();
+  
+  // 获取当前语言的消息
+  const messages = await languageManager.getMessages();
+  
   // 设置 Ctrl+C 优雅退出处理
   process.removeAllListeners('SIGINT');
   process.on('SIGINT', () => {
-    console.log(chalk.yellow('\n\nOperation cancelled by user. Goodbye!'));
+    console.log(chalk.yellow(messages.interruptMessage));
     process.exit(0);
   });
 
@@ -39,37 +50,37 @@ async function showInteractiveMenu(): Promise<void> {
       const providers = await providerManager.listProviders();
       
       if (providers.length === 0) {
-        console.log(chalk.yellow('No providers found. Let\'s create your first one.'));
+        console.log(chalk.yellow(messages.noProvidersFound));
         
         const answers = await inquirer.prompt([
           { 
             type: 'input', 
             name: 'id', 
-            message: 'Provider ID (unique identifier):', 
+            message: messages.forms.providerId, 
             default: 'anthropic' 
           },
           { 
             type: 'input', 
             name: 'name', 
-            message: 'Provider name:', 
+            message: messages.forms.providerName, 
             default: 'Anthropic Official' 
           },
           { 
             type: 'input', 
             name: 'description', 
-            message: 'Description:', 
+            message: messages.forms.description, 
             default: 'Official Anthropic API' 
           },
           { 
             type: 'input', 
             name: 'baseUrl', 
-            message: 'Base URL:', 
+            message: messages.forms.baseUrl, 
             default: 'https://api.anthropic.com' 
           },
           { 
             type: 'password', 
             name: 'apiKey', 
-            message: 'API Key:', 
+            message: messages.forms.apiKey, 
             mask: '*' 
           }
         ]);
@@ -107,20 +118,20 @@ async function showInteractiveMenu(): Promise<void> {
         {
           type: 'list',
           name: 'action',
-          message: 'What would you like to do?',
+          message: messages.mainMenuTitle,
           choices: [
-            { name: 'Switch provider', value: 'switch' },
-            { name: 'Add new provider', value: 'add' },
-            { name: 'Update provider', value: 'update' },
-            { name: 'Remove provider', value: 'remove' },
-            { name: 'Show detailed status', value: 'status' },
-            { name: 'Exit', value: 'exit' }
+            { name: messages.mainMenuOptions.switchProvider, value: 'switch' },
+            { name: messages.mainMenuOptions.addProvider, value: 'add' },
+            { name: messages.mainMenuOptions.updateProvider, value: 'update' },
+            { name: messages.mainMenuOptions.removeProvider, value: 'remove' },
+            { name: messages.mainMenuOptions.showStatus, value: 'status' },
+            { name: messages.mainMenuOptions.exit, value: 'exit' }
           ]
         }
       ]);
 
       if (action.action === 'exit') {
-        console.log(chalk.cyan('Thank you for using CCM. Goodbye!'));
+        console.log(chalk.cyan(messages.exitMessage));
         break;
       }
 
@@ -287,7 +298,7 @@ async function showInteractiveMenu(): Promise<void> {
 program
   .name('ccman')
   .description('Claude Code Manager - Manage Claude API configurations')
-  .version('2.0.0')
+  .version(getPackageVersion())
   .hook('preAction', () => {
     // 开发模式提示
     if (process.env.CCM_CONFIG_DIR || process.env.CLAUDE_CONFIG_PATH) {
@@ -555,6 +566,9 @@ program
       process.exit(1);
     }
   });
+
+// 添加语言管理命令
+program.addCommand(createLanguageCommands());
 
 // 解析命令行参数
 program.parse(process.argv);

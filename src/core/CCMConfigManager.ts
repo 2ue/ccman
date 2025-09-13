@@ -2,6 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
 import { CCMConfig, ProviderConfig } from '../types';
+import { getPackageVersion } from '../utils/version';
 
 /**
  * CCM配置管理器
@@ -32,8 +33,12 @@ export class CCMConfigManager {
         currentProvider: '',
         claudeConfigPath: process.env.CLAUDE_CONFIG_PATH || path.join(os.homedir(), '.claude', 'settings-dev.json'),
         providers: {},
+        settings: {
+          language: null,
+          firstRun: true
+        },
         metadata: {
-          version: '2.0.0',
+          version: getPackageVersion(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -58,6 +63,14 @@ export class CCMConfigManager {
       // 确保providers字段存在
       if (!config.providers) {
         config.providers = {};
+      }
+
+      // 确保settings字段存在（兼容旧版本）
+      if (!config.settings) {
+        config.settings = {
+          language: null,
+          firstRun: true
+        };
       }
       
       return config;

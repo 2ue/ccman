@@ -1,18 +1,16 @@
-# CCM - Claude Code Manager
+# CCM - Claude Code Manager v2.0
 
-A TypeScript-based command-line tool to manage Claude Code API configurations with **safe shell integration** through independent configuration files.
+A TypeScript-based command-line tool to manage multiple Claude Code API provider configurations with **direct settings.json integration** and **intelligent language support**.
 
 > **English Documentation** | [中文文档](./README_zh.md)
 
-## ✨ Features
+## ✨ New in v2.0
 
-✅ **Environment Group Management** - Add, remove, switch between Claude Code environments  
-✅ **Safe Shell Integration** - Uses independent `~/.ccman/.ccmanrc` file to avoid modifying user configs  
-✅ **Interactive Source Control** - Choose manual or automatic source with risk warnings  
-✅ **Type Safety** - Full TypeScript implementation with strict typing  
-✅ **Interactive CLI** - User-friendly commands with colored output and inquirer prompts  
-✅ **Multi-Shell Support** - Works with bash, zsh, and fish  
-✅ **Complete Workflow** - From setup to usage in one seamless flow  
+🌍 **Intelligent Language Support** - Auto-detects system language or guides first-run setup  
+🔧 **Direct Claude Integration** - Modifies `~/.claude/settings.json` directly, no shell variables  
+📁 **Provider Management** - Store and switch between multiple API provider configurations  
+🎯 **Interactive Menu System** - Continuous operation support with navigation options  
+⚡ **Zero-Config Experience** - Works out of the box with smart defaults  
 
 ## 🚀 Quick Start
 
@@ -26,307 +24,347 @@ npm install -g ccman
 npm install && npm run build
 ```
 
+### First Run Experience
+
+```bash
+# Start CCM (first time)
+ccman
+
+🌍 Welcome to CCM! / 欢迎使用 CCM!
+
+This is your first time running CCM.
+这是您首次运行 CCM。
+
+? Please choose your preferred language:
+? 请选择您偏好的语言：
+❯ 🇨🇳 中文 (Chinese)  
+  🇺🇸 English
+  🌐 Auto-detect based on system
+
+✓ Language set to Chinese
+✓ You can change this later with: ccman lang set <zh|en|auto>
+```
+
 ### Basic Usage
 
 ```bash
-# Interactive setup (recommended)
-ccman config
+# Interactive main menu (recommended)
+ccman
 
-# Or add environment directly
-ccman add default https://api.anthropic.com your-api-key
-
-# List all environments
+# List all providers
 ccman ls
 
-# Switch to an environment with source options
-ccman use default
+# Add provider directly  
+ccman add <id> <name> <baseUrl> [apiKey]
 
-# Show current environment
-ccman current
+# Switch provider
+ccman use <id>
+
+# Remove provider
+ccman rm <id>
 ```
+
+## 🌐 Language Management
+
+### Language Commands
+```bash
+ccman lang                    # Show current language setting
+ccman lang set zh             # Set to Chinese
+ccman lang set en             # Set to English  
+ccman lang set auto           # Auto-detect based on system
+ccman lang reset              # Reset to first-run state
+```
+
+### Supported Languages
+- **Chinese (zh)** - 完整中文界面
+- **English (en)** - Full English interface
+- **Auto-detect** - Based on system `LANG` environment variable
+
+### Language Detection Logic
+- English environments (`en-*`) → English interface
+- Other environments (including `zh-*`, unset) → Chinese interface
+- Manual override available anytime
 
 ## 📖 Commands Reference
 
-### Core Environment Management
+### Core Provider Management
 ```bash
-ccman add <name> <baseUrl> [apiKey]     # Add environment (interactive API key if not provided)
-ccman remove <name>                     # Remove environment group
-ccman use <name>                        # Switch environment with source interaction
-ccman list|ls                           # List all environments (* = current)
-ccman current                           # Show current environment details
-ccman clear|clearall                    # Clear ALL environments and shell integration (DESTRUCTIVE)
+ccman                              # Interactive menu (default)
+ccman add <id> <name> <url> [key]  # Add new provider
+ccman use <id>                     # Switch to provider
+ccman ls                           # List all providers
+ccman ls --current                 # Show current provider details
+ccman ls --brief                   # Brief provider list
+ccman rm <id>                      # Remove provider
+ccman clear                        # Remove ALL providers (destructive)
 ```
 
-### Interactive Configuration
+### Language Management
 ```bash
-ccman config                            # Full interactive configuration wizard
-                                     # - Add/switch/edit/remove environments
-                                     # - No existing environments? Guided setup
-                                     # - Complete menu-driven interface
+ccman lang                         # Show current language
+ccman lang set <zh|en|auto>        # Set language preference
+ccman lang reset                   # Reset to first-run state
 ```
 
-### Advanced Operations
+## 🎯 Interactive Experience
+
+### Main Menu Navigation
 ```bash
-ccman status                            # Show detailed CCM statistics
-ccman test [name]                       # Test environment configuration
-ccman env                               # Generate shell export script
-```
+$ ccman
 
-### Shell Integration Options
-```bash
-# Disable automatic shell writing
-ccman add <name> <url> --no-auto-write  
-ccman use <name> --no-auto-write        
-
-# Force automatic source (risky)
-ccman use <name> --auto-source          
-```
-
-## 🔧 Interactive Workflows
-
-### 1. Adding Environment with Smart Use Flow
-
-```bash
-$ ccman add myenv https://api.example.com
-? Enter API Key: ****************
-✓ Added environment group "myenv"
-  Base URL: https://api.example.com
-  Created: 2025-08-06 11:45:30
-
-? Set "myenv" as current environment? Yes
-✓ Environment variables written to /home/user/.ccman/.ccmanrc
-
-? How would you like to apply the environment variables?
-❯ Manual - I will restart terminal or source manually (Recommended)
-  Auto-source - Try to source automatically (May not work in all environments)
-
-> Manual
-To apply changes, restart your terminal or run:
-source ~/.bashrc (or ~/.zshrc)
-```
-
-### 2. Interactive Configuration Menu
-
-```bash
-$ ccman config
 ? What would you like to do?
-❯ Switch environment
-  Add new environment  
-  Edit environment
-  Remove environment
-  Show current status
+❯ Switch provider
+  Add new provider
+  Update provider  
+  Remove provider
+  Show detailed status
+  Exit
 
-> Add new environment
-? Environment name: staging
-? Base URL: https://staging-api.example.com
-? API Key: ****************
-✓ Added environment "staging"
+# After each operation:
+? Would you like to perform another operation? (Y/n)
 ```
 
-### 3. Environment Switching with Source Control
-
+### Provider Addition Flow
 ```bash
-$ ccman use production  
-✓ Switched to environment "production"
-  Base URL: https://api.anthropic.com
-✓ Environment variables written to /home/user/.ccman/.ccmanrc
+$ ccman add
 
-? How would you like to apply the environment variables?
-  Manual - I will restart terminal or source manually (Recommended)
-❯ Auto-source - Try to source automatically (May not work in all environments)
+? Provider ID: my-provider
+? Provider name: My Custom API
+? Description: My custom Claude API
+? Base URL: https://api.mycustom.com
+? API Key: ****************
 
-> Auto-source
-⚠️  Attempting auto-source - this may not work in all terminal environments
-✓ Shell configuration sourced successfully
+✓ Provider added successfully
+? Set "My Custom API" as current provider? (Y/n)
+✓ Provider switched successfully
+Claude Code configuration has been updated successfully!
 ```
 
-## 🛡️ Safe Shell Integration Architecture
+## 🔧 Architecture Overview
 
-### How It Works
+### Direct Claude Integration
+CCM v2.0 directly modifies your Claude Code settings file:
 
-CCM uses a **two-tier architecture** for safe shell integration:
-
-1. **Independent Configuration File**: `~/.ccman/.ccmanrc`
-   ```bash
-   # CCM (Claude Code Manager) Environment Variables - Auto Generated
-   # Generated at: 2025-08-06 11:45:30
-   # Environment: production
-   export ANTHROPIC_BASE_URL="https://api.anthropic.com"
-   export ANTHROPIC_AUTH_TOKEN="your-api-key"
-   # End CCM Environment Variables
-   ```
-
-2. **Minimal Shell Reference**: One line added to `.bashrc`/`.zshrc`
-   ```bash
-   # CCM (Claude Code Manager) - Auto Generated Reference
-   [ -f "/home/user/.ccman/.ccmanrc" ] && source "/home/user/.ccman/.ccmanrc"
-   # End CCM Reference
-   ```
-
-### Benefits
-- ✅ **Non-invasive**: Only adds one reference line to shell config
-- ✅ **Safe**: User's existing shell config remains untouched
-- ✅ **Clean**: Easy to remove completely
-- ✅ **Isolated**: All CCM variables in separate file
-
-### Environment Variables Managed
-- `ANTHROPIC_BASE_URL` - API base URL
-- `ANTHROPIC_AUTH_TOKEN` - API authentication token
-
-## 📊 Configuration Structure
-
-CCM stores configuration in `~/.ccman/config.json`:
-
+**Before (CCM manages)**:
 ```json
 {
-  "current": "production",
-  "environments": {
-    "production": {
-      "name": "production",
-      "baseUrl": "https://api.anthropic.com",
-      "apiKey": "your-key",
-      "createdAt": "2025-08-06T03:45:30.000Z",
-      "lastUsed": "2025-08-06T03:50:15.000Z"
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "old-token",
+    "ANTHROPIC_BASE_URL": "https://old-api.com"
+  }
+}
+```
+
+**After (CCM updates)**:
+```json
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "new-token", 
+    "ANTHROPIC_BASE_URL": "https://new-api.com",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1
+  },
+  "permissions": {
+    "allow": [],
+    "deny": []
+  },
+  "apiKeyHelper": "echo 'new-token'"
+}
+```
+
+### Provider Storage Structure
+Providers are stored in `~/.ccman/providers/`:
+
+```
+~/.ccman/
+├── config.json          # Main CCM configuration
+├── providers/            # Individual provider configs
+│   ├── anthropic.json
+│   ├── my-provider.json
+│   └── staging.json
+```
+
+### Configuration Merging
+CCM only updates Claude-specific keys, preserving your existing settings:
+- ✅ Preserves: `mcpServers`, `model`, `customUserConfig`, etc.
+- 🔄 Updates: `env.ANTHROPIC_*`, `permissions`, `apiKeyHelper`
+
+## 📊 Provider Configuration
+
+### Provider Structure
+```json
+{
+  "name": "Anthropic Official",
+  "description": "Official Anthropic API Configuration", 
+  "config": {
+    "env": {
+      "ANTHROPIC_AUTH_TOKEN": "your-token",
+      "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1
     },
-    "staging": {
-      "name": "staging", 
-      "baseUrl": "https://staging-api.example.com",
-      "apiKey": "staging-key",
-      "createdAt": "2025-08-06T03:46:00.000Z"
+    "permissions": { "allow": [], "deny": [] },
+    "apiKeyHelper": "echo 'your-token'"
+  },
+  "metadata": {
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z", 
+    "usageCount": 5
+  }
+}
+```
+
+### Main Configuration
+```json
+{
+  "currentProvider": "anthropic",
+  "claudeConfigPath": "/Users/user/.claude/settings.json",
+  "providers": {
+    "anthropic": {
+      "name": "Anthropic Official",
+      "configFile": "anthropic.json",
+      "lastUsed": "2025-01-15T10:30:00.000Z"
     }
   },
   "settings": {
-    "autoWriteShell": true,
-    "preferredShell": "auto",
-    "shellConfigPath": null
+    "language": "zh",
+    "firstRun": false
+  },
+  "metadata": {
+    "version": "2.0.0",
+    "createdAt": "2025-01-15T10:00:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z"
   }
 }
 ```
 
 ## 💡 Usage Examples
 
-### Complete Setup Workflow
+### Complete First-Time Setup
 ```bash
-# Start with interactive setup
-ccman config
-# → Guided through adding first environment
-# → Automatically prompted to set as current
-# → Choose source method (manual/auto)
+# First run - language selection
+ccman
+# → Language selection wizard
+# → No providers found, guided creation
+# → Automatic Claude settings update
 
-# Add more environments
-ccman add staging https://staging.example.com
-ccman add dev https://dev.example.com
+# Add additional providers
+ccman add staging "Staging API" https://staging-api.com
+ccman add dev "Development" https://dev-api.com
 
-# Switch with full interaction
+# Switch between providers
+ccman use staging
 ccman use dev
-# → Writes to ~/.ccman/.ccmanrc
-# → Asks about sourcing method
-# → Provides clear instructions
-
-# Check status
-ccman status
-# CCM Status:
-# Total environments: 3
-# Current environment: dev
-# Shell integration: Enabled
+ccman use anthropic
 ```
 
-### Manual Environment Variable Setup
+### Multi-Provider Workflow
 ```bash
-# If you prefer manual control
-ccman use prod --no-auto-write
-ccman env  # Shows export script
-source <(ccman env)  # Apply manually
+# List all providers with details
+ccman ls
+# * Anthropic Official (anthropic) - https://api.anthropic.com
+#   Staging API (staging) - https://staging-api.com  
+#   Development (dev) - https://dev-api.com
+
+# Switch to staging for testing
+ccman use staging
+# ✓ Provider switched successfully
+# ✓ Claude Code configuration has been updated successfully!
+
+# Check current provider
+ccman ls --current
+# Current provider: Staging API (staging)
+# Base URL: https://staging-api.com
+# Usage count: 3 times
+# Last updated: 2025-01-15 10:30:15
 ```
 
-### Advanced Usage
+### Language Switching
 ```bash
-# Test environment connectivity
-ccman test production
+# Check current language
+ccman lang
+# Current language: 中文 (Chinese)
 
-# Force auto-source (with risk warning)
-ccman use staging --auto-source
+# Switch to English
+ccman lang set en
+# ✓ Language switched successfully
+# Current language: English
 
-# Edit existing environment
-ccman config  # → Edit environment → Select → Update values
-
-# Complete reset (removes EVERYTHING - environments, shell config)
-ccman clear   # Interactive confirmation required
+# Set auto-detect
+ccman lang set auto
+# ✓ Language switched successfully  
+# Current language: Auto-detect
+# Auto-detected: English
 ```
 
-## ⚙️ Development
+## 🛠️ Development Setup
+
+### Development Environment
+CCM supports isolated development environments:
 
 ```bash
-# Development mode (with file watching)
+# Set development paths
+export CCM_CONFIG_DIR=".ccman-dev"
+export CLAUDE_CONFIG_PATH="$HOME/.claude/settings-dev.json"
+
+# Use development mode
 npm run dev
 
-# Build TypeScript
+# Build for production
 npm run build
 
-# Clean build artifacts  
-npm run clean
-
-# Start built CLI
+# Test built version
 npm start
 ```
 
-## 🎯 Command Line Options
-
-### Global Options
-All commands support standard CLI conventions:
-- `-h, --help` - Show command help
-- `-V, --version` - Show version
-
-### Add Command Options
+### Development Commands
 ```bash
-ccman add <name> <baseUrl> [apiKey] [options]
-
-Options:
-  --no-auto-write    Do not automatically write to shell config
-```
-
-### Use Command Options  
-```bash
-ccman use <name> [options]
-
-Options:
-  --no-auto-write    Do not automatically write to shell config
-  --auto-source      Automatically source shell config (risky)
+npm run dev                 # Development mode with tsx
+npm run build              # TypeScript compilation  
+npm run start              # Run built CLI
+npm run clean              # Remove dist/ directory
+npm run lint               # ESLint TypeScript files
+npm test                   # Run tests (passWithNoTests)
 ```
 
 ## 🔍 Troubleshooting
 
-### Environment Variables Not Applied
+### Provider Issues
 ```bash
-# Check if .ccmanrc exists
-ls -la ~/.ccman/.ccmanrc
+# Provider not working?
+ccman ls --current         # Check current provider details
+ccman use <provider-id>    # Re-apply provider configuration
 
-# Check shell reference
-grep "ccman" ~/.bashrc ~/.zshrc
-
-# Manual application
-source ~/.ccman/.ccmanrc
-
-# Or regenerate
-ccman use <current-env>
+# Settings not applied?
+# Check ~/.claude/settings.json for updates
+cat ~/.claude/settings.json | grep ANTHROPIC
 ```
 
-### Shell Integration Issues
+### Language Issues  
 ```bash
-# Check shell type detection
-ccman status
+# Language not switching?
+ccman lang                 # Check current setting
+ccman lang set zh          # Force Chinese
+ccman lang set en          # Force English
 
-# Force manual setup
-ccman use <env> --no-auto-write
-source <(ccman env)
+# First-run issues?
+ccman lang reset           # Reset to first-run state
+ccman                      # Restart for language selection
+```
+
+### Configuration Issues
+```bash  
+# Corrupt configuration?
+ccman clear                # Remove all (with confirmation)
+ccman                      # Fresh start
+
+# Development isolation
+export CCM_CONFIG_DIR=".ccman-dev"  # Separate dev config
 ```
 
 ## 📋 Requirements
 
-- Node.js >= 16.0.0  
-- TypeScript 5.0+
-- Supported shells: bash, zsh, fish
-- Operating systems: Linux, macOS, Windows (WSL)
+- **Node.js** >= 16.0.0
+- **Claude Code** installed with settings.json support
+- **Operating Systems**: Linux, macOS, Windows (WSL)
 
 ## 📄 License
 
@@ -334,28 +372,23 @@ MIT License - see LICENSE file for details.
 
 ---
 
-## 🚀 From Setup to Usage - Complete Flow
+## 🚀 Migration from v1.x
 
-```bash
-# 1. Interactive first-time setup
-ccman config
-  → No environments? Guided creation
-  → Set as current? Yes
-  → Source method? Manual/Auto
+CCM v2.0 uses a completely different architecture:
 
-# 2. Add more environments  
-ccman add dev https://dev.api.com
-  → Interactive API key input
-  → Set as current? Yes/No
-  → Full source interaction if Yes
+### v1.x (Shell Integration)
+- Modified shell configuration files
+- Used environment variables
+- Complex shell integration
 
-# 3. Switch anytime with full control
-ccman use production
-  → Safe .ccmanrc update
-  → Source method choice
-  → Clear instructions
+### v2.0 (Direct Integration)  
+- Modifies `~/.claude/settings.json` directly
+- Provider-based configuration
+- Language support
+- Simplified, safer approach
 
-# 4. Everything just works! ✨
-```
+**Migration**: v1.x and v2.x are incompatible. Start fresh with `ccman clear` if upgrading.
 
-*CCM - Making Claude Code API configuration management safe, interactive, and user-friendly.*
+---
+
+*CCM v2.0 - Intelligent, multilingual, and seamless Claude Code provider management.*
