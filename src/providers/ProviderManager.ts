@@ -4,8 +4,6 @@ import {
   AddProviderOptions, 
   ProviderListItem, 
   ProviderConfig, 
-  ClaudeSettings,
-  CCMConfig,
   OperationResult 
 } from '../types';
 

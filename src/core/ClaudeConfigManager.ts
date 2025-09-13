@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
-import { ClaudeSettings, CCMConfig, ProviderConfig } from '../types';
+import { ClaudeSettings } from '../types';
 
 /**
  * Claude配置管理器
