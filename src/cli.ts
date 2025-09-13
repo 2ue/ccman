@@ -3,120 +3,400 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { EnvironmentManager } from './config/EnvironmentManager';
-import { AddEnvOptions } from './types';
-import { getCurrentVersion } from './utils/version';
+import { ProviderManager } from './providers/ProviderManager';
+import { AddProviderOptions } from './types';
 
 const program = new Command();
-const envManager = new EnvironmentManager();
+const providerManager = new ProviderManager();
 
-/**
- * 统一的 use 环境交互逻辑
- */
-async function performUseEnvironment(name: string, options?: { 
-  autoWrite?: boolean; 
-  autoSource?: boolean;
-  skipSuccessMessage?: boolean;
-}): Promise<void> {
-  const result = await envManager.useEnvironment(name, {
-    autoWriteShell: options?.autoWrite,
-    autoSource: options?.autoSource
+// 询问是否继续操作
+async function askToContinue(): Promise<boolean> {
+  const answer = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'continue',
+      message: 'Would you like to perform another operation?',
+      default: true
+    }
+  ]);
+  return answer.continue;
+}
+
+// 交互式配置菜单
+async function showInteractiveMenu(): Promise<void> {
+  // 设置 Ctrl+C 优雅退出处理
+  process.removeAllListeners('SIGINT');
+  process.on('SIGINT', () => {
+    console.log(chalk.yellow('\n\nOperation cancelled by user. Goodbye!'));
+    process.exit(0);
   });
-  
-  if (!options?.skipSuccessMessage) {
-    console.log(chalk.green(`✓ Switched to environment "${name}"`));
-    console.log(`  Base URL: ${result.env.baseUrl}`);
-  }
-  
-  if (result.shellWriteResult?.success) {
-    console.log(chalk.green(`✓ Environment variables written to ${result.shellWriteResult.filePath}`));
-    
-    if (options?.autoSource) {
-      if (result.sourceResult?.success) {
-        console.log(chalk.green('✓ Shell configuration sourced automatically'));
-        console.log(chalk.yellow('⚠️  Note: Auto-sourcing may not work in all terminal environments'));
-      } else {
-        console.log(chalk.red(`✗ Failed to source shell config: ${result.sourceResult?.error}`));
-        console.log(chalk.cyan('Please run manually: source ~/.bashrc (or ~/.zshrc)'));
+
+  try {
+    let shouldContinue = true;
+
+    while (shouldContinue) {
+      await providerManager.init();
+      const providers = await providerManager.listProviders();
+      
+      if (providers.length === 0) {
+        console.log(chalk.yellow('No providers found. Let\'s create your first one.'));
+        
+        const answers = await inquirer.prompt([
+          { 
+            type: 'input', 
+            name: 'id', 
+            message: 'Provider ID (unique identifier):', 
+            default: 'anthropic' 
+          },
+          { 
+            type: 'input', 
+            name: 'name', 
+            message: 'Provider name:', 
+            default: 'Anthropic Official' 
+          },
+          { 
+            type: 'input', 
+            name: 'description', 
+            message: 'Description:', 
+            default: 'Official Anthropic API' 
+          },
+          { 
+            type: 'input', 
+            name: 'baseUrl', 
+            message: 'Base URL:', 
+            default: 'https://api.anthropic.com' 
+          },
+          { 
+            type: 'password', 
+            name: 'apiKey', 
+            message: 'API Key:', 
+            mask: '*' 
+          }
+        ]);
+        
+        const result = await providerManager.addProvider({
+          id: answers.id,
+          name: answers.name,
+          description: answers.description,
+          baseUrl: answers.baseUrl,
+          apiKey: answers.apiKey
+        });
+        
+        if (result.success) {
+          console.log(chalk.green(`✓ ${result.message}`));
+          // 自动设为当前供应商
+          const useResult = await providerManager.useProvider(answers.id);
+          if (useResult.success) {
+            console.log(chalk.green(`✓ ${useResult.message}`));
+          }
+        } else {
+          console.error(chalk.red(`✗ ${result.message}`));
+        }
+        
+        console.log();
+        shouldContinue = await askToContinue();
+        continue;
       }
-    } else {
-      // 询问用户是否要自动 source
-      const sourceAnswer = await inquirer.prompt([
+
+      const choices = providers.map(provider => ({
+        name: `${provider.name} (${provider.id}) - ${provider.baseUrl}${provider.isCurrent ? ' [current]' : ''}`,
+        value: provider.id
+      }));
+
+      const action = await inquirer.prompt([
         {
           type: 'list',
-          name: 'sourceChoice',
-          message: 'How would you like to apply the environment variables?',
+          name: 'action',
+          message: 'What would you like to do?',
           choices: [
-            { name: 'Manual - I will restart terminal or source manually (Recommended)', value: 'manual' },
-            { name: 'Auto-source - Try to source automatically (May not work in all environments)', value: 'auto' }
-          ],
-          default: 'manual'
+            { name: 'Switch provider', value: 'switch' },
+            { name: 'Add new provider', value: 'add' },
+            { name: 'Update provider', value: 'update' },
+            { name: 'Remove provider', value: 'remove' },
+            { name: 'Show detailed status', value: 'status' },
+            { name: 'Exit', value: 'exit' }
+          ]
         }
       ]);
-      
-      if (sourceAnswer.sourceChoice === 'auto') {
-        console.log(chalk.yellow('⚠️  Attempting auto-source - this may not work in all terminal environments'));
-        const sourceResult = await envManager.getShellManager().autoSourceShell();
+
+      if (action.action === 'exit') {
+        console.log(chalk.cyan('Thank you for using CCM. Goodbye!'));
+        break;
+      }
+
+      switch (action.action) {
+      case 'switch': {
+        const switchAnswer = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'id',
+            message: 'Select provider:',
+            choices
+          }
+        ]);
         
-        if (sourceResult.success) {
-          console.log(chalk.green('✓ Shell configuration sourced successfully'));
+        const switchResult = await providerManager.useProvider(switchAnswer.id);
+        if (switchResult.success) {
+          console.log(chalk.green(`✓ ${switchResult.message}`));
         } else {
-          console.log(chalk.red(`✗ Auto-source failed: ${sourceResult.error}`));
-          console.log(chalk.cyan('Please run manually: source ~/.bashrc (or ~/.zshrc)'));
+          console.error(chalk.red(`✗ ${switchResult.message}`));
         }
-      } else {
-        console.log(chalk.cyan('To apply changes, restart your terminal or run:'));
-        console.log(chalk.cyan('source ~/.bashrc (or ~/.zshrc)'));
+        
+        console.log();
+        shouldContinue = await askToContinue();
+        break;
+      }
+
+      case 'add': {
+        const addAnswers = await inquirer.prompt([
+          { type: 'input', name: 'id', message: 'Provider ID:' },
+          { type: 'input', name: 'name', message: 'Provider name:' },
+          { type: 'input', name: 'description', message: 'Description:' },
+          { type: 'input', name: 'baseUrl', message: 'Base URL:' },
+          { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' }
+        ]);
+        
+        const addResult = await providerManager.addProvider(addAnswers);
+        if (addResult.success) {
+          console.log(chalk.green(`✓ ${addResult.message}`));
+        } else {
+          console.error(chalk.red(`✗ ${addResult.message}`));
+        }
+        
+        console.log();
+        shouldContinue = await askToContinue();
+        break;
+      }
+
+      case 'update': {
+        const updateIdAnswer = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'id',
+            message: 'Select provider to update:',
+            choices
+          }
+        ]);
+        
+        const currentProvider = providers.find(p => p.id === updateIdAnswer.id);
+        if (currentProvider) {
+          const updateAnswers = await inquirer.prompt([
+            { type: 'input', name: 'name', message: 'Provider name:', default: currentProvider.name },
+            { type: 'input', name: 'description', message: 'Description:', default: currentProvider.description },
+            { type: 'input', name: 'baseUrl', message: 'Base URL:', default: currentProvider.baseUrl },
+            { type: 'password', name: 'apiKey', message: 'API Key (leave empty to keep current):', mask: '*' }
+          ]);
+          
+          const updateOptions: Partial<AddProviderOptions> = {
+            name: updateAnswers.name,
+            description: updateAnswers.description,
+            baseUrl: updateAnswers.baseUrl
+          };
+          
+          if (updateAnswers.apiKey.trim()) {
+            updateOptions.apiKey = updateAnswers.apiKey;
+          }
+          
+          const updateResult = await providerManager.updateProvider(updateIdAnswer.id, updateOptions);
+          if (updateResult.success) {
+            console.log(chalk.green(`✓ ${updateResult.message}`));
+          } else {
+            console.error(chalk.red(`✗ ${updateResult.message}`));
+          }
+        }
+        
+        console.log();
+        shouldContinue = await askToContinue();
+        break;
+      }
+
+      case 'remove': {
+        const removeAnswer = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'id',
+            message: 'Select provider to remove:',
+            choices
+          }
+        ]);
+        
+        const confirmRemove = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'confirm',
+            message: `Are you sure you want to remove this provider?`,
+            default: false
+          }
+        ]);
+        
+        if (confirmRemove.confirm) {
+          const removeResult = await providerManager.removeProvider(removeAnswer.id);
+          if (removeResult.success) {
+            console.log(chalk.green(`✓ ${removeResult.message}`));
+          } else {
+            console.error(chalk.red(`✗ ${removeResult.message}`));
+          }
+        } else {
+          console.log(chalk.yellow('Operation cancelled'));
+        }
+        
+        console.log();
+        shouldContinue = await askToContinue();
+        break;
+      }
+
+      case 'status': {
+        const stats = await providerManager.getStats();
+        console.log();
+        console.log(chalk.blue('CCM Status:'));
+        console.log(`Total providers: ${stats.totalProviders}`);
+        console.log(`Current provider: ${stats.currentProvider || 'None'}`);
+        console.log(`Claude config: ${stats.claudeConfigPath}`);
+        console.log(`CCM config: ${stats.ccmConfigPath}`);
+        
+        if (providers.length > 0) {
+          console.log();
+          console.log(chalk.blue('Recent providers:'));
+          providers
+            .filter(p => p.lastUsed)
+            .slice(0, 3)
+            .forEach(provider => {
+              const marker = provider.isCurrent ? chalk.green('* ') : '  ';
+              const name = provider.isCurrent ? chalk.green(provider.name) : provider.name;
+              const lastUsed = new Date(provider.lastUsed!).toLocaleDateString();
+              console.log(`${marker}${name} (${lastUsed}, ${provider.usageCount} uses)`);
+            });
+        }
+        console.log();
+        
+        console.log();
+        shouldContinue = await askToContinue();
+        break;
       }
     }
-  } else if (options?.autoWrite !== false) {
-    console.log(chalk.yellow('Environment variables have been set, but may not persist.'));
-    console.log(chalk.cyan('Consider running: source <(ccman env)'));
-  } else {
-    console.log(chalk.yellow('To set environment variables manually, run:'));
-    console.log(chalk.cyan('source <(ccman env)'));
+    } // while 循环结束
+  } catch (error) {
+    console.error(chalk.red(`✗ Error: ${error}`));
+    process.exit(1);
+  } finally {
+    // 恢复原始的 SIGINT 处理器
+    process.removeAllListeners('SIGINT');
   }
 }
 
 program
   .name('ccman')
-  .description('Claude Code Manager - Manage Claude Code API configurations')
-  .version(getCurrentVersion());
-
-// 列出所有环境
-program
-  .command('list')
-  .alias('ls')
-  .description('List all environment groups')
-  .action(() => {
-    const environments = envManager.listEnvironments();
-    
-    if (environments.length === 0) {
-      console.log(chalk.yellow('No environment groups found. Use "ccman add" to create one.'));
-      return;
-    }
-
-    console.log();
-    environments.forEach(env => {
-      const marker = env.isCurrent ? chalk.green('* ') : '  ';
-      const name = env.isCurrent ? chalk.green(env.name) : env.name;
-      console.log(`${marker}${name.padEnd(15)} ${env.baseUrl}`);
-      
-      if (env.lastUsed) {
-        const lastUsed = new Date(env.lastUsed).toLocaleDateString();
-        console.log(`${' '.repeat(17)} Last used: ${lastUsed}`);
+  .description('Claude Code Manager - Manage Claude API configurations')
+  .version('2.0.0')
+  .hook('preAction', () => {
+    // 开发模式提示
+    if (process.env.CCM_CONFIG_DIR || process.env.CLAUDE_CONFIG_PATH) {
+      console.log(chalk.yellow('🔧 Development Mode:'));
+      if (process.env.CCM_CONFIG_DIR) {
+        console.log(chalk.yellow(`   CCM Config: ${process.env.CCM_CONFIG_DIR}`));
       }
-    });
-    console.log();
+      if (process.env.CLAUDE_CONFIG_PATH) {
+        console.log(chalk.yellow(`   Claude Config: ${process.env.CLAUDE_CONFIG_PATH}`));
+      }
+      console.log();
+    }
+  })
+  .action(async () => {
+    // 默认无参数时进入交互菜单
+    await showInteractiveMenu();
   });
 
-// 添加环境
+// 智能列表命令
 program
-  .command('add <name> <baseUrl> [apiKey]')
-  .description('Add a new environment group')
-  .option('--no-auto-write', 'Do not automatically write to shell config')
-  .action(async (name: string, baseUrl: string, apiKey?: string, options?: { autoWrite: boolean }) => {
+  .command('ls')
+  .alias('list')
+  .description('List provider configurations')
+  .option('--current', 'Show only current provider details')
+  .option('--brief', 'Show brief summary')
+  .action(async (options?: { current?: boolean; brief?: boolean }) => {
     try {
+      await providerManager.init();
+      
+      if (options?.current) {
+        // 显示当前供应商详情
+        const currentProvider = await providerManager.getCurrentProvider();
+        
+        if (!currentProvider) {
+          console.log(chalk.yellow('No provider is currently active.'));
+          console.log('Use "ccman use <id>" to activate a provider.');
+          return;
+        }
+
+        console.log();
+        console.log(chalk.green(`Current provider: ${currentProvider.config.name} (${currentProvider.id})`));
+        console.log(`Description: ${currentProvider.config.description}`);
+        console.log(`Base URL: ${currentProvider.config.config.env.ANTHROPIC_BASE_URL}`);
+        console.log(`API Key: ${'*'.repeat(Math.min(currentProvider.config.config.env.ANTHROPIC_AUTH_TOKEN.length, 20))}`);
+        console.log(`Usage count: ${currentProvider.config.metadata.usageCount} times`);
+        console.log(`Last updated: ${new Date(currentProvider.config.metadata.updatedAt).toLocaleString()}`);
+        console.log();
+        return;
+      }
+
+      const providers = await providerManager.listProviders();
+      
+      if (providers.length === 0) {
+        console.log(chalk.yellow('No provider configurations found. Use "ccman add" to create one.'));
+        return;
+      }
+
+      if (options?.brief) {
+        // 简洁模式
+        console.log();
+        providers.forEach(provider => {
+          const marker = provider.isCurrent ? chalk.green('* ') : '  ';
+          const name = provider.isCurrent ? chalk.green(provider.name) : provider.name;
+          console.log(`${marker}${name} (${provider.id})`);
+        });
+        console.log();
+        return;
+      }
+
+      // 默认详细模式（合并原 list + status 信息）
+      const stats = await providerManager.getStats();
+      
+      console.log();
+      console.log(chalk.blue('CCM Status:'));
+      console.log(`Total providers: ${stats.totalProviders}`);
+      console.log(`Current provider: ${stats.currentProvider || 'None'}`);
+      console.log(`Claude config: ${stats.claudeConfigPath}`);
+      console.log(`CCM config: ${stats.ccmConfigPath}`);
+      console.log();
+      
+      console.log(chalk.blue('Providers:'));
+      providers.forEach(provider => {
+        const marker = provider.isCurrent ? chalk.green('* ') : '  ';
+        const name = provider.isCurrent ? chalk.green(provider.name) : provider.name;
+        console.log(`${marker}${name.padEnd(15)} ${provider.baseUrl}`);
+        console.log(`${' '.repeat(17)} ${provider.description}`);
+        
+        if (provider.lastUsed) {
+          const lastUsed = new Date(provider.lastUsed).toLocaleDateString();
+          console.log(`${' '.repeat(17)} Last used: ${lastUsed}, Usage: ${provider.usageCount} times`);
+        }
+        console.log();
+      });
+
+    } catch (error) {
+      console.error(chalk.red(`✗ Error: ${error}`));
+      process.exit(1);
+    }
+  });
+
+// 添加供应商
+program
+  .command('add <id> <name> <baseUrl> [apiKey]')
+  .description('Add a new provider configuration')
+  .option('-d, --description <desc>', 'Provider description')
+  .action(async (id: string, name: string, baseUrl: string, apiKey?: string, options?: { description?: string }) => {
+    try {
+      await providerManager.init();
+      
       if (!apiKey) {
         const answer = await inquirer.prompt([
           {
@@ -129,36 +409,43 @@ program
         apiKey = answer.apiKey;
       }
 
-      const addOptions: AddEnvOptions = {
+      const addOptions: AddProviderOptions = {
+        id,
         name,
+        description: options?.description,
         baseUrl,
-        apiKey: apiKey!,
-        autoWriteShell: options?.autoWrite
+        apiKey: apiKey!
       };
 
-      const env = await envManager.addEnvironment(addOptions);
-      console.log(chalk.green(`✓ Added environment group "${name}"`));
-      console.log(`  Base URL: ${env.baseUrl}`);
-      console.log(`  Created: ${new Date(env.createdAt).toLocaleString()}`);
+      const result = await providerManager.addProvider(addOptions);
       
-      // 询问是否设为当前环境
-      const currentEnv = envManager.getCurrentEnvironment();
-      if (!currentEnv || currentEnv.name !== name) {
-        const useAnswer = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'useCurrent',
-            message: `Set "${name}" as current environment?`,
-            default: true
-          }
-        ]);
+      if (result.success) {
+        console.log(chalk.green(`✓ ${result.message}`));
         
-        if (useAnswer.useCurrent) {
-          await performUseEnvironment(name, {
-            autoWrite: options?.autoWrite,
-            skipSuccessMessage: true // 因为前面已经显示了添加成功的信息
-          });
+        // 询问是否设为当前供应商
+        const currentProvider = await providerManager.getCurrentProvider();
+        if (!currentProvider || currentProvider.id !== id) {
+          const useAnswer = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'useCurrent',
+              message: `Set "${name}" as current provider?`,
+              default: true
+            }
+          ]);
+          
+          if (useAnswer.useCurrent) {
+            const useResult = await providerManager.useProvider(id);
+            if (useResult.success) {
+              console.log(chalk.green(`✓ ${useResult.message}`));
+            } else {
+              console.error(chalk.red(`✗ ${useResult.message}`));
+            }
+          }
         }
+      } else {
+        console.error(chalk.red(`✗ ${result.message}`));
+        process.exit(1);
       }
       
     } catch (error) {
@@ -167,16 +454,41 @@ program
     }
   });
 
-// 删除环境
+// 使用供应商
 program
-  .command('remove <name>')
-  .alias('rm')
-  .description('Remove an environment group')
-  .action(async (name: string) => {
+  .command('use <id>')
+  .description('Switch to a provider configuration')
+  .action(async (id: string) => {
     try {
-      const env = envManager.getEnvironment(name);
-      if (!env) {
-        console.error(chalk.red(`✗ Environment "${name}" not found`));
+      await providerManager.init();
+      const result = await providerManager.useProvider(id);
+      
+      if (result.success) {
+        console.log(chalk.green(`✓ ${result.message}`));
+        console.log(chalk.cyan('Claude Code configuration has been updated successfully!'));
+      } else {
+        console.error(chalk.red(`✗ ${result.message}`));
+        process.exit(1);
+      }
+    } catch (error) {
+      console.error(chalk.red(`✗ Error: ${error}`));
+      process.exit(1);
+    }
+  });
+
+// 删除供应商
+program
+  .command('rm <id>')
+  .alias('remove')
+  .description('Remove a provider configuration')
+  .action(async (id: string) => {
+    try {
+      await providerManager.init();
+      const providers = await providerManager.listProviders();
+      const provider = providers.find(p => p.id === id);
+      
+      if (!provider) {
+        console.error(chalk.red(`✗ Provider '${id}' not found`));
         process.exit(1);
       }
 
@@ -184,14 +496,19 @@ program
         {
           type: 'confirm',
           name: 'confirm',
-          message: `Are you sure you want to remove environment "${name}"?`,
+          message: `Are you sure you want to remove provider "${provider.name}" (${id})?`,
           default: false
         }
       ]);
 
       if (answer.confirm) {
-        await envManager.removeEnvironment(name);
-        console.log(chalk.green(`✓ Removed environment "${name}"`));
+        const result = await providerManager.removeProvider(id);
+        
+        if (result.success) {
+          console.log(chalk.green(`✓ ${result.message}`));
+        } else {
+          console.error(chalk.red(`✗ ${result.message}`));
+        }
       } else {
         console.log(chalk.yellow('Operation cancelled'));
       }
@@ -201,124 +518,18 @@ program
     }
   });
 
-// 使用环境
-program
-  .command('use <name>')
-  .description('Switch to an environment group')
-  .option('--no-auto-write', 'Do not automatically write to shell config')
-  .option('--auto-source', 'Automatically source shell config after writing (risky)')
-  .action(async (name: string, options?: { autoWrite: boolean; autoSource: boolean }) => {
-    try {
-      await performUseEnvironment(name, {
-        autoWrite: options?.autoWrite,
-        autoSource: options?.autoSource
-      });
-    } catch (error) {
-      console.error(chalk.red(`✗ Error: ${error}`));
-      process.exit(1);
-    }
-  });
-
-// 显示当前环境
-program
-  .command('current')
-  .description('Show current environment group')
-  .action(() => {
-    const currentEnv = envManager.getCurrentEnvironment();
-    
-    if (!currentEnv) {
-      console.log(chalk.yellow('No environment is currently active.'));
-      console.log('Use "ccman use <name>" to activate an environment.');
-      return;
-    }
-
-    console.log();
-    console.log(chalk.green(`Current environment: ${currentEnv.name}`));
-    console.log(`Base URL: ${currentEnv.baseUrl}`);
-    console.log(`API Key: ${'*'.repeat(Math.min(currentEnv.apiKey.length, 20))}`);
-    console.log(`Created: ${new Date(currentEnv.createdAt).toLocaleString()}`);
-    
-    if (currentEnv.lastUsed) {
-      console.log(`Last used: ${new Date(currentEnv.lastUsed).toLocaleString()}`);
-    }
-    console.log();
-  });
-
-// 生成环境变量脚本
-program
-  .command('env')
-  .description('Generate shell script to set environment variables')
-  .action(() => {
-    try {
-      const script = envManager.generateEnvScript();
-      console.log(script);
-    } catch (error) {
-      console.error(chalk.red(`✗ Error: ${error}`));
-      process.exit(1);
-    }
-  });
-
-// 测试环境
-program
-  .command('test [name]')
-  .description('Test environment configuration (defaults to current)')
-  .action(async (name?: string) => {
-    const result = await envManager.testEnvironment(name);
-    
-    if (result.success) {
-      console.log(chalk.green(`✓ ${result.message}`));
-    } else {
-      console.error(chalk.red(`✗ ${result.message}`));
-      if (result.error) {
-        console.error(chalk.gray(`Details: ${result.error}`));
-      }
-      process.exit(1);
-    }
-  });
-
-// 显示统计信息
-program
-  .command('status')
-  .description('Show CCM status and statistics')
-  .action(() => {
-    const stats = envManager.getStats();
-    const environments = envManager.listEnvironments();
-    
-    console.log();
-    console.log(chalk.blue('CCM Status:'));
-    console.log(`Total environments: ${stats.totalEnvironments}`);
-    console.log(`Current environment: ${stats.currentEnvironment || 'None'}`);
-    console.log(`Shell integration: ${stats.hasShellIntegration ? 'Enabled' : 'Disabled'}`);
-    
-    if (environments.length > 0) {
-      console.log();
-      console.log(chalk.blue('Recent environments:'));
-      const sortedEnvs = environments
-        .filter(env => env.lastUsed)
-        .sort((a, b) => new Date(b.lastUsed!).getTime() - new Date(a.lastUsed!).getTime())
-        .slice(0, 3);
-        
-      sortedEnvs.forEach(env => {
-        const lastUsed = new Date(env.lastUsed!).toLocaleDateString();
-        console.log(`  ${env.name} (${lastUsed})`);
-      });
-    }
-    console.log();
-  });
-
 // 清除所有配置
 program
   .command('clear')
-  .alias('clearall')
-  .description('Clear all environments and shell integration (DESTRUCTIVE)')
+  .alias('reset')
+  .description('Clear all provider configurations (DESTRUCTIVE)')
   .action(async () => {
     try {
-      // 确认操作
       const confirmAnswer = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'confirmed',
-          message: chalk.red('⚠️  This will remove ALL environments and shell integration. Are you sure?'),
+          message: chalk.red('⚠️  This will remove ALL provider configurations. Are you sure?'),
           default: false
         }
       ]);
@@ -328,37 +539,16 @@ program
         return;
       }
 
-      // 执行清除
-      console.log(chalk.yellow('Clearing CCM configuration...'));
-      const result = await envManager.clearAll();
+      await providerManager.init();
+      const result = await providerManager.clearAll();
 
-      // 显示结果
-      console.log();
       if (result.success) {
         console.log(chalk.green(`✓ ${result.message}`));
+        console.log(chalk.cyan('CCM has been reset to initial state.'));
+        console.log(chalk.cyan('You can start fresh with: ccman'));
       } else {
-        console.log(chalk.red(`✗ ${result.message}`));
+        console.error(chalk.red(`✗ ${result.message}`));
       }
-
-      // 显示详细信息
-      if (result.details.length > 0) {
-        console.log();
-        result.details.forEach(detail => {
-          if (detail.startsWith('✓')) {
-            console.log(chalk.green(detail));
-          } else if (detail.startsWith('⚠')) {
-            console.log(chalk.yellow(detail));
-          } else if (detail.startsWith('✗')) {
-            console.log(chalk.red(detail));
-          } else {
-            console.log(detail);
-          }
-        });
-      }
-
-      console.log();
-      console.log(chalk.cyan('CCM has been reset to initial state.'));
-      console.log(chalk.cyan('You can start fresh with: ccman config'));
 
     } catch (error) {
       console.error(chalk.red(`✗ Error: ${error}`));
@@ -366,145 +556,5 @@ program
     }
   });
 
-// 交互式配置
-program
-  .command('config')
-  .description('Interactive configuration')
-  .action(async () => {
-    const environments = envManager.listEnvironments();
-    
-    if (environments.length === 0) {
-      console.log(chalk.yellow('No environments found. Let\'s create your first one.'));
-      
-      const answers = await inquirer.prompt([
-        { type: 'input', name: 'name', message: 'Environment name:', default: 'default' },
-        { type: 'input', name: 'baseUrl', message: 'Base URL:', default: 'https://api.anthropic.com' },
-        { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' },
-        { type: 'confirm', name: 'autoWrite', message: 'Automatically write to shell config?', default: true }
-      ]);
-      
-      try {
-        await envManager.addEnvironment({
-          name: answers.name,
-          baseUrl: answers.baseUrl,
-          apiKey: answers.apiKey,
-          autoWriteShell: answers.autoWrite
-        });
-        console.log(chalk.green(`✓ Created environment "${answers.name}"`));
-      } catch (error) {
-        console.error(chalk.red(`✗ Error: ${error}`));
-      }
-      return;
-    }
-
-    const choices = environments.map(env => ({
-      name: `${env.name} (${env.baseUrl})${env.isCurrent ? ' [current]' : ''}`,
-      value: env.name
-    }));
-
-    const action = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'action',
-        message: 'What would you like to do?',
-        choices: [
-          { name: 'Switch environment', value: 'switch' },
-          { name: 'Add new environment', value: 'add' },
-          { name: 'Edit environment', value: 'edit' },
-          { name: 'Remove environment', value: 'remove' },
-          { name: 'Show current status', value: 'status' }
-        ]
-      }
-    ]);
-
-    switch (action.action) {
-      case 'switch':
-        const switchAnswer = await inquirer.prompt([
-          {
-            type: 'list',
-            name: 'name',
-            message: 'Select environment:',
-            choices
-          }
-        ]);
-        try {
-          await performUseEnvironment(switchAnswer.name);
-        } catch (error) {
-          console.error(chalk.red(`✗ Error: ${error}`));
-        }
-        break;
-
-      case 'add':
-        const addAnswers = await inquirer.prompt([
-          { type: 'input', name: 'name', message: 'Environment name:' },
-          { type: 'input', name: 'baseUrl', message: 'Base URL:' },
-          { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' }
-        ]);
-        try {
-          await envManager.addEnvironment(addAnswers);
-          console.log(chalk.green(`✓ Added environment "${addAnswers.name}"`));
-        } catch (error) {
-          console.error(chalk.red(`✗ Error: ${error}`));
-        }
-        break;
-
-      case 'edit':
-        const editEnvAnswer = await inquirer.prompt([
-          {
-            type: 'list',
-            name: 'name',
-            message: 'Select environment to edit:',
-            choices
-          }
-        ]);
-        
-        const currentConfig = envManager.getEnvironment(editEnvAnswer.name);
-        if (currentConfig) {
-          const editAnswers = await inquirer.prompt([
-            { type: 'input', name: 'baseUrl', message: 'Base URL:', default: currentConfig.baseUrl },
-            { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*', default: currentConfig.apiKey }
-          ]);
-          
-          try {
-            await envManager.updateEnvironment(editEnvAnswer.name, {
-              baseUrl: editAnswers.baseUrl,
-              apiKey: editAnswers.apiKey
-            });
-            console.log(chalk.green(`✓ Updated environment "${editEnvAnswer.name}"`));
-          } catch (error) {
-            console.error(chalk.red(`✗ Error: ${error}`));
-          }
-        }
-        break;
-
-      case 'status':
-        {
-          const stats = envManager.getStats();
-          const environments = envManager.listEnvironments();
-          
-          console.log();
-          console.log(chalk.blue('CCM Status:'));
-          console.log(`Total environments: ${stats.totalEnvironments}`);
-          console.log(`Current environment: ${stats.currentEnvironment || 'None'}`);
-          console.log(`Shell integration: ${stats.hasShellIntegration ? 'Enabled' : 'Disabled'}`);
-          
-          if (environments.length > 0) {
-            console.log();
-            console.log(chalk.blue('Recent environments:'));
-            environments
-              .sort((a, b) => new Date(b.lastUsed || b.createdAt).getTime() - new Date(a.lastUsed || a.createdAt).getTime())
-              .slice(0, 3)
-              .forEach(env => {
-                const marker = env.isCurrent ? chalk.green('* ') : '  ';
-                const name = env.isCurrent ? chalk.green(env.name) : env.name;
-                console.log(`${marker}${name.padEnd(15)} ${env.baseUrl}`);
-              });
-          }
-          console.log();
-        }
-        break;
-    }
-  });
-
 // 解析命令行参数
-program.parse();
+program.parse(process.argv);

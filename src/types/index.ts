@@ -1,60 +1,88 @@
 /**
  * Claude Code Manager 类型定义
+ * 新架构：直接修改 ~/.claude/settings.json
  */
 
-export interface ClaudeEnv {
-  /** 环境名称 */
+/**
+ * Claude settings.json 结构
+ */
+export interface ClaudeSettings {
+  env: {
+    ANTHROPIC_AUTH_TOKEN: string;
+    ANTHROPIC_BASE_URL: string;
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC?: number;
+  };
+  permissions: {
+    allow: string[];
+    deny: string[];
+  };
+  apiKeyHelper: string;
+}
+
+/**
+ * 供应商配置
+ */
+export interface ProviderConfig {
   name: string;
-  /** API 基础 URL */
+  description: string;
+  config: ClaudeSettings;
+  metadata: {
+    createdAt: string;
+    updatedAt: string;
+    usageCount: number;
+  };
+}
+
+/**
+ * CCM 主配置
+ */
+export interface CCMConfig {
+  currentProvider: string;
+  claudeConfigPath: string;
+  providers: {
+    [providerId: string]: {
+      name: string;
+      configFile: string;
+      lastUsed: string;
+    };
+  };
+  metadata: {
+    version: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+/**
+ * 添加供应商选项
+ */
+export interface AddProviderOptions {
+  id: string;
+  name: string;
+  description?: string;
   baseUrl: string;
-  /** API 密钥 */
   apiKey: string;
-  /** 创建时间 */
-  createdAt: string;
-  /** 最后使用时间 */
+  apiKeyHelper?: string;
+}
+
+/**
+ * 供应商列表项
+ */
+export interface ProviderListItem {
+  id: string;
+  name: string;
+  description: string;
+  baseUrl: string;
+  isCurrent: boolean;
   lastUsed?: string;
+  usageCount: number;
 }
 
-export interface Config {
-  /** 当前使用的环境名称 */
-  current: string | null;
-  /** 环境配置列表 */
-  environments: { [name: string]: ClaudeEnv };
-  /** 全局设置 */
-  settings: GlobalSettings;
-}
-
-export interface GlobalSettings {
-  /** 是否自动写入 shell 配置文件 */
-  autoWriteShell: boolean;
-  /** 首选的 shell 类型 */
-  preferredShell: 'bash' | 'zsh' | 'auto';
-  /** shell 配置文件路径（可自定义） */
-  shellConfigPath?: string;
-}
-
-export interface ShellEnvVars {
-  ANTHROPIC_BASE_URL: string;
-  ANTHROPIC_AUTH_TOKEN: string;
-}
-
-export interface AddEnvOptions {
-  name: string;
-  baseUrl: string;
-  apiKey: string;
-  autoWriteShell?: boolean;
-}
-
-export interface ShellWriteResult {
+/**
+ * 操作结果
+ */
+export interface OperationResult {
   success: boolean;
-  filePath: string;
   message: string;
   error?: string;
 }
-
-export interface EnvironmentListItem extends ClaudeEnv {
-  /** 是否为当前使用的环境 */
-  isCurrent: boolean;
-}
-
-export type ShellType = 'bash' | 'zsh' | 'fish' | 'unknown';
