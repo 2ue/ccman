@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "Claude Code Manager - A TypeScript tool to manage Claude Code API configurations",
   "main": "dist/index.js",
-  "packageManager": "pnpm@8.15.1",
+  "packageManager": "pnpm@7.33.7",
   "bin": {
     "ccman": "./dist/cli.js"
   },

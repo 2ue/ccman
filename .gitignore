@@ -3,7 +3,7 @@ node_modules/
 jspm_packages/
 bower_components/
 
-# Build outputs  
+# Build outputs
 dist/
 build/
 lib/
@@ -82,3 +82,4 @@ temp/
 # CCM specific
 .ccm/
 ccmrc
+.history
