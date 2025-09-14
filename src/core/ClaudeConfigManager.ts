@@ -1,6 +1,5 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as os from 'os';
 import { ClaudeSettings } from '../types';
 import { envConfig } from '../utils/env-config';
 
@@ -12,24 +11,8 @@ export class ClaudeConfigManager {
   private claudeConfigPath: string;
 
   constructor(claudeConfigPath?: string) {
-    // 加载环境配置
-    envConfig.load();
-    
-    if (claudeConfigPath) {
-      // 优先使用传入参数
-      this.claudeConfigPath = claudeConfigPath;
-    } else {
-      // 从环境变量读取
-      const envPath = process.env.CLAUDE_CONFIG_PATH;
-      if (!envPath) {
-        throw new Error('CLAUDE_CONFIG_PATH environment variable is required');
-      }
-      
-      // 处理~路径扩展
-      this.claudeConfigPath = envPath.startsWith('~')
-        ? path.join(os.homedir(), envPath.slice(2))
-        : envPath;
-    }
+    // 优先使用传入参数，否则使用编译时确定的路径
+    this.claudeConfigPath = claudeConfigPath || envConfig.getClaudeConfigPath();
   }
 
   /**

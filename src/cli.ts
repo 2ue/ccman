@@ -350,6 +350,21 @@ program
       }
 
       const providers = await providerManager.listProviders();
+      const stats = await providerManager.getStats();
+      
+      // 显示状态和配置信息，不管是否有providers
+      console.log();
+      console.log(chalk.blue('CCM Status:'));
+      console.log(`Total providers: ${stats.totalProviders}`);
+      console.log(`Current provider: ${stats.currentProvider || 'None'}`);
+      console.log(`Environment: ${stats.environment}`);
+      console.log();
+      
+      console.log(chalk.blue('Configuration Files:'));
+      console.log(`Claude config: ${chalk.cyan(stats.claudeConfigPath)}`);
+      console.log(`CCM config: ${chalk.cyan(stats.ccmConfigFile)}`);
+      console.log(`Providers dir: ${chalk.cyan(stats.providersDir)}`);
+      console.log();
       
       if (providers.length === 0) {
         console.log(chalk.yellow('No provider configurations found. Use "ccman add" to create one.'));
@@ -358,7 +373,6 @@ program
 
       if (options?.brief) {
         // 简洁模式
-        console.log();
         providers.forEach(provider => {
           const marker = provider.isCurrent ? chalk.green('* ') : '  ';
           const name = provider.isCurrent ? chalk.green(provider.name) : provider.name;
@@ -368,17 +382,7 @@ program
         return;
       }
 
-      // 默认详细模式（合并原 list + status 信息）
-      const stats = await providerManager.getStats();
-      
-      console.log();
-      console.log(chalk.blue('CCM Status:'));
-      console.log(`Total providers: ${stats.totalProviders}`);
-      console.log(`Current provider: ${stats.currentProvider || 'None'}`);
-      console.log(`Claude config: ${stats.claudeConfigPath}`);
-      console.log(`CCM config: ${stats.ccmConfigPath}`);
-      console.log();
-      
+      // 详细显示providers信息
       console.log(chalk.blue('Providers:'));
       providers.forEach(provider => {
         const marker = provider.isCurrent ? chalk.green('* ') : '  ';

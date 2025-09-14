@@ -26,6 +26,9 @@ coverage/
 !.env.development
 !.env.production
 
+# Generated static environment config
+src/config/static-env.ts
+
 # Logs
 logs/
 *.log

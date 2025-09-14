@@ -1,5 +1,6 @@
 import { CCMConfigManager } from '../core/CCMConfigManager';
 import { ClaudeConfigManager } from '../core/ClaudeConfigManager';
+import { envConfig } from '../utils/env-config';
 import { 
   AddProviderOptions, 
   ProviderListItem, 
@@ -355,17 +356,26 @@ export class ProviderManager {
     currentProvider: string | null;
     claudeConfigPath: string;
     ccmConfigPath: string;
+    ccmConfigFile: string;
+    providersDir: string;
+    environment: string;
   }> {
     try {
       const config = await this.ccmConfig.readConfig();
       const currentProvider = config.currentProvider ? 
         (config.providers[config.currentProvider]?.name || config.currentProvider) : null;
 
+      // 从静态配置获取环境信息
+      const environment = envConfig.getCurrentEnvironment();
+
       return {
         totalProviders: Object.keys(config.providers).length,
         currentProvider,
         claudeConfigPath: this.claudeConfig.getClaudeConfigPath(),
-        ccmConfigPath: this.ccmConfig.getConfigDir()
+        ccmConfigPath: this.ccmConfig.getConfigDir(),
+        ccmConfigFile: `${this.ccmConfig.getConfigDir()}/config.json`,
+        providersDir: this.ccmConfig.getProvidersDir(),
+        environment
       };
 
     } catch (error) {
@@ -373,7 +383,10 @@ export class ProviderManager {
         totalProviders: 0,
         currentProvider: null,
         claudeConfigPath: this.claudeConfig.getClaudeConfigPath(),
-        ccmConfigPath: this.ccmConfig.getConfigDir()
+        ccmConfigPath: this.ccmConfig.getConfigDir(),
+        ccmConfigFile: `${this.ccmConfig.getConfigDir()}/config.json`,
+        providersDir: this.ccmConfig.getProvidersDir(),
+        environment: 'unknown'
       };
     }
   }

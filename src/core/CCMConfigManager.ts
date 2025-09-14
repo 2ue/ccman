@@ -1,6 +1,5 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as os from 'os';
 import { CCMConfig, ProviderConfig } from '../types';
 import { getPackageVersion } from '../utils/version';
 import { envConfig } from '../utils/env-config';
@@ -15,20 +14,8 @@ export class CCMConfigManager {
   private providersDir: string;
 
   constructor() {
-    // 加载环境配置
-    envConfig.load();
-    
-    // 从环境变量读取配置目录，支持~扩展
-    const configDirName = process.env.CCM_CONFIG_DIR;
-    if (!configDirName) {
-      throw new Error('CCM_CONFIG_DIR environment variable is required');
-    }
-    
-    // 处理~路径扩展
-    this.configDir = configDirName.startsWith('~') 
-      ? path.join(os.homedir(), configDirName.slice(2))
-      : configDirName;
-      
+    // 使用编译时生成的静态配置
+    this.configDir = envConfig.getCCMConfigDir();
     this.configPath = path.join(this.configDir, 'config.json');
     this.providersDir = path.join(this.configDir, 'providers');
   }
@@ -41,20 +28,10 @@ export class CCMConfigManager {
     await fs.ensureDir(this.providersDir);
     
     if (!await fs.pathExists(this.configPath)) {
-      // 从环境变量读取Claude配置路径
-      const claudeConfigPath = process.env.CLAUDE_CONFIG_PATH;
-      if (!claudeConfigPath) {
-        throw new Error('CLAUDE_CONFIG_PATH environment variable is required');
-      }
-      
-      // 处理~路径扩展
-      const expandedClaudeConfigPath = claudeConfigPath.startsWith('~')
-        ? path.join(os.homedir(), claudeConfigPath.slice(2))
-        : claudeConfigPath;
-      
+      // 使用编译时确定的Claude配置路径
       const defaultConfig: CCMConfig = {
         currentProvider: '',
-        claudeConfigPath: expandedClaudeConfigPath,
+        claudeConfigPath: envConfig.getClaudeConfigPath(),
         providers: {},
         settings: {
           language: null,

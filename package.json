@@ -1,6 +1,6 @@
 {
   "name": "ccman",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Claude Code Manager - A TypeScript tool to manage Claude Code API configurations",
   "main": "dist/index.js",
   "packageManager": "pnpm@7.33.7",
@@ -8,10 +8,11 @@
     "ccman": "./dist/cli.js"
   },
   "scripts": {
-    "build": "NODE_ENV=production tsc",
-    "dev": "NODE_ENV=development tsx src/cli.ts",
-    "start": "NODE_ENV=production node dist/cli.js",
-    "test": "jest --passWithNoTests",
+    "prebuild": "NODE_ENV=production node scripts/build-env.js",
+    "prebuild:dev": "NODE_ENV=development node scripts/build-env.js",
+    "build": "pnpm prebuild && tsc",
+    "build:dev": "pnpm prebuild:dev && tsc",
+    "dev": "pnpm prebuild:dev && tsx src/cli.ts",
     "lint": "eslint src/**/*.ts",
     "clean": "rm -rf dist",
     "release": "./scripts/release.sh",
@@ -37,7 +38,6 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^11.0.0",
-    "dotenv": "^17.2.2",
     "fs-extra": "^11.0.0",
     "inquirer": "^8.2.6"
   },
