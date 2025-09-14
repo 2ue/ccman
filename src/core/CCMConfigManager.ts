@@ -30,6 +30,7 @@ export class CCMConfigManager {
     if (!await fs.pathExists(this.configPath)) {
       // 使用编译时确定的Claude配置路径
       const defaultConfig: CCMConfig = {
+        version: getPackageVersion(),
         currentProvider: '',
         claudeConfigPath: envConfig.getClaudeConfigPath(),
         providers: {},
@@ -60,20 +61,15 @@ export class CCMConfigManager {
       const content = await fs.readFile(this.configPath, 'utf8');
       const config = JSON.parse(content);
       
-      // 确保providers字段存在
-      if (!config.providers) {
-        config.providers = {};
-      }
-
-      // 确保settings字段存在（兼容旧版本）
-      if (!config.settings) {
-        config.settings = {
-          language: null,
-          firstRun: true
-        };
+      // 迁移旧版本配置
+      const migratedConfig = await this.migrateConfig(config);
+      
+      // 如果配置被迁移了，立即保存新格式
+      if (this.needsMigration(config)) {
+        await fs.writeFile(this.configPath, JSON.stringify(migratedConfig, null, 2));
       }
       
-      return config;
+      return migratedConfig;
     } catch (error) {
       throw new Error(`Failed to read CCM config: ${error}`);
     }
@@ -84,11 +80,89 @@ export class CCMConfigManager {
    */
   async writeConfig(config: CCMConfig): Promise<void> {
     try {
-      config.metadata.updatedAt = new Date().toISOString();
-      await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
+      // 确保配置结构完整，兼容旧版本
+      const migratedConfig = await this.migrateConfig(config);
+      
+      // 更新版本信息和时间戳
+      migratedConfig.version = getPackageVersion();
+      migratedConfig.metadata.version = getPackageVersion();
+      migratedConfig.metadata.updatedAt = new Date().toISOString();
+      
+      await fs.writeFile(this.configPath, JSON.stringify(migratedConfig, null, 2));
     } catch (error) {
       throw new Error(`Failed to write CCM config: ${error}`);
     }
+  }
+
+  /**
+   * 检查是否需要迁移配置
+   */
+  private needsMigration(config: any): boolean {
+    // 只检查metadata字段，因为version字段是新添加的
+    return !config.metadata;
+  }
+
+  /**
+   * 执行配置迁移
+   */
+  private async performMigration(config: any): Promise<CCMConfig> {
+    console.log('🔄 Migrating configuration from older version...');
+    
+    // 备份旧配置
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = `${this.configPath}.backup-v1-${timestamp}`;
+    
+    if (await fs.pathExists(this.configPath)) {
+      await fs.copy(this.configPath, backupPath);
+      console.log(`📦 Old config backed up to: ${backupPath}`);
+    }
+    
+    // 迁移到新格式
+    const migratedConfig: CCMConfig = {
+      version: getPackageVersion(),
+      currentProvider: config.currentProvider || '',
+      claudeConfigPath: config.claudeConfigPath || envConfig.getClaudeConfigPath(),
+      providers: config.providers || {},
+      settings: {
+        language: config.settings?.language || null,
+        firstRun: config.settings?.firstRun ?? true
+      },
+      metadata: {
+        version: getPackageVersion(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    };
+    
+    console.log('✅ Configuration migration completed');
+    return migratedConfig;
+  }
+
+  /**
+   * 配置迁移和兼容性处理
+   */
+  private async migrateConfig(config: any): Promise<CCMConfig> {
+    // 检查是否需要迁移
+    if (this.needsMigration(config)) {
+      return await this.performMigration(config);
+    }
+    
+    // 确保所有必需字段存在
+    return {
+      version: config.version || getPackageVersion(),
+      currentProvider: config.currentProvider || '',
+      claudeConfigPath: config.claudeConfigPath || envConfig.getClaudeConfigPath(),
+      providers: config.providers || {},
+      settings: {
+        language: config.settings?.language || null,
+        firstRun: config.settings?.firstRun ?? true
+      },
+      metadata: {
+        version: config.metadata?.version || getPackageVersion(),
+        createdAt: config.metadata?.createdAt || new Date().toISOString(),
+        updatedAt: config.metadata?.updatedAt || new Date().toISOString()
+      }
+    };
   }
 
   /**

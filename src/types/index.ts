@@ -37,6 +37,7 @@ export interface ProviderConfig {
  * CCM 主配置
  */
 export interface CCMConfig {
+  version: string;
   currentProvider: string;
   claudeConfigPath: string;
   providers: {
