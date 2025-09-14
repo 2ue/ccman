@@ -11,6 +11,9 @@ dependencies:
   commander:
     specifier: ^11.0.0
     version: 11.1.0
+  dotenv:
+    specifier: ^17.2.2
+    version: 17.2.2
   fs-extra:
     specifier: ^11.0.0
     version: 11.3.1
@@ -1622,6 +1625,11 @@ packages:
     dependencies:
       esutils: 2.0.3
     dev: true
+
+  /dotenv@17.2.2:
+    resolution: {integrity: sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q==}
+    engines: {node: '>=12'}
+    dev: false
 
   /electron-to-chromium@1.5.196:
     resolution: {integrity: sha512-FnnXV0dXANe7YNtKl/Af1raw+sBBUPuwcNEWfLOJyumXBvfQEBsnc0Gn+yEnVscq4x3makTtrlf4TjAo7lcXTQ==}

@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { CCMConfig, ProviderConfig } from '../types';
 import { getPackageVersion } from '../utils/version';
+import { envConfig } from '../utils/env-config';
 
 /**
  * CCM配置管理器
@@ -14,6 +15,9 @@ export class CCMConfigManager {
   private providersDir: string;
 
   constructor() {
+    // 加载环境配置
+    envConfig.load();
+    
     // 使用环境变量支持开发时的配置隔离
     const configDirName = process.env.CCM_CONFIG_DIR || '.ccman';
     this.configDir = path.join(os.homedir(), configDirName);

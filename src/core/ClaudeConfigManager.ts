@@ -2,6 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
 import { ClaudeSettings } from '../types';
+import { envConfig } from '../utils/env-config';
 
 /**
  * Claude配置管理器
@@ -11,6 +12,9 @@ export class ClaudeConfigManager {
   private claudeConfigPath: string;
 
   constructor(claudeConfigPath?: string) {
+    // 加载环境配置
+    envConfig.load();
+    
     // 优先使用传入参数，其次使用环境变量，最后使用生产默认路径
     this.claudeConfigPath = claudeConfigPath || 
                            process.env.CLAUDE_CONFIG_PATH || 
