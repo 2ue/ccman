@@ -15,7 +15,7 @@ export class CCMConfigManager {
 
   constructor() {
     // 使用环境变量支持开发时的配置隔离
-    const configDirName = process.env.CCM_CONFIG_DIR || '.ccman-dev';
+    const configDirName = process.env.CCM_CONFIG_DIR || '.ccman';
     this.configDir = path.join(os.homedir(), configDirName);
     this.configPath = path.join(this.configDir, 'config.json');
     this.providersDir = path.join(this.configDir, 'providers');
@@ -31,7 +31,7 @@ export class CCMConfigManager {
     if (!await fs.pathExists(this.configPath)) {
       const defaultConfig: CCMConfig = {
         currentProvider: '',
-        claudeConfigPath: process.env.CLAUDE_CONFIG_PATH || path.join(os.homedir(), '.claude', 'settings-dev.json'),
+        claudeConfigPath: process.env.CLAUDE_CONFIG_PATH || path.join(os.homedir(), '.claude', 'settings.json'),
         providers: {},
         settings: {
           language: null,

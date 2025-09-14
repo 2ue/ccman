@@ -11,10 +11,10 @@ export class ClaudeConfigManager {
   private claudeConfigPath: string;
 
   constructor(claudeConfigPath?: string) {
-    // 优先使用传入参数，其次使用环境变量，最后使用开发默认路径
+    // 优先使用传入参数，其次使用环境变量，最后使用生产默认路径
     this.claudeConfigPath = claudeConfigPath || 
                            process.env.CLAUDE_CONFIG_PATH || 
-                           path.join(os.homedir(), '.claude', 'settings-dev.json');
+                           path.join(os.homedir(), '.claude', 'settings.json');
   }
 
   /**
