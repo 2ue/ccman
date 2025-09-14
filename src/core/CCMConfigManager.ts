@@ -18,9 +18,17 @@ export class CCMConfigManager {
     // 加载环境配置
     envConfig.load();
     
-    // 使用环境变量支持开发时的配置隔离
-    const configDirName = process.env.CCM_CONFIG_DIR || '.ccman';
-    this.configDir = path.join(os.homedir(), configDirName);
+    // 从环境变量读取配置目录，支持~扩展
+    const configDirName = process.env.CCM_CONFIG_DIR;
+    if (!configDirName) {
+      throw new Error('CCM_CONFIG_DIR environment variable is required');
+    }
+    
+    // 处理~路径扩展
+    this.configDir = configDirName.startsWith('~') 
+      ? path.join(os.homedir(), configDirName.slice(2))
+      : configDirName;
+      
     this.configPath = path.join(this.configDir, 'config.json');
     this.providersDir = path.join(this.configDir, 'providers');
   }
@@ -33,9 +41,20 @@ export class CCMConfigManager {
     await fs.ensureDir(this.providersDir);
     
     if (!await fs.pathExists(this.configPath)) {
+      // 从环境变量读取Claude配置路径
+      const claudeConfigPath = process.env.CLAUDE_CONFIG_PATH;
+      if (!claudeConfigPath) {
+        throw new Error('CLAUDE_CONFIG_PATH environment variable is required');
+      }
+      
+      // 处理~路径扩展
+      const expandedClaudeConfigPath = claudeConfigPath.startsWith('~')
+        ? path.join(os.homedir(), claudeConfigPath.slice(2))
+        : claudeConfigPath;
+      
       const defaultConfig: CCMConfig = {
         currentProvider: '',
-        claudeConfigPath: process.env.CLAUDE_CONFIG_PATH || path.join(os.homedir(), '.claude', 'settings.json'),
+        claudeConfigPath: expandedClaudeConfigPath,
         providers: {},
         settings: {
           language: null,

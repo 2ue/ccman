@@ -8,9 +8,9 @@
     "ccman": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "NODE_ENV=production tsc",
     "dev": "NODE_ENV=development tsx src/cli.ts",
-    "start": "node dist/cli.js",
+    "start": "NODE_ENV=production node dist/cli.js",
     "test": "jest --passWithNoTests",
     "lint": "eslint src/**/*.ts",
     "clean": "rm -rf dist",

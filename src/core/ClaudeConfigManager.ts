@@ -15,10 +15,21 @@ export class ClaudeConfigManager {
     // 加载环境配置
     envConfig.load();
     
-    // 优先使用传入参数，其次使用环境变量，最后使用生产默认路径
-    this.claudeConfigPath = claudeConfigPath || 
-                           process.env.CLAUDE_CONFIG_PATH || 
-                           path.join(os.homedir(), '.claude', 'settings.json');
+    if (claudeConfigPath) {
+      // 优先使用传入参数
+      this.claudeConfigPath = claudeConfigPath;
+    } else {
+      // 从环境变量读取
+      const envPath = process.env.CLAUDE_CONFIG_PATH;
+      if (!envPath) {
+        throw new Error('CLAUDE_CONFIG_PATH environment variable is required');
+      }
+      
+      // 处理~路径扩展
+      this.claudeConfigPath = envPath.startsWith('~')
+        ? path.join(os.homedir(), envPath.slice(2))
+        : envPath;
+    }
   }
 
   /**

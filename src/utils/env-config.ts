@@ -44,9 +44,12 @@ export class EnvConfigManager {
    * 检测运行环境
    */
   private detectEnvironment(): 'development' | 'production' {
-    // 1. 显式设置的NODE_ENV
+    // 1. 显式设置的NODE_ENV优先级最高
     if (process.env.NODE_ENV === 'development') {
       return 'development';
+    }
+    if (process.env.NODE_ENV === 'production') {
+      return 'production';
     }
 
     // 2. 如果是通过npm run dev运行，则为开发环境
@@ -54,18 +57,23 @@ export class EnvConfigManager {
       return 'development';
     }
 
-    // 3. 检查是否在项目目录内运行（开发环境特征）
+    // 3. 检查是否在项目目录内通过tsx运行（开发环境特征）
     const currentScript = process.argv[1];
     if (currentScript && currentScript.includes('tsx')) {
       return 'development';
     }
 
-    // 4. 检查是否使用npm link或本地路径运行
-    if (currentScript && (currentScript.includes('src/cli.ts') || currentScript.includes('node_modules/.bin'))) {
+    // 4. 检查是否使用src/cli.ts直接运行（开发环境）
+    if (currentScript && currentScript.includes('src/cli.ts')) {
       return 'development';
     }
 
-    // 5. 默认为生产环境
+    // 5. 检查是否在node_modules中运行（可能是npm link）
+    if (currentScript && currentScript.includes('/node_modules/') && currentScript.includes('ccman')) {
+      return 'development';
+    }
+
+    // 6. 默认为生产环境（全局安装、npm start等）
     return 'production';
   }
 
