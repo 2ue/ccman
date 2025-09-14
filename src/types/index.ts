@@ -16,7 +16,6 @@ export interface ClaudeSettings {
     allow: string[];
     deny: string[];
   };
-  apiKeyHelper: string;
 }
 
 /**
@@ -66,7 +65,6 @@ export interface AddProviderOptions {
   description?: string;
   baseUrl: string;
   apiKey: string;
-  apiKeyHelper?: string;
 }
 
 /**

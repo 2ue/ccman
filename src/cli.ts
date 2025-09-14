@@ -157,7 +157,6 @@ async function showInteractiveMenu(): Promise<void> {
 
       case 'add': {
         const addAnswers = await inquirer.prompt([
-          { type: 'input', name: 'id', message: 'Provider ID:' },
           { type: 'input', name: 'name', message: 'Provider name:' },
           { type: 'input', name: 'description', message: 'Description:' },
           { type: 'input', name: 'baseUrl', message: 'Base URL:' },
@@ -167,6 +166,28 @@ async function showInteractiveMenu(): Promise<void> {
         const addResult = await providerManager.addProvider(addAnswers);
         if (addResult.success) {
           console.log(chalk.green(`✓ ${addResult.message}`));
+          
+          // 获取生成的provider ID并询问是否设为当前供应商
+          const providerId = addResult.data?.providerId;
+          if (providerId) {
+            const useAnswer = await inquirer.prompt([
+              {
+                type: 'confirm',
+                name: 'useCurrent',
+                message: `Set "${addAnswers.name}" as current provider?`,
+                default: true
+              }
+            ]);
+            
+            if (useAnswer.useCurrent) {
+              const useResult = await providerManager.useProvider(providerId);
+              if (useResult.success) {
+                console.log(chalk.green(`✓ ${useResult.message}`));
+              } else {
+                console.error(chalk.red(`✗ ${useResult.message}`));
+              }
+            }
+          }
         } else {
           console.error(chalk.red(`✗ ${addResult.message}`));
         }

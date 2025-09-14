@@ -84,8 +84,7 @@ export class ProviderManager {
           permissions: {
             allow: [],
             deny: []
-          },
-          apiKeyHelper: options.apiKeyHelper || `echo '${options.apiKey}'`
+          }
         },
         metadata: {
           createdAt: new Date().toISOString(),
@@ -319,7 +318,6 @@ export class ProviderManager {
       }
       if (updates.apiKey) {
         providerConfig.config.env.ANTHROPIC_AUTH_TOKEN = updates.apiKey;
-        providerConfig.config.apiKeyHelper = updates.apiKeyHelper || `echo '${updates.apiKey}'`;
       }
 
       await this.ccmConfig.writeProviderConfig(providerId, providerConfig);
