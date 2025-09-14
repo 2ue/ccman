@@ -36,23 +36,45 @@ export class ProviderManager {
   }
 
   /**
+   * 生成供应商唯一ID
+   * 基于名称生成，确保唯一性
+   */
+  private async generateProviderId(name: string): Promise<string> {
+    // 基础ID：转换为小写，替换空格和特殊字符
+    const baseId = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')  // 替换非字母数字字符为连字符
+      .replace(/-+/g, '-')         // 合并多个连字符
+      .replace(/^-|-$/g, '');      // 移除首尾连字符
+    
+    // 检查ID是否已存在
+    const config = await this.ccmConfig.readConfig();
+    let finalId = baseId;
+    let counter = 1;
+    
+    while (config.providers[finalId]) {
+      finalId = `${baseId}-${counter}`;
+      counter++;
+    }
+    
+    return finalId;
+  }
+
+  /**
    * 添加新的供应商配置
    */
   async addProvider(options: AddProviderOptions): Promise<OperationResult> {
     try {
-      // 检查供应商ID是否已存在
-      const existingProvider = await this.ccmConfig.readProviderConfig(options.id);
-      if (existingProvider) {
-        return {
-          success: false,
-          message: `Provider '${options.id}' already exists`
-        };
-      }
+      // 自动生成唯一ID
+      const providerId = await this.generateProviderId(options.name);
+      
+      // 设置默认描述为供应商名称
+      const description = options.description || options.name;
 
       // 创建供应商配置
       const providerConfig: ProviderConfig = {
         name: options.name,
-        description: options.description || `${options.name} API Configuration`,
+        description: description,
         config: {
           env: {
             ANTHROPIC_AUTH_TOKEN: options.apiKey,
@@ -73,33 +95,34 @@ export class ProviderManager {
       };
 
       // 保存供应商配置
-      await this.ccmConfig.writeProviderConfig(options.id, providerConfig);
+      await this.ccmConfig.writeProviderConfig(providerId, providerConfig);
 
       // 更新主配置
       const config = await this.ccmConfig.readConfig();
-      config.providers[options.id] = {
+      config.providers[providerId] = {
         name: options.name,
-        configFile: `${options.id}.json`,
+        configFile: `${providerId}.json`,
         lastUsed: new Date().toISOString()
       };
 
       // 如果这是第一个供应商，设为当前并更新Claude配置
       if (Object.keys(config.providers).length === 1) {
-        config.currentProvider = options.id;
+        config.currentProvider = providerId;
         
         // 更新Claude配置
         await this.claudeConfig.writeClaudeConfig(providerConfig.config);
         
         // 增加使用次数
         providerConfig.metadata.usageCount++;
-        await this.ccmConfig.writeProviderConfig(options.id, providerConfig);
+        await this.ccmConfig.writeProviderConfig(providerId, providerConfig);
       }
 
       await this.ccmConfig.writeConfig(config);
 
       return {
         success: true,
-        message: `Successfully added provider '${options.name}'`
+        message: `Successfully added provider '${options.name}' (ID: ${providerId})`,
+        data: { providerId }  // 返回生成的ID
       };
 
     } catch (error) {

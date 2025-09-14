@@ -55,12 +55,6 @@ async function showInteractiveMenu(): Promise<void> {
         const answers = await inquirer.prompt([
           { 
             type: 'input', 
-            name: 'id', 
-            message: messages.forms.providerId, 
-            default: 'anthropic' 
-          },
-          { 
-            type: 'input', 
             name: 'name', 
             message: messages.forms.providerName, 
             default: 'Anthropic Official' 
@@ -69,7 +63,7 @@ async function showInteractiveMenu(): Promise<void> {
             type: 'input', 
             name: 'description', 
             message: messages.forms.description, 
-            default: 'Official Anthropic API' 
+            default: '' 
           },
           { 
             type: 'input', 
@@ -86,7 +80,6 @@ async function showInteractiveMenu(): Promise<void> {
         ]);
         
         const result = await providerManager.addProvider({
-          id: answers.id,
           name: answers.name,
           description: answers.description,
           baseUrl: answers.baseUrl,
@@ -95,10 +88,14 @@ async function showInteractiveMenu(): Promise<void> {
         
         if (result.success) {
           console.log(chalk.green(`✓ ${result.message}`));
-          // 自动设为当前供应商
-          const useResult = await providerManager.useProvider(answers.id);
-          if (useResult.success) {
-            console.log(chalk.green(`✓ ${useResult.message}`));
+          
+          // 获取生成的provider ID并自动设为当前供应商
+          const providerId = result.data?.providerId;
+          if (providerId) {
+            const useResult = await providerManager.useProvider(providerId);
+            if (useResult.success) {
+              console.log(chalk.green(`✓ ${useResult.message}`));
+            }
           }
         } else {
           console.error(chalk.red(`✗ ${result.message}`));
@@ -405,10 +402,10 @@ program
 
 // 添加供应商
 program
-  .command('add <id> <name> <baseUrl> [apiKey]')
+  .command('add <name> <baseUrl> [apiKey]')
   .description('Add a new provider configuration')
-  .option('-d, --description <desc>', 'Provider description')
-  .action(async (id: string, name: string, baseUrl: string, apiKey?: string, options?: { description?: string }) => {
+  .option('-d, --description <desc>', 'Provider description (defaults to provider name)')
+  .action(async (name: string, baseUrl: string, apiKey?: string, options?: { description?: string }) => {
     try {
       await providerManager.init();
       
@@ -425,7 +422,6 @@ program
       }
 
       const addOptions: AddProviderOptions = {
-        id,
         name,
         description: options?.description,
         baseUrl,
@@ -437,9 +433,12 @@ program
       if (result.success) {
         console.log(chalk.green(`✓ ${result.message}`));
         
+        // 获取生成的provider ID
+        const providerId = result.data?.providerId;
+        
         // 询问是否设为当前供应商
         const currentProvider = await providerManager.getCurrentProvider();
-        if (!currentProvider || currentProvider.id !== id) {
+        if (!currentProvider || currentProvider.config.name !== name) {
           const useAnswer = await inquirer.prompt([
             {
               type: 'confirm',
@@ -449,8 +448,8 @@ program
             }
           ]);
           
-          if (useAnswer.useCurrent) {
-            const useResult = await providerManager.useProvider(id);
+          if (useAnswer.useCurrent && providerId) {
+            const useResult = await providerManager.useProvider(providerId);
             if (useResult.success) {
               console.log(chalk.green(`✓ ${useResult.message}`));
             } else {

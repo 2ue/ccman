@@ -62,7 +62,6 @@ export interface CCMConfig {
  * 添加供应商选项
  */
 export interface AddProviderOptions {
-  id: string;
   name: string;
   description?: string;
   baseUrl: string;
@@ -90,6 +89,7 @@ export interface OperationResult {
   success: boolean;
   message: string;
   error?: string;
+  data?: any;
 }
 
 /**
