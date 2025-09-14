@@ -62,9 +62,7 @@ export class ClaudeConfigManager {
           // 覆盖CCM管理的权限设置
           allow: config.permissions.allow,
           deny: config.permissions.deny
-        },
-        // 覆盖apiKeyHelper
-        apiKeyHelper: config.apiKeyHelper
+        }
       };
       
       await fs.writeFile(this.claudeConfigPath, JSON.stringify(mergedConfig, null, 2), 'utf8');
