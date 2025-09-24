@@ -69,7 +69,8 @@ src/
     "env": {
       "ANTHROPIC_AUTH_TOKEN": "sk-xxx",
       "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
-      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1,
+      "CLAUDE_CODE_MAX_OUTPUT_TOKENS": 32000
     },
     "permissions": {
       "allow": [],
@@ -136,6 +137,7 @@ interface ClaudeSettings {
     ANTHROPIC_AUTH_TOKEN: string;
     ANTHROPIC_BASE_URL: string;
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC?: number;
+    CLAUDE_CODE_MAX_OUTPUT_TOKENS?: number;
   };
   permissions: { allow: string[]; deny: string[]; };
   apiKeyHelper: string;
@@ -170,8 +172,9 @@ interface ProviderConfig {
 {
   "env": {
     "ANTHROPIC_AUTH_TOKEN": "...",       // ✅ CCM管理
-    "ANTHROPIC_BASE_URL": "...",         // ✅ CCM管理  
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1  // ✅ CCM管理
+    "ANTHROPIC_BASE_URL": "...",         // ✅ CCM管理
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1,  // ✅ CCM管理
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": 32000  // ✅ CCM管理
   },
   "permissions": {
     "allow": [],                         // ✅ CCM管理

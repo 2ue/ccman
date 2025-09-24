@@ -11,6 +11,7 @@ export interface ClaudeSettings {
     ANTHROPIC_AUTH_TOKEN: string;
     ANTHROPIC_BASE_URL: string;
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC?: number;
+    CLAUDE_CODE_MAX_OUTPUT_TOKENS?: number;
   };
   permissions: {
     allow: string[];

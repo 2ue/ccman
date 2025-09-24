@@ -79,7 +79,8 @@ export class ProviderManager {
           env: {
             ANTHROPIC_AUTH_TOKEN: options.apiKey,
             ANTHROPIC_BASE_URL: options.baseUrl,
-            CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1
+            CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1,
+            CLAUDE_CODE_MAX_OUTPUT_TOKENS: 32000
           },
           permissions: {
             allow: [],
@@ -108,7 +109,7 @@ export class ProviderManager {
       if (Object.keys(config.providers).length === 1) {
         config.currentProvider = providerId;
         
-        // 更新Claude配置
+        // 更新Claude配置，首次可能需要备份
         await this.claudeConfig.writeClaudeConfig(providerConfig.config);
         
         // 增加使用次数
@@ -198,11 +199,8 @@ export class ProviderManager {
         };
       }
 
-      // 备份当前Claude配置
-      const backupPath = await this.claudeConfig.backupClaudeConfig();
-
-      // 更新Claude配置
-      await this.claudeConfig.writeClaudeConfig(providerConfig.config);
+      // 更新Claude配置（不需要备份，因为都是CCM管理的配置之间切换）
+      await this.claudeConfig.writeClaudeConfig(providerConfig.config, true);
 
       // 更新CCM配置
       config.currentProvider = providerId;
@@ -215,7 +213,7 @@ export class ProviderManager {
 
       return {
         success: true,
-        message: `Successfully switched to provider '${config.providers[providerId].name}'${backupPath ? `. Backup created: ${backupPath}` : ''}`
+        message: `Successfully switched to provider '${config.providers[providerId].name}'`
       };
 
     } catch (error) {
@@ -325,7 +323,7 @@ export class ProviderManager {
       // 如果更新的是当前供应商，同步更新Claude配置
       const config = await this.ccmConfig.readConfig();
       if (config.currentProvider === providerId) {
-        await this.claudeConfig.writeClaudeConfig(providerConfig.config);
+        await this.claudeConfig.writeClaudeConfig(providerConfig.config, true);
       }
 
       // 更新主配置中的名称

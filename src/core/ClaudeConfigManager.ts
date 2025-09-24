@@ -35,16 +35,22 @@ export class ClaudeConfigManager {
    * 选择性写入Claude配置
    * 只覆盖指定的key，保留其他用户配置
    */
-  async writeClaudeConfig(config: ClaudeSettings): Promise<void> {
+  async writeClaudeConfig(config: ClaudeSettings, skipBackup: boolean = false): Promise<string | null> {
     try {
       await fs.ensureDir(path.dirname(this.claudeConfigPath));
       
       let existingConfig: any = {};
+      let backupPath: string | null = null;
       
       // 如果文件已存在，先读取现有配置
       if (await fs.pathExists(this.claudeConfigPath)) {
         const content = await fs.readFile(this.claudeConfigPath, 'utf8');
         existingConfig = JSON.parse(content);
+        
+        // 只有在需要时才备份（首次CCM接管用户配置）
+        if (!skipBackup && !this.isCCMManaged(existingConfig)) {
+          backupPath = await this.backupClaudeConfig();
+        }
       }
       
       // 选择性覆盖只有CCM管理的key
@@ -55,17 +61,22 @@ export class ClaudeConfigManager {
           // 只覆盖CCM管理的环境变量
           ANTHROPIC_AUTH_TOKEN: config.env.ANTHROPIC_AUTH_TOKEN,
           ANTHROPIC_BASE_URL: config.env.ANTHROPIC_BASE_URL,
-          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: config.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: config.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC,
+          CLAUDE_CODE_MAX_OUTPUT_TOKENS: config.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS
         },
         permissions: {
           ...existingConfig.permissions, // 保留现有permissions配置
           // 覆盖CCM管理的权限设置
           allow: config.permissions.allow,
           deny: config.permissions.deny
-        }
+        },
+        // 添加CCM管理标记（隐藏字段）
+        '_ccm_managed': true,
+        '_ccm_version': '2.0.0'
       };
       
       await fs.writeFile(this.claudeConfigPath, JSON.stringify(mergedConfig, null, 2), 'utf8');
+      return backupPath;
     } catch (error) {
       throw new Error(`Failed to write Claude config: ${error}`);
     }
@@ -101,6 +112,13 @@ export class ClaudeConfigManager {
     } catch (error) {
       throw new Error(`Failed to restore Claude config: ${error}`);
     }
+  }
+
+  /**
+   * 检查配置是否已被CCM管理
+   */
+  private isCCMManaged(config: any): boolean {
+    return config && config._ccm_managed === true;
   }
 
   /**
