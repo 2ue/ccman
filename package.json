@@ -31,10 +31,31 @@
     "config",
     "manager",
     "cli",
-    "typescript"
+    "typescript",
+    "anthropic",
+    "claud code",
+    "ai",
+    "provider-manager"
   ],
-  "author": "",
+  "author": {
+    "name": "2ue",
+    "email": "jie746635835@163.com"
+  },
+  "homepage": "https://github.com/2ue/ccman#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2ue/ccman.git"
+  },
+  "bugs": {
+    "url": "https://github.com/2ue/ccman/issues"
+  },
   "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "README_en.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^11.0.0",

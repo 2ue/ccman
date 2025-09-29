@@ -1,0 +1,49 @@
+# Source files
+src/
+tsconfig.json
+.prettierrc
+.eslintrc.js
+.editorconfig
+
+# Development files
+.history/
+.ccman-dev/
+dev-test.sh
+
+# Environment files
+.env.development
+.env.production
+
+# Test files
+*.test.ts
+*.spec.ts
+jest.config.js
+
+# Scripts (keep release scripts out of npm)
+scripts/
+
+# Git files
+.git/
+.github/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
