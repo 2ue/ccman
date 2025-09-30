@@ -122,14 +122,11 @@ export class ClaudeConfigManager {
   }
 
   /**
-   * 验证Claude配置目录是否存在
+   * 确保Claude配置目录存在（不存在则创建）
    */
   async ensureClaudeConfigDir(): Promise<void> {
     const claudeDir = path.dirname(this.claudeConfigPath);
-    
-    if (!await fs.pathExists(claudeDir)) {
-      throw new Error(`Claude config directory not found: ${claudeDir}. Please ensure Claude Code is installed and initialized.`);
-    }
+    await fs.ensureDir(claudeDir);
   }
 
   /**
