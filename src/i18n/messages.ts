@@ -25,6 +25,8 @@ export interface MessageBundle {
     updateProvider: string;
     removeProvider: string;
     showStatus: string;
+    doctor: string;
+    setup: string;
     exit: string;
   };
   
@@ -70,7 +72,37 @@ export interface MessageBundle {
     invalidLanguage: string;
     availableCommands: string;
   };
-  
+
+  // 环境管理
+  environment: {
+    checkTitle: string;
+    claudeCode: string;
+    nodeJs: string;
+    npm: string;
+    installed: string;
+    notInstalled: string;
+    version: string;
+    required: string;
+    path: string;
+    versionManagers: string;
+    issues: string;
+    suggestions: string;
+    ready: string;
+    hasWarnings: string;
+    notReady: string;
+    checkingEnvironment: string;
+    environmentStatus: string;
+    needsInstallOrUpgrade: string;
+    availableOptions: string;
+    selectMethod: string;
+    selected: string;
+    installSteps: string;
+    proceedInstall: string;
+    dryRunNotice: string;
+    installCancelled: string;
+    noSetupNeeded: string;
+  };
+
   // 退出消息
   exitMessage: string;
   interruptMessage: string;
@@ -103,6 +135,8 @@ export const chineseMessages: MessageBundle = {
     updateProvider: '更新供应商',
     removeProvider: '删除供应商',
     showStatus: '显示详细状态',
+    doctor: '🔍 环境检查',
+    setup: '⚙️  环境设置',
     exit: '退出'
   },
   
@@ -148,7 +182,37 @@ export const chineseMessages: MessageBundle = {
     invalidLanguage: '无效的语言选项。可用选项：zh, en, auto',
     availableCommands: '您可以使用以下命令更改：ccman lang set <zh|en|auto>'
   },
-  
+
+  // 环境管理
+  environment: {
+    checkTitle: 'Claude Code 环境检查',
+    claudeCode: 'Claude Code',
+    nodeJs: 'Node.js',
+    npm: 'npm',
+    installed: '已安装',
+    notInstalled: '未安装',
+    version: '版本',
+    required: '要求',
+    path: '路径',
+    versionManagers: '版本管理器',
+    issues: '问题',
+    suggestions: '建议',
+    ready: '环境已就绪',
+    hasWarnings: '环境有警告',
+    notReady: '环境未就绪',
+    checkingEnvironment: '检查环境中...',
+    environmentStatus: '环境状态',
+    needsInstallOrUpgrade: '需要安装或升级',
+    availableOptions: '可用的安装选项',
+    selectMethod: '选择安装方法',
+    selected: '已选择',
+    installSteps: '安装步骤',
+    proceedInstall: '继续安装吗？(演示模式,不会真正安装)',
+    dryRunNotice: '演示模式：不会真正执行安装命令',
+    installCancelled: '安装已取消',
+    noSetupNeeded: '无需设置。'
+  },
+
   // 退出消息
   exitMessage: '感谢使用 CCM。再见！',
   interruptMessage: '\n\n用户取消操作。再见！'
@@ -181,6 +245,8 @@ export const englishMessages: MessageBundle = {
     updateProvider: 'Update provider',
     removeProvider: 'Remove provider',
     showStatus: 'Show detailed status',
+    doctor: '🔍 Environment Check',
+    setup: '⚙️  Environment Setup',
     exit: 'Exit'
   },
   
@@ -226,7 +292,37 @@ export const englishMessages: MessageBundle = {
     invalidLanguage: 'Invalid language option. Available: zh, en, auto',
     availableCommands: 'You can change with: ccman lang set <zh|en|auto>'
   },
-  
+
+  // 环境管理
+  environment: {
+    checkTitle: 'Claude Code Environment Check',
+    claudeCode: 'Claude Code',
+    nodeJs: 'Node.js',
+    npm: 'npm',
+    installed: 'Installed',
+    notInstalled: 'Not installed',
+    version: 'Version',
+    required: 'Required',
+    path: 'Path',
+    versionManagers: 'Version Managers',
+    issues: 'Issues',
+    suggestions: 'Suggestions',
+    ready: 'Environment is ready',
+    hasWarnings: 'Environment has warnings',
+    notReady: 'Environment is not ready',
+    checkingEnvironment: 'Checking environment...',
+    environmentStatus: 'Environment Status',
+    needsInstallOrUpgrade: 'needs to be installed or upgraded',
+    availableOptions: 'Available installation options',
+    selectMethod: 'Select installation method',
+    selected: 'Selected',
+    installSteps: 'Installation steps',
+    proceedInstall: 'Proceed with installation? (dry-run mode, will not actually install)',
+    dryRunNotice: 'Dry-run mode: Commands will not be actually executed',
+    installCancelled: 'Installation cancelled',
+    noSetupNeeded: 'No setup needed.'
+  },
+
   // 退出消息
   exitMessage: 'Thank you for using CCM. Goodbye!',
   interruptMessage: '\n\nOperation cancelled by user. Goodbye!'

@@ -9,6 +9,7 @@ import { LanguageManager } from './i18n/LanguageManager';
 import { createLanguageCommands } from './commands/lang';
 import { getPackageVersion } from './utils/version';
 import { createProviderChoices, DefaultProvider } from './config/default-providers';
+import { EnvironmentManager } from './core/EnvironmentManager';
 
 const program = new Command();
 const providerManager = new ProviderManager();
@@ -175,6 +176,10 @@ async function showInteractiveMenu(): Promise<void> {
             { name: messages.mainMenuOptions.updateProvider, value: 'update' },
             { name: messages.mainMenuOptions.removeProvider, value: 'remove' },
             { name: messages.mainMenuOptions.showStatus, value: 'status' },
+            new inquirer.Separator(),
+            { name: messages.mainMenuOptions.doctor, value: 'doctor' },
+            { name: messages.mainMenuOptions.setup, value: 'setup' },
+            new inquirer.Separator(),
             { name: messages.mainMenuOptions.exit, value: 'exit' }
           ]
         }
@@ -377,7 +382,7 @@ async function showInteractiveMenu(): Promise<void> {
         console.log(`Current provider: ${stats.currentProvider || 'None'}`);
         console.log(`Claude config: ${stats.claudeConfigPath}`);
         console.log(`CCM config: ${stats.ccmConfigPath}`);
-        
+
         if (providers.length > 0) {
           console.log();
           console.log(chalk.blue('Recent providers:'));
@@ -392,7 +397,204 @@ async function showInteractiveMenu(): Promise<void> {
             });
         }
         console.log();
-        
+
+        console.log();
+        shouldContinue = await askToContinue();
+        break;
+      }
+
+      case 'doctor': {
+        const envManager = new EnvironmentManager();
+        const checkResult = await envManager.checkEnvironment();
+
+        console.log();
+        console.log(chalk.blue(`🔍 ${messages.environment.checkTitle}`));
+        console.log();
+
+        // Claude Code 状态
+        if (checkResult.claudeCode.installed) {
+          console.log(chalk.green(`${messages.environment.claudeCode}: ✓ ${messages.environment.installed}`));
+          if (checkResult.claudeCode.version) {
+            console.log(`  ${messages.environment.version}: ${checkResult.claudeCode.version}`);
+          }
+          if (checkResult.claudeCode.path) {
+            console.log(`  ${messages.environment.path}: ${checkResult.claudeCode.path}`);
+          }
+        } else {
+          console.log(chalk.red(`${messages.environment.claudeCode}: ✗ ${messages.environment.notInstalled}`));
+        }
+        console.log();
+
+        // Node.js 状态
+        if (checkResult.node.installed) {
+          const versionStatus = checkResult.node.versionValid ? chalk.green('✓') : chalk.yellow('⚠️');
+          console.log(`${chalk.green(messages.environment.nodeJs + ':')} ${versionStatus} ${messages.environment.installed}`);
+          console.log(`  ${messages.environment.version}: ${checkResult.node.version}`);
+          console.log(`  ${messages.environment.required}: ${checkResult.requirements.nodeVersion}`);
+          if (checkResult.node.path) {
+            console.log(`  ${messages.environment.path}: ${checkResult.node.path}`);
+          }
+        } else {
+          console.log(chalk.red(`${messages.environment.nodeJs}: ✗ ${messages.environment.notInstalled}`));
+        }
+        console.log();
+
+        // npm 状态
+        if (checkResult.npm.installed) {
+          console.log(chalk.green(`${messages.environment.npm}: ✓ ${messages.environment.installed}`));
+          if (checkResult.npm.version) {
+            console.log(`  ${messages.environment.version}: ${checkResult.npm.version}`);
+          }
+          if (checkResult.npm.path) {
+            console.log(`  ${messages.environment.path}: ${checkResult.npm.path}`);
+          }
+        } else {
+          console.log(chalk.yellow(`${messages.environment.npm}: ✗ ${messages.environment.notInstalled}`));
+        }
+        console.log();
+
+        // 版本管理器
+        const managers = [];
+        if (checkResult.versionManagers.volta) managers.push('volta');
+        if (checkResult.versionManagers.nvm) managers.push('nvm');
+
+        if (managers.length > 0) {
+          console.log(chalk.blue(`${messages.environment.versionManagers}:`));
+          managers.forEach(m => console.log(`  ✓ ${m}`));
+          console.log();
+        }
+
+        // 问题列表
+        if (checkResult.issues.length > 0) {
+          console.log(chalk.yellow(`⚠️  ${messages.environment.issues}:`));
+          checkResult.issues.forEach(issue => console.log(`  - ${issue}`));
+          console.log();
+        }
+
+        // 建议
+        if (checkResult.suggestions.length > 0) {
+          console.log(chalk.cyan(`💡 ${messages.environment.suggestions}:`));
+          checkResult.suggestions.forEach(suggestion => console.log(`  - ${suggestion}`));
+          console.log();
+        }
+
+        // 总体状态
+        if (checkResult.status === 'ready') {
+          console.log(chalk.green(`✅ ${messages.environment.ready}`));
+        } else if (checkResult.status === 'warning') {
+          console.log(chalk.yellow(`⚠️  ${messages.environment.hasWarnings}`));
+        } else {
+          console.log(chalk.red(`❌ ${messages.environment.notReady}`));
+        }
+        console.log();
+
+        console.log();
+        shouldContinue = await askToContinue();
+        break;
+      }
+
+      case 'setup': {
+        const envManager = new EnvironmentManager();
+
+        console.log(chalk.blue(`🔍 ${messages.environment.checkingEnvironment}`));
+        const checkResult = await envManager.checkEnvironment();
+
+        console.log();
+        console.log(`${messages.environment.environmentStatus}:`);
+        console.log(`  ${messages.environment.claudeCode}: ${checkResult.claudeCode.installed ? '✓' : '✗'}`);
+        console.log(`  ${messages.environment.nodeJs}: ${checkResult.node.installed && checkResult.node.versionValid ? '✓' : '✗'}`);
+        console.log();
+
+        if (checkResult.status === 'ready') {
+          console.log(chalk.green(`✅ ${messages.environment.ready}!`));
+          console.log(messages.environment.noSetupNeeded);
+        } else {
+          const plan = await envManager.generateInstallPlan(checkResult);
+
+          if (plan.needsNode) {
+            console.log(chalk.yellow(`⚠️  ${messages.environment.nodeJs} ${messages.environment.needsInstallOrUpgrade}`));
+            console.log();
+            console.log(`${messages.environment.availableOptions}:`);
+            console.log();
+
+            const optionChoices = plan.nodeOptions.map((opt, idx) => ({
+              name: `${idx + 1}. ${opt.name}${opt.reason ? ` (${opt.reason})` : ''}`,
+              value: idx,
+              short: opt.name
+            }));
+
+            const optionAnswer = await inquirer.prompt([
+              {
+                type: 'list',
+                name: 'option',
+                message: messages.environment.selectMethod + ':',
+                choices: optionChoices
+              }
+            ]);
+
+            const selectedOption = plan.nodeOptions[optionAnswer.option];
+            console.log();
+            console.log(chalk.cyan(`${messages.environment.selected}: ${selectedOption.name}`));
+            if (selectedOption.description) {
+              console.log(chalk.gray(`  ${selectedOption.description}`));
+            }
+            console.log();
+
+            console.log(chalk.blue(`${messages.environment.installSteps}:`));
+            selectedOption.steps.forEach((step, idx) => {
+              console.log(`  ${idx + 1}. ${step.description}`);
+              console.log(chalk.gray(`     $ ${step.command}`));
+            });
+            console.log();
+
+            const confirmAnswer = await inquirer.prompt([
+              {
+                type: 'confirm',
+                name: 'confirm',
+                message: messages.environment.proceedInstall,
+                default: true
+              }
+            ]);
+
+            if (confirmAnswer.confirm) {
+              const { Installer } = await import('./setup/installer');
+              const installer = new Installer({ dryRun: true });
+              await installer.executeSteps(selectedOption.steps);
+            } else {
+              console.log(chalk.yellow(messages.environment.installCancelled));
+            }
+          }
+
+          if (plan.needsClaudeCode) {
+            console.log();
+            console.log(chalk.yellow(`⚠️  ${messages.environment.claudeCode} ${messages.environment.needsInstallOrUpgrade}`));
+            console.log();
+            console.log(chalk.blue(`${messages.environment.installSteps}:`));
+            plan.claudeCodeSteps.forEach((step, idx) => {
+              console.log(`  ${idx + 1}. ${step.description}`);
+              console.log(chalk.gray(`     $ ${step.command}`));
+            });
+            console.log();
+
+            const confirmAnswer = await inquirer.prompt([
+              {
+                type: 'confirm',
+                name: 'confirm',
+                message: messages.environment.proceedInstall,
+                default: true
+              }
+            ]);
+
+            if (confirmAnswer.confirm) {
+              const { Installer } = await import('./setup/installer');
+              const installer = new Installer({ dryRun: true });
+              await installer.executeSteps(plan.claudeCodeSteps);
+            } else {
+              console.log(chalk.yellow(messages.environment.installCancelled));
+            }
+          }
+        }
+
         console.log();
         shouldContinue = await askToContinue();
         break;
