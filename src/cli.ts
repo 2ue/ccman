@@ -8,6 +8,7 @@ import { AddProviderOptions } from './types';
 import { LanguageManager } from './i18n/LanguageManager';
 import { createLanguageCommands } from './commands/lang';
 import { getPackageVersion } from './utils/version';
+import { createProviderChoices, DefaultProvider } from './config/default-providers';
 
 const program = new Command();
 const providerManager = new ProviderManager();
@@ -51,33 +52,85 @@ async function showInteractiveMenu(): Promise<void> {
       
       if (providers.length === 0) {
         console.log(chalk.yellow(messages.noProvidersFound));
-        
-        const answers = await inquirer.prompt([
-          { 
-            type: 'input', 
-            name: 'name', 
-            message: messages.forms.providerName, 
-            default: 'Anthropic Official' 
-          },
-          { 
-            type: 'input', 
-            name: 'description', 
-            message: messages.forms.description, 
-            default: '' 
-          },
-          { 
-            type: 'input', 
-            name: 'baseUrl', 
-            message: messages.forms.baseUrl, 
-            default: 'https://api.anthropic.com' 
-          },
-          { 
-            type: 'password', 
-            name: 'apiKey', 
-            message: messages.forms.apiKey, 
-            mask: '*' 
-          }
-        ]);
+        console.log(chalk.cyan('📝 选择一个预设供应商或手动配置：'));
+        console.log();
+
+        // 显示供应商选择菜单
+        let providerChoice;
+        do {
+          providerChoice = await inquirer.prompt([
+            {
+              type: 'list',
+              name: 'provider',
+              message: '选择供应商:',
+              choices: createProviderChoices(),
+              pageSize: 10
+            }
+          ]);
+        } while (providerChoice.provider === 'separator');
+
+        let answers: any;
+
+        if (providerChoice.provider === 'custom') {
+          // 手动输入
+          answers = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'name',
+              message: messages.forms.providerName
+            },
+            {
+              type: 'input',
+              name: 'description',
+              message: messages.forms.description,
+              default: ''
+            },
+            {
+              type: 'input',
+              name: 'baseUrl',
+              message: messages.forms.baseUrl
+            },
+            {
+              type: 'password',
+              name: 'apiKey',
+              message: messages.forms.apiKey,
+              mask: '*'
+            }
+          ]);
+        } else {
+          // 使用预设供应商
+          const selectedProvider = providerChoice.provider as DefaultProvider;
+          console.log(chalk.green(`已选择：${selectedProvider.name}`));
+          console.log(`URL: ${chalk.cyan(selectedProvider.baseUrl)}`);
+          console.log();
+
+          answers = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'name',
+              message: '供应商名称:',
+              default: selectedProvider.name
+            },
+            {
+              type: 'input',
+              name: 'description',
+              message: '描述:',
+              default: selectedProvider.description
+            },
+            {
+              type: 'input',
+              name: 'baseUrl',
+              message: '基础URL:',
+              default: selectedProvider.baseUrl
+            },
+            {
+              type: 'password',
+              name: 'apiKey',
+              message: 'API密钥:',
+              mask: '*'
+            }
+          ]);
+        }
         
         const result = await providerManager.addProvider({
           name: answers.name,
@@ -156,12 +209,54 @@ async function showInteractiveMenu(): Promise<void> {
       }
 
       case 'add': {
-        const addAnswers = await inquirer.prompt([
-          { type: 'input', name: 'name', message: 'Provider name:' },
-          { type: 'input', name: 'description', message: 'Description:' },
-          { type: 'input', name: 'baseUrl', message: 'Base URL:' },
-          { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' }
-        ]);
+        // 先让用户选择是使用预设供应商还是自定义
+        let providerTypeAnswer;
+        do {
+          providerTypeAnswer = await inquirer.prompt([
+            {
+              type: 'list',
+              name: 'providerChoice',
+              message: '请选择供应商类型:',
+              choices: createProviderChoices()
+            }
+          ]);
+        } while (providerTypeAnswer.providerChoice === 'separator');
+
+        let addAnswers: any;
+
+        if (providerTypeAnswer.providerChoice === 'custom') {
+          // 用户选择自定义，手动输入所有信息
+          addAnswers = await inquirer.prompt([
+            { type: 'input', name: 'name', message: 'Provider name:' },
+            { type: 'input', name: 'description', message: 'Description:' },
+            { type: 'input', name: 'baseUrl', message: 'Base URL:' },
+            { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' }
+          ]);
+        } else {
+          // 用户选择了预设供应商，使用预设信息
+          const selectedProvider = providerTypeAnswer.providerChoice as DefaultProvider;
+          addAnswers = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'name',
+              message: 'Provider name:',
+              default: selectedProvider.name
+            },
+            {
+              type: 'input',
+              name: 'description',
+              message: 'Description:',
+              default: selectedProvider.description
+            },
+            {
+              type: 'input',
+              name: 'baseUrl',
+              message: 'Base URL:',
+              default: selectedProvider.baseUrl
+            },
+            { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' }
+          ]);
+        }
         
         const addResult = await providerManager.addProvider(addAnswers);
         if (addResult.success) {
@@ -423,8 +518,102 @@ program
 
 // 添加供应商
 program
+  .command('add-interactive')
+  .alias('addi')
+  .description('Add a new provider configuration interactively (with preset options)')
+  .action(async () => {
+    try {
+      await providerManager.init();
+
+      // 让用户选择预设供应商或自定义
+      let providerTypeAnswer;
+      do {
+        providerTypeAnswer = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'providerChoice',
+            message: '请选择供应商类型:',
+            choices: createProviderChoices()
+          }
+        ]);
+      } while (providerTypeAnswer.providerChoice === 'separator');
+
+      let addAnswers: any;
+
+      if (providerTypeAnswer.providerChoice === 'custom') {
+        // 用户选择自定义，手动输入所有信息
+        addAnswers = await inquirer.prompt([
+          { type: 'input', name: 'name', message: 'Provider name:' },
+          { type: 'input', name: 'description', message: 'Description:' },
+          { type: 'input', name: 'baseUrl', message: 'Base URL:' },
+          { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' }
+        ]);
+      } else {
+        // 用户选择了预设供应商，使用预设信息
+        const selectedProvider = providerTypeAnswer.providerChoice as DefaultProvider;
+        addAnswers = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'name',
+            message: 'Provider name:',
+            default: selectedProvider.name
+          },
+          {
+            type: 'input',
+            name: 'description',
+            message: 'Description:',
+            default: selectedProvider.description
+          },
+          {
+            type: 'input',
+            name: 'baseUrl',
+            message: 'Base URL:',
+            default: selectedProvider.baseUrl
+          },
+          { type: 'password', name: 'apiKey', message: 'API Key:', mask: '*' }
+        ]);
+      }
+
+      const result = await providerManager.addProvider(addAnswers);
+
+      if (result.success) {
+        console.log(chalk.green(`✓ ${result.message}`));
+
+        // 获取生成的provider ID
+        const providerId = result.data?.providerId;
+
+        // 询问是否设为当前供应商
+        const currentProvider = await providerManager.getCurrentProvider();
+        if (!currentProvider || currentProvider.config.name !== addAnswers.name) {
+          const useAnswer = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'useCurrent',
+              message: `Set "${addAnswers.name}" as current provider?`,
+              default: true
+            }
+          ]);
+
+          if (useAnswer.useCurrent && providerId) {
+            const useResult = await providerManager.useProvider(providerId);
+            if (useResult.success) {
+              console.log(chalk.green(`✓ ${useResult.message}`));
+            }
+          }
+        }
+      } else {
+        console.error(chalk.red(`✗ ${result.message}`));
+      }
+    } catch (error) {
+      console.error(chalk.red('Error adding provider:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+// 命令行添加供应商
+program
   .command('add <name> <baseUrl> [apiKey]')
-  .description('Add a new provider configuration')
+  .description('Add a new provider configuration (command line mode)')
   .option('-d, --description <desc>', 'Provider description (defaults to provider name)')
   .action(async (name: string, baseUrl: string, apiKey?: string, options?: { description?: string }) => {
     try {
