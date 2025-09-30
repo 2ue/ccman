@@ -28,11 +28,53 @@
 
 ## 🚀 快速开始
 
-### 安装
+### 安装方式
+
+#### 方式 1: npm 安装 (推荐)
 
 ```bash
+# 全局安装
 npm install -g ccman
+
+# 或使用 pnpm
+pnpm add -g ccman
+
+# 或使用 yarn
+yarn global add ccman
 ```
+
+#### 方式 2: npx 直接运行 (无需安装)
+
+```bash
+# 直接运行,不安装到全局
+npx ccman
+
+# 运行特定命令
+npx ccman ls
+npx ccman add anthropic "Anthropic Official" https://api.anthropic.com
+```
+
+#### 方式 3: 从源码安装
+
+```bash
+# 克隆仓库
+git clone https://github.com/2ue/ccman.git
+cd ccman
+
+# 安装依赖
+pnpm install
+
+# 全局链接 (开发模式)
+npm link
+
+# 或构建后使用
+pnpm build
+node dist/cli.js
+```
+
+#### 方式 4: 下载预编译版本
+
+访问 [GitHub Releases](https://github.com/2ue/ccman/releases) 下载对应平台的预编译版本 (如果提供)
 
 ### 首次运行
 

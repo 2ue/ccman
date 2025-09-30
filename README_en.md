@@ -28,11 +28,53 @@
 
 ## 🚀 Quick Start
 
-### Installation
+### Installation Methods
+
+#### Method 1: npm Installation (Recommended)
 
 ```bash
+# Global installation
 npm install -g ccman
+
+# Or use pnpm
+pnpm add -g ccman
+
+# Or use yarn
+yarn global add ccman
 ```
+
+#### Method 2: npx Direct Run (No Installation Required)
+
+```bash
+# Run directly without global installation
+npx ccman
+
+# Run specific commands
+npx ccman ls
+npx ccman add anthropic "Anthropic Official" https://api.anthropic.com
+```
+
+#### Method 3: Install from Source
+
+```bash
+# Clone repository
+git clone https://github.com/2ue/ccman.git
+cd ccman
+
+# Install dependencies
+pnpm install
+
+# Link globally (development mode)
+npm link
+
+# Or build and run
+pnpm build
+node dist/cli.js
+```
+
+#### Method 4: Download Pre-built Version
+
+Visit [GitHub Releases](https://github.com/2ue/ccman/releases) to download pre-built versions for your platform (if available)
 
 ### First Run
 
