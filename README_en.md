@@ -109,7 +109,7 @@ $ ccman
 
 CCM directly manages the `~/.claude/settings.json` file with these safety measures:
 
-### 1. Selective Updates
+### Selective Updates
 
 Only modifies CCM-managed configuration items:
 - `env.ANTHROPIC_AUTH_TOKEN`
@@ -118,13 +118,9 @@ Only modifies CCM-managed configuration items:
 - `env.CLAUDE_CODE_MAX_OUTPUT_TOKENS`
 - `permissions.allow` / `permissions.deny`
 
-### 2. Configuration Protection
+**Preserves all other user configuration items** (such as `mcpServers`, `model`, `customUserConfig`, etc.)
 
-Preserves all other user configuration items:
-- ✅ Preserves: `mcpServers`, `model`, `customUserConfig`, etc.
-- 🔄 Updates: Only the CCM-managed configuration items listed above
-
-### 3. Automatic Backups
+### Automatic Backups
 
 Automatically backs up current configuration to `~/.ccman/backups/` before each switch
 
@@ -140,57 +136,6 @@ Automatically backs up current configuration to `~/.ccman/backups/` before each 
 └── backups/                # Configuration backup directory (auto-created)
 ```
 
-### Provider Configuration File Structure
-
-```json
-{
-  "name": "Anthropic Official",
-  "description": "Official Anthropic API Configuration",
-  "config": {
-    "env": {
-      "ANTHROPIC_AUTH_TOKEN": "your-token",
-      "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
-      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1,
-      "CLAUDE_CODE_MAX_OUTPUT_TOKENS": 32000
-    },
-    "permissions": {
-      "allow": [],
-      "deny": []
-    }
-  },
-  "metadata": {
-    "createdAt": "2025-01-15T10:30:00.000Z",
-    "updatedAt": "2025-01-15T10:30:00.000Z",
-    "usageCount": 5
-  }
-}
-```
-
-### Main CCM Configuration File Structure
-
-```json
-{
-  "currentProvider": "anthropic",
-  "claudeConfigPath": "/Users/user/.claude/settings.json",
-  "providers": {
-    "anthropic": {
-      "name": "Anthropic Official",
-      "configFile": "anthropic.json",
-      "lastUsed": "2025-01-15T10:30:00.000Z"
-    }
-  },
-  "settings": {
-    "language": "zh",
-    "firstRun": false
-  },
-  "metadata": {
-    "version": "2.1.3",
-    "createdAt": "2025-01-15T10:00:00.000Z",
-    "updatedAt": "2025-01-15T10:30:00.000Z"
-  }
-}
-```
-
 ## 🌐 Language Support
 
 ### Supported Languages
@@ -204,88 +149,6 @@ Automatically backs up current configuration to `~/.ccman/backups/` before each 
 - English environments (`en-*`) → Automatically uses English interface
 - Other environments (including `zh-*`, unset, etc.) → Automatically uses Chinese interface
 - Users can manually override language settings at any time
-
-### First-Run Experience
-
-```bash
-$ ccman
-
-🌍 Welcome to CCM! / 欢迎使用 CCM!
-
-This is your first time running CCM.
-这是您首次运行 CCM。
-
-? Please choose your preferred language:
-? 请选择您偏好的语言：
-❯ 🇨🇳 中文 (Chinese)
-  🇺🇸 English
-  🌐 Auto-detect based on system
-
-✓ Language set to English
-✓ You can change this later with: ccman lang set <zh|en|auto>
-```
-
-## 🛠️ Development
-
-### Environment Setup
-
-```bash
-# Clone repository
-git clone https://github.com/2ue/ccman.git
-cd ccman
-
-# Install dependencies
-pnpm install
-```
-
-### Development Commands
-
-```bash
-pnpm run dev                 # Development mode (using tsx)
-pnpm run build               # TypeScript compilation
-pnpm run start               # Run compiled CLI
-pnpm run clean               # Clean dist/ directory
-pnpm run lint                # ESLint code check
-pnpm test                    # Run tests
-```
-
-### Development Environment Isolation
-
-CCM supports development environment configuration isolation to avoid affecting production configurations:
-
-```bash
-# Set development environment configuration paths
-export CCM_CONFIG_DIR=".ccman-dev"
-export CLAUDE_CONFIG_PATH="$HOME/.claude/settings-dev.json"
-
-# Run in isolated environment
-pnpm run dev
-```
-
-### Project Structure
-
-```
-src/
-├── types/                    # TypeScript type definitions
-│   └── index.ts             # Core type interfaces
-├── core/                     # Core modules
-│   ├── CCMConfigManager.ts  # CCM configuration manager
-│   └── ClaudeConfigManager.ts # Claude configuration manager
-├── providers/                # Provider management
-│   └── ProviderManager.ts   # Provider business logic
-├── commands/                 # Command handling
-│   └── lang.ts              # Language command processing
-├── i18n/                     # Internationalization
-│   ├── LanguageManager.ts   # Language manager
-│   └── messages.ts          # Multi-language messages
-├── utils/                    # Utility functions
-│   ├── env-config.ts        # Environment configuration
-│   └── version.ts           # Version information
-├── config/                   # Configuration files
-│   └── static-env.ts        # Static environment configuration
-├── cli.ts                    # CLI entry point
-└── index.ts                 # Module exports
-```
 
 ## 📋 System Requirements
 
@@ -307,9 +170,6 @@ ccman use <provider-id>
 
 # 3. Check Claude configuration file
 cat ~/.claude/settings.json | grep ANTHROPIC
-
-# 4. View complete configuration
-cat ~/.claude/settings.json | jq .
 ```
 
 ### Language Switching Issues
@@ -320,9 +180,6 @@ ccman lang
 
 # Force set to Chinese
 ccman lang set zh
-
-# Force set to English
-ccman lang set en
 
 # Reset to first-run state (re-select language)
 ccman lang reset
@@ -339,61 +196,12 @@ ccman clear
 ccman
 ```
 
-### Development Environment Issues
+## 📚 Development Documentation
 
-```bash
-# Use isolated development environment
-export CCM_CONFIG_DIR=".ccman-dev"
-pnpm run dev
-
-# Clean and rebuild
-pnpm run clean
-pnpm run build
-```
-
-## 📝 Changelog
-
-### v2.1.3 (2025-09-24)
-- ✨ Added `CLAUDE_CODE_MAX_OUTPUT_TOKENS` configuration support
-- 🐛 Fixed TypeScript compilation errors, completely removed apiKeyHelper configuration
-- 🎨 Optimized interactive menu experience
-- 📦 Updated dependency package versions
-
-### v2.1.2
-- 🎨 Simplified provider configuration, removed manual ID setting
-- ✨ Optimized first-run experience
-
-### v2.0.0
-- 🎉 New architecture: Direct configuration integration without shell integration
-- 🌍 Intelligent multilingual support (Chinese/English/Auto-detect)
-- 🎯 Interactive menu system
-- 📁 Multi-provider management
-- 🔒 Automatic backups and configuration protection
-
-### v1.x
-- Legacy architecture: Based on shell environment variable integration (deprecated)
-
-## 🚀 Migration from v1.x
-
-CCM v2.0 uses a completely different architecture and is incompatible with v1.x:
-
-### v1.x (Deprecated)
-- ❌ Modified shell configuration files (.bashrc, .zshrc, etc.)
-- ❌ Used environment variables
-- ❌ Complex shell integration and reloading
-
-### v2.x (Current Version)
-- ✅ Directly modifies `~/.claude/settings.json`
-- ✅ Provider-based configuration management
-- ✅ Intelligent language support
-- ✅ Simplified, secure implementation
-
-**Migration Steps**:
-
-1. Uninstall v1.x version
-2. Clean up related content from shell configuration files
-3. Install v2.x version: `npm install -g ccman`
-4. Run `ccman` to reconfigure
+- [开发指南 (中文)](./docs/DEVELOPMENT.md)
+- [Development Guide (English)](./docs/DEVELOPMENT_en.md)
+- [Release Guide](./docs/release-guide.md)
+- [Scripts Guide](./docs/scripts-guide.md)
 
 ## 🤝 Contributing
 
