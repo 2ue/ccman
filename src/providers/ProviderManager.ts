@@ -199,8 +199,8 @@ export class ProviderManager {
         };
       }
 
-      // 更新Claude配置（不需要备份，因为都是CCM管理的配置之间切换）
-      await this.claudeConfig.writeClaudeConfig(providerConfig.config, true);
+      // 更新Claude配置
+      await this.claudeConfig.writeClaudeConfig(providerConfig.config);
 
       // 更新CCM配置
       config.currentProvider = providerId;
@@ -323,7 +323,7 @@ export class ProviderManager {
       // 如果更新的是当前供应商，同步更新Claude配置
       const config = await this.ccmConfig.readConfig();
       if (config.currentProvider === providerId) {
-        await this.claudeConfig.writeClaudeConfig(providerConfig.config, true);
+        await this.claudeConfig.writeClaudeConfig(providerConfig.config);
       }
 
       // 更新主配置中的名称

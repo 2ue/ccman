@@ -35,24 +35,31 @@ export class ClaudeConfigManager {
    * 选择性写入Claude配置
    * 只覆盖指定的key，保留其他用户配置
    */
-  async writeClaudeConfig(config: ClaudeSettings, skipBackup: boolean = false): Promise<string | null> {
+  async writeClaudeConfig(config: ClaudeSettings): Promise<string | null> {
     try {
       await fs.ensureDir(path.dirname(this.claudeConfigPath));
-      
+
       let existingConfig: any = {};
       let backupPath: string | null = null;
-      
-      // 如果文件已存在，先读取现有配置
+
+      // 首次使用检查：如果备份文件不存在，说明是首次使用
+      const backupFilePath = path.join(path.dirname(this.claudeConfigPath), 'settings.ccman.backup.json');
+
+      if (!await fs.pathExists(backupFilePath)) {
+        // 首次使用 ccman
+        if (await fs.pathExists(this.claudeConfigPath)) {
+          // settings.json 存在，完整备份以保护用户原有配置
+          backupPath = await this.backupClaudeConfig();
+        }
+        // 如果 settings.json 不存在，不需要备份（没有用户内容需要保护）
+      }
+
+      // 如果文件已存在，读取现有配置
       if (await fs.pathExists(this.claudeConfigPath)) {
         const content = await fs.readFile(this.claudeConfigPath, 'utf8');
         existingConfig = JSON.parse(content);
-        
-        // 只有在需要时才备份（首次CCM接管用户配置）
-        if (!skipBackup && !this.isCCMManaged(existingConfig)) {
-          backupPath = await this.backupClaudeConfig();
-        }
       }
-      
+
       // 选择性覆盖只有CCM管理的key
       const mergedConfig = {
         ...existingConfig, // 保留现有配置
@@ -69,12 +76,9 @@ export class ClaudeConfigManager {
           // 覆盖CCM管理的权限设置
           allow: config.permissions.allow,
           deny: config.permissions.deny
-        },
-        // 添加CCM管理标记（隐藏字段）
-        '_ccm_managed': true,
-        '_ccm_version': '2.0.0'
+        }
       };
-      
+
       await fs.writeFile(this.claudeConfigPath, JSON.stringify(mergedConfig, null, 2), 'utf8');
       return backupPath;
     } catch (error) {
@@ -83,18 +87,18 @@ export class ClaudeConfigManager {
   }
 
   /**
-   * 备份当前Claude配置
+   * 备份当前Claude配置到固定位置
+   * 首次使用 ccman 时备份用户原有配置
    */
   async backupClaudeConfig(): Promise<string> {
     try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupPath = `${this.claudeConfigPath}.backup-${timestamp}`;
-      
+      const backupPath = path.join(path.dirname(this.claudeConfigPath), 'settings.ccman.backup.json');
+
       if (await fs.pathExists(this.claudeConfigPath)) {
         await fs.copy(this.claudeConfigPath, backupPath);
         return backupPath;
       }
-      
+
       return '';
     } catch (error) {
       throw new Error(`Failed to backup Claude config: ${error}`);
@@ -112,13 +116,6 @@ export class ClaudeConfigManager {
     } catch (error) {
       throw new Error(`Failed to restore Claude config: ${error}`);
     }
-  }
-
-  /**
-   * 检查配置是否已被CCM管理
-   */
-  private isCCMManaged(config: any): boolean {
-    return config && config._ccm_managed === true;
   }
 
   /**
