@@ -67,7 +67,32 @@ export const CLAUDE_CONFIG_PATH = STATIC_ENV.CLAUDE_CONFIG_PATH;
   
   console.log(`📝 Generated static config: src/config/static-env.ts`);
   console.log(`🎯 Environment: ${nodeEnv}`);
-  console.log(`📋 Variables: ${Object.keys(envVars).join(', ')}`);
+  console.log('');
+  console.log('📋 环境配置:');
+
+  // 显示 CCM 配置
+  if (envVars.CCM_CONFIG_DIR) {
+    console.log(`   CCM 配置目录: ${envVars.CCM_CONFIG_DIR}`);
+  }
+
+  // 显示 IDE 配置及对应的 IDE
+  const ideConfigs = [];
+  if (envVars.CLAUDE_CONFIG_PATH) {
+    ideConfigs.push('Claude Code');
+    console.log(`   Claude Code 配置: ${envVars.CLAUDE_CONFIG_PATH}`);
+  }
+  if (envVars.CODEX_CONFIG_PATH) {
+    ideConfigs.push('Codex');
+    console.log(`   Codex 配置: ${envVars.CODEX_CONFIG_PATH}`);
+    if (envVars.CODEX_AUTH_PATH) {
+      console.log(`   Codex 认证: ${envVars.CODEX_AUTH_PATH}`);
+    }
+  }
+
+  // 显示默认使用的 IDE
+  if (ideConfigs.length > 0) {
+    console.log(`   🎯 默认使用: Claude Code (可通过 IDE 参数切换)`);
+  }
 }
 
 if (require.main === module) {
