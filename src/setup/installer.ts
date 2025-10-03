@@ -2,7 +2,6 @@
  * 安装执行器
  */
 import chalk from 'chalk';
-import { executeCommand } from '../utils/command';
 import { InstallStep, InstallationResult, InstallerOptions } from './types';
 
 /**
