@@ -192,8 +192,15 @@ jobs:
           cd packages/cli
           # 备份原始 package.json
           cp package.json package.json.bak
-          # 修改包名为 ccman（去掉 @ccman/ scope）
-          node -e "const pkg = require('./package.json'); pkg.name = 'ccman'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+          # 修改包名为 ccman，并将 @ccman/core 依赖改为 file: 路径
+          node -e "
+            const pkg = require('./package.json');
+            pkg.name = 'ccman';
+            pkg.dependencies['@ccman/core'] = 'file:../core';
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
+          # 安装依赖（会把 core 打包进 node_modules）
+          pnpm install --no-frozen-lockfile
 
       - name: Publish ccman CLI
         run: |
