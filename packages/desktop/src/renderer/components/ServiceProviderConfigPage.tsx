@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import type { CodexPresetTemplate, ClaudeCodePresetTemplate, AddProviderInput } from '@ccman/core'
+import type { CodexPresetTemplate, ClaudeCodePresetTemplate, AddProviderInput, EditProviderInput } from '@ccman/core'
 import { Search, Package, ExternalLink, Edit2, Trash2, Plus, FileCode2 } from 'lucide-react'
 import PresetFormModal from './PresetFormModal'
 import ConfigEditorModal from './ConfigEditorModal'
@@ -94,13 +94,13 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
     setShowUsePresetModal(true)
   }
 
-  const handleUsePresetSubmit = async (input: AddProviderInput) => {
+  const handleUsePresetSubmit = async (input: AddProviderInput | EditProviderInput) => {
     if (!usingPreset) return
 
     try {
       const api = usingPreset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claudecode
 
-      await api.addProvider(input)
+      await api.addProvider(input as AddProviderInput)
 
       setShowUsePresetModal(false)
       setUsingPreset(undefined)

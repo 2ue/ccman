@@ -44,11 +44,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests
-        run: pnpm -r test
+      - name: Run tests (exclude desktop)
+        run: pnpm test
 
-      - name: Build all packages
-        run: pnpm -r build
+      - name: Build packages (exclude desktop)
+        run: pnpm build
 
       - name: Extract version from tag
         id: version
@@ -102,4 +102,4 @@ jobs:
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') }}
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

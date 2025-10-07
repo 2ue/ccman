@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { createClaudeCodeManager, CLAUDECODE_PRESETS } from '@ccman/core'
-import { promptProviderForm } from '../../interactive'
+import { promptProviderForm } from '../../interactive.js'
 
 export function addCommand(program: Command): void {
   program

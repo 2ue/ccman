@@ -22,11 +22,11 @@ const program = new Command()
 program
   .name('ccman')
   .description('Codex/Claude Code API 服务商配置管理工具')
-  .version('2.0.0')
+  .version('3.0.0')
   .showHelpAfterError(false)
   .exitOverride((err) => {
-    // 只拦截 commander.help 和 commander.version,让它们正常退出
-    if (err.code === 'commander.help' || err.code === 'commander.version') {
+    // 只拦截 commander.helpDisplayed 和 commander.version,让它们正常退出
+    if (err.code === 'commander.helpDisplayed' || err.code === 'commander.version') {
       process.exit(0)
     }
     throw err
