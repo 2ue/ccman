@@ -338,25 +338,13 @@ $ ccman cc use "Claude Test"
 - Codex 配置：`~/.codex/`
 - Claude Code 配置：`~/.claude/`
 
-### 切换服务商后需要重启工具吗？
-
-不需要。ccman 直接修改 Codex/Claude Code 的配置文件，工具会自动重新加载。
-
 ### 可以同时使用 CLI 和 Desktop 吗？
 
 可以。CLI 和 Desktop 共享同一套配置文件（`~/.ccman/`），修改会实时同步。
 
 ### API Key 安全吗？
 
-是的。API Key 只存储在本地配置文件中，文件权限为 `0600`（仅所有者可读写）。
-
-### 如何删除所有配置？
-
-```bash
-rm -rf ~/.ccman ~/.codex/.ccman.json ~/.claude/.ccman.json
-```
-
-**注意**：这不会删除 Codex/Claude Code 的原始配置，只删除 ccman 的管理数据。
+是的。API Key 只存储在本地，不会联网上传。
 
 ### 预设模板和自定义配置有什么区别？
 
