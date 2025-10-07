@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { getCcmanDir } from './paths'
+import { getCcmanDir } from './paths.js'
 
 /**
  * 旧版配置文件结构

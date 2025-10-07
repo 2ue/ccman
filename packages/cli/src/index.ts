@@ -6,7 +6,7 @@ import { printLogo } from './utils/logo.js'
 import { createCodexCommands } from './commands/codex/index.js'
 import { createClaudeCodeCommands } from './commands/claudecode/index.js'
 import { startMainMenu, startClaudeCodeMenu, startCodexMenu } from './interactive.js'
-import { getCcmanDir, getCodexDir, getClaudeDir } from '@ccman/core'
+import { getCcmanDir, getCodexDir, getClaudeDir, VERSION } from '@ccman/core'
 
 // 开发模式：输出配置目录
 if (process.env.NODE_ENV === 'development') {
@@ -22,7 +22,7 @@ const program = new Command()
 program
   .name('ccman')
   .description('Codex/Claude Code API 服务商配置管理工具')
-  .version('3.0.0')
+  .version(VERSION)
   .showHelpAfterError(false)
   .exitOverride((err) => {
     // 只拦截 commander.helpDisplayed 和 commander.version,让它们正常退出

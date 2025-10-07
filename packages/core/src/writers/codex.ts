@@ -1,8 +1,8 @@
 import * as fs from 'fs'
 import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
-import type { Provider } from '../tool-manager'
-import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths'
-import { ensureDir, fileExists } from '../utils/file'
+import type { Provider } from '../tool-manager.js'
+import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
+import { ensureDir, fileExists } from '../utils/file.js'
 
 /**
  * Codex config.toml 结构

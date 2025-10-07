@@ -1,10 +1,10 @@
 import * as path from 'path'
-import { getCcmanDir } from './paths'
-import { readJSON, writeJSON, fileExists, ensureDir } from './utils/file'
-import { writeCodexConfig } from './writers/codex'
-import { writeClaudeCodeConfig } from './writers/claudecode'
-import { CODEX_PRESETS } from './presets/codex'
-import { CLAUDECODE_PRESETS } from './presets/claudecode'
+import { getCcmanDir } from './paths.js'
+import { readJSON, writeJSON, fileExists, ensureDir } from './utils/file.js'
+import { writeCodexConfig } from './writers/codex.js'
+import { writeClaudeCodeConfig } from './writers/claudecode.js'
+import { CODEX_PRESETS } from './presets/codex.js'
+import { CLAUDECODE_PRESETS } from './presets/claudecode.js'
 
 /**
  * 工具类型

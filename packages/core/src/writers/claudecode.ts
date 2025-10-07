@@ -1,7 +1,7 @@
 import * as fs from 'fs'
-import type { Provider } from '../tool-manager'
-import { getClaudeConfigPath, getClaudeDir } from '../paths'
-import { ensureDir, fileExists } from '../utils/file'
+import type { Provider } from '../tool-manager.js'
+import { getClaudeConfigPath, getClaudeDir } from '../paths.js'
+import { ensureDir, fileExists } from '../utils/file.js'
 
 /**
  * Claude Code settings.json 结构

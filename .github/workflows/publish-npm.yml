@@ -71,14 +71,14 @@ jobs:
       - name: Publish @ccman/core
         run: |
           cd packages/core
-          pnpm publish --access public --provenance --no-git-checks
+          pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @ccman/cli
+      - name: Publish ccman CLI
         run: |
           cd packages/cli
-          pnpm publish --access public --provenance --no-git-checks
+          pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
