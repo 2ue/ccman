@@ -27,8 +27,7 @@ export function listCommand(program: Command): void {
           const nameStyle = isCurrent ? chalk.green.bold : chalk.white
 
           console.log(`${marker} ${nameStyle(p.name)}`)
-          console.log(`  ${chalk.gray(`ID: ${p.id}`)}`)
-          console.log(`  ${chalk.gray(`URL: ${p.baseUrl}`)}`)
+          console.log(`  ${chalk.gray(p.baseUrl)}`)
 
           if (p.lastUsedAt) {
             const date = new Date(p.lastUsedAt).toLocaleString('zh-CN')

@@ -1,6 +1,6 @@
 # ccman
 
-像 NVM 管理 Node 版本一样管理 Codex 和 Claude Code 的 API 服务商配置。
+Codex 和 Claude Code 的 API 服务商配置管理工具。
 
 ## 💡 功能说明
 
@@ -63,12 +63,10 @@ $ ccman cx list
 📋 Codex 服务商列表 (共 2 个)
 
 ● DeepSeek                         # ● 表示当前使用
-  ID: codex-1759838018103-abc123
-  URL: https://api.deepseek.com/v1
+  https://api.deepseek.com/v1
 
 ○ OpenAI
-  ID: codex-1759838018104-def456
-  URL: https://api.openai.com/v1
+  https://api.openai.com/v1
 ```
 
 **Claude Code 示例**：
@@ -79,8 +77,7 @@ $ ccman cc list
 📋 Claude Code 服务商列表 (共 1 个)
 
 ● Claude Official
-  ID: claudecode-1759838018105-xyz789
-  URL: https://api.anthropic.com
+  https://api.anthropic.com
 ```
 
 **空列表**：
@@ -329,56 +326,9 @@ $ ccman cc use "Claude Test"
 
 ### Desktop 使用
 
-#### 启动应用
+双击安装的 ccman 应用即可使用图形界面管理服务商。
 
-双击安装后的 ccman 应用。
-
-#### 界面说明
-
-- **顶部 Tab**：
-  - `Codex`: 管理 Codex 服务商
-  - `Claude`: 管理 Claude Code 服务商
-  - `View Configs`: 查看原始配置文件
-
-- **服务商列表**：
-  - 绿色 `Current` 标签：当前使用的服务商
-  - `Use` 按钮：切换到该服务商
-  - `Edit` 按钮：编辑配置
-  - `Clone` 按钮：克隆配置
-  - `Remove` 按钮：删除配置
-
-#### 基本操作
-
-**1. 添加服务商**
-
-- 点击左上角 `Add Provider` 按钮
-- 选择预设模板或自定义配置
-- 填写配置后点击 `Save`
-
-**2. 切换服务商**
-
-- 找到目标服务商
-- 点击 `Use` 按钮
-- 该服务商会显示绿色 `Current` 标签
-
-**3. 编辑服务商**
-
-- 点击服务商右侧的 `Edit` 按钮
-- 修改配置
-- 点击 `Save` 保存
-
-**4. 克隆服务商**
-
-- 点击 `Clone` 按钮
-- 输入新名称
-- 修改 API Key
-- 点击 `Save`
-
-**5. 查看配置文件**
-
-- 点击顶部 `View Configs` 按钮
-- 查看 Codex/Claude Code 的原始配置文件
-- **注意**：建议使用界面操作，直接编辑可能导致格式错误
+（截图待补充）
 
 ## 💡 常见问题
 
