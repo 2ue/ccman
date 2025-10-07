@@ -1,0 +1,326 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  # ============================================================================
+  # 阶段 1: 测试和构建所有产物
+  # ============================================================================
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7.33.7
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests (exclude desktop)
+        run: pnpm test
+
+  build-cli:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7.33.7
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages (exclude desktop)
+        run: pnpm build
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Verify version match
+        run: |
+          CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
+          TAG_VERSION="${{ steps.version.outputs.VERSION }}"
+
+          if [ "$CLI_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch!"
+            echo "Tag: $TAG_VERSION"
+            echo "CLI: $CLI_VERSION"
+            exit 1
+          fi
+
+      - name: Upload CLI build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-build
+          path: |
+            packages/cli/dist
+            packages/core/dist
+            packages/cli/package.json
+            packages/core/package.json
+
+  build-desktop-mac:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7.33.7
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Core module
+        run: |
+          cd packages/core
+          pnpm build
+
+      - name: Build Desktop app
+        run: |
+          cd packages/desktop
+          pnpm build
+
+      - name: Package for macOS
+        run: |
+          cd packages/desktop
+          pnpm build:electron
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-mac
+          path: |
+            packages/desktop/release/*.dmg
+            packages/desktop/release/*.dmg.blockmap
+
+  build-desktop-win:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7.33.7
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Core module
+        run: |
+          cd packages/core
+          pnpm build
+
+      - name: Build Desktop app
+        run: |
+          cd packages/desktop
+          pnpm build
+
+      - name: Package for Windows
+        run: |
+          cd packages/desktop
+          pnpm build:electron
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-win
+          path: |
+            packages/desktop/release/*.exe
+            packages/desktop/release/*.exe.blockmap
+
+  # ============================================================================
+  # 阶段 2: 发布 npm 包
+  # ============================================================================
+
+  publish-npm:
+    needs: [build-cli, build-desktop-mac, build-desktop-win]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7.33.7
+
+      - name: Download CLI build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-build
+          path: .
+
+      - name: Prepare CLI package for publishing
+        run: |
+          cd packages/cli
+          # 备份原始 package.json
+          cp package.json package.json.bak
+          # 修改包名为 ccman（去掉 @ccman/ scope）
+          node -e "const pkg = require('./package.json'); pkg.name = 'ccman'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
+
+      - name: Publish ccman CLI
+        run: |
+          cd packages/cli
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Restore original package.json
+        if: always()
+        run: |
+          cd packages/cli
+          mv package.json.bak package.json
+
+  # ============================================================================
+  # 阶段 3: 创建 GitHub Release 并上传所有产物
+  # ============================================================================
+
+  create-release:
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Create GitHub Release with all artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## 📦 npm 包已发布
+
+            - [ccman@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/ccman)
+
+            ## 📥 CLI 安装
+
+            ```bash
+            npm install -g ccman
+            ```
+
+            ## 🚀 CLI 使用
+
+            ```bash
+            # 进入交互式菜单
+            ccman
+
+            # 管理 Codex 服务商
+            ccman cx
+
+            # 管理 Claude Code 服务商
+            ccman cc
+            ```
+
+            ## 🖥️ Desktop 应用下载
+
+            ### macOS
+            - **Intel (x64)**: `ccman-${{ steps.version.outputs.VERSION }}-macos-x64.dmg`
+            - **Apple Silicon (ARM64)**: `ccman-${{ steps.version.outputs.VERSION }}-macos-arm64.dmg`
+            - **Universal (Intel + Apple Silicon)**: `ccman-${{ steps.version.outputs.VERSION }}-macos-universal.dmg`
+
+            下载对应的 `.dmg` 文件，双击安装即可。
+
+            ### Windows
+            - **64-bit**: `ccman-${{ steps.version.outputs.VERSION }}-windows-x64.exe`
+
+            下载 `.exe` 文件，双击安装即可。
+
+            ---
+
+            详见 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          files: |
+            desktop-mac/*.dmg
+            desktop-mac/*.dmg.blockmap
+            desktop-win/*.exe
+            desktop-win/*.exe.blockmap
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,8 @@
 {
   "name": "@ccman/desktop",
-  "version": "0.1.0",
+  "version": "3.0.1",
   "description": "ccman Desktop GUI application",
+  "type": "module",
   "main": "./dist/main/index.js",
   "scripts": {
     "dev": "vite",
@@ -52,7 +53,8 @@
           "arch": ["x64", "arm64", "universal"]
         }
       ],
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "artifactName": "${productName}-${version}-macos-${arch}.${ext}"
     },
     "win": {
       "target": [
@@ -61,11 +63,13 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-${version}-windows-${arch}.${ext}"
     },
     "linux": {
       "target": ["AppImage"],
-      "category": "Development"
+      "category": "Development",
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     }
   }
 }
