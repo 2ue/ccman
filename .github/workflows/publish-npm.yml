@@ -56,24 +56,23 @@ jobs:
 
       - name: Verify version match
         run: |
-          CORE_VERSION=$(node -p "require('./packages/core/package.json').version")
           CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
           TAG_VERSION="${{ steps.version.outputs.VERSION }}"
 
-          if [ "$CORE_VERSION" != "$TAG_VERSION" ] || [ "$CLI_VERSION" != "$TAG_VERSION" ]; then
+          if [ "$CLI_VERSION" != "$TAG_VERSION" ]; then
             echo "Version mismatch!"
             echo "Tag: $TAG_VERSION"
-            echo "Core: $CORE_VERSION"
             echo "CLI: $CLI_VERSION"
             exit 1
           fi
 
-      - name: Publish @ccman/core
+      - name: Prepare CLI package for publishing
         run: |
-          cd packages/core
-          pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          cd packages/cli
+          # 备份原始 package.json
+          cp package.json package.json.bak
+          # 修改包名为 ccman（去掉 @ccman/ scope）
+          node -e "const pkg = require('./package.json'); pkg.name = 'ccman'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
 
       - name: Publish ccman CLI
         run: |
@@ -82,6 +81,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Restore original package.json
+        if: always()
+        run: |
+          cd packages/cli
+          mv package.json.bak package.json
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -89,13 +94,25 @@ jobs:
           body: |
             ## 📦 npm 包已发布
 
-            - [@ccman/core@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/@ccman/core)
-            - [@ccman/cli@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/@ccman/cli)
+            - [ccman@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/ccman)
 
             ## 📥 安装
 
             ```bash
-            npm install -g @ccman/cli
+            npm install -g ccman
+            ```
+
+            ## 🚀 使用
+
+            ```bash
+            # 进入交互式菜单
+            ccman
+
+            # 管理 Codex 服务商
+            ccman cx
+
+            # 管理 Claude Code 服务商
+            ccman cc
             ```
 
             详见 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
