@@ -7,46 +7,10 @@ on:
 
 jobs:
   # ============================================================================
-  # 阶段 1: 测试和构建所有产物
+  # 阶段 1: 并行构建所有产物
   # ============================================================================
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7.33.7
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run tests (exclude desktop)
-        run: pnpm test
-
   build-cli:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -95,7 +59,6 @@ jobs:
             packages/core/package.json
 
   build-desktop-mac:
-    needs: test
     runs-on: macos-latest
     steps:
       - name: Checkout code
@@ -144,7 +107,6 @@ jobs:
             packages/desktop/release/*.dmg.blockmap
 
   build-desktop-win:
-    needs: test
     runs-on: windows-latest
     steps:
       - name: Checkout code
