@@ -1,0 +1,46 @@
+{
+  "name": "@ccman/core",
+  "version": "0.1.0",
+  "description": "Core business logic for ccman",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "codex",
+    "claude",
+    "claude-code",
+    "ai",
+    "api",
+    "config",
+    "manager"
+  ],
+  "author": "2ue",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/2ue/ccm.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/2ue/ccm#readme",
+  "bugs": {
+    "url": "https://github.com/2ue/ccm/issues"
+  },
+  "dependencies": {
+    "@iarna/toml": "^2.2.5",
+    "proper-lockfile": "^4.1.2"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "ccman-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Manage Codex and Claude Code API service provider configurations",
+  "scripts": {
+    "build": "pnpm --filter=!@ccman/desktop -r build",
+    "build:all": "pnpm -r build",
+    "test": "pnpm --filter=!@ccman/desktop -r test",
+    "lint": "eslint . --ext .ts,.tsx --ignore-pattern 'packages/desktop/**'",
+    "lint:fix": "eslint . --ext .ts,.tsx --ignore-pattern 'packages/desktop/**' --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "clean": "pnpm -r clean"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}

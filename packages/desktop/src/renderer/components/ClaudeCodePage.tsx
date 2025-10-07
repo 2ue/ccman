@@ -1,0 +1,132 @@
+import { useState } from 'react'
+import { Provider } from '@ccman/core'
+import ProviderGrid from './ProviderGrid'
+import ConfigEditorModal from './ConfigEditorModal'
+import { AlertDialog } from './dialogs'
+import { Plus, Inbox, FileCode2 } from 'lucide-react'
+import { BUTTON_WITH_ICON, BUTTON_STYLES } from '../styles/button'
+
+interface ClaudeCodePageProps {
+  providers: Provider[]
+  currentProvider?: Provider
+  onAdd: () => void
+  onSwitch: (id: string) => void
+  onEdit: (provider: Provider) => void
+  onDelete: (id: string, name: string) => void
+  onClone: (provider: Provider) => void
+}
+
+export default function ClaudeCodePage({
+  providers,
+  currentProvider,
+  onAdd,
+  onSwitch,
+  onEdit,
+  onDelete,
+  onClone,
+}: ClaudeCodePageProps) {
+  const [showConfigEditor, setShowConfigEditor] = useState(false)
+  const [configFiles, setConfigFiles] = useState<
+    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+  >([])
+
+  const [alertDialog, setAlertDialog] = useState<{
+    show: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'warning' | 'info'
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    type: 'info',
+  })
+
+  const handleEditConfig = async () => {
+    try {
+      const files = await window.electronAPI.config.readConfigFiles('claudecode')
+      setConfigFiles(files)
+      setShowConfigEditor(true)
+    } catch (error) {
+      setAlertDialog({
+        show: true,
+        title: '读取配置文件失败',
+        message: (error as Error).message,
+        type: 'error',
+      })
+    }
+  }
+
+  const handleSaveConfig = async (
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+  ) => {
+    await window.electronAPI.config.writeConfigFiles(files)
+  }
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Claude Code 服务商管理</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              管理 Claude Code 的 API 配置，当前共 {providers.length} 个服务商
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleEditConfig} className={BUTTON_STYLES.icon} title="编辑配置文件">
+              <FileCode2 className="w-5 h-5" />
+            </button>
+            <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
+              <Plus className="w-4 h-4" />
+              添加服务商
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Provider Grid */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {providers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <Inbox className="w-16 h-16 mb-4 text-gray-400" />
+            <p className="text-lg font-medium mb-2">还没有 Claude Code 服务商</p>
+            <p className="text-sm text-gray-400 mb-4">点击右上角"添加服务商"按钮开始配置</p>
+            <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
+              <Plus className="w-4 h-4" />
+              添加第一个服务商
+            </button>
+          </div>
+        ) : (
+          <ProviderGrid
+            providers={providers}
+            currentProviderId={currentProvider?.id}
+            onSwitch={onSwitch}
+            onEdit={(provider) => onEdit(provider)}
+            onDelete={onDelete}
+            onClone={(provider) => onClone(provider)}
+          />
+        )}
+      </div>
+
+      {/* Config Editor Modal */}
+      <ConfigEditorModal
+        show={showConfigEditor}
+        title="编辑 Claude Code 配置"
+        files={configFiles}
+        onSave={handleSaveConfig}
+        onClose={() => setShowConfigEditor(false)}
+      />
+
+      {/* Alert Dialog */}
+      <AlertDialog
+        show={alertDialog.show}
+        title={alertDialog.title}
+        message={alertDialog.message}
+        type={alertDialog.type}
+        onClose={() => setAlertDialog({ ...alertDialog, show: false })}
+      />
+    </div>
+  )
+}

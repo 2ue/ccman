@@ -1,0 +1,160 @@
+name: Build Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            platform: mac
+            arch: x64,arm64
+          - os: windows-latest
+            platform: win
+            arch: x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Core module
+        run: |
+          cd packages/core
+          pnpm build
+
+      - name: Build Desktop app
+        run: |
+          cd packages/desktop
+          pnpm build
+
+      - name: Package for macOS (Universal)
+        if: matrix.platform == 'mac'
+        run: |
+          cd packages/desktop
+          pnpm build:electron
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false # 禁用代码签名
+
+      - name: Package for Windows
+        if: matrix.platform == 'win'
+        run: |
+          cd packages/desktop
+          pnpm build:electron
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Upload macOS artifacts
+        if: matrix.platform == 'mac'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ccman-${{ steps.version.outputs.VERSION }}-mac
+          path: |
+            packages/desktop/release/*.dmg
+            packages/desktop/release/*.zip
+
+      - name: Upload Windows artifacts
+        if: matrix.platform == 'win'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ccman-${{ steps.version.outputs.VERSION }}-win
+          path: |
+            packages/desktop/release/*.exe
+            packages/desktop/release/*.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Create or update GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## 🖥️ Desktop 应用下载
+
+            ### macOS
+            - **Universal Binary (Intel + Apple Silicon)**: `ccman-${{ steps.version.outputs.VERSION }}-mac.dmg`
+            - 下载 `.dmg` 文件，双击安装
+
+            ### Windows
+            - **64-bit**: `ccman-${{ steps.version.outputs.VERSION }}-win.exe`
+            - 下载 `.exe` 文件，双击安装
+
+            ## 📦 CLI 安装
+
+            ```bash
+            npm install -g @ccman/cli
+            ```
+
+            ## 📝 更新日志
+
+            详见 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+
+            ---
+
+            **版本**: v${{ steps.version.outputs.VERSION }}
+            **发布日期**: $(date -u +"%Y-%m-%d")
+          files: |
+            ccman-${{ steps.version.outputs.VERSION }}-mac/*.dmg
+            ccman-${{ steps.version.outputs.VERSION }}-mac/*.zip
+            ccman-${{ steps.version.outputs.VERSION }}-win/*.exe
+            ccman-${{ steps.version.outputs.VERSION }}-win/*.zip
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

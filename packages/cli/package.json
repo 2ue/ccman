@@ -1,0 +1,52 @@
+{
+  "name": "ccman",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Manage Codex and Claude Code API service provider configurations",
+  "main": "./dist/index.js",
+  "bin": {
+    "ccman": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "codex",
+    "claude",
+    "claude-code",
+    "ai",
+    "api",
+    "config",
+    "manager",
+    "cli"
+  ],
+  "author": "2ue",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/2ue/ccm.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/2ue/ccm#readme",
+  "bugs": {
+    "url": "https://github.com/2ue/ccm/issues"
+  },
+  "dependencies": {
+    "@ccman/core": "workspace:*",
+    "chalk": "^5.3.0",
+    "commander": "^11.0.0",
+    "inquirer": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.0",
+    "tsx": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
