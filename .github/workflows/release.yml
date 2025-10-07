@@ -54,9 +54,7 @@ jobs:
           name: cli-build
           path: |
             packages/cli/dist
-            packages/core/dist
             packages/cli/package.json
-            packages/core/package.json
 
   build-desktop-mac:
     runs-on: macos-latest
