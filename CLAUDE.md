@@ -574,13 +574,59 @@ Closes #1
 - **Minor (0.x.0)**：新功能（如添加新命令）
 - **Patch (0.0.x)**：Bug 修复
 
+### 版本号管理
+
+**使用脚本统一修改所有包版本号**：
+
+```bash
+# 方式 1：直接运行脚本
+node scripts/bump-version.js 3.0.4
+
+# 方式 2：使用 npm script
+npm run version 3.0.4
+```
+
+**脚本功能**：
+- ✅ 自动修改所有包的 `package.json` 版本号
+  - `package.json` (根目录)
+  - `packages/core/package.json`
+  - `packages/cli/package.json`
+  - `packages/desktop/package.json`
+- ✅ 验证版本号格式（`x.y.z` 或 `x.y.z-alpha.1`）
+- ✅ 显示修改前后的版本号对比
+- ✅ 提示下一步操作
+
+**禁止手动修改版本号**：
+- ❌ 不要手动修改单个 package.json
+- ❌ 不要使用 `npm version` 命令（会触发 git 操作）
+- ✅ 统一使用 `scripts/bump-version.js`
+
 ### 发布流程
 
-1. 更新 CHANGELOG.md
-2. 更新 package.json 版本号
-3. 运行测试：`pnpm test`
-4. 构建：`pnpm build`
-5. 发布：`pnpm publish`
+1. **更新 CHANGELOG.md**
+2. **修改版本号**：
+   ```bash
+   npm run version 3.0.4
+   ```
+3. **运行测试**：
+   ```bash
+   pnpm test
+   ```
+4. **构建**：
+   ```bash
+   pnpm build
+   ```
+5. **提交并打 tag**：
+   ```bash
+   git add .
+   git commit -m "chore: bump version to 3.0.4"
+   git tag v3.0.4
+   git push && git push --tags
+   ```
+6. **自动发布**：GitHub Actions 会自动：
+   - 发布 CLI 到 npm
+   - 构建并发布 Desktop 应用（macOS/Windows）
+   - 创建 GitHub Release
 
 ## 常见问题
 
@@ -675,6 +721,7 @@ Step 5: 检查代码复杂度
 | ❌ 预设管理仅 UI 支持 | 违反功能对等原则 | `docs/需求分析.md:84-100` |
 | ❌ 异步 I/O（配置读写） | 配置小，同步更简单 | `CLAUDE.md:136-160` |
 | ❌ Zustand/Redux | React state 够用 | `CLAUDE.md:161-176` |
+| ❌ 手动修改版本号 | 必须使用 `scripts/bump-version.js` | `CLAUDE.md:577-602` |
 
 #### 4. 功能开发验证清单
 
@@ -772,6 +819,7 @@ Step 5: 检查代码复杂度
 - 正在使用 UI 组件库
 - 代码文件超过 300 行
 - 函数超过 50 行
+- 正在手动修改 package.json 版本号（必须使用 `scripts/bump-version.js`）
 
 **停止后的操作**：
 1. 重新阅读对应的设计文档
@@ -818,6 +866,7 @@ Step 5: 检查代码复杂度
 - [ ] 不实现 validate/backup/restore
 - [ ] 不使用异步 I/O（配置读写）
 - [ ] 不使用状态管理库
+- [ ] 不手动修改版本号（必须使用 `scripts/bump-version.js`）
 
 ## 4. 开始开发
 ✅ 所有检查通过，开始编码
