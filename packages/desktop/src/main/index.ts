@@ -11,6 +11,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
+import os from 'os'
 import {
   createCodexManager,
   createClaudeCodeManager,
@@ -24,38 +25,121 @@ import {
 } from '@ccman/core'
 import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput } from '@ccman/core'
 
+// 设置日志文件（生产模式）
+const isDev = process.env.NODE_ENV === 'development'
+let logStream: fs.WriteStream | null = null
+
+if (!isDev) {
+  const logDir = path.join(os.homedir(), '.ccman', 'logs')
+  fs.mkdirSync(logDir, { recursive: true })
+  const logFile = path.join(logDir, `desktop-${Date.now()}.log`)
+  logStream = fs.createWriteStream(logFile, { flags: 'a' })
+
+  // 重定向 console.log 到文件
+  const originalLog = console.log
+  const originalError = console.error
+  console.log = (...args) => {
+    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
+    logStream?.write(`[LOG] ${new Date().toISOString()} ${msg}\n`)
+    originalLog(...args)
+  }
+  console.error = (...args) => {
+    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
+    logStream?.write(`[ERROR] ${new Date().toISOString()} ${msg}\n`)
+    originalError(...args)
+  }
+
+  console.log('[Main] Log file created:', logFile)
+}
+
 // 开发模式：输出配置目录
-if (process.env.NODE_ENV === 'development') {
+if (isDev) {
   console.log('\n[开发模式] 配置目录:')
   console.log(`  ccman: ${getCcmanDir()}`)
   console.log(`  codex:  ${getCodexDir()}`)
   console.log(`  claude: ${getClaudeDir()}`)
+  console.log()
+} else {
+  console.log('\n[生产模式] 启动信息:')
+  console.log(`  ccman: ${getCcmanDir()}`)
+  console.log(`  codex:  ${getCodexDir()}`)
+  console.log(`  claude: ${getClaudeDir()}`)
+  console.log(`  app.isPackaged: ${app.isPackaged}`)
+  console.log(`  __dirname: ${__dirname}`)
   console.log()
 }
 
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {
+  console.log('[Main] Creating window...')
+
+  // 获取正确的资源路径
+  // 开发模式：__dirname = /path/to/dist/main
+  // 生产模式：__dirname = /path/to/app.asar/dist/main
+  const isDev = process.env.NODE_ENV === 'development'
+  const preloadPath = isDev
+    ? path.join(__dirname, '../preload/index.js')
+    : path.join(__dirname, '../preload/index.js')
+
+  console.log('[Main] Preload path:', preloadPath)
+  console.log('[Main] Preload exists:', fs.existsSync(preloadPath))
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: false, // 先隐藏，ready-to-show 时再显示
     webPreferences: {
-      contextIsolation: true, // 隔离上下文
-      nodeIntegration: false, // 禁止 Node.js 集成
-      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: preloadPath,
     },
   })
 
+  console.log('[Main] Window created, loading content...')
+  console.log('[Main] __dirname:', __dirname)
+  console.log('[Main] NODE_ENV:', process.env.NODE_ENV)
+  console.log('[Main] app.isPackaged:', app.isPackaged)
+
+  // 确保窗口显示
+  mainWindow.once('ready-to-show', () => {
+    console.log('[Main] Window ready to show, showing now...')
+    mainWindow!.show()
+    mainWindow!.focus()
+  })
+
   // 加载渲染进程
-  if (process.env.NODE_ENV === 'development') {
+  if (isDev) {
+    console.log('[Main] Loading dev server: http://localhost:5173')
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+    const htmlPath = path.join(__dirname, '../renderer/index.html')
+    console.log('[Main] Loading production file:', htmlPath)
+    console.log('[Main] File exists:', fs.existsSync(htmlPath))
+
+    mainWindow.loadFile(htmlPath)
+      .then(() => console.log('[Main] HTML loaded successfully'))
+      .catch(err => {
+        console.error('[Main] Failed to load HTML:', err)
+        // 显示错误对话框
+        const { dialog } = require('electron')
+        dialog.showErrorBox('加载失败', `无法加载应用界面：${err.message}`)
+      })
   }
 
   mainWindow.on('closed', () => {
+    console.log('[Main] Window closed')
     mainWindow = null
+  })
+
+  // 添加额外的错误处理
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('[Main] Failed to load:', errorCode, errorDescription)
+  })
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[Main] Content loaded successfully')
   })
 }
 
@@ -437,5 +521,11 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
+  }
+})
+
+app.on('quit', () => {
+  if (logStream) {
+    logStream.end()
   }
 })

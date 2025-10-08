@@ -1,6 +1,6 @@
 {
   "name": "@ccman/desktop",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "ccman Desktop GUI application",
   "type": "module",
   "main": "./dist/main/index.js",
@@ -50,7 +50,11 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64", "universal"]
+          "arch": [
+            "x64",
+            "arm64",
+            "universal"
+          ]
         }
       ],
       "icon": "build/icon.icns",
@@ -60,14 +64,18 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
       "artifactName": "${productName}-${version}-windows-${arch}.${ext}"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Development",
       "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     }

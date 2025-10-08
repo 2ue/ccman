@@ -12,7 +12,7 @@ export default defineConfig({
           build: {
             outDir: 'dist/main',
             rollupOptions: {
-              external: ['@ccman/core'],
+              external: ['electron'],
             },
           },
         },
@@ -23,7 +23,7 @@ export default defineConfig({
           build: {
             outDir: 'dist/preload',
             rollupOptions: {
-              external: ['@ccman/core'],
+              external: ['electron'],
             },
           },
         },
