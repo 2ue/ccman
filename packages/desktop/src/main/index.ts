@@ -8,7 +8,7 @@
  * Renderer → Preload → Main → Core (tool-manager.ts)
  */
 
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import os from 'os'
@@ -65,7 +65,6 @@ if (isDev) {
   console.log(`  codex:  ${getCodexDir()}`)
   console.log(`  claude: ${getClaudeDir()}`)
   console.log(`  app.isPackaged: ${app.isPackaged}`)
-  console.log(`  __dirname: ${__dirname}`)
   console.log()
 }
 
@@ -122,8 +121,6 @@ function createWindow() {
       .then(() => console.log('[Main] HTML loaded successfully'))
       .catch(err => {
         console.error('[Main] Failed to load HTML:', err)
-        // 显示错误对话框
-        const { dialog } = require('electron')
         dialog.showErrorBox('加载失败', `无法加载应用界面：${err.message}`)
       })
   }

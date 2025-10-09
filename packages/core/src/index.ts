@@ -2,18 +2,10 @@
  * ccman Core Module
  * Business logic for managing Codex and Claude Code service providers
  */
-
-import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-
-// Read version from package.json
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'))
+import pkg from '../package.json';
 
 /** Core version */
-export const VERSION = packageJson.version as string
+export const VERSION = pkg.version as string
 
 // Tool Manager (Factory Functions)
 export {

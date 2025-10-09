@@ -1,8 +1,7 @@
 {
   "name": "@ccman/desktop",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "ccman Desktop GUI application",
-  "type": "module",
   "main": "./dist/main/index.js",
   "scripts": {
     "dev": "vite",

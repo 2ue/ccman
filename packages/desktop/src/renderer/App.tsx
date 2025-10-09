@@ -72,6 +72,7 @@ export default function App() {
   // 加载数据
   const loadData = async () => {
     try {
+      console.log('window.electronAPI', window.electronAPI);
       // 加载 Codex 数据
       const codexList = await window.electronAPI.codex.listProviders()
       setCodexProviders(codexList)
