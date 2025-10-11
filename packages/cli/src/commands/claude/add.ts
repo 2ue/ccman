@@ -106,8 +106,7 @@ export function addCommand(program: Command): void {
         console.log(chalk.green('✅ 添加成功'))
         console.log()
         console.log(`  ${chalk.bold(provider.name)} ${chalk.blue('[Claude Code]')}`)
-        console.log(`  ${chalk.gray(`ID: ${provider.id}`)}`)
-        console.log(`  ${chalk.gray(`URL: ${provider.baseUrl}`)}`)
+        console.log(`  ${chalk.gray(provider.baseUrl)}`)
         console.log()
 
         // 询问是否立即切换

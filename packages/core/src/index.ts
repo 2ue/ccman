@@ -2,7 +2,10 @@
  * ccman Core Module
  * Business logic for managing Codex and Claude Code service providers
  */
-import pkg from '../package.json';
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const pkg = require('../package.json')
 
 /** Core version */
 export const VERSION = pkg.version as string
@@ -27,7 +30,7 @@ export { CODEX_PRESETS, type PresetTemplate as CodexPresetTemplate } from './pre
 export { CC_PRESETS, type PresetTemplate as ClaudePresetTemplate } from './presets/claude.js'
 
 // Migration
-export { migrateConfig, rollbackMigration } from './migrate.js'
+export { migrateConfig, rollbackMigration, migrateV2ToV3, validateMigration } from './migrate.js'
 
 // Paths (导出用于测试)
 export {

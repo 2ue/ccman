@@ -265,19 +265,18 @@ async function handleAdd(tool: ToolType): Promise<void> {
 
     const preset = presets.find((p) => p.name === presetName)!
 
-    const { inputApiKey } = await inquirer.prompt([
-      {
-        type: 'password',
-        name: 'inputApiKey',
-        message: '输入 API 密钥:',
-        mask: '*',
-        validate: (value) => (value ? true : 'API 密钥不能为空'),
-      },
-    ])
+    console.log(chalk.blue(`\n使用预设: ${preset.name} - ${preset.description}\n`))
 
-    name = preset.name
-    baseUrl = preset.baseUrl
-    apiKey = inputApiKey
+    // 允许修改所有字段（与命令式和 Desktop 行为一致）
+    const input = await promptProviderForm({
+      name: preset.name,
+      baseUrl: preset.baseUrl,
+      apiKey: '',
+    })
+
+    name = input.name
+    baseUrl = input.baseUrl
+    apiKey = input.apiKey
   } else {
     // 自定义
     const answers = await inquirer.prompt([
@@ -319,8 +318,7 @@ async function handleAdd(tool: ToolType): Promise<void> {
   console.log(chalk.green('✅ 添加成功'))
   console.log()
   console.log(`  ${chalk.bold(provider.name)} ${chalk.blue(`[${toolName}]`)}`)
-  console.log(`  ${chalk.gray(`ID: ${provider.id}`)}`)
-  console.log(`  ${chalk.gray(`URL: ${provider.baseUrl}`)}`)
+  console.log(`  ${chalk.gray(provider.baseUrl)}`)
   console.log()
 
   // 询问是否切换
@@ -387,8 +385,7 @@ async function handleList(tool: ToolType): Promise<void> {
     const nameStyle = isCurrent ? chalk.green.bold : chalk.white
 
     console.log(`${marker} ${nameStyle(p.name)}`)
-    console.log(`  ${chalk.gray(`ID: ${p.id}`)}`)
-    console.log(`  ${chalk.gray(`URL: ${p.baseUrl}`)}`)
+    console.log(`  ${chalk.gray(p.baseUrl)}`)
 
     if (p.lastUsedAt) {
       const date = new Date(p.lastUsedAt).toLocaleString('zh-CN')
@@ -417,8 +414,7 @@ async function handleCurrent(tool: ToolType): Promise<void> {
 
   console.log(chalk.bold(`\n👁️  当前 ${toolName} 服务商\n`))
   console.log(`  ${chalk.green.bold(current.name)}`)
-  console.log(`  ${chalk.gray(`ID: ${current.id}`)}`)
-  console.log(`  ${chalk.gray(`URL: ${current.baseUrl}`)}`)
+  console.log(`  ${chalk.gray(current.baseUrl)}`)
 
   if (current.lastUsedAt) {
     const date = new Date(current.lastUsedAt).toLocaleString('zh-CN')
@@ -537,7 +533,7 @@ async function handleClone(tool: ToolType): Promise<void> {
 
   console.log(chalk.green('\n✅ 克隆成功\n'))
   console.log(`  ${chalk.bold(newProvider.name)}`)
-  console.log(`  ${chalk.gray(`ID: ${newProvider.id}`)}`)
+  console.log(`  ${chalk.gray(newProvider.baseUrl)}`)
   console.log()
 }
 
