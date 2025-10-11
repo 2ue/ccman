@@ -1,6 +1,6 @@
 {
   "name": "ccman",
-  "version": "3.0.9",
+  "version": "3.0.10",
   "description": "Manage Codex and Claude Code API service provider configurations",
   "main": "./dist/index.js",
   "bin": {
