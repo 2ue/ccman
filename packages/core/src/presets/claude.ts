@@ -40,6 +40,11 @@ export const CC_PRESETS: PresetTemplate[] = [
     description: '88Code API 服务',
   },
   {
+    name: 'KKYYXX',
+    baseUrl: 'https://api.kkyyxx.xyz',
+    description: 'KKYYXX API 服务',
+  },
+  {
     name: 'BigModel',
     baseUrl: 'https://open.bigmodel.cn/api/anthropic',
     description: '智谱 BigModel API',
