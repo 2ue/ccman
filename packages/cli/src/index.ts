@@ -53,10 +53,12 @@ cc.action(async () => {
 })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式
-if (!process.argv.slice(2).length) {
-  printLogo()
-  await startMainMenu()
-} else {
-  // 解析命令行参数
-  program.parse(process.argv)
-}
+;(async () => {
+  if (!process.argv.slice(2).length) {
+    printLogo()
+    await startMainMenu()
+  } else {
+    // 解析命令行参数
+    program.parse(process.argv)
+  }
+})()

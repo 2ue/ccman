@@ -1,7 +1,6 @@
 {
   "name": "ccman",
-  "version": "3.0.4",
-  "type": "module",
+  "version": "3.0.5",
   "description": "Manage Codex and Claude Code API service provider configurations",
   "main": "./dist/index.js",
   "bin": {
@@ -11,8 +10,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --external commander --external inquirer --external chalk --clean",
-    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "dev": "NODE_ENV=development tsx src/index.ts",
     "clean": "rm -rf dist"
   },
   "keywords": [
