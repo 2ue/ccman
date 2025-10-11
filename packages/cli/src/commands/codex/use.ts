@@ -1,7 +1,12 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createCodexManager, ProviderNotFoundError } from '@ccman/core'
+import {
+  createCodexManager,
+  ProviderNotFoundError,
+  getCodexConfigPath,
+  getCodexAuthPath,
+} from '@ccman/core'
 
 export function useCommand(program: Command): void {
   program
@@ -53,8 +58,8 @@ export function useCommand(program: Command): void {
         console.log(`  ${chalk.gray(`URL: ${provider.baseUrl}`)}`)
         console.log()
         console.log(chalk.gray('配置已更新:'))
-        console.log(chalk.gray('  - ~/.codex/config.toml'))
-        console.log(chalk.gray('  - ~/.codex/auth.json'))
+        console.log(chalk.gray(`  - ${getCodexConfigPath()}`))
+        console.log(chalk.gray(`  - ${getCodexAuthPath()}`))
         console.log()
       } catch (error) {
         if (error instanceof ProviderNotFoundError) {

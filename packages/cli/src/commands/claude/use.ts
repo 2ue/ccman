@@ -1,7 +1,11 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createClaudeManager, ProviderNotFoundError } from '@ccman/core'
+import {
+  createClaudeManager,
+  ProviderNotFoundError,
+  getClaudeConfigPath,
+} from '@ccman/core'
 
 export function useCommand(program: Command): void {
   program
@@ -53,8 +57,7 @@ export function useCommand(program: Command): void {
         console.log(`  ${chalk.gray(`URL: ${provider.baseUrl}`)}`)
         console.log()
         console.log(chalk.gray('配置已更新:'))
-        console.log(chalk.gray('  - ~/.claude/config.toml'))
-        console.log(chalk.gray('  - ~/.claude/auth.json'))
+        console.log(chalk.gray(`  - ${getClaudeConfigPath()}`))
         console.log()
       } catch (error) {
         if (error instanceof ProviderNotFoundError) {

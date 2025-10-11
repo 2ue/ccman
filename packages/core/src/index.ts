@@ -32,7 +32,7 @@ export { CC_PRESETS, type PresetTemplate as ClaudePresetTemplate } from './prese
 // Migration
 export { migrateConfig, rollbackMigration, migrateV2ToV3, validateMigration } from './migrate.js'
 
-// Paths (导出用于测试)
+// Paths (导出用于测试和 CLI 输出)
 export {
   getCcmanDir,
   getCodexDir,

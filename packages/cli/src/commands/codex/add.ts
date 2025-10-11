@@ -1,7 +1,12 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createCodexManager, CODEX_PRESETS } from '@ccman/core'
+import {
+  createCodexManager,
+  CODEX_PRESETS,
+  getCodexConfigPath,
+  getCodexAuthPath,
+} from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
 
 export function addCommand(program: Command): void {
@@ -124,8 +129,8 @@ export function addCommand(program: Command): void {
           console.log(chalk.green('✅ 已切换到新服务商'))
           console.log()
           console.log(chalk.gray('配置已更新:'))
-          console.log(chalk.gray('  - ~/.codex/config.toml'))
-          console.log(chalk.gray('  - ~/.codex/auth.json'))
+          console.log(chalk.gray(`  - ${getCodexConfigPath()}`))
+          console.log(chalk.gray(`  - ${getCodexAuthPath()}`))
         } else {
           console.log(chalk.blue('💡 稍后切换:') + chalk.white(` ccman cx use "${provider.name}"`))
         }

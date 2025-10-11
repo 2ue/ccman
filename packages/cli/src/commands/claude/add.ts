@@ -1,7 +1,11 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createClaudeManager, CC_PRESETS } from '@ccman/core'
+import {
+  createClaudeManager,
+  CC_PRESETS,
+  getClaudeConfigPath,
+} from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
 
 export function addCommand(program: Command): void {
@@ -124,7 +128,7 @@ export function addCommand(program: Command): void {
           console.log(chalk.green('✅ 已切换到新服务商'))
           console.log()
           console.log(chalk.gray('配置已更新:'))
-          console.log(chalk.gray('  - ~/.claude/settings.json'))
+          console.log(chalk.gray(`  - ${getClaudeConfigPath()}`))
         } else {
           console.log(chalk.blue('💡 稍后切换:') + chalk.white(` ccman cc use "${provider.name}"`))
         }
