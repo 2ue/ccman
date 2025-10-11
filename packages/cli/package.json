@@ -1,6 +1,6 @@
 {
   "name": "ccman",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "Manage Codex and Claude Code API service provider configurations",
   "main": "./dist/index.js",
   "bin": {
@@ -36,7 +36,6 @@
     "url": "https://github.com/2ue/ccm/issues"
   },
   "dependencies": {
-    "@ccman/core": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^11.0.0",
     "inquirer": "^9.0.0"
