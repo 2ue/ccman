@@ -25,7 +25,7 @@ interface OldConfig {
  * 新版配置文件结构
  */
 interface NewConfig {
-  current?: string
+  currentProviderId?: string
   providers: Array<{
     id: string
     name: string
@@ -40,7 +40,7 @@ interface NewConfig {
  * 迁移配置文件从 v1 到 v2
  *
  * v1: 单一 config.json,providers 混合在一个数组,type 字段区分
- * v2: 分离为 codex.json 和 claudecode.json,无 type 字段
+ * v2: 分离为 codex.json 和 claude.json,无 type 字段
  *
  * @returns 迁移结果
  */
@@ -49,14 +49,14 @@ export function migrateConfig(): {
   message: string
   details?: {
     codexProviders: number
-    claudeCodeProviders: number
+    claudeProviders: number
     backupPath?: string
   }
 } {
   const ccmanDir = getCcmanDir()
   const oldConfigPath = path.join(ccmanDir, 'config.json')
   const codexConfigPath = path.join(ccmanDir, 'codex.json')
-  const claudeCodeConfigPath = path.join(ccmanDir, 'claudecode.json')
+  const claudeConfigPath = path.join(ccmanDir, 'claude.json')
 
   // 检查是否需要迁移
   if (!fs.existsSync(oldConfigPath)) {
@@ -67,7 +67,7 @@ export function migrateConfig(): {
   }
 
   // 检查是否已经迁移过
-  if (fs.existsSync(codexConfigPath) || fs.existsSync(claudeCodeConfigPath)) {
+  if (fs.existsSync(codexConfigPath) || fs.existsSync(claudeConfigPath)) {
     return {
       success: true,
       message: 'Migration already completed',
@@ -89,7 +89,7 @@ export function migrateConfig(): {
         return rest
       })
 
-    const claudeCodeProviders = oldConfig.providers
+    const claudeProviders = oldConfig.providers
       .filter((p) => p.type === 'claude')
       .map((p) => {
         // 删除 type 字段
@@ -100,18 +100,18 @@ export function migrateConfig(): {
 
     // 创建新配置
     const codexConfig: NewConfig = {
-      current: oldConfig.currentProviders.codex,
+      currentProviderId: oldConfig.currentProviders.codex,
       providers: codexProviders,
     }
 
-    const claudeCodeConfig: NewConfig = {
-      current: oldConfig.currentProviders.claude,
-      providers: claudeCodeProviders,
+    const claudeConfig: NewConfig = {
+      currentProviderId: oldConfig.currentProviders.claude,
+      providers: claudeProviders,
     }
 
     // 写入新配置
     fs.writeFileSync(codexConfigPath, JSON.stringify(codexConfig, null, 2), { mode: 0o600 })
-    fs.writeFileSync(claudeCodeConfigPath, JSON.stringify(claudeCodeConfig, null, 2), { mode: 0o600 })
+    fs.writeFileSync(claudeConfigPath, JSON.stringify(claudeConfig, null, 2), { mode: 0o600 })
 
     // 备份旧配置
     const backupPath = `${oldConfigPath}.bak`
@@ -122,7 +122,7 @@ export function migrateConfig(): {
       message: 'Migration completed successfully',
       details: {
         codexProviders: codexProviders.length,
-        claudeCodeProviders: claudeCodeProviders.length,
+        claudeProviders: claudeProviders.length,
         backupPath,
       },
     }
@@ -158,14 +158,14 @@ export function rollbackMigration(): {
 
     // 删除新配置文件(如果存在)
     const codexConfigPath = path.join(ccmanDir, 'codex.json')
-    const claudeCodeConfigPath = path.join(ccmanDir, 'claudecode.json')
+    const claudeConfigPath = path.join(ccmanDir, 'claude.json')
 
     if (fs.existsSync(codexConfigPath)) {
       fs.unlinkSync(codexConfigPath)
     }
 
-    if (fs.existsSync(claudeCodeConfigPath)) {
-      fs.unlinkSync(claudeCodeConfigPath)
+    if (fs.existsSync(claudeConfigPath)) {
+      fs.unlinkSync(claudeConfigPath)
     }
 
     return {

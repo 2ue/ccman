@@ -22,7 +22,7 @@ interface ClaudeEnv {
 }
 
 /**
- * 写入 Claude Code 配置（零破坏性）
+ * 写入 Claude 配置（零破坏性）
  *
  * 管理的字段（强制覆盖）：
  * - ANTHROPIC_AUTH_TOKEN
@@ -34,7 +34,7 @@ interface ClaudeEnv {
  * - permissions.allow
  * - permissions.deny
  */
-export function writeClaudeCodeConfig(provider: Provider): void {
+export function writeClaudeConfig(provider: Provider): void {
   // 确保目录存在
   ensureDir(getClaudeDir())
 

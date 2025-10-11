@@ -8,13 +8,13 @@
  * Renderer → Preload → Main → Core (tool-manager.ts)
  */
 
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import os from 'os'
 import {
   createCodexManager,
-  createClaudeCodeManager,
+  createClaudeManager,
   migrateConfig,
   getClaudeConfigPath,
   getCodexConfigPath,
@@ -199,60 +199,60 @@ ipcMain.handle('codex:find-by-name', async (_event, name: string) => {
 })
 
 // ============================================================================
-// IPC 处理器 - Claude Code
+// IPC 处理器 - Claude
 // ============================================================================
 
-// 添加 Claude Code provider
-ipcMain.handle('claudecode:add-provider', async (_event, input: AddProviderInput) => {
-  const manager = createClaudeCodeManager()
+// 添加 Claude provider
+ipcMain.handle('claude:add-provider', async (_event, input: AddProviderInput) => {
+  const manager = createClaudeManager()
   return manager.add(input)
 })
 
-// 列出所有 Claude Code providers
-ipcMain.handle('claudecode:list-providers', async () => {
-  const manager = createClaudeCodeManager()
+// 列出所有 Claude providers
+ipcMain.handle('claude:list-providers', async () => {
+  const manager = createClaudeManager()
   return manager.list()
 })
 
-// 获取 Claude Code provider
-ipcMain.handle('claudecode:get-provider', async (_event, id: string) => {
-  const manager = createClaudeCodeManager()
+// 获取 Claude provider
+ipcMain.handle('claude:get-provider', async (_event, id: string) => {
+  const manager = createClaudeManager()
   return manager.get(id)
 })
 
-// 切换 Claude Code provider
-ipcMain.handle('claudecode:switch-provider', async (_event, id: string) => {
-  const manager = createClaudeCodeManager()
+// 切换 Claude provider
+ipcMain.handle('claude:switch-provider', async (_event, id: string) => {
+  const manager = createClaudeManager()
   return manager.switch(id)
 })
 
-// 编辑 Claude Code provider
-ipcMain.handle('claudecode:edit-provider', async (_event, id: string, updates: EditProviderInput) => {
-  const manager = createClaudeCodeManager()
+// 编辑 Claude provider
+ipcMain.handle('claude:edit-provider', async (_event, id: string, updates: EditProviderInput) => {
+  const manager = createClaudeManager()
   return manager.edit(id, updates)
 })
 
-// 删除 Claude Code provider
-ipcMain.handle('claudecode:remove-provider', async (_event, id: string) => {
-  const manager = createClaudeCodeManager()
+// 删除 Claude provider
+ipcMain.handle('claude:remove-provider', async (_event, id: string) => {
+  const manager = createClaudeManager()
   return manager.remove(id)
 })
 
-// 克隆 Claude Code provider
-ipcMain.handle('claudecode:clone-provider', async (_event, sourceId: string, newName: string) => {
-  const manager = createClaudeCodeManager()
+// 克隆 Claude provider
+ipcMain.handle('claude:clone-provider', async (_event, sourceId: string, newName: string) => {
+  const manager = createClaudeManager()
   return manager.clone(sourceId, newName)
 })
 
-// 获取当前 Claude Code provider
-ipcMain.handle('claudecode:get-current', async () => {
-  const manager = createClaudeCodeManager()
+// 获取当前 Claude provider
+ipcMain.handle('claude:get-current', async () => {
+  const manager = createClaudeManager()
   return manager.getCurrent()
 })
 
-// 根据名称查找 Claude Code provider
-ipcMain.handle('claudecode:find-by-name', async (_event, name: string) => {
-  const manager = createClaudeCodeManager()
+// 根据名称查找 Claude provider
+ipcMain.handle('claude:find-by-name', async (_event, name: string) => {
+  const manager = createClaudeManager()
   return manager.findByName(name)
 })
 
@@ -285,30 +285,30 @@ ipcMain.handle('codex:remove-preset', async (_event, name: string) => {
 })
 
 // ============================================================================
-// IPC 处理器 - Claude Code Presets
+// IPC 处理器 - Claude Presets
 // ============================================================================
 
-// 获取 Claude Code presets
-ipcMain.handle('claudecode:list-presets', async () => {
-  const manager = createClaudeCodeManager()
+// 获取 Claude presets
+ipcMain.handle('claude:list-presets', async () => {
+  const manager = createClaudeManager()
   return manager.listPresets()
 })
 
-// 添加 Claude Code preset
-ipcMain.handle('claudecode:add-preset', async (_event, input: AddPresetInput) => {
-  const manager = createClaudeCodeManager()
+// 添加 Claude preset
+ipcMain.handle('claude:add-preset', async (_event, input: AddPresetInput) => {
+  const manager = createClaudeManager()
   return manager.addPreset(input)
 })
 
-// 编辑 Claude Code preset
-ipcMain.handle('claudecode:edit-preset', async (_event, name: string, updates: EditPresetInput) => {
-  const manager = createClaudeCodeManager()
+// 编辑 Claude preset
+ipcMain.handle('claude:edit-preset', async (_event, name: string, updates: EditPresetInput) => {
+  const manager = createClaudeManager()
   return manager.editPreset(name, updates)
 })
 
-// 删除 Claude Code preset
-ipcMain.handle('claudecode:remove-preset', async (_event, name: string) => {
-  const manager = createClaudeCodeManager()
+// 删除 Claude preset
+ipcMain.handle('claude:remove-preset', async (_event, name: string) => {
+  const manager = createClaudeManager()
   return manager.removePreset(name)
 })
 
@@ -317,9 +317,9 @@ ipcMain.handle('claudecode:remove-preset', async (_event, name: string) => {
 // ============================================================================
 
 // 读取配置文件
-ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claudecode') => {
+ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude') => {
   try {
-    if (tool === 'claudecode') {
+    if (tool === 'claude') {
       const path = getClaudeConfigPath()
 
       // 检查文件是否存在
@@ -429,11 +429,11 @@ ipcMain.handle(
   }
 )
 
-// 读取预置配置文件（用于 Settings 按钮）
-ipcMain.handle('read-preset-config-files', async () => {
+// 读取 ccman 配置文件（用于 Settings 按钮）
+ipcMain.handle('read-ccman-config-files', async () => {
   try {
     const codexPath = path.join(getCcmanDir(), 'codex.json')
-    const claudecodePath = path.join(getCcmanDir(), 'claudecode.json')
+    const claudePath = path.join(getCcmanDir(), 'claude.json')
 
     return [
       {
@@ -443,20 +443,20 @@ ipcMain.handle('read-preset-config-files', async () => {
         language: 'json' as const,
       },
       {
-        name: 'claudecode.json',
-        path: claudecodePath,
-        content: fs.readFileSync(claudecodePath, 'utf-8'),
+        name: 'claude.json',
+        path: claudePath,
+        content: fs.readFileSync(claudePath, 'utf-8'),
         language: 'json' as const,
       },
     ]
   } catch (error) {
-    throw new Error(`读取预置配置文件失败：${(error as Error).message}`)
+    throw new Error(`读取 ccman 配置文件失败：${(error as Error).message}`)
   }
 })
 
-// 写入预置配置文件（用于 Settings 按钮）
+// 写入 ccman 配置文件（用于 Settings 按钮）
 ipcMain.handle(
-  'write-preset-config-files',
+  'write-ccman-config-files',
   async (
     _event,
     files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
@@ -487,7 +487,7 @@ ipcMain.handle(
         throw error
       }
     } catch (error) {
-      throw new Error(`写入预置配置文件失败：${(error as Error).message}`)
+      throw new Error(`写入 ccman 配置文件失败：${(error as Error).message}`)
     }
   }
 )
@@ -499,6 +499,31 @@ ipcMain.handle(
 // 迁移配置
 ipcMain.handle('migrate-config', async () => {
   return migrateConfig()
+})
+
+// ============================================================================
+// IPC 处理器 - 系统操作
+// ============================================================================
+
+// 打开文件夹
+ipcMain.handle('open-folder', async () => {
+  try {
+    const ccmanDir = getCcmanDir()
+    await shell.openPath(ccmanDir)
+    return { success: true }
+  } catch (error) {
+    throw new Error(`打开文件夹失败：${(error as Error).message}`)
+  }
+})
+
+// 打开 URL
+ipcMain.handle('open-url', async (_event, url: string) => {
+  try {
+    await shell.openExternal(url)
+    return { success: true }
+  } catch (error) {
+    throw new Error(`打开链接失败：${(error as Error).message}`)
+  }
 })
 
 // ============================================================================

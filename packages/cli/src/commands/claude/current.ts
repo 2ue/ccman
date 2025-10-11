@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import { createClaudeCodeManager } from '@ccman/core'
+import { createClaudeManager } from '@ccman/core'
 
 export function currentCommand(program: Command): void {
   program
@@ -8,7 +8,7 @@ export function currentCommand(program: Command): void {
     .description('显示当前使用的 Claude Code 服务商')
     .action(async () => {
       try {
-        const manager = createClaudeCodeManager()
+        const manager = createClaudeManager()
         const current = manager.getCurrent()
 
         if (!current) {

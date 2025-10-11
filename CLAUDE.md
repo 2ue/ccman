@@ -4,8 +4,6 @@
 
 ccman 是一个 API 服务商配置管理工具，用于管理 Codex 和 Claude Code 的服务商配置。
 
-**核心价值**：像 NVM 管理 Node 版本一样管理 AI 服务商配置。
-
 **交付形式**：
 - CLI：命令行工具（快速切换，可脚本化）
 - Desktop：Electron 图形界面（可视化管理，直观）

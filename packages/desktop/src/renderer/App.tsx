@@ -1,12 +1,12 @@
 /**
  * Desktop Renderer App
  *
- * 按照架构设计方案,分别管理 Codex 和 Claude Code
+ * 按照架构设计方案,分别管理 Codex 和 Claude
  * 不再有混合的 providers 数组
  *
  * 架构:
  * - Codex Providers: 独立管理,使用 window.electronAPI.codex.*
- * - Claude Code Providers: 独立管理,使用 window.electronAPI.claudecode.*
+ * - Claude Providers: 独立管理,使用 window.electronAPI.claude.*
  */
 
 import { useState, useEffect } from 'react'
@@ -20,6 +20,7 @@ import AboutPage from './components/AboutPage'
 import AddProviderModal from './components/AddProviderModal'
 import ProviderForm from './components/ProviderForm'
 import { ConfirmDialog, AlertDialog } from './components/dialogs'
+import Toast from './components/Toast'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('home')
@@ -28,21 +29,21 @@ export default function App() {
   const [codexProviders, setCodexProviders] = useState<Provider[]>([])
   const [currentCodex, setCurrentCodex] = useState<Provider | undefined>()
 
-  // Claude Code 数据
-  const [claudeCodeProviders, setClaudeCodeProviders] = useState<Provider[]>([])
-  const [currentClaudeCode, setCurrentClaudeCode] = useState<Provider | undefined>()
+  // Claude 数据
+  const [claudeProviders, setClaudeProviders] = useState<Provider[]>([])
+  const [currentClaude, setCurrentClaude] = useState<Provider | undefined>()
 
   // Modal 状态
   const [showAddModal, setShowAddModal] = useState(false)
-  const [addModalTool, setAddModalTool] = useState<'codex' | 'claudecode'>('claudecode')
+  const [addModalTool, setAddModalTool] = useState<'codex' | 'claude'>('claude')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingProvider, setEditingProvider] = useState<Provider | undefined>()
-  const [editingTool, setEditingTool] = useState<'codex' | 'claudecode'>('claudecode')
+  const [editingTool, setEditingTool] = useState<'codex' | 'claude'>('claude')
   const [isCloneMode, setIsCloneMode] = useState(false)
 
   // Presets 数量
   const [codexPresetsCount, setCodexPresetsCount] = useState(0)
-  const [claudeCodePresetsCount, setClaudeCodePresetsCount] = useState(0)
+  const [claudePresetsCount, setClaudePresetsCount] = useState(0)
 
   // Dialog 状态
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -69,6 +70,14 @@ export default function App() {
     type: 'info',
   })
 
+  const [toast, setToast] = useState<{
+    show: boolean
+    message: string
+  }>({
+    show: false,
+    message: '',
+  })
+
   // 加载数据
   const loadData = async () => {
     try {
@@ -81,13 +90,13 @@ export default function App() {
       const codexPresets = await window.electronAPI.codex.listPresets()
       setCodexPresetsCount(codexPresets.length)
 
-      // 加载 Claude Code 数据
-      const claudeCodeList = await window.electronAPI.claudecode.listProviders()
-      setClaudeCodeProviders(claudeCodeList)
-      const claudeCodeCurrent = await window.electronAPI.claudecode.getCurrent()
-      setCurrentClaudeCode(claudeCodeCurrent)
-      const claudeCodePresets = await window.electronAPI.claudecode.listPresets()
-      setClaudeCodePresetsCount(claudeCodePresets.length)
+      // 加载 Claude 数据
+      const claudeList = await window.electronAPI.claude.listProviders()
+      setClaudeProviders(claudeList)
+      const claudeCurrent = await window.electronAPI.claude.getCurrent()
+      setCurrentClaude(claudeCurrent)
+      const claudePresets = await window.electronAPI.claude.listPresets()
+      setClaudePresetsCount(claudePresets.length)
     } catch (error) {
       console.error('加载数据失败：', error)
     }
@@ -105,6 +114,10 @@ export default function App() {
     try {
       await window.electronAPI.codex.switchProvider(id)
       await loadData()
+      setToast({
+        show: true,
+        message: '切换成功',
+      })
     } catch (error) {
       setAlertDialog({
         show: true,
@@ -125,6 +138,10 @@ export default function App() {
         try {
           await window.electronAPI.codex.removeProvider(id)
           await loadData()
+          setToast({
+            show: true,
+            message: '删除成功',
+          })
         } catch (error) {
           setAlertDialog({
             show: true,
@@ -155,13 +172,17 @@ export default function App() {
   }
 
   // ============================================================================
-  // Claude Code 操作
+  // Claude 操作
   // ============================================================================
 
-  const handleClaudeCodeSwitch = async (id: string) => {
+  const handleClaudeSwitch = async (id: string) => {
     try {
-      await window.electronAPI.claudecode.switchProvider(id)
+      await window.electronAPI.claude.switchProvider(id)
       await loadData()
+      setToast({
+        show: true,
+        message: '切换成功',
+      })
     } catch (error) {
       setAlertDialog({
         show: true,
@@ -172,7 +193,7 @@ export default function App() {
     }
   }
 
-  const handleClaudeCodeDelete = (id: string, name: string) => {
+  const handleClaudeDelete = (id: string, name: string) => {
     setConfirmDialog({
       show: true,
       title: '确认删除',
@@ -180,8 +201,12 @@ export default function App() {
       onConfirm: async () => {
         setConfirmDialog({ ...confirmDialog, show: false })
         try {
-          await window.electronAPI.claudecode.removeProvider(id)
+          await window.electronAPI.claude.removeProvider(id)
           await loadData()
+          setToast({
+            show: true,
+            message: '删除成功',
+          })
         } catch (error) {
           setAlertDialog({
             show: true,
@@ -194,19 +219,19 @@ export default function App() {
     })
   }
 
-  const handleClaudeCodeClone = (provider: Provider) => {
+  const handleClaudeClone = (provider: Provider) => {
     setEditingProvider({
       ...provider,
       name: `${provider.name}（副本）`,
     })
-    setEditingTool('claudecode')
+    setEditingTool('claude')
     setIsCloneMode(true)
     setShowEditModal(true)
   }
 
-  const handleClaudeCodeEdit = (provider: Provider) => {
+  const handleClaudeEdit = (provider: Provider) => {
     setEditingProvider(provider)
-    setEditingTool('claudecode')
+    setEditingTool('claude')
     setIsCloneMode(false)
     setShowEditModal(true)
   }
@@ -215,7 +240,7 @@ export default function App() {
   // 通用操作
   // ============================================================================
 
-  const handleAddProvider = (tool: 'codex' | 'claudecode') => {
+  const handleAddProvider = (tool: 'codex' | 'claude') => {
     setAddModalTool(tool)
     setShowAddModal(true)
   }
@@ -224,7 +249,7 @@ export default function App() {
     if (!editingProvider) return
 
     try {
-      const api = editingTool === 'codex' ? window.electronAPI.codex : window.electronAPI.claudecode
+      const api = editingTool === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
 
       if (isCloneMode) {
         // 克隆模式：创建新服务商
@@ -238,6 +263,10 @@ export default function App() {
       setEditingProvider(undefined)
       setIsCloneMode(false)
       await loadData()
+      setToast({
+        show: true,
+        message: `${isCloneMode ? '克隆' : '更新'}成功`,
+      })
     } catch (error) {
       setAlertDialog({
         show: true,
@@ -255,26 +284,26 @@ export default function App() {
       {/* 根据 activeTab 渲染不同页面 */}
       {activeTab === 'home' && (
         <HomePage
-          claudeProvider={currentClaudeCode}
+          claudeProvider={currentClaude}
           codexProvider={currentCodex}
-          claudeCount={claudeCodeProviders.length}
+          claudeCount={claudeProviders.length}
           codexCount={codexProviders.length}
-          serviceProviderCount={codexPresetsCount + claudeCodePresetsCount}
+          serviceProviderCount={codexPresetsCount + claudePresetsCount}
           onNavigate={setActiveTab}
-          onAddClaude={() => handleAddProvider('claudecode')}
+          onAddClaude={() => handleAddProvider('claude')}
           onAddCodex={() => handleAddProvider('codex')}
         />
       )}
 
       {activeTab === 'claude' && (
         <ClaudeCodePage
-          providers={claudeCodeProviders}
-          currentProvider={currentClaudeCode}
-          onAdd={() => handleAddProvider('claudecode')}
-          onSwitch={handleClaudeCodeSwitch}
-          onEdit={handleClaudeCodeEdit}
-          onDelete={handleClaudeCodeDelete}
-          onClone={handleClaudeCodeClone}
+          providers={claudeProviders}
+          currentProvider={currentClaude}
+          onAdd={() => handleAddProvider('claude')}
+          onSwitch={handleClaudeSwitch}
+          onEdit={handleClaudeEdit}
+          onDelete={handleClaudeDelete}
+          onClone={handleClaudeClone}
         />
       )}
 
@@ -295,6 +324,9 @@ export default function App() {
           onUseServiceProvider={() => {
             loadData()
           }}
+          onSuccess={(message) => {
+            setToast({ show: true, message })
+          }}
         />
       )}
 
@@ -309,6 +341,9 @@ export default function App() {
           setShowAddModal(false)
           loadData()
         }}
+        onSuccess={(message) => {
+          setToast({ show: true, message })
+        }}
       />
 
       {/* Edit/Clone Provider Modal */}
@@ -316,11 +351,12 @@ export default function App() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {isCloneMode ? '克隆' : '编辑'}服务商 - {editingTool === 'claudecode' ? 'Claude Code' : 'Codex'}
+              {isCloneMode ? '克隆' : '编辑'}服务商 - {editingTool === 'claude' ? 'Claude' : 'Codex'}
             </h2>
             <ProviderForm
               provider={editingProvider}
               isClone={isCloneMode}
+              existingProviders={editingTool === 'codex' ? codexProviders : claudeProviders}
               onSubmit={handleEditSubmit}
               onCancel={() => {
                 setShowEditModal(false)
@@ -347,6 +383,13 @@ export default function App() {
         message={alertDialog.message}
         type={alertDialog.type}
         onClose={() => setAlertDialog({ ...alertDialog, show: false })}
+      />
+
+      {/* Toast */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        onClose={() => setToast({ show: false, message: '' })}
       />
     </div>
   )

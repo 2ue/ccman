@@ -16,7 +16,7 @@ import type {
   AddProviderInput,
   EditProviderInput,
   CodexPresetTemplate,
-  ClaudeCodePresetTemplate,
+  ClaudePresetTemplate,
   AddPresetInput,
   EditPresetInput,
 } from '@ccman/core'
@@ -60,10 +60,10 @@ const codexAPI: CodexAPI = {
 }
 
 // ============================================================================
-// Claude Code API
+// Claude API
 // ============================================================================
 
-export interface ClaudeCodeAPI {
+export interface ClaudeAPI {
   addProvider: (input: AddProviderInput) => Promise<Provider>
   listProviders: () => Promise<Provider[]>
   getProvider: (id: string) => Promise<Provider | undefined>
@@ -74,28 +74,28 @@ export interface ClaudeCodeAPI {
   getCurrent: () => Promise<Provider | undefined>
   findByName: (name: string) => Promise<Provider | undefined>
 
-  addPreset: (input: AddPresetInput) => Promise<ClaudeCodePresetTemplate>
-  listPresets: () => Promise<ClaudeCodePresetTemplate[]>
-  editPreset: (name: string, updates: EditPresetInput) => Promise<ClaudeCodePresetTemplate>
+  addPreset: (input: AddPresetInput) => Promise<ClaudePresetTemplate>
+  listPresets: () => Promise<ClaudePresetTemplate[]>
+  editPreset: (name: string, updates: EditPresetInput) => Promise<ClaudePresetTemplate>
   removePreset: (name: string) => Promise<void>
 }
 
-const claudeCodeAPI: ClaudeCodeAPI = {
-  addProvider: (input) => ipcRenderer.invoke('claudecode:add-provider', input),
-  listProviders: () => ipcRenderer.invoke('claudecode:list-providers'),
-  getProvider: (id) => ipcRenderer.invoke('claudecode:get-provider', id),
-  switchProvider: (id) => ipcRenderer.invoke('claudecode:switch-provider', id),
-  editProvider: (id, updates) => ipcRenderer.invoke('claudecode:edit-provider', id, updates),
-  removeProvider: (id) => ipcRenderer.invoke('claudecode:remove-provider', id),
+const claudeAPI: ClaudeAPI = {
+  addProvider: (input) => ipcRenderer.invoke('claude:add-provider', input),
+  listProviders: () => ipcRenderer.invoke('claude:list-providers'),
+  getProvider: (id) => ipcRenderer.invoke('claude:get-provider', id),
+  switchProvider: (id) => ipcRenderer.invoke('claude:switch-provider', id),
+  editProvider: (id, updates) => ipcRenderer.invoke('claude:edit-provider', id, updates),
+  removeProvider: (id) => ipcRenderer.invoke('claude:remove-provider', id),
   cloneProvider: (sourceId, newName) =>
-    ipcRenderer.invoke('claudecode:clone-provider', sourceId, newName),
-  getCurrent: () => ipcRenderer.invoke('claudecode:get-current'),
-  findByName: (name) => ipcRenderer.invoke('claudecode:find-by-name', name),
+    ipcRenderer.invoke('claude:clone-provider', sourceId, newName),
+  getCurrent: () => ipcRenderer.invoke('claude:get-current'),
+  findByName: (name) => ipcRenderer.invoke('claude:find-by-name', name),
 
-  addPreset: (input) => ipcRenderer.invoke('claudecode:add-preset', input),
-  listPresets: () => ipcRenderer.invoke('claudecode:list-presets'),
-  editPreset: (name, updates) => ipcRenderer.invoke('claudecode:edit-preset', name, updates),
-  removePreset: (name) => ipcRenderer.invoke('claudecode:remove-preset', name),
+  addPreset: (input) => ipcRenderer.invoke('claude:add-preset', input),
+  listPresets: () => ipcRenderer.invoke('claude:list-presets'),
+  editPreset: (name, updates) => ipcRenderer.invoke('claude:edit-preset', name, updates),
+  removePreset: (name) => ipcRenderer.invoke('claude:remove-preset', name),
 }
 
 // ============================================================================
@@ -104,26 +104,36 @@ const claudeCodeAPI: ClaudeCodeAPI = {
 
 export interface ConfigAPI {
   readConfigFiles: (
-    tool: 'codex' | 'claudecode'
+    tool: 'codex' | 'claude'
   ) => Promise<Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>>
   writeConfigFiles: (
     files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
   ) => Promise<{ success: boolean }>
-  readPresetConfigFiles: () => Promise<
+  readCcmanConfigFiles: () => Promise<
     Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
   >
-  writePresetConfigFiles: (
+  writeCcmanConfigFiles: (
     files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
   ) => Promise<{ success: boolean }>
   migrate: () => Promise<{ success: boolean; message: string }>
 }
 
+export interface SystemAPI {
+  openFolder: () => Promise<{ success: boolean }>
+  openUrl: (url: string) => Promise<{ success: boolean }>
+}
+
 const configAPI: ConfigAPI = {
   readConfigFiles: (tool) => ipcRenderer.invoke('read-config-files', tool),
   writeConfigFiles: (files) => ipcRenderer.invoke('write-config-files', files),
-  readPresetConfigFiles: () => ipcRenderer.invoke('read-preset-config-files'),
-  writePresetConfigFiles: (files) => ipcRenderer.invoke('write-preset-config-files', files),
+  readCcmanConfigFiles: () => ipcRenderer.invoke('read-ccman-config-files'),
+  writeCcmanConfigFiles: (files) => ipcRenderer.invoke('write-ccman-config-files', files),
   migrate: () => ipcRenderer.invoke('migrate-config'),
+}
+
+const systemAPI: SystemAPI = {
+  openFolder: () => ipcRenderer.invoke('open-folder'),
+  openUrl: (url) => ipcRenderer.invoke('open-url', url),
 }
 
 // ============================================================================
@@ -132,8 +142,9 @@ const configAPI: ConfigAPI = {
 
 contextBridge.exposeInMainWorld('electronAPI', {
   codex: codexAPI,
-  claudecode: claudeCodeAPI,
+  claude: claudeAPI,
   config: configAPI,
+  system: systemAPI,
 })
 
 // ============================================================================
@@ -142,8 +153,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 export interface ElectronAPI {
   codex: CodexAPI
-  claudecode: ClaudeCodeAPI
+  claude: ClaudeAPI
   config: ConfigAPI
+  system: SystemAPI
 }
 
 declare global {

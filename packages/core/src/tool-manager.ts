@@ -2,14 +2,14 @@ import * as path from 'path'
 import { getCcmanDir } from './paths.js'
 import { readJSON, writeJSON, fileExists, ensureDir } from './utils/file.js'
 import { writeCodexConfig } from './writers/codex.js'
-import { writeClaudeCodeConfig } from './writers/claudecode.js'
+import { writeClaudeConfig } from './writers/claude.js'
 import { CODEX_PRESETS } from './presets/codex.js'
-import { CLAUDECODE_PRESETS } from './presets/claudecode.js'
+import { CC_PRESETS } from './presets/claude.js'
 
 /**
  * 工具类型
  */
-export type ToolType = 'codex' | 'claudecode'
+export type ToolType = 'codex' | 'claude'
 
 /**
  * Provider 配置(不包含 type 字段,因为配置已分离)
@@ -46,7 +46,7 @@ export interface PresetTemplate {
  */
 interface ToolConfig {
   /** 当前激活的 provider ID */
-  current?: string
+  currentProviderId?: string
   /** provider 列表 */
   providers: Provider[]
   /** 用户自定义预置列表 */
@@ -127,21 +127,21 @@ export interface ToolManager {
  */
 export class ProviderNotFoundError extends Error {
   constructor(id: string) {
-    super(`Provider not found: ${id}`)
+    super(`服务商不存在: ${id}`)
     this.name = 'ProviderNotFoundError'
   }
 }
 
 export class ProviderNameConflictError extends Error {
   constructor(name: string) {
-    super(`Provider name already exists: ${name}`)
+    super(`服务商名称已存在: ${name}`)
     this.name = 'ProviderNameConflictError'
   }
 }
 
 export class PresetNameConflictError extends Error {
   constructor(name: string) {
-    super(`Preset name already exists: ${name}`)
+    super(`预置名称已存在: ${name}`)
     this.name = 'PresetNameConflictError'
   }
 }
@@ -169,13 +169,14 @@ export function createCodexManager(): ToolManager {
    */
   function loadConfig(): ToolConfig {
     if (!fileExists(configPath)) {
-      // 初始化空配置
+      // 初始化配置，包含内置预置
       ensureDir(getCcmanDir())
-      const emptyConfig: ToolConfig = {
+      const initialConfig: ToolConfig = {
         providers: [],
+        presets: [...CODEX_PRESETS], // 初始化内置预置到配置文件
       }
-      writeJSON(configPath, emptyConfig)
-      return emptyConfig
+      writeJSON(configPath, initialConfig)
+      return initialConfig
     }
 
     return readJSON<ToolConfig>(configPath)
@@ -242,7 +243,7 @@ export function createCodexManager(): ToolManager {
       }
 
       // 更新当前 provider
-      config.current = id
+      config.currentProviderId = id
 
       // 更新最后使用时间
       provider.lastUsedAt = Date.now()
@@ -256,11 +257,11 @@ export function createCodexManager(): ToolManager {
     getCurrent(): Provider | null {
       const config = loadConfig()
 
-      if (!config.current) {
+      if (!config.currentProviderId) {
         return null
       }
 
-      const provider = config.providers.find((p) => p.id === config.current)
+      const provider = config.providers.find((p) => p.id === config.currentProviderId)
       return provider || null
     },
 
@@ -288,7 +289,7 @@ export function createCodexManager(): ToolManager {
       saveConfig(config)
 
       // 如果是当前激活的 provider,重新写入配置
-      if (config.current === id) {
+      if (config.currentProviderId === id) {
         writeCodexConfig(provider)
       }
 
@@ -304,8 +305,8 @@ export function createCodexManager(): ToolManager {
       }
 
       // 如果删除的是当前 provider,清除 current
-      if (config.current === id) {
-        config.current = undefined
+      if (config.currentProviderId === id) {
+        config.currentProviderId = undefined
       }
 
       config.providers.splice(index, 1)
@@ -378,7 +379,7 @@ export function createCodexManager(): ToolManager {
       const preset = config.presets.find((p) => p.name === name)
 
       if (!preset) {
-        throw new Error(`Preset not found: ${name}`)
+        throw new Error(`预置不存在: ${name}`)
       }
 
       // 如果要修改名称，检查新名称是否与其他preset冲突
@@ -419,25 +420,26 @@ export function createCodexManager(): ToolManager {
 }
 
 /**
- * 创建 Claude Code 工具管理器
+ * 创建 Claude 工具管理器
  *
- * 硬编码 Claude Code 的所有逻辑,无条件判断
+ * 硬编码 Claude 的所有逻辑,无条件判断
  */
-export function createClaudeCodeManager(): ToolManager {
-  const configPath = path.join(getCcmanDir(), 'claudecode.json')
+export function createClaudeManager(): ToolManager {
+  const configPath = path.join(getCcmanDir(), 'claude.json')
 
   /**
    * 加载配置文件
    */
   function loadConfig(): ToolConfig {
     if (!fileExists(configPath)) {
-      // 初始化空配置
+      // 初始化配置，包含内置预置
       ensureDir(getCcmanDir())
-      const emptyConfig: ToolConfig = {
+      const initialConfig: ToolConfig = {
         providers: [],
+        presets: [...CC_PRESETS], // 初始化内置预置到配置文件
       }
-      writeJSON(configPath, emptyConfig)
-      return emptyConfig
+      writeJSON(configPath, initialConfig)
+      return initialConfig
     }
 
     return readJSON<ToolConfig>(configPath)
@@ -461,7 +463,7 @@ export function createClaudeCodeManager(): ToolManager {
       }
 
       const provider: Provider = {
-        id: generateId('claudecode'),
+        id: generateId('claude'),
         name: input.name,
         baseUrl: input.baseUrl,
         apiKey: input.apiKey,
@@ -504,25 +506,25 @@ export function createClaudeCodeManager(): ToolManager {
       }
 
       // 更新当前 provider
-      config.current = id
+      config.currentProviderId = id
 
       // 更新最后使用时间
       provider.lastUsedAt = Date.now()
 
       saveConfig(config)
 
-      // 硬编码:写入 Claude Code 配置
-      writeClaudeCodeConfig(provider)
+      // 硬编码:写入 Claude 配置
+      writeClaudeConfig(provider)
     },
 
     getCurrent(): Provider | null {
       const config = loadConfig()
 
-      if (!config.current) {
+      if (!config.currentProviderId) {
         return null
       }
 
-      const provider = config.providers.find((p) => p.id === config.current)
+      const provider = config.providers.find((p) => p.id === config.currentProviderId)
       return provider || null
     },
 
@@ -550,8 +552,8 @@ export function createClaudeCodeManager(): ToolManager {
       saveConfig(config)
 
       // 如果是当前激活的 provider,重新写入配置
-      if (config.current === id) {
-        writeClaudeCodeConfig(provider)
+      if (config.currentProviderId === id) {
+        writeClaudeConfig(provider)
       }
 
       return provider
@@ -566,8 +568,8 @@ export function createClaudeCodeManager(): ToolManager {
       }
 
       // 如果删除的是当前 provider,清除 current
-      if (config.current === id) {
-        config.current = undefined
+      if (config.currentProviderId === id) {
+        config.currentProviderId = undefined
       }
 
       config.providers.splice(index, 1)
@@ -586,7 +588,7 @@ export function createClaudeCodeManager(): ToolManager {
 
       const newProvider: Provider = {
         ...source,
-        id: generateId('claudecode'),
+        id: generateId('claude'),
         name: newName,
         createdAt: Date.now(),
         lastUsedAt: undefined,
@@ -606,7 +608,7 @@ export function createClaudeCodeManager(): ToolManager {
       }
 
       // 检查名称是否与内置presets或用户presets重复
-      const allPresets = [...CLAUDECODE_PRESETS, ...config.presets]
+      const allPresets = [...CC_PRESETS, ...config.presets]
       const nameExists = allPresets.some((p) => p.name === input.name)
       if (nameExists) {
         throw new PresetNameConflictError(input.name)
@@ -627,7 +629,7 @@ export function createClaudeCodeManager(): ToolManager {
     listPresets(): PresetTemplate[] {
       const config = loadConfig()
       const userPresets = config.presets || []
-      return [...CLAUDECODE_PRESETS, ...userPresets]
+      return [...CC_PRESETS, ...userPresets]
     },
 
     editPreset(name: string, updates: EditPresetInput): PresetTemplate {
@@ -640,12 +642,12 @@ export function createClaudeCodeManager(): ToolManager {
       const preset = config.presets.find((p) => p.name === name)
 
       if (!preset) {
-        throw new Error(`Preset not found: ${name}`)
+        throw new Error(`预置不存在: ${name}`)
       }
 
       // 如果要修改名称，检查新名称是否与其他preset冲突
       if (updates.name !== undefined && updates.name !== preset.name) {
-        const allPresets = [...CLAUDECODE_PRESETS, ...config.presets]
+        const allPresets = [...CC_PRESETS, ...config.presets]
         const nameConflict = allPresets.some((p) => p.name !== name && p.name === updates.name)
         if (nameConflict) {
           throw new PresetNameConflictError(updates.name)

@@ -1,9 +1,6 @@
-import { useState } from 'react'
 import { Provider } from '@ccman/core'
-import { Target, CheckCircle2, AlertCircle, Zap, Plus, FolderCog, BarChart3, FileCode2 } from 'lucide-react'
+import { Target, CheckCircle2, AlertCircle, Zap, Plus, FolderCog, BarChart3, FolderOpen } from 'lucide-react'
 import { BUTTON_STYLES } from '../styles/button'
-import ConfigEditorModal from './ConfigEditorModal'
-import { AlertDialog } from './dialogs'
 
 interface HomePageProps {
   claudeProvider?: Provider
@@ -26,42 +23,12 @@ export default function HomePage({
   onAddClaude,
   onAddCodex,
 }: HomePageProps) {
-  const [showConfigEditor, setShowConfigEditor] = useState(false)
-  const [configFiles, setConfigFiles] = useState<
-    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
-  >([])
-
-  const [alertDialog, setAlertDialog] = useState<{
-    show: boolean
-    title: string
-    message: string
-    type: 'success' | 'error' | 'warning' | 'info'
-  }>({
-    show: false,
-    title: '',
-    message: '',
-    type: 'info',
-  })
-
-  const handleEditConfig = async () => {
+  const handleOpenFolder = async () => {
     try {
-      const files = await window.electronAPI.config.readPresetConfigFiles()
-      setConfigFiles(files)
-      setShowConfigEditor(true)
+      await window.electronAPI.system.openFolder()
     } catch (error) {
-      setAlertDialog({
-        show: true,
-        title: '读取配置文件失败',
-        message: (error as Error).message,
-        type: 'error',
-      })
+      console.error('打开文件夹失败：', error)
     }
-  }
-
-  const handleSaveConfig = async (
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
-  ) => {
-    await window.electronAPI.config.writePresetConfigFiles(files)
   }
 
   return (
@@ -70,11 +37,11 @@ export default function HomePage({
         {/* Hero Section */}
         <div className="text-center mb-12 relative">
           <button
-            onClick={handleEditConfig}
+            onClick={handleOpenFolder}
             className="absolute top-0 right-0 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            title="查看 ccman 配置文件"
+            title="打开配置文件夹"
           >
-            <FileCode2 className="w-5 h-5" />
+            <FolderOpen className="w-5 h-5" />
           </button>
           <div className="flex items-center justify-center gap-3 mb-4">
             <Target className="w-10 h-10 text-blue-600" />
@@ -227,24 +194,6 @@ export default function HomePage({
           </div>
         </div>
       </div>
-
-      {/* Config Editor Modal */}
-      <ConfigEditorModal
-        show={showConfigEditor}
-        title="查看 ccman 配置文件"
-        files={configFiles}
-        onSave={handleSaveConfig}
-        onClose={() => setShowConfigEditor(false)}
-      />
-
-      {/* Alert Dialog */}
-      <AlertDialog
-        show={alertDialog.show}
-        title={alertDialog.title}
-        message={alertDialog.message}
-        type={alertDialog.type}
-        onClose={() => setAlertDialog({ ...alertDialog, show: false })}
-      />
     </div>
   )
 }

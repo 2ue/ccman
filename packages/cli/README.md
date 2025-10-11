@@ -2,8 +2,6 @@
 
 > Codex 和 Claude Code 的 API 服务商配置管理工具
 
-像 NVM 管理 Node 版本一样管理 AI 服务商配置。
-
 ## ✨ 特性
 
 - 🔄 **快速切换**：一键切换不同的 API 服务商

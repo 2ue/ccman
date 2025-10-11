@@ -10,22 +10,24 @@ import type {
   AddProviderInput,
   EditProviderInput,
   CodexPresetTemplate,
-  ClaudeCodePresetTemplate,
+  ClaudePresetTemplate,
 } from '@ccman/core'
 import { BUTTON_STYLES } from '../styles/button'
 
 interface Props {
   provider?: Provider
-  preset?: CodexPresetTemplate | ClaudeCodePresetTemplate
+  preset?: CodexPresetTemplate | ClaudePresetTemplate
   isClone?: boolean
+  existingProviders?: Provider[]
   onSubmit: (input: AddProviderInput | EditProviderInput) => void | Promise<void>
   onCancel: () => void
 }
 
-export default function ProviderForm({ provider, preset, isClone = false, onSubmit, onCancel }: Props) {
+export default function ProviderForm({ provider, preset, isClone = false, existingProviders = [], onSubmit, onCancel }: Props) {
   const [name, setName] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
   const [apiKey, setApiKey] = useState('')
+  const [nameError, setNameError] = useState('')
 
   useEffect(() => {
     if (provider) {
@@ -46,10 +48,41 @@ export default function ProviderForm({ provider, preset, isClone = false, onSubm
     }
   }, [provider, preset])
 
+  // 检查名称是否重复
+  const checkNameConflict = (inputName: string): boolean => {
+    if (!inputName.trim()) return false
+
+    // 编辑模式且克隆模式：需要排除正在编辑的服务商
+    const currentId = provider && !isClone ? provider.id : null
+
+    return existingProviders.some(
+      (p) => p.name === inputName.trim() && p.id !== currentId
+    )
+  }
+
+  // 处理名称输入变化
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value
+    setName(newName)
+
+    // 实时检查名称冲突
+    if (newName.trim() && checkNameConflict(newName)) {
+      setNameError(`服务商名称已存在: ${newName.trim()}`)
+    } else {
+      setNameError('')
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // HTML5 表单验证会自动处理必填项,所以这里不需要 alert
+    // 提交前再次检查名称冲突
+    if (checkNameConflict(name)) {
+      setNameError(`服务商名称已存在: ${name.trim()}`)
+      return
+    }
+
+    // HTML5 表单验证会自动处理必填项
     onSubmit({ name, baseUrl, apiKey: apiKey ? apiKey : undefined })
   }
 
@@ -71,11 +104,18 @@ export default function ProviderForm({ provider, preset, isClone = false, onSubm
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={handleNameChange}
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+            nameError
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-gray-300 focus:ring-blue-500'
+          }`}
           placeholder="例如：我的 Anthropic API"
           required
         />
+        {nameError && (
+          <p className="text-sm text-red-600 mt-1">{nameError}</p>
+        )}
       </div>
 
       <div>

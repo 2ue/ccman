@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import { createClaudeCodeManager } from '@ccman/core'
+import { createClaudeManager } from '@ccman/core'
 
 export function listCommand(program: Command): void {
   program
@@ -9,7 +9,7 @@ export function listCommand(program: Command): void {
     .description('列出所有 Claude Code 服务商')
     .action(async () => {
       try {
-        const manager = createClaudeCodeManager()
+        const manager = createClaudeManager()
         const providers = manager.list()
         const current = manager.getCurrent()
 

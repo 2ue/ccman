@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { writeClaudeCodeConfig } from './claudecode'
+import { writeClaudeConfig } from './claude'
 import { getClaudeConfigPath, __setTestPaths } from '../paths'
 import { fileExists } from '../utils/file'
 import type { Provider } from '../types'
@@ -24,18 +24,17 @@ describe('Claude Writer', () => {
     }
   })
 
-  describe('writeClaudeCodeConfig', () => {
+  describe('writeClaudeConfig', () => {
     it('should create new config file', () => {
       const provider: Provider = {
         id: 'test-id',
         name: 'Test',
-        type: 'claude',
         baseUrl: 'https://test.anthropic.com',
         apiKey: 'sk-ant-test-key-123',
         createdAt: Date.now(),
       }
 
-      writeClaudeCodeConfig(provider)
+      writeClaudeConfig(provider)
 
       const claudePath = getClaudeConfigPath()
       expect(fileExists(claudePath)).toBe(true)
@@ -70,12 +69,11 @@ describe('Claude Writer', () => {
       const provider: Provider = {
         id: 'test-id',
         name: 'Test',
-        type: 'claude',
         baseUrl: 'https://new.anthropic.com',
         apiKey: 'new-key',
         createdAt: Date.now(),
       }
-      writeClaudeCodeConfig(provider)
+      writeClaudeConfig(provider)
 
       // 验证
       const content = fs.readFileSync(claudePath, 'utf-8')
@@ -92,12 +90,11 @@ describe('Claude Writer', () => {
       const provider: Provider = {
         id: 'test',
         name: 'Test',
-        type: 'claude',
         baseUrl: 'https://api.anthropic.com',
         apiKey: 'test-key',
         createdAt: Date.now(),
       }
-      writeClaudeCodeConfig(provider)
+      writeClaudeConfig(provider)
 
       const content = fs.readFileSync(getClaudeConfigPath(), 'utf-8')
       const config = JSON.parse(content)
@@ -109,12 +106,11 @@ describe('Claude Writer', () => {
       const provider: Provider = {
         id: 'test',
         name: 'Test',
-        type: 'claude',
         baseUrl: 'https://api.anthropic.com/',
         apiKey: 'test-key',
         createdAt: Date.now(),
       }
-      writeClaudeCodeConfig(provider)
+      writeClaudeConfig(provider)
 
       const content = fs.readFileSync(getClaudeConfigPath(), 'utf-8')
       const config = JSON.parse(content)
@@ -134,12 +130,11 @@ describe('Claude Writer', () => {
       const provider: Provider = {
         id: 'test',
         name: 'Test',
-        type: 'claude',
         baseUrl: 'https://api.anthropic.com',
         apiKey: 'test-key',
         createdAt: Date.now(),
       }
-      writeClaudeCodeConfig(provider)
+      writeClaudeConfig(provider)
 
       expect(fs.existsSync(parentDir)).toBe(true)
       expect(fileExists(claudePath)).toBe(true)
@@ -149,12 +144,11 @@ describe('Claude Writer', () => {
       const provider: Provider = {
         id: 'test',
         name: 'Test',
-        type: 'claude',
         baseUrl: 'https://api.anthropic.com',
         apiKey: 'test-key',
         createdAt: Date.now(),
       }
-      writeClaudeCodeConfig(provider)
+      writeClaudeConfig(provider)
 
       const content = fs.readFileSync(getClaudeConfigPath(), 'utf-8')
 

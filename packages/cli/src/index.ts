@@ -4,8 +4,8 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import { printLogo } from './utils/logo.js'
 import { createCodexCommands } from './commands/codex/index.js'
-import { createClaudeCodeCommands } from './commands/claudecode/index.js'
-import { startMainMenu, startClaudeCodeMenu, startCodexMenu } from './interactive.js'
+import { createClaudeCommands } from './commands/claude/index.js'
+import { startMainMenu, startClaudeMenu, startCodexMenu } from './interactive.js'
 import { getCcmanDir, getCodexDir, getClaudeDir, VERSION } from '@ccman/core'
 
 // 开发模式：输出配置目录
@@ -42,14 +42,14 @@ cx.action(async () => {
   await startCodexMenu()
 })
 
-// 创建 cc (Claude Code) 子命令
-const cc = program.command('cc').description('管理 Claude Code 服务商')
-createClaudeCodeCommands(cc)
+// 创建 cc (Claude) 子命令
+const cc = program.command('cc').description('管理 Claude 服务商')
+createClaudeCommands(cc)
 
 // cc 不带参数时进入交互模式
 cc.action(async () => {
   printLogo()
-  await startClaudeCodeMenu()
+  await startClaudeMenu()
 })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式

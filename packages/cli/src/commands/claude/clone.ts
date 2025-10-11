@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createClaudeCodeManager, ProviderNotFoundError } from '@ccman/core'
+import { createClaudeManager, ProviderNotFoundError } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
 
 export function cloneCommand(program: Command): void {
@@ -10,7 +10,7 @@ export function cloneCommand(program: Command): void {
     .description('克隆 Claude Code 服务商')
     .action(async (sourceName?: string, newName?: string) => {
       try {
-        const manager = createClaudeCodeManager()
+        const manager = createClaudeManager()
         const providers = manager.list()
 
         if (providers.length === 0) {

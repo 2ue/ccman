@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createClaudeCodeManager, CLAUDECODE_PRESETS } from '@ccman/core'
+import { createClaudeManager, CC_PRESETS } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
 
 export function addCommand(program: Command): void {
@@ -10,7 +10,7 @@ export function addCommand(program: Command): void {
     .description('添加新的 Claude Code 服务商(交互式)')
     .action(async () => {
       try {
-        const manager = createClaudeCodeManager()
+        const manager = createClaudeManager()
 
         console.log(chalk.bold('\n📝 添加 Claude Code 服务商\n'))
 
@@ -38,14 +38,14 @@ export function addCommand(program: Command): void {
               type: 'list',
               name: 'presetName',
               message: '选择预置服务商:',
-              choices: CLAUDECODE_PRESETS.map((p) => ({
+              choices: CC_PRESETS.map((p) => ({
                 name: `${p.name} - ${p.description}`,
                 value: p.name,
               })),
             },
           ])
 
-          const preset = CLAUDECODE_PRESETS.find((p) => p.name === presetName)!
+          const preset = CC_PRESETS.find((p) => p.name === presetName)!
 
           console.log(chalk.blue(`\n使用预设: ${preset.name} - ${preset.description}\n`))
 

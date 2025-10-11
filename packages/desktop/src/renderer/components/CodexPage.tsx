@@ -3,7 +3,7 @@ import { Provider } from '@ccman/core'
 import ProviderGrid from './ProviderGrid'
 import ConfigEditorModal from './ConfigEditorModal'
 import { AlertDialog } from './dialogs'
-import { Plus, Inbox, FileCode2 } from 'lucide-react'
+import { Plus, Inbox, FileCode2, Search } from 'lucide-react'
 import { BUTTON_WITH_ICON, BUTTON_STYLES } from '../styles/button'
 
 interface CodexPageProps {
@@ -29,6 +29,7 @@ export default function CodexPage({
   const [configFiles, setConfigFiles] = useState<
     Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
   >([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   const [alertDialog, setAlertDialog] = useState<{
     show: boolean
@@ -63,6 +64,13 @@ export default function CodexPage({
     await window.electronAPI.config.writeConfigFiles(files)
   }
 
+  // 前端搜索过滤
+  const filteredProviders = providers.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.baseUrl.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
       {/* Header */}
@@ -72,6 +80,7 @@ export default function CodexPage({
             <h1 className="text-2xl font-bold text-gray-900">Codex 服务商管理</h1>
             <p className="text-sm text-gray-500 mt-1">
               管理 Codex 的 API 配置，当前共 {providers.length} 个服务商
+              {searchQuery && ` · 搜索结果: ${filteredProviders.length} 个`}
             </p>
           </div>
           <div className="flex gap-2">
@@ -80,8 +89,22 @@ export default function CodexPage({
             </button>
             <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
               <Plus className="w-4 h-4" />
-              添加服务商
+              添加
             </button>
+          </div>
+        </div>
+
+        {/* 搜索框 */}
+        <div className="mt-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索服务商..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
       </div>
@@ -95,13 +118,20 @@ export default function CodexPage({
             <p className="text-sm text-gray-400 mb-4">点击右上角"添加服务商"按钮开始配置</p>
             <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
               <Plus className="w-4 h-4" />
-              添加第一个服务商
+              添加
             </button>
+          </div>
+        ) : filteredProviders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <Inbox className="w-16 h-16 mb-4 text-gray-400" />
+            <p className="text-lg font-medium mb-2">没有匹配的服务商</p>
+            <p className="text-sm text-gray-400 mb-4">尝试使用其他关键词搜索</p>
           </div>
         ) : (
           <ProviderGrid
-            providers={providers}
+            providers={filteredProviders}
             currentProviderId={currentProvider?.id}
+            tool="codex"
             onSwitch={onSwitch}
             onEdit={(provider) => onEdit(provider)}
             onDelete={onDelete}

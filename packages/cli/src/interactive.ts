@@ -3,15 +3,15 @@
  *
  * 提供三种入口：
  * - startMainMenu(): 主菜单（ccman）
- * - startClaudeCodeMenu(): Claude Code 菜单（ccman cc）
+ * - startClaudeMenu(): Claude 菜单（ccman cc）
  * - startCodexMenu(): Codex 菜单（ccman cx）
  */
 
 import inquirer from 'inquirer'
 import chalk from 'chalk'
-import { createCodexManager, createClaudeCodeManager } from '@ccman/core'
+import { createCodexManager, createClaudeManager } from '@ccman/core'
 
-type ToolType = 'codex' | 'claudecode'
+type ToolType = 'codex' | 'claude'
 
 // ============================================================================
 // 通用表单函数
@@ -97,7 +97,7 @@ export async function startMainMenu(): Promise<void> {
         name: 'choice',
         message: '请选择操作:',
         choices: [
-          { name: '🔷 Claude Code 管理', value: 'claudecode' },
+          { name: '🔷 Claude 管理', value: 'claude' },
           { name: '🔶 Codex 管理', value: 'codex' },
           { name: '📦 预置服务商管理', value: 'presets' },
           { name: '❌ 退出', value: 'exit' },
@@ -110,8 +110,8 @@ export async function startMainMenu(): Promise<void> {
       break
     }
 
-    if (choice === 'claudecode') {
-      await startClaudeCodeMenu()
+    if (choice === 'claude') {
+      await startClaudeMenu()
     } else if (choice === 'codex') {
       await startCodexMenu()
     } else if (choice === 'presets') {
@@ -121,14 +121,14 @@ export async function startMainMenu(): Promise<void> {
 }
 
 // ============================================================================
-// Claude Code 菜单
+// Claude 菜单
 // ============================================================================
 
 /**
- * Claude Code 菜单 - ccman cc 入口
+ * Claude 菜单 - ccman cc 入口
  */
-export async function startClaudeCodeMenu(): Promise<void> {
-  await showToolMenu('claudecode')
+export async function startClaudeMenu(): Promise<void> {
+  await showToolMenu('claude')
 }
 
 // ============================================================================
@@ -147,8 +147,8 @@ export async function startCodexMenu(): Promise<void> {
 // ============================================================================
 
 async function showToolMenu(tool: ToolType): Promise<void> {
-  const toolName = tool === 'claudecode' ? 'Claude Code' : 'Codex'
-  const toolEmoji = tool === 'claudecode' ? '🔷' : '🔶'
+  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
+  const toolEmoji = tool === 'claude' ? '🔷' : '🔶'
 
   while (true) {
     console.log()
@@ -226,8 +226,8 @@ async function showPresetsMenu(): Promise<void> {
 // ============================================================================
 
 async function handleAdd(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeCodeManager()
-  const toolName = tool === 'claudecode' ? 'Claude Code' : 'Codex'
+  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
+  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
   const presets = manager.listPresets()
 
   console.log(chalk.bold(`\n📝 添加 ${toolName} 服务商\n`))
@@ -342,7 +342,7 @@ async function handleAdd(tool: ToolType): Promise<void> {
 }
 
 async function handleSwitch(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeCodeManager()
+  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
   const providers = manager.list()
   const current = manager.getCurrent()
 
@@ -369,10 +369,10 @@ async function handleSwitch(tool: ToolType): Promise<void> {
 }
 
 async function handleList(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeCodeManager()
+  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
   const providers = manager.list()
   const current = manager.getCurrent()
-  const toolName = tool === 'claudecode' ? 'Claude Code' : 'Codex'
+  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
 
   if (providers.length === 0) {
     console.log(chalk.yellow(`\n⚠️  暂无 ${toolName} 服务商\n`))
@@ -406,9 +406,9 @@ async function handleList(tool: ToolType): Promise<void> {
 }
 
 async function handleCurrent(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeCodeManager()
+  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
   const current = manager.getCurrent()
-  const toolName = tool === 'claudecode' ? 'Claude Code' : 'Codex'
+  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
 
   if (!current) {
     console.log(chalk.yellow(`\n⚠️  未选择任何 ${toolName} 服务商\n`))
@@ -429,7 +429,7 @@ async function handleCurrent(tool: ToolType): Promise<void> {
 }
 
 async function handleEdit(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeCodeManager()
+  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
   const providers = manager.list()
 
   if (providers.length === 0) {
@@ -490,7 +490,7 @@ async function handleEdit(tool: ToolType): Promise<void> {
 }
 
 async function handleClone(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeCodeManager()
+  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
   const providers = manager.list()
 
   if (providers.length === 0) {
@@ -542,7 +542,7 @@ async function handleClone(tool: ToolType): Promise<void> {
 }
 
 async function handleRemove(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeCodeManager()
+  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
   const providers = manager.list()
 
   if (providers.length === 0) {

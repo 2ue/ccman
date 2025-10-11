@@ -1,29 +1,32 @@
 import { useState, useEffect } from 'react'
-import { X, Plus, Package, Check } from 'lucide-react'
+import { X, Plus, Package, ExternalLink } from 'lucide-react'
 import type {
+  Provider,
   AddProviderInput,
   EditProviderInput,
   CodexPresetTemplate,
-  ClaudeCodePresetTemplate,
+  ClaudePresetTemplate,
 } from '@ccman/core'
 import ProviderForm from './ProviderForm'
 import { AlertDialog } from './dialogs'
 
 interface Props {
   show: boolean
-  type: 'codex' | 'claudecode'
+  type: 'codex' | 'claude'
   onClose: () => void
   onSubmit: () => void
+  onSuccess?: (message: string) => void
 }
 
-export default function AddProviderModal({ show, type, onClose, onSubmit }: Props) {
+export default function AddProviderModal({ show, type, onClose, onSubmit, onSuccess }: Props) {
   const [showCustomForm, setShowCustomForm] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<
-    CodexPresetTemplate | ClaudeCodePresetTemplate | undefined
+    CodexPresetTemplate | ClaudePresetTemplate | undefined
   >()
   const [presets, setPresets] = useState<
-    Array<CodexPresetTemplate | ClaudeCodePresetTemplate>
+    Array<CodexPresetTemplate | ClaudePresetTemplate>
   >([])
+  const [providers, setProviders] = useState<Provider[]>([])
 
   const [alertDialog, setAlertDialog] = useState<{
     show: boolean
@@ -39,7 +42,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit }: Prop
 
   const loadPresets = async () => {
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claudecode
+      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
       const presetsData = await api.listPresets()
       setPresets(presetsData)
     } catch (error) {
@@ -47,13 +50,24 @@ export default function AddProviderModal({ show, type, onClose, onSubmit }: Prop
     }
   }
 
+  const loadProviders = async () => {
+    try {
+      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const providersData = await api.listProviders()
+      setProviders(providersData)
+    } catch (error) {
+      console.error('Failed to load providers:', error)
+    }
+  }
+
   useEffect(() => {
     if (show) {
       loadPresets()
+      loadProviders()
     }
   }, [show, type])
 
-  const handleSelectPreset = (preset: CodexPresetTemplate | ClaudeCodePresetTemplate) => {
+  const handleSelectPreset = (preset: CodexPresetTemplate | ClaudePresetTemplate) => {
     setSelectedPreset(preset)
     setShowCustomForm(true)
   }
@@ -65,13 +79,15 @@ export default function AddProviderModal({ show, type, onClose, onSubmit }: Prop
 
   const handleProviderSubmit = async (input: AddProviderInput | EditProviderInput) => {
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claudecode
+      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
       await api.addProvider(input as AddProviderInput)
       onSubmit()
       onClose()
       // 重置状态
       setSelectedPreset(undefined)
       setShowCustomForm(false)
+      // 显示成功提示
+      onSuccess?.('添加成功')
     } catch (error) {
       setAlertDialog({
         show: true,
@@ -97,10 +113,10 @@ export default function AddProviderModal({ show, type, onClose, onSubmit }: Prop
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className={`bg-white rounded-lg shadow-xl w-full ${showCustomForm ? 'max-w-md' : 'max-w-4xl'} max-h-[90vh] overflow-hidden flex flex-col`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            添加 {type === 'claudecode' ? 'Claude Code' : 'Codex'} 服务商
+            添加 {type === 'claude' ? 'Claude' : 'Codex'} 服务商
           </h2>
           <button
             onClick={handleClose}
@@ -121,6 +137,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit }: Prop
               </button>
               <ProviderForm
                 preset={selectedPreset}
+                existingProviders={providers}
                 onSubmit={handleProviderSubmit}
                 onCancel={handleBackToList}
               />
@@ -129,12 +146,14 @@ export default function AddProviderModal({ show, type, onClose, onSubmit }: Prop
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Package className="w-5 h-5 text-blue-600" />
+                  <Package className={`w-5 h-5 ${type === 'codex' ? 'text-blue-600' : 'text-purple-600'}`} />
                   <h3 className="text-base font-semibold text-gray-900">选择预置服务商</h3>
                 </div>
                 <button
                   onClick={handleAddCustom}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium"
+                  className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
+                    type === 'codex' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
+                  }`}
                 >
                   <Plus className="w-4 h-4" />
                   自定义添加
@@ -149,37 +168,51 @@ export default function AddProviderModal({ show, type, onClose, onSubmit }: Prop
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {presets.map((preset, index) => (
-                    <div
-                      key={`${type}-preset-${index}-${preset.name}`}
-                      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-lg transition-shadow cursor-pointer"
-                      onClick={() => handleSelectPreset(preset)}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900 text-base">{preset.name}</h3>
-                      </div>
+                  {presets.map((preset, index) => {
+                    // 前7个为内置预设
+                    const isBuiltIn = index < 7
 
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{preset.description}</p>
+                    return (
+                      <div
+                        key={`${type}-preset-${index}-${preset.name}`}
+                        className="bg-white rounded-lg border border-gray-200 p-3 hover:border-gray-300 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                              isBuiltIn
+                                ? 'bg-gray-100 text-gray-600 border-gray-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                              {isBuiltIn ? '内置' : '自定义'}
+                            </span>
+                          </div>
+                        </div>
 
-                      <div className="mb-4">
-                        <div className="text-xs text-gray-500 mb-1">Base URL:</div>
-                        <div className="text-xs text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded break-all">
+                        <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
+
+                        <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
                           {preset.baseUrl}
+                        </p>
+
+                        <div className="flex gap-2 pt-2 border-t border-gray-100">
+                          <button
+                            onClick={() => handleSelectPreset(preset)}
+                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                              type === 'codex'
+                                ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                                : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                            }`}
+                            title="使用此预置"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            使用
+                          </button>
                         </div>
                       </div>
-
-                      <button
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleSelectPreset(preset)
-                        }}
-                      >
-                        <Check className="w-4 h-4" />
-                        使用此预置
-                      </button>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

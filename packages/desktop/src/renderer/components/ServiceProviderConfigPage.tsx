@@ -2,14 +2,14 @@
  * ServiceProviderConfigPage - 预置服务商展示页面
  *
  * 按照架构设计：
- * - 预置在Core层硬编码 (CODEX_PRESETS, CLAUDECODE_PRESETS)
+ * - 预置在Core层硬编码 (CODEX_PRESETS, CC_PRESETS)
  * - 两套独立的预设，完全分离
  * - 用户可以从预置中快速添加服务商（需要填写API Key）
  * - 用户可以添加自己的预置服务商
  */
 
 import { useState, useEffect } from 'react'
-import type { CodexPresetTemplate, ClaudeCodePresetTemplate, AddProviderInput, EditProviderInput } from '@ccman/core'
+import type { Provider, CodexPresetTemplate, ClaudePresetTemplate, AddProviderInput, EditProviderInput } from '@ccman/core'
 import { Search, Package, ExternalLink, Edit2, Trash2, Plus, FileCode2 } from 'lucide-react'
 import PresetFormModal from './PresetFormModal'
 import ConfigEditorModal from './ConfigEditorModal'
@@ -18,6 +18,7 @@ import { ConfirmDialog, AlertDialog } from './dialogs'
 
 interface ServiceProviderConfigPageProps {
   onUseServiceProvider: () => void
+  onSuccess?: (message: string) => void
 }
 
 // 扩展预置类型，添加 isBuiltIn 标记
@@ -25,18 +26,20 @@ interface ExtendedPreset {
   name: string
   baseUrl: string
   description: string
-  type: 'codex' | 'claudecode'
+  type: 'codex' | 'claude'
   isBuiltIn: boolean
 }
 
-export default function ServiceProviderConfigPage({ onUseServiceProvider }: ServiceProviderConfigPageProps) {
+export default function ServiceProviderConfigPage({ onUseServiceProvider, onSuccess }: ServiceProviderConfigPageProps) {
   const [codexPresets, setCodexPresets] = useState<CodexPresetTemplate[]>([])
-  const [claudeCodePresets, setClaudeCodePresets] = useState<ClaudeCodePresetTemplate[]>([])
+  const [claudeCodePresets, setClaudeCodePresets] = useState<ClaudePresetTemplate[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [codexProviders, setCodexProviders] = useState<Provider[]>([])
+  const [claudeProviders, setClaudeProviders] = useState<Provider[]>([])
 
   // 预置表单 Modal
   const [showPresetModal, setShowPresetModal] = useState(false)
-  const [presetModalType, setPresetModalType] = useState<'codex' | 'claudecode'>('codex')
+  const [presetModalType, setPresetModalType] = useState<'codex' | 'claude'>('codex')
   const [editingPreset, setEditingPreset] = useState<{ name: string; baseUrl: string; description: string } | undefined>()
 
   // Settings Modal
@@ -77,9 +80,9 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
   const loadPresets = async () => {
     try {
       const codex = await window.electronAPI.codex.listPresets()
-      const claudecode = await window.electronAPI.claudecode.listPresets()
+      const claude = await window.electronAPI.claude.listPresets()
       setCodexPresets(codex)
-      setClaudeCodePresets(claudecode)
+      setClaudeCodePresets(claude)
     } catch (error) {
       console.error('加载预置失败:', error)
     }
@@ -89,27 +92,36 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
     loadPresets()
   }, [])
 
-  const handleUsePreset = (preset: ExtendedPreset) => {
+  const handleUsePreset = async (preset: ExtendedPreset) => {
     setUsingPreset(preset)
     setShowUsePresetModal(true)
+
+    // Load providers list for validation
+    try {
+      const api = preset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const providersData = await api.listProviders()
+
+      if (preset.type === 'codex') {
+        setCodexProviders(providersData)
+      } else {
+        setClaudeProviders(providersData)
+      }
+    } catch (error) {
+      console.error('Failed to load providers:', error)
+    }
   }
 
   const handleUsePresetSubmit = async (input: AddProviderInput | EditProviderInput) => {
     if (!usingPreset) return
 
     try {
-      const api = usingPreset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claudecode
+      const api = usingPreset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
 
       await api.addProvider(input as AddProviderInput)
 
       setShowUsePresetModal(false)
       setUsingPreset(undefined)
-      setAlertDialog({
-        show: true,
-        title: '添加成功',
-        message: '服务商已成功添加！',
-        type: 'success',
-      })
+      onSuccess?.('添加成功')
       onUseServiceProvider()
     } catch (error) {
       setAlertDialog({
@@ -121,7 +133,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
     }
   }
 
-  const handleAddPreset = (type: 'codex' | 'claudecode') => {
+  const handleAddPreset = (type: 'codex' | 'claude') => {
     setPresetModalType(type)
     setEditingPreset(undefined)
     setShowPresetModal(true)
@@ -146,15 +158,10 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
         setConfirmDialog({ ...confirmDialog, show: false })
 
         try {
-          const api = preset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claudecode
+          const api = preset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
           await api.removePreset(preset.name)
           await loadPresets()
-          setAlertDialog({
-            show: true,
-            title: '删除成功',
-            message: '预置已成功删除！',
-            type: 'success',
-          })
+          onSuccess?.('删除成功')
         } catch (error) {
           setAlertDialog({
             show: true,
@@ -169,7 +176,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
 
   const handleEditConfig = async () => {
     try {
-      const files = await window.electronAPI.config.readPresetConfigFiles()
+      const files = await window.electronAPI.config.readCcmanConfigFiles()
       setConfigFiles(files)
       setShowConfigEditor(true)
     } catch (error) {
@@ -185,7 +192,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
   const handleSaveConfig = async (
     files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
   ) => {
-    await window.electronAPI.config.writePresetConfigFiles(files)
+    await window.electronAPI.config.writeCcmanConfigFiles(files)
     await loadPresets()
   }
 
@@ -198,7 +205,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
 
   const extendedClaudeCodePresets: ExtendedPreset[] = claudeCodePresets.map((p, index) => ({
     ...p,
-    type: 'claudecode' as const,
+    type: 'claude' as const,
     isBuiltIn: index < 7, // 前7个是内置的
   }))
 
@@ -285,11 +292,13 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
-                      {preset.isBuiltIn && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                          Built-in
-                        </span>
-                      )}
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        preset.isBuiltIn
+                          ? 'bg-gray-100 text-gray-600 border-gray-200'
+                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
+                        {preset.isBuiltIn ? '内置' : '自定义'}
+                      </span>
                     </div>
                   </div>
 
@@ -344,7 +353,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
               </span>
             </div>
             <button
-              onClick={() => handleAddPreset('claudecode')}
+              onClick={() => handleAddPreset('claude')}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -366,11 +375,13 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
-                      {preset.isBuiltIn && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                          Built-in
-                        </span>
-                      )}
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        preset.isBuiltIn
+                          ? 'bg-gray-100 text-gray-600 border-gray-200'
+                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
+                        {preset.isBuiltIn ? '内置' : '自定义'}
+                      </span>
                     </div>
                   </div>
 
@@ -427,6 +438,9 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
         onSubmit={() => {
           loadPresets()
         }}
+        onSuccess={(message) => {
+          onSuccess?.(message)
+        }}
       />
 
       {/* Config Editor Modal */}
@@ -464,6 +478,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider }: Serv
             </h2>
             <ProviderForm
               preset={usingPreset}
+              existingProviders={usingPreset.type === 'codex' ? codexProviders : claudeProviders}
               onSubmit={handleUsePresetSubmit}
               onCancel={() => {
                 setShowUsePresetModal(false)

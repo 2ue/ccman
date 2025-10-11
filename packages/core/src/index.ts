@@ -10,7 +10,7 @@ export const VERSION = pkg.version as string
 // Tool Manager (Factory Functions)
 export {
   createCodexManager,
-  createClaudeCodeManager,
+  createClaudeManager,
   type ToolManager,
   type Provider,
   type AddProviderInput,
@@ -24,7 +24,7 @@ export {
 
 // Presets
 export { CODEX_PRESETS, type PresetTemplate as CodexPresetTemplate } from './presets/codex.js'
-export { CLAUDECODE_PRESETS, type PresetTemplate as ClaudeCodePresetTemplate } from './presets/claudecode.js'
+export { CC_PRESETS, type PresetTemplate as ClaudePresetTemplate } from './presets/claude.js'
 
 // Migration
 export { migrateConfig, rollbackMigration } from './migrate.js'

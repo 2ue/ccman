@@ -13,7 +13,7 @@ export interface PresetTemplate {
 /**
  * Claude Code 内置预设列表
  */
-export const CLAUDECODE_PRESETS: PresetTemplate[] = [
+export const CC_PRESETS: PresetTemplate[] = [
   {
     name: 'Anthropic Official',
     baseUrl: 'https://api.anthropic.com',

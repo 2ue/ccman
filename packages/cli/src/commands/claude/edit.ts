@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createClaudeCodeManager, ProviderNotFoundError } from '@ccman/core'
+import { createClaudeManager, ProviderNotFoundError } from '@ccman/core'
 
 export function editCommand(program: Command): void {
   program
@@ -9,7 +9,7 @@ export function editCommand(program: Command): void {
     .description('编辑 Claude Code 服务商')
     .action(async (name?: string) => {
       try {
-        const manager = createClaudeCodeManager()
+        const manager = createClaudeManager()
         const providers = manager.list()
 
         if (providers.length === 0) {

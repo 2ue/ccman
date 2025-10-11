@@ -4,6 +4,7 @@ import type { Provider } from '@ccman/core'
 interface Props {
   providers: Provider[]
   currentProviderId: string | undefined
+  tool: 'codex' | 'claude'
   onSwitch: (id: string) => void
   onEdit: (provider: Provider) => void
   onDelete: (id: string, name: string) => void
@@ -13,6 +14,7 @@ interface Props {
 export default function ProviderGrid({
   providers,
   currentProviderId,
+  tool,
   onSwitch,
   onEdit,
   onDelete,
@@ -41,7 +43,9 @@ export default function ProviderGrid({
               key={provider.id}
               className={`bg-white rounded-lg p-3 hover:shadow-md transition-all ${
                 isActive
-                  ? 'border-2 border-green-500 shadow-sm'
+                  ? tool === 'codex'
+                    ? 'border border-blue-500'
+                    : 'border border-purple-500'
                   : 'border border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -52,12 +56,16 @@ export default function ProviderGrid({
                       {provider.name}
                     </h3>
                     {isActive && (
-                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <Check className={`w-4 h-4 flex-shrink-0 ${tool === 'codex' ? 'text-blue-500' : 'text-purple-500'}`} />
                     )}
                   </div>
                   {isActive && (
                     <div>
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        tool === 'codex'
+                          ? 'bg-blue-100 text-blue-700 border-blue-200'
+                          : 'bg-purple-100 text-purple-700 border-purple-200'
+                      }`}>
                         激活中
                       </span>
                     </div>
@@ -73,7 +81,11 @@ export default function ProviderGrid({
                 {!isActive && (
                   <button
                     onClick={() => onSwitch(provider.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                      tool === 'codex'
+                        ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                        : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                    }`}
                     title="切换到此服务商"
                   >
                     <Play className="w-3.5 h-3.5" />

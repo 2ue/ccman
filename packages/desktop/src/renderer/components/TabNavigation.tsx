@@ -7,7 +7,7 @@ interface TabNavigationProps {
 
 export default function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   const tabs: { key: TabType; label: string }[] = [
-    { key: 'home', label: 'ccman' },
+    { key: 'home', label: 'CCMAN' },
     { key: 'claude', label: 'Claude Code' },
     { key: 'codex', label: 'Codex' },
     { key: 'service-providers', label: '预置服务商' },

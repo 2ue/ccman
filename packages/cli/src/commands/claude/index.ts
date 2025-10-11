@@ -8,9 +8,9 @@ import { editCommand } from './edit.js'
 import { cloneCommand } from './clone.js'
 
 /**
- * 创建 Claude Code 所有子命令
+ * 创建 Claude 所有子命令
  */
-export function createClaudeCodeCommands(program: Command): void {
+export function createClaudeCommands(program: Command): void {
   addCommand(program)
   listCommand(program)
   useCommand(program)

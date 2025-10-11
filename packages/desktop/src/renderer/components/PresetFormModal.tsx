@@ -11,12 +11,13 @@ interface PresetData {
 interface Props {
   show: boolean
   preset?: PresetData
-  type: 'codex' | 'claudecode'
+  type: 'codex' | 'claude'
   onClose: () => void
   onSubmit: () => void
+  onSuccess?: (message: string) => void
 }
 
-export default function PresetFormModal({ show, preset, type, onClose, onSubmit }: Props) {
+export default function PresetFormModal({ show, preset, type, onClose, onSubmit, onSuccess }: Props) {
   const [name, setName] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
   const [description, setDescription] = useState('')
@@ -49,14 +50,16 @@ export default function PresetFormModal({ show, preset, type, onClose, onSubmit 
     e.preventDefault()
 
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claudecode
+      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
 
       if (preset) {
         // 编辑模式
         await api.editPreset(preset.name, { name, baseUrl, description })
+        onSuccess?.('更新成功')
       } else {
         // 添加模式
         await api.addPreset({ name, baseUrl, description })
+        onSuccess?.('添加成功')
       }
 
       onSubmit()
@@ -78,7 +81,7 @@ export default function PresetFormModal({ show, preset, type, onClose, onSubmit 
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            {preset ? '编辑预置服务商' : '添加预置服务商'} - {type === 'codex' ? 'Codex' : 'Claude Code'}
+            {preset ? '编辑预置服务商' : '添加预置服务商'} - {type === 'codex' ? 'Codex' : 'Claude'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
