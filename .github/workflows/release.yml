@@ -55,6 +55,7 @@ jobs:
           path: |
             packages/cli/dist
             packages/cli/package.json
+            packages/cli/README.md
 
   build-desktop-mac:
     runs-on: macos-latest
@@ -183,7 +184,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cli-build
-          path: .
+          path: packages/cli
 
       - name: Prepare CLI package for publishing
         run: |
