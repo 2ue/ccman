@@ -10,6 +10,7 @@
 import inquirer from 'inquirer'
 import chalk from 'chalk'
 import { createCodexManager, createClaudeManager } from '@ccman/core'
+import { formatProviderTable } from './utils/format.js'
 
 type ToolType = 'codex' | 'claude'
 
@@ -377,29 +378,8 @@ async function handleList(tool: ToolType): Promise<void> {
     return
   }
 
-  console.log(chalk.bold(`\n📋 ${toolName} 服务商列表 (共 ${providers.length} 个)\n`))
-
-  providers.forEach((p) => {
-    const isCurrent = current?.id === p.id
-    const marker = isCurrent ? chalk.green('●') : chalk.gray('○')
-    const nameStyle = isCurrent ? chalk.green.bold : chalk.white
-
-    console.log(`${marker} ${nameStyle(p.name)}`)
-    console.log(`  ${chalk.gray(p.baseUrl)}`)
-
-    if (p.lastUsedAt) {
-      const date = new Date(p.lastUsedAt).toLocaleString('zh-CN')
-      console.log(`  ${chalk.gray(`最后使用: ${date}`)}`)
-    }
-
-    console.log()
-  })
-
-  if (current) {
-    console.log(chalk.green(`✅ 当前使用: ${current.name}\n`))
-  } else {
-    console.log(chalk.yellow('⚠️  未选择任何服务商\n'))
-  }
+  console.log(chalk.bold(`\n📋 ${toolName} 服务商 (${providers.length} 个)`))
+  console.log(formatProviderTable(providers, current?.id, toolName))
 }
 
 async function handleCurrent(tool: ToolType): Promise<void> {
