@@ -34,11 +34,23 @@ export {
   getCcmanDir,
   getCodexDir,
   getClaudeDir,
+  getConfigPath,
   getCodexConfigPath,
   getCodexAuthPath,
   getClaudeConfigPath,
   __setTestPaths,
 } from './paths.js'
+
+// Config (统一配置管理)
+export {
+  loadConfig,
+  saveConfig,
+  getSyncConfig,
+  saveSyncConfig,
+  deleteSyncConfig,
+  updateLastSyncTime,
+  type CcmanConfig,
+} from './config.js'
 
 // Sync (WebDAV 同步)
 export {

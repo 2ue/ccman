@@ -28,6 +28,8 @@ import {
   uploadToCloud,
   downloadFromCloud,
   mergeSync,
+  getSyncConfig,
+  saveSyncConfig,
 } from '@ccman/core'
 import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
 
@@ -511,11 +513,10 @@ ipcMain.handle('migrate-config', async () => {
 // IPC 处理器 - WebDAV 同步
 // ============================================================================
 
-// 保存 WebDAV 配置（存储在 ~/.ccman/sync-config.json）
+// 保存 WebDAV 配置（使用统一的 config.json）
 ipcMain.handle('sync:save-config', async (_event, config: SyncConfig) => {
   try {
-    const configPath = path.join(getCcmanDir(), 'sync-config.json')
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
+    saveSyncConfig(config)
     return { success: true }
   } catch (error) {
     throw new Error(`保存配置失败：${(error as Error).message}`)
@@ -525,12 +526,7 @@ ipcMain.handle('sync:save-config', async (_event, config: SyncConfig) => {
 // 获取 WebDAV 配置
 ipcMain.handle('sync:get-config', async () => {
   try {
-    const configPath = path.join(getCcmanDir(), 'sync-config.json')
-    if (!fs.existsSync(configPath)) {
-      return null
-    }
-    const content = fs.readFileSync(configPath, 'utf-8')
-    return JSON.parse(content) as SyncConfig
+    return getSyncConfig()
   } catch (error) {
     throw new Error(`读取配置失败：${(error as Error).message}`)
   }
