@@ -22,8 +22,11 @@ import {
   getCcmanDir,
   getCodexDir,
   getClaudeDir,
+  uploadConfig,
+  downloadAndOverwriteConfig,
+  testWebDAVConnection,
 } from '@ccman/core'
-import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput } from '@ccman/core'
+import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
 
 // 设置日志文件（生产模式）
 const isDev = process.env.NODE_ENV === 'development'
@@ -499,6 +502,64 @@ ipcMain.handle(
 // 迁移配置
 ipcMain.handle('migrate-config', async () => {
   return migrateConfig()
+})
+
+// ============================================================================
+// IPC 处理器 - WebDAV 同步
+// ============================================================================
+
+// 保存 WebDAV 配置（存储在 ~/.ccman/sync-config.json）
+ipcMain.handle('sync:save-config', async (_event, config: SyncConfig) => {
+  try {
+    const configPath = path.join(getCcmanDir(), 'sync-config.json')
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
+    return { success: true }
+  } catch (error) {
+    throw new Error(`保存配置失败：${(error as Error).message}`)
+  }
+})
+
+// 获取 WebDAV 配置
+ipcMain.handle('sync:get-config', async () => {
+  try {
+    const configPath = path.join(getCcmanDir(), 'sync-config.json')
+    if (!fs.existsSync(configPath)) {
+      return null
+    }
+    const content = fs.readFileSync(configPath, 'utf-8')
+    return JSON.parse(content) as SyncConfig
+  } catch (error) {
+    throw new Error(`读取配置失败：${(error as Error).message}`)
+  }
+})
+
+// 测试 WebDAV 连接
+ipcMain.handle('sync:test-connection', async (_event, config: SyncConfig) => {
+  try {
+    return await testWebDAVConnection(config)
+  } catch (error) {
+    throw new Error(`连接测试失败：${(error as Error).message}`)
+  }
+})
+
+// 上传配置到 WebDAV
+ipcMain.handle('sync:upload-config', async (_event, config: SyncConfig) => {
+  try {
+    await uploadConfig(config)
+    return { success: true }
+  } catch (error) {
+    throw new Error(`上传配置失败：${(error as Error).message}`)
+  }
+})
+
+// 从 WebDAV 下载配置
+ipcMain.handle('sync:download-config', async (_event, config: SyncConfig) => {
+  try {
+    const backupPaths = await downloadAndOverwriteConfig(config)
+    return backupPaths
+  } catch (error) {
+    throw new Error(`下载配置失败：${(error as Error).message}`)
+  }
 })
 
 // ============================================================================

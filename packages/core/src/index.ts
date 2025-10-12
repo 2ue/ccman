@@ -39,3 +39,13 @@ export {
   getClaudeConfigPath,
   __setTestPaths,
 } from './paths.js'
+
+// Sync (WebDAV 同步)
+export {
+  uploadConfig,
+  downloadAndOverwriteConfig,
+  getRemoteSyncInfo,
+  getLocalSyncData,
+} from './sync/sync.js'
+export { testWebDAVConnection } from './sync/webdav-client.js'
+export type { SyncConfig, SyncData, ToolConfigForSync, WebDAVAuthType } from './sync/types.js'

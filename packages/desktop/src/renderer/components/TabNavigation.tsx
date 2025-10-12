@@ -1,4 +1,4 @@
-export type TabType = 'home' | 'claude' | 'codex' | 'service-providers' | 'about'
+export type TabType = 'home' | 'claude' | 'codex' | 'service-providers' | 'settings' | 'about'
 
 interface TabNavigationProps {
   activeTab: TabType
@@ -11,6 +11,7 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
     { key: 'claude', label: 'Claude Code' },
     { key: 'codex', label: 'Codex' },
     { key: 'service-providers', label: '预置服务商' },
+    { key: 'settings', label: '设置' },
     { key: 'about', label: '关于' },
   ]
 

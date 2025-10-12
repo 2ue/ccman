@@ -19,6 +19,7 @@ import type {
   ClaudePresetTemplate,
   AddPresetInput,
   EditPresetInput,
+  SyncConfig,
 } from '@ccman/core'
 
 // ============================================================================
@@ -137,6 +138,26 @@ const systemAPI: SystemAPI = {
 }
 
 // ============================================================================
+// WebDAV Sync API
+// ============================================================================
+
+export interface SyncAPI {
+  saveSyncConfig: (config: SyncConfig) => Promise<{ success: boolean }>
+  getSyncConfig: () => Promise<SyncConfig | null>
+  testConnection: (config: SyncConfig) => Promise<boolean>
+  uploadConfig: (config: SyncConfig) => Promise<{ success: boolean }>
+  downloadConfig: (config: SyncConfig) => Promise<string[]>
+}
+
+const syncAPI: SyncAPI = {
+  saveSyncConfig: (config) => ipcRenderer.invoke('sync:save-config', config),
+  getSyncConfig: () => ipcRenderer.invoke('sync:get-config'),
+  testConnection: (config) => ipcRenderer.invoke('sync:test-connection', config),
+  uploadConfig: (config) => ipcRenderer.invoke('sync:upload-config', config),
+  downloadConfig: (config) => ipcRenderer.invoke('sync:download-config', config),
+}
+
+// ============================================================================
 // 暴露 API 给渲染进程
 // ============================================================================
 
@@ -145,6 +166,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   claude: claudeAPI,
   config: configAPI,
   system: systemAPI,
+  sync: syncAPI,
 })
 
 // ============================================================================
@@ -156,6 +178,7 @@ export interface ElectronAPI {
   claude: ClaudeAPI
   config: ConfigAPI
   system: SystemAPI
+  sync: SyncAPI
 }
 
 declare global {
