@@ -6,6 +6,8 @@ import { printLogo } from './utils/logo.js'
 import { createCodexCommands } from './commands/codex/index.js'
 import { createClaudeCommands } from './commands/claude/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
+import { exportCommand } from './commands/export.js'
+import { importCommand } from './commands/import.js'
 import { startMainMenu, startClaudeMenu, startCodexMenu } from './interactive.js'
 import { getCcmanDir, getCodexDir, getClaudeDir, VERSION } from '@ccman/core'
 
@@ -62,6 +64,10 @@ sync.action(async () => {
   printLogo()
   await startSyncMenu()
 })
+
+// 导入导出命令（顶层命令）
+exportCommand(program)
+importCommand(program)
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式
 ;(async () => {

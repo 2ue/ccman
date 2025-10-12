@@ -30,6 +30,9 @@ import {
   mergeSync,
   getSyncConfig,
   saveSyncConfig,
+  exportConfig,
+  importConfig,
+  validateImportDir,
 } from '@ccman/core'
 import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
 
@@ -617,6 +620,69 @@ ipcMain.handle('open-url', async (_event, url: string) => {
     return { success: true }
   } catch (error) {
     throw new Error(`打开链接失败：${(error as Error).message}`)
+  }
+})
+
+// ============================================================================
+// IPC 处理器 - 导入导出
+// ============================================================================
+
+// 选择文件夹
+ipcMain.handle('importexport:select-folder', async (_event, title: string) => {
+  try {
+    const result = await dialog.showOpenDialog({
+      title,
+      properties: ['openDirectory', 'createDirectory'],
+    })
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
+
+    return result.filePaths[0]
+  } catch (error) {
+    throw new Error(`选择文件夹失败：${(error as Error).message}`)
+  }
+})
+
+// 导出配置
+ipcMain.handle('importexport:export', async (_event, targetDir: string) => {
+  try {
+    const result = exportConfig(targetDir)
+    return {
+      success: result.success,
+      exportedFiles: result.exportedFiles,
+    }
+  } catch (error) {
+    throw new Error(`导出配置失败：${(error as Error).message}`)
+  }
+})
+
+// 导入配置
+ipcMain.handle('importexport:import', async (_event, sourceDir: string) => {
+  try {
+    const result = importConfig(sourceDir)
+    return {
+      success: result.success,
+      backupPaths: result.backupPaths,
+      importedFiles: result.importedFiles,
+    }
+  } catch (error) {
+    throw new Error(`导入配置失败：${(error as Error).message}`)
+  }
+})
+
+// 验证导入目录
+ipcMain.handle('importexport:validate', async (_event, sourceDir: string) => {
+  try {
+    const result = validateImportDir(sourceDir)
+    return {
+      valid: result.valid,
+      message: result.message,
+      foundFiles: result.foundFiles,
+    }
+  } catch (error) {
+    throw new Error(`验证目录失败：${(error as Error).message}`)
   }
 })
 

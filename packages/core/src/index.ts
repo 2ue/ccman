@@ -66,3 +66,15 @@ export type { SyncConfig, SyncData, ToolConfigForSync, WebDAVAuthType } from './
 export { uploadToCloud, downloadFromCloud, mergeSync } from './sync/sync-v2.js'
 export { encryptApiKey, decryptApiKey } from './sync/crypto.js'
 export { mergeProviders, areProvidersEqual } from './sync/merge-advanced.js'
+
+// Export/Import (配置导入导出)
+export {
+  exportConfig,
+  importConfig,
+  validateExport,
+  validateImportDir,
+  type ExportValidation,
+  type ImportValidation,
+  type ExportResult,
+  type ImportResult,
+} from './export.js'

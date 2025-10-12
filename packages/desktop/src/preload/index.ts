@@ -156,6 +156,17 @@ export interface SyncAPI {
   ) => Promise<{ hasChanges: boolean; backupPaths: string[] }>
 }
 
+// ============================================================================
+// Import/Export API
+// ============================================================================
+
+export interface ImportExportAPI {
+  selectFolder: (title: string) => Promise<string | null>
+  exportConfig: (targetDir: string) => Promise<{ success: boolean; exportedFiles: string[] }>
+  importConfig: (sourceDir: string) => Promise<{ success: boolean; backupPaths: string[]; importedFiles: string[] }>
+  validateImportDir: (sourceDir: string) => Promise<{ valid: boolean; message?: string; foundFiles: string[] }>
+}
+
 const syncAPI: SyncAPI = {
   saveSyncConfig: (config) => ipcRenderer.invoke('sync:save-config', config),
   getSyncConfig: () => ipcRenderer.invoke('sync:get-config'),
@@ -170,6 +181,13 @@ const syncAPI: SyncAPI = {
   mergeSync: (config, password) => ipcRenderer.invoke('sync:merge-sync', config, password),
 }
 
+const importExportAPI: ImportExportAPI = {
+  selectFolder: (title) => ipcRenderer.invoke('importexport:select-folder', title),
+  exportConfig: (targetDir) => ipcRenderer.invoke('importexport:export', targetDir),
+  importConfig: (sourceDir) => ipcRenderer.invoke('importexport:import', sourceDir),
+  validateImportDir: (sourceDir) => ipcRenderer.invoke('importexport:validate', sourceDir),
+}
+
 // ============================================================================
 // 暴露 API 给渲染进程
 // ============================================================================
@@ -180,6 +198,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   config: configAPI,
   system: systemAPI,
   sync: syncAPI,
+  importExport: importExportAPI,
 })
 
 // ============================================================================
@@ -192,6 +211,7 @@ export interface ElectronAPI {
   config: ConfigAPI
   system: SystemAPI
   sync: SyncAPI
+  importExport: ImportExportAPI
 }
 
 declare global {
