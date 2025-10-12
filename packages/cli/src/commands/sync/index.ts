@@ -54,42 +54,42 @@ export async function startSyncMenu(): Promise<void> {
           const { configCommand } = await import('./config.js')
           const cmd = new Command()
           configCommand(cmd)
-          await cmd.parseAsync(['node', 'ccman', 'sync', 'config'])
+          await cmd.parseAsync(['node', 'ccman', 'config'])
           break
         }
         case 'test': {
           const { testCommand } = await import('./test.js')
           const cmd = new Command()
           testCommand(cmd)
-          await cmd.parseAsync(['node', 'ccman', 'sync', 'test'])
+          await cmd.parseAsync(['node', 'ccman', 'test'])
           break
         }
         case 'upload': {
           const { uploadCommand } = await import('./upload.js')
           const cmd = new Command()
           uploadCommand(cmd)
-          await cmd.parseAsync(['node', 'ccman', 'sync', 'upload'])
+          await cmd.parseAsync(['node', 'ccman', 'upload'])
           break
         }
         case 'download': {
           const { downloadCommand } = await import('./download.js')
           const cmd = new Command()
           downloadCommand(cmd)
-          await cmd.parseAsync(['node', 'ccman', 'sync', 'download'])
+          await cmd.parseAsync(['node', 'ccman', 'download'])
           break
         }
         case 'merge': {
           const { mergeCommand } = await import('./merge.js')
           const cmd = new Command()
           mergeCommand(cmd)
-          await cmd.parseAsync(['node', 'ccman', 'sync', 'merge'])
+          await cmd.parseAsync(['node', 'ccman', 'merge'])
           break
         }
         case 'status': {
           const { statusCommand } = await import('./status.js')
           const cmd = new Command()
           statusCommand(cmd)
-          await cmd.parseAsync(['node', 'ccman', 'sync', 'status'])
+          await cmd.parseAsync(['node', 'ccman', 'status'])
           break
         }
       }
