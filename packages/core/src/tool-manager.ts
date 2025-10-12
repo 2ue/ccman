@@ -25,6 +25,8 @@ export interface Provider {
   apiKey: string
   /** 创建时间(Unix timestamp) */
   createdAt: number
+  /** 最后修改时间(Unix timestamp) */
+  lastModified: number
   /** 最后使用时间(Unix timestamp,可选) */
   lastUsedAt?: number
 }
@@ -199,12 +201,14 @@ export function createCodexManager(): ToolManager {
         throw new ProviderNameConflictError(input.name)
       }
 
+      const timestamp = Date.now()
       const provider: Provider = {
         id: generateId('codex'),
         name: input.name,
         baseUrl: input.baseUrl,
         apiKey: input.apiKey,
-        createdAt: Date.now(),
+        createdAt: timestamp,
+        lastModified: timestamp,
       }
 
       config.providers.push(provider)
@@ -286,6 +290,9 @@ export function createCodexManager(): ToolManager {
       if (updates.baseUrl !== undefined) provider.baseUrl = updates.baseUrl
       if (updates.apiKey !== undefined) provider.apiKey = updates.apiKey
 
+      // 更新最后修改时间
+      provider.lastModified = Date.now()
+
       saveConfig(config)
 
       // 如果是当前激活的 provider,重新写入配置
@@ -323,11 +330,13 @@ export function createCodexManager(): ToolManager {
         throw new ProviderNameConflictError(newName)
       }
 
+      const timestamp = Date.now()
       const newProvider: Provider = {
         ...source,
         id: generateId('codex'),
         name: newName,
-        createdAt: Date.now(),
+        createdAt: timestamp,
+        lastModified: timestamp,
         lastUsedAt: undefined,
       }
 
@@ -462,12 +471,14 @@ export function createClaudeManager(): ToolManager {
         throw new ProviderNameConflictError(input.name)
       }
 
+      const timestamp = Date.now()
       const provider: Provider = {
         id: generateId('claude'),
         name: input.name,
         baseUrl: input.baseUrl,
         apiKey: input.apiKey,
-        createdAt: Date.now(),
+        createdAt: timestamp,
+        lastModified: timestamp,
       }
 
       config.providers.push(provider)
@@ -549,6 +560,9 @@ export function createClaudeManager(): ToolManager {
       if (updates.baseUrl !== undefined) provider.baseUrl = updates.baseUrl
       if (updates.apiKey !== undefined) provider.apiKey = updates.apiKey
 
+      // 更新最后修改时间
+      provider.lastModified = Date.now()
+
       saveConfig(config)
 
       // 如果是当前激活的 provider,重新写入配置
@@ -586,11 +600,13 @@ export function createClaudeManager(): ToolManager {
         throw new ProviderNameConflictError(newName)
       }
 
+      const timestamp = Date.now()
       const newProvider: Provider = {
         ...source,
         id: generateId('claude'),
         name: newName,
-        createdAt: Date.now(),
+        createdAt: timestamp,
+        lastModified: timestamp,
         lastUsedAt: undefined,
       }
 

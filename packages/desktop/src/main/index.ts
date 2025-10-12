@@ -25,6 +25,9 @@ import {
   uploadConfig,
   downloadAndOverwriteConfig,
   testWebDAVConnection,
+  uploadToCloud,
+  downloadFromCloud,
+  mergeSync,
 } from '@ccman/core'
 import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
 
@@ -559,6 +562,40 @@ ipcMain.handle('sync:download-config', async (_event, config: SyncConfig) => {
     return backupPaths
   } catch (error) {
     throw new Error(`下载配置失败：${(error as Error).message}`)
+  }
+})
+
+// ============================================================================
+// IPC 处理器 - WebDAV 智能同步（V2）
+// ============================================================================
+
+// 上传到云端（加密 API Key）
+ipcMain.handle('sync:upload-to-cloud', async (_event, config: SyncConfig, password: string) => {
+  try {
+    await uploadToCloud(config, password)
+    return { success: true }
+  } catch (error) {
+    throw new Error(`上传到云端失败：${(error as Error).message}`)
+  }
+})
+
+// 从云端下载（解密 API Key）
+ipcMain.handle('sync:download-from-cloud', async (_event, config: SyncConfig, password: string) => {
+  try {
+    const backupPaths = await downloadFromCloud(config, password)
+    return backupPaths
+  } catch (error) {
+    throw new Error(`从云端下载失败：${(error as Error).message}`)
+  }
+})
+
+// 智能合并同步
+ipcMain.handle('sync:merge-sync', async (_event, config: SyncConfig, password: string) => {
+  try {
+    const result = await mergeSync(config, password)
+    return result
+  } catch (error) {
+    throw new Error(`智能合并失败：${(error as Error).message}`)
   }
 })
 

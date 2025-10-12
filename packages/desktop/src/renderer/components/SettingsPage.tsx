@@ -1,9 +1,11 @@
 /**
- * 设置页面 - WebDAV 同步配置
+ * 设置页面 - WebDAV 智能同步配置
  */
 
 import { useState, useEffect } from 'react'
+import { Save, Network, Upload, Download, RefreshCw, Eye, EyeOff } from 'lucide-react'
 import type { SyncConfig, WebDAVAuthType } from '@ccman/core'
+import { BUTTON_STYLES, BUTTON_WITH_ICON } from '../styles/button'
 
 interface SettingsPageProps {
   onSuccess: (message: string) => void
@@ -16,10 +18,14 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
   const [password, setPassword] = useState('')
   const [authType, setAuthType] = useState<WebDAVAuthType>('password')
   const [remoteDir, setRemoteDir] = useState('/')
+  const [syncPassword, setSyncPassword] = useState('')
+  const [rememberPassword, setRememberPassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showSyncPassword, setShowSyncPassword] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isMerging, setIsMerging] = useState(false)
 
   // 加载已保存的配置
   useEffect(() => {
@@ -35,6 +41,12 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
         setPassword(config.password || '')
         setAuthType(config.authType || 'password')
         setRemoteDir(config.remoteDir || '/')
+
+        // 加载同步密码（如果已保存）
+        if (config.syncPassword) {
+          setSyncPassword(config.syncPassword)
+          setRememberPassword(true)
+        }
       }
     } catch (error) {
       console.error('加载配置失败：', error)
@@ -70,7 +82,14 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
       return
     }
 
-    const config: SyncConfig = { webdavUrl, username, password, authType, remoteDir }
+    const config: SyncConfig = {
+      webdavUrl,
+      username,
+      password,
+      authType,
+      remoteDir,
+      syncPassword: rememberPassword ? syncPassword : undefined,
+    }
 
     try {
       await window.electronAPI.sync.saveSyncConfig(config)
@@ -80,9 +99,14 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
     }
   }
 
-  const handleUpload = async () => {
+  const handleUploadToCloud = async () => {
     if (!webdavUrl || !username || !password) {
       onError('参数错误', '请先保存 WebDAV 配置')
+      return
+    }
+
+    if (!syncPassword) {
+      onError('参数错误', '请输入同步密码')
       return
     }
 
@@ -90,8 +114,8 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
 
     setIsUploading(true)
     try {
-      await window.electronAPI.sync.uploadConfig(config)
-      onSuccess('配置上传成功')
+      await window.electronAPI.sync.uploadToCloud(config, syncPassword)
+      onSuccess('✅ 配置已上传到云端')
     } catch (error) {
       onError('上传失败', (error as Error).message)
     } finally {
@@ -99,9 +123,14 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
     }
   }
 
-  const handleDownload = async () => {
+  const handleDownloadFromCloud = async () => {
     if (!webdavUrl || !username || !password) {
       onError('参数错误', '请先保存 WebDAV 配置')
+      return
+    }
+
+    if (!syncPassword) {
+      onError('参数错误', '请输入同步密码')
       return
     }
 
@@ -109,8 +138,8 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
 
     setIsDownloading(true)
     try {
-      const backupPaths = await window.electronAPI.sync.downloadConfig(config)
-      onSuccess(`配置下载成功，已备份到：${backupPaths.join(', ')}`)
+      const backupPaths = await window.electronAPI.sync.downloadFromCloud(config, syncPassword)
+      onSuccess(`✅ 配置已从云端下载并覆盖本地\n备份: ${backupPaths.join(', ')}`)
     } catch (error) {
       onError('下载失败', (error as Error).message)
     } finally {
@@ -118,140 +147,243 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
     }
   }
 
+  const handleMergeSync = async () => {
+    if (!webdavUrl || !username || !password) {
+      onError('参数错误', '请先保存 WebDAV 配置')
+      return
+    }
+
+    if (!syncPassword) {
+      onError('参数错误', '请输入同步密码')
+      return
+    }
+
+    const config: SyncConfig = { webdavUrl, username, password, authType, remoteDir }
+
+    setIsMerging(true)
+    try {
+      const result = await window.electronAPI.sync.mergeSync(config, syncPassword)
+
+      if (!result.hasChanges) {
+        onSuccess('ℹ️ 配置已同步，无需操作')
+      } else {
+        onSuccess(`✅ 配置已智能合并并同步\n备份: ${result.backupPaths.join(', ')}`)
+      }
+    } catch (error) {
+      onError('合并失败', (error as Error).message)
+    } finally {
+      setIsMerging(false)
+    }
+  }
+
   return (
     <div className="flex-1 overflow-auto p-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">WebDAV 同步设置</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">WebDAV 智能同步</h1>
 
         <div className="bg-white rounded-lg shadow p-6 space-y-6">
           {/* 说明 */}
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">关于 WebDAV 同步</h3>
+            <h3 className="text-sm font-medium text-blue-900 mb-2">📖 同步模式说明</h3>
             <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-              <li>通过 WebDAV 同步配置，可在多台设备间共享服务商配置</li>
-              <li>上传：将本地配置（不含 API Key）上传到 WebDAV</li>
-              <li>下载：从 WebDAV 下载配置并覆盖本地（会自动备份）</li>
-              <li>下载后，相同 ID 的服务商会保留本地 API Key</li>
+              <li><strong>上传到云端</strong>：本地配置覆盖云端（包含加密的 API Key）</li>
+              <li><strong>从云端下载</strong>：云端配置覆盖本地（自动备份本地配置）</li>
+              <li><strong>智能合并</strong>：自动合并本地和云端配置
+                <ul className="ml-6 mt-1 space-y-0.5">
+                  <li>• 相同 ID：保留最新修改</li>
+                  <li>• 相同配置（URL+Key）：保留最新修改</li>
+                  <li>• 不同配置：全部保留，自动处理 name 冲突</li>
+                </ul>
+              </li>
             </ul>
           </div>
 
-          {/* WebDAV URL */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">WebDAV 服务器地址</label>
-            <input
-              type="url"
-              value={webdavUrl}
-              onChange={(e) => setWebdavUrl(e.target.value)}
-              placeholder="https://dav.example.com"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          {/* WebDAV 基本配置 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">WebDAV 配置</h3>
 
-          {/* Username */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">用户名</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="用户名"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">密码</label>
-            <div className="relative">
+            {/* WebDAV URL */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">服务器地址</label>
               <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="密码"
+                type="url"
+                value={webdavUrl}
+                onChange={(e) => setWebdavUrl(e.target.value)}
+                placeholder="https://dav.example.com"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            </div>
+
+            {/* Username */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="用户名"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">密码（WebDAV 认证）</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="WebDAV 密码"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+                  title={showPassword ? '隐藏密码' : '显示密码'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Auth Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">认证类型</label>
+              <select
+                value={authType}
+                onChange={(e) => setAuthType(e.target.value as WebDAVAuthType)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {showPassword ? '隐藏' : '显示'}
-              </button>
+                <option value="password">Basic Auth（基础认证）</option>
+                <option value="digest">Digest Auth（摘要认证）</option>
+              </select>
+              <p className="mt-1 text-sm text-gray-500">
+                大多数 WebDAV 服务使用 Basic Auth
+              </p>
+            </div>
+
+            {/* Remote Directory */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">远程同步目录</label>
+              <input
+                type="text"
+                value={remoteDir}
+                onChange={(e) => setRemoteDir(e.target.value)}
+                placeholder="/"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                指定 WebDAV 服务器上的同步目录，默认为根目录 /
+              </p>
             </div>
           </div>
 
-          {/* Auth Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">认证类型</label>
-            <select
-              value={authType}
-              onChange={(e) => setAuthType(e.target.value as WebDAVAuthType)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="password">Basic Auth（基础认证）</option>
-              <option value="digest">Digest Auth（摘要认证）</option>
-            </select>
-            <p className="mt-1 text-sm text-gray-500">
-              大多数 WebDAV 服务使用 Basic Auth。如果连接失败，可尝试 Digest Auth
-            </p>
-          </div>
+          {/* 同步密码配置 */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-lg font-medium text-gray-900">同步密码</h3>
 
-          {/* Remote Directory */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">远程同步目录</label>
-            <input
-              type="text"
-              value={remoteDir}
-              onChange={(e) => setRemoteDir(e.target.value)}
-              placeholder="/"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              指定 WebDAV 服务器上的同步目录，默认为根目录 /。如果目录不存在会自动创建
-            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                同步密码（用于加密 API Key）
+              </label>
+              <div className="relative">
+                <input
+                  type={showSyncPassword ? 'text' : 'password'}
+                  value={syncPassword}
+                  onChange={(e) => setSyncPassword(e.target.value)}
+                  placeholder="请输入同步密码"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSyncPassword(!showSyncPassword)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+                  title={showSyncPassword ? '隐藏密码' : '显示密码'}
+                >
+                  {showSyncPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                ⚠️ 用于加密 API Key，请妥善保管。忘记密码将无法解密云端配置
+              </p>
+            </div>
+
+            {/* 记住密码 */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="rememberPassword"
+                checked={rememberPassword}
+                onChange={(e) => setRememberPassword(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="rememberPassword" className="ml-2 text-sm text-gray-700">
+                记住密码（本地加密存储）
+              </label>
+            </div>
           </div>
 
           {/* 操作按钮 */}
-          <div className="flex flex-wrap gap-3 pt-4">
-            <button
-              onClick={handleTestConnection}
-              disabled={isTesting}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isTesting ? '测试中...' : '测试连接'}
-            </button>
+          <div className="space-y-3 pt-4 border-t">
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleTestConnection}
+                disabled={isTesting}
+                className={`${BUTTON_WITH_ICON.secondary} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Network className="w-4 h-4" />
+                {isTesting ? '测试中...' : '测试连接'}
+              </button>
 
-            <button
-              onClick={handleSaveConfig}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              保存配置
-            </button>
+              <button
+                onClick={handleSaveConfig}
+                className={BUTTON_WITH_ICON.primary}
+              >
+                <Save className="w-4 h-4" />
+                保存配置
+              </button>
+            </div>
 
-            <button
-              onClick={handleUpload}
-              disabled={isUploading}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isUploading ? '上传中...' : '上传配置'}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleUploadToCloud}
+                disabled={isUploading}
+                className={`${BUTTON_WITH_ICON.primary} bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Upload className="w-4 h-4" />
+                {isUploading ? '上传中...' : '上传到云端'}
+              </button>
 
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isDownloading ? '下载中...' : '下载配置'}
-            </button>
+              <button
+                onClick={handleDownloadFromCloud}
+                disabled={isDownloading}
+                className={`${BUTTON_WITH_ICON.primary} bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Download className="w-4 h-4" />
+                {isDownloading ? '下载中...' : '从云端下载'}
+              </button>
+
+              <button
+                onClick={handleMergeSync}
+                disabled={isMerging}
+                className={`${BUTTON_WITH_ICON.primary} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <RefreshCw className="w-4 h-4" />
+                {isMerging ? '合并中...' : '智能合并'}
+              </button>
+            </div>
           </div>
 
           {/* 警告信息 */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
             <h3 className="text-sm font-medium text-yellow-900 mb-2">⚠️ 注意事项</h3>
             <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
-              <li>下载配置会覆盖本地所有服务商配置（保留 API Key）</li>
-              <li>下载前会自动备份本地配置</li>
-              <li>上传的配置不含 API Key，保护隐私安全</li>
+              <li>所有同步操作都会加密 API Key（使用同步密码）</li>
+              <li>下载和合并操作会自动备份本地配置</li>
+              <li>如果同步密码错误，无法解密云端配置</li>
+              <li>建议使用"智能合并"模式，避免配置丢失</li>
             </ul>
           </div>
         </div>

@@ -17,12 +17,14 @@ export interface SyncConfig {
   webdavUrl: string
   /** 用户名 */
   username: string
-  /** 密码 */
+  /** 密码（WebDAV 认证密码） */
   password: string
   /** 认证类型（可选，默认 password = Basic Auth） */
   authType?: WebDAVAuthType
   /** 远程同步目录（可选，默认 / 根目录） */
   remoteDir?: string
+  /** 同步密码（用于加密 API Key，可选存储） */
+  syncPassword?: string
 }
 
 /**

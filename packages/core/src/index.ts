@@ -49,3 +49,8 @@ export {
 } from './sync/sync.js'
 export { testWebDAVConnection } from './sync/webdav-client.js'
 export type { SyncConfig, SyncData, ToolConfigForSync, WebDAVAuthType } from './sync/types.js'
+
+// Sync V2 (智能同步)
+export { uploadToCloud, downloadFromCloud, mergeSync } from './sync/sync-v2.js'
+export { encryptApiKey, decryptApiKey } from './sync/crypto.js'
+export { mergeProviders, areProvidersEqual } from './sync/merge-advanced.js'

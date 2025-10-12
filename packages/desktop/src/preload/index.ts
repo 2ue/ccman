@@ -147,6 +147,13 @@ export interface SyncAPI {
   testConnection: (config: SyncConfig) => Promise<boolean>
   uploadConfig: (config: SyncConfig) => Promise<{ success: boolean }>
   downloadConfig: (config: SyncConfig) => Promise<string[]>
+  // V2: 智能同步
+  uploadToCloud: (config: SyncConfig, password: string) => Promise<{ success: boolean }>
+  downloadFromCloud: (config: SyncConfig, password: string) => Promise<string[]>
+  mergeSync: (
+    config: SyncConfig,
+    password: string
+  ) => Promise<{ hasChanges: boolean; backupPaths: string[] }>
 }
 
 const syncAPI: SyncAPI = {
@@ -155,6 +162,12 @@ const syncAPI: SyncAPI = {
   testConnection: (config) => ipcRenderer.invoke('sync:test-connection', config),
   uploadConfig: (config) => ipcRenderer.invoke('sync:upload-config', config),
   downloadConfig: (config) => ipcRenderer.invoke('sync:download-config', config),
+  // V2: 智能同步
+  uploadToCloud: (config, password) =>
+    ipcRenderer.invoke('sync:upload-to-cloud', config, password),
+  downloadFromCloud: (config, password) =>
+    ipcRenderer.invoke('sync:download-from-cloud', config, password),
+  mergeSync: (config, password) => ipcRenderer.invoke('sync:merge-sync', config, password),
 }
 
 // ============================================================================
