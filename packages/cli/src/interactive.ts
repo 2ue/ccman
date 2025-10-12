@@ -100,6 +100,7 @@ export async function startMainMenu(): Promise<void> {
         choices: [
           { name: '🔷 Claude 管理', value: 'claude' },
           { name: '🔶 Codex 管理', value: 'codex' },
+          { name: '🔄 WebDAV 同步', value: 'sync' },
           { name: '📦 预置服务商管理', value: 'presets' },
           { name: '❌ 退出', value: 'exit' },
         ],
@@ -115,6 +116,9 @@ export async function startMainMenu(): Promise<void> {
       await startClaudeMenu()
     } else if (choice === 'codex') {
       await startCodexMenu()
+    } else if (choice === 'sync') {
+      const { startSyncMenu } = await import('./commands/sync/index.js')
+      await startSyncMenu()
     } else if (choice === 'presets') {
       await showPresetsMenu()
     }

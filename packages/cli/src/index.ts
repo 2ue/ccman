@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import { printLogo } from './utils/logo.js'
 import { createCodexCommands } from './commands/codex/index.js'
 import { createClaudeCommands } from './commands/claude/index.js'
+import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { startMainMenu, startClaudeMenu, startCodexMenu } from './interactive.js'
 import { getCcmanDir, getCodexDir, getClaudeDir, VERSION } from '@ccman/core'
 
@@ -50,6 +51,16 @@ createClaudeCommands(cc)
 cc.action(async () => {
   printLogo()
   await startClaudeMenu()
+})
+
+// 创建 sync 子命令
+const sync = program.command('sync').description('WebDAV 同步配置')
+createSyncCommands(sync)
+
+// sync 不带参数时进入交互模式
+sync.action(async () => {
+  printLogo()
+  await startSyncMenu()
 })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式
