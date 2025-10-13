@@ -8,15 +8,17 @@
  */
 
 import fs from 'fs'
+import path from 'path'
 import type { Provider } from '../tool-manager.js'
 
 /**
  * 备份配置文件
  *
  * @param configPath - 配置文件路径
+ * @param keepCount - 保留的备份数量（默认 3 个）
  * @returns 备份文件路径
  */
-export function backupConfig(configPath: string): string {
+export function backupConfig(configPath: string, keepCount: number = 3): string {
   if (!fs.existsSync(configPath)) {
     throw new Error(`配置文件不存在: ${configPath}`)
   }
@@ -26,7 +28,62 @@ export function backupConfig(configPath: string): string {
 
   fs.copyFileSync(configPath, backupPath)
 
+  // 自动清理旧备份
+  cleanupOldBackups(configPath, keepCount)
+
   return backupPath
+}
+
+/**
+ * 清理旧备份文件，只保留最近的 N 个
+ *
+ * @param configPath - 配置文件路径
+ * @param keepCount - 保留的备份数量
+ */
+function cleanupOldBackups(configPath: string, keepCount: number): void {
+  const dir = path.dirname(configPath)
+  const basename = path.basename(configPath)
+  const backupPrefix = `${basename}.backup.`
+
+  try {
+    // 读取目录中的所有文件
+    const files = fs.readdirSync(dir)
+
+    // 筛选出所有备份文件，提取时间戳并排序
+    const backups = files
+      .filter(f => f.startsWith(backupPrefix))
+      .map(f => {
+        const timestampStr = f.substring(backupPrefix.length)
+        const timestamp = parseInt(timestampStr, 10)
+
+        // 验证时间戳是否有效
+        if (isNaN(timestamp)) {
+          return null
+        }
+
+        return {
+          name: f,
+          path: path.join(dir, f),
+          timestamp
+        }
+      })
+      .filter((backup): backup is NonNullable<typeof backup> => backup !== null)
+      .sort((a, b) => b.timestamp - a.timestamp) // 降序：最新的在前
+
+    // 删除超出保留数量的旧备份
+    const toDelete = backups.slice(keepCount)
+    for (const backup of toDelete) {
+      try {
+        fs.unlinkSync(backup.path)
+      } catch (error) {
+        // 删除失败不影响主流程，静默处理
+        console.warn(`无法删除旧备份文件 ${backup.name}: ${(error as Error).message}`)
+      }
+    }
+  } catch (error) {
+    // 清理失败不影响主流程，静默处理
+    console.warn(`清理旧备份时出错: ${(error as Error).message}`)
+  }
 }
 
 /**

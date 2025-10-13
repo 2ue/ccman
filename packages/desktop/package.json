@@ -1,6 +1,6 @@
 {
   "name": "@ccman/desktop",
-  "version": "3.0.17",
+  "version": "3.0.18",
   "description": "ccman Desktop GUI application",
   "main": "./dist/main/index.js",
   "scripts": {
