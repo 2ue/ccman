@@ -122,6 +122,7 @@ export interface ConfigAPI {
 export interface SystemAPI {
   openFolder: () => Promise<{ success: boolean }>
   openUrl: (url: string) => Promise<{ success: boolean }>
+  getAppVersion: () => Promise<string>
 }
 
 const configAPI: ConfigAPI = {
@@ -135,6 +136,7 @@ const configAPI: ConfigAPI = {
 const systemAPI: SystemAPI = {
   openFolder: () => ipcRenderer.invoke('open-folder'),
   openUrl: (url) => ipcRenderer.invoke('open-url', url),
+  getAppVersion: () => ipcRenderer.invoke('system:get-app-version'),
 }
 
 // ============================================================================

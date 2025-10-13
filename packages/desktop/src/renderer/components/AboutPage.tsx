@@ -1,4 +1,12 @@
+import { useState, useEffect } from 'react'
+
 export default function AboutPage() {
+  const [version, setVersion] = useState('Loading...')
+
+  useEffect(() => {
+    window.electronAPI.system.getAppVersion().then(setVersion)
+  }, [])
+
   const handleOpenUrl = async (url: string) => {
     try {
       await window.electronAPI.system.openUrl(url)
@@ -9,12 +17,12 @@ export default function AboutPage() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-8">
-      <div className="max-w-2xl w-full bg-white rounded-lg shadow-sm p-8">
+      <div className="max-w-4xl w-full bg-white rounded-lg shadow-sm p-8">
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">ccman</h1>
           <p className="text-gray-600">Codex/Claude Code API 服务商配置管理工具</p>
-          <p className="text-sm text-gray-500 mt-2">版本 3.0.7</p>
+          <p className="text-sm text-gray-500 mt-2">版本 {version}</p>
         </div>
 
         {/* 项目描述 */}

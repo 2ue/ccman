@@ -94,7 +94,7 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full">
       <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
         <HardDrive className="w-6 h-6" />
         本地备份

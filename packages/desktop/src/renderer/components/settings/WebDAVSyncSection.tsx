@@ -177,7 +177,7 @@ export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSect
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full">
       <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
         <Cloud className="w-6 h-6" />
         云同步

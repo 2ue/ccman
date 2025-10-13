@@ -33,6 +33,7 @@ import {
   exportConfig,
   importConfig,
   validateImportDir,
+  VERSION,
 } from '@ccman/core'
 import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
 
@@ -621,6 +622,11 @@ ipcMain.handle('open-url', async (_event, url: string) => {
   } catch (error) {
     throw new Error(`打开链接失败：${(error as Error).message}`)
   }
+})
+
+// 获取应用版本号
+ipcMain.handle('system:get-app-version', async () => {
+  return VERSION
 })
 
 // ============================================================================
