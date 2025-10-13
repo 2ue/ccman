@@ -19,6 +19,17 @@
 
 ---
 
+## 📸 界面预览
+
+<div align="center">
+  <img src="./docs/screenshoot/ccman.png" alt="ccman 主界面" width="800">
+  <p><em>ccman Desktop 主界面</em></p>
+</div>
+
+👉 [查看更多截图](./docs/Screenshots.md) - 包含所有功能界面展示
+
+---
+
 ## ✨ 核心特性
 
 - 🔄 **一键切换**：一条命令切换服务商，自动修改配置文件
