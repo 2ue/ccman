@@ -68,41 +68,11 @@ export function createWebDAVClient(config: SyncConfig): WebDAVClient {
 export async function testWebDAVConnection(config: SyncConfig): Promise<boolean> {
   try {
     const client = createWebDAVClient(config)
-
-    // 尝试多种测试方法，以兼容不同的 WebDAV 服务器
-    try {
-      // 方法1：检查根目录是否存在
-      await client.exists('/')
-      return true
-    } catch (error1) {
-      console.log('方法1失败，尝试方法2:', error1)
-
-      try {
-        // 方法2：获取根目录内容
-        await client.getDirectoryContents('/')
-        return true
-      } catch (error2) {
-        console.log('方法2失败，尝试方法3:', error2)
-
-        try {
-          // 方法3：尝试创建测试目录
-          const testDir = '/.ccman-test'
-          await client.createDirectory(testDir)
-          // 创建成功后立即删除
-          try {
-            await client.deleteFile(testDir)
-          } catch (e) {
-            // 忽略删除错误
-          }
-          return true
-        } catch (error3) {
-          console.error('所有测试方法都失败')
-          throw error3
-        }
-      }
-    }
+    // 检查根目录是否可访问（任何 WebDAV 服务器都应该支持）
+    await client.exists('/')
+    return true
   } catch (error) {
-    console.error('WebDAV 连接失败:', error)
+    console.error('WebDAV 连接失败:', (error as Error).message)
     return false
   }
 }
@@ -150,6 +120,16 @@ export async function ensureDirectory(
 }
 
 /**
+ * 判断是否为路径不存在错误
+ */
+function isPathNotFoundError(error: Error): boolean {
+  const msg = error.message.toLowerCase()
+  // WebDAV 标准：409 Conflict 表示父目录不存在
+  // 也可能是 404 Not Found
+  return msg.includes('404') || msg.includes('409') || msg.includes('not found') || msg.includes('conflict')
+}
+
+/**
  * 上传数据到 WebDAV
  *
  * @param config - WebDAV 配置
@@ -166,18 +146,46 @@ export async function uploadToWebDAV(
   const fullPath = joinPath(remoteDir, filename)
 
   try {
-    // 尝试确保目标目录存在（静默失败）
-    const dirPath = fullPath.substring(0, fullPath.lastIndexOf('/'))
-    if (dirPath && dirPath !== '/') {
-      await ensureDirectory(config, dirPath)
+    // 先直接上传（乐观策略：大多数 WebDAV 支持自动创建父目录）
+    await client.putFileContents(fullPath, data, { overwrite: true })
+  } catch (firstError) {
+    // 如果是路径不存在错误，尝试创建目录后重试
+    if (isPathNotFoundError(firstError as Error)) {
+      const dirPath = fullPath.substring(0, fullPath.lastIndexOf('/'))
+      if (dirPath && dirPath !== '/') {
+        await ensureDirectory(config, dirPath)
+        // 重试上传
+        await client.putFileContents(fullPath, data, { overwrite: true })
+      } else {
+        throw firstError
+      }
+    } else {
+      // 其他错误直接抛出
+      throw firstError
+    }
+  }
+
+  // 验证文件是否真的上传成功
+  try {
+    const exists = await client.exists(fullPath)
+    if (!exists) {
+      throw new Error(`文件上传后未在服务器上找到: ${fullPath}`)
+    }
+  } catch (verifyError) {
+    const errorMsg = (verifyError as Error).message
+
+    // 特殊处理 WebDAV 连接问题
+    if (errorMsg.includes('multistatus') || errorMsg.includes('Invalid response')) {
+      throw new Error(
+        'WebDAV 配置错误，请检查：\n' +
+        '1. URL 是否为 WebDAV 端点（不是网页地址）\n' +
+        '2. 用户名和密码是否正确\n' +
+        '3. 认证类型是否匹配\n\n' +
+        `详细：${errorMsg}`
+      )
     }
 
-    // 直接上传文件（某些服务器会自动创建父目录）
-    await client.putFileContents(fullPath, data, {
-      overwrite: true,
-    })
-  } catch (error) {
-    throw new Error(`上传失败: ${(error as Error).message}`)
+    throw verifyError
   }
 }
 
@@ -222,3 +230,4 @@ export async function existsOnWebDAV(config: SyncConfig, filename: string): Prom
     return false
   }
 }
+

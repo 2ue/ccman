@@ -1,6 +1,6 @@
 {
   "name": "@ccman/core",
-  "version": "3.0.16",
+  "version": "3.0.17",
   "type": "module",
   "description": "Core business logic for ccman",
   "main": "./dist/index.js",

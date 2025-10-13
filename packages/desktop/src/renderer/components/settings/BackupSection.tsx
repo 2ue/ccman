@@ -3,7 +3,7 @@
  */
 
 import { useState } from 'react'
-import { FileUp, FileDown } from 'lucide-react'
+import { FileUp, FileDown, HardDrive, Package, AlertTriangle } from 'lucide-react'
 import { BUTTON_WITH_ICON } from '../../styles/button'
 import { ConfirmDialog } from '../dialogs/ConfirmDialog'
 
@@ -95,12 +95,18 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
 
   return (
     <div className="max-w-3xl">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">💾 本地备份</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <HardDrive className="w-6 h-6" />
+        本地备份
+      </h2>
 
       <div className="bg-white rounded-lg shadow p-6 space-y-6">
         {/* 说明 */}
         <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">📦 导入/导出说明</h3>
+          <h3 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            导入/导出说明
+          </h3>
           <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
             <li>
               <strong>导出配置</strong>：将配置保存到本地文件夹（包含 API Key）
@@ -135,7 +141,10 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
 
         {/* 安全提示 */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <h3 className="text-sm font-medium text-yellow-900 mb-2">⚠️ 安全提示</h3>
+          <h3 className="text-sm font-medium text-yellow-900 mb-2 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            安全提示
+          </h3>
           <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
             <li>导出的配置文件包含完整的 API Key，请妥善保管</li>
             <li>导入操作会覆盖当前配置，请确认后再操作</li>
@@ -150,7 +159,10 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
         title="确认导入配置"
         message={
           <div className="space-y-3">
-            <p className="text-red-600 font-medium">⚠️ 警告：此操作将覆盖当前所有配置！</p>
+            <p className="text-red-600 font-medium flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              警告：此操作将覆盖当前所有配置！
+            </p>
             <div className="text-sm text-gray-700">
               <p className="font-medium">源目录：</p>
               <p className="text-gray-600 break-all">{importDir}</p>

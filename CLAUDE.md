@@ -128,6 +128,7 @@ if (!isValidUrl(baseUrl)) {
 - fs-extra（内置 fs 够用）
 - moment/date-fns（只需要 `Date.now()`）
 - dotenv（直接读取配置文件）
+- react-icons / @mui/icons-material / heroicons 等其他图标库（统一使用 lucide-react）
 
 **允许的依赖**：参考 `docs/技术选型.md`
 
@@ -524,6 +525,15 @@ ipcMain.handle('switch-provider', (e, id) => switchProvider(id))
 - **UI 组件**：自己写（不需要 Ant Design/MUI）
 - **样式**：简单 CSS 或 Tailwind（不需要 CSS-in-JS）
 - **路由**：不需要（单页应用）
+- **图标**：统一使用 `lucide-react`（项目已引入，不引入其他图标库）
+  ```typescript
+  // ✅ 正确：使用 lucide-react
+  import { Save, Upload, Download } from 'lucide-react'
+
+  // ❌ 错误：不要引入其他图标库
+  import { AiOutlineSave } from 'react-icons/ai'  // ❌ 禁止
+  import SaveIcon from '@mui/icons-material/Save'  // ❌ 禁止
+  ```
 
 ## 提交规范
 
@@ -720,6 +730,7 @@ Step 5: 检查代码复杂度
 | ❌ 异步 I/O（配置读写） | 配置小，同步更简单 | `CLAUDE.md:136-160` |
 | ❌ Zustand/Redux | React state 够用 | `CLAUDE.md:161-176` |
 | ❌ 手动修改版本号 | 必须使用 `scripts/bump-version.js` | `CLAUDE.md:577-602` |
+| ❌ 其他图标库 | 统一使用 lucide-react | `CLAUDE.md:527-535` |
 
 #### 4. 功能开发验证清单
 
@@ -815,6 +826,7 @@ Step 5: 检查代码复杂度
 - 正在使用异步 I/O 读写配置
 - 正在引入 Redux/Zustand
 - 正在使用 UI 组件库
+- 正在引入其他图标库（react-icons、@mui/icons-material 等，统一使用 lucide-react）
 - 代码文件超过 300 行
 - 函数超过 50 行
 - 正在手动修改 package.json 版本号（必须使用 `scripts/bump-version.js`）
@@ -864,6 +876,7 @@ Step 5: 检查代码复杂度
 - [ ] 不实现 validate/backup/restore
 - [ ] 不使用异步 I/O（配置读写）
 - [ ] 不使用状态管理库
+- [ ] 不使用其他图标库（统一使用 lucide-react）
 - [ ] 不手动修改版本号（必须使用 `scripts/bump-version.js`）
 
 ## 4. 开始开发

@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Save, Network, Upload, Download, RefreshCw, Eye, EyeOff } from 'lucide-react'
+import { Save, Network, Upload, Download, RefreshCw, Eye, EyeOff, Cloud, BookOpen, AlertTriangle } from 'lucide-react'
 import type { SyncConfig, WebDAVAuthType } from '@ccman/core'
 import { BUTTON_WITH_ICON } from '../../styles/button'
 
@@ -178,12 +178,18 @@ export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSect
 
   return (
     <div className="max-w-3xl">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">☁️ 云同步</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <Cloud className="w-6 h-6" />
+        云同步
+      </h2>
 
       <div className="bg-white rounded-lg shadow p-6 space-y-6">
         {/* 说明 */}
         <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">📖 同步模式说明</h3>
+          <h3 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            同步模式说明
+          </h3>
           <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
             <li>
               <strong>上传到云端</strong>：本地配置覆盖云端（包含加密的 API Key）
@@ -309,7 +315,7 @@ export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSect
                 {showSyncPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-red-600 font-medium">
               ⚠️ 用于加密 API Key，请妥善保管。忘记密码将无法解密云端配置
             </p>
           </div>
@@ -379,7 +385,10 @@ export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSect
 
         {/* 警告信息 */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <h3 className="text-sm font-medium text-yellow-900 mb-2">⚠️ 注意事项</h3>
+          <h3 className="text-sm font-medium text-yellow-900 mb-2 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            注意事项
+          </h3>
           <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
             <li>所有同步操作都会加密 API Key（使用同步密码）</li>
             <li>下载和合并操作会自动备份本地配置</li>
