@@ -235,7 +235,9 @@ export function createCodexManager(): ToolManager {
 
     findByName(name: string): Provider | undefined {
       const config = loadConfig()
-      return config.providers.find((p) => p.name === name)
+      // 大小写不敏感匹配
+      const lowerName = name.toLowerCase()
+      return config.providers.find((p) => p.name.toLowerCase() === lowerName)
     },
 
     switch(id: string): void {
@@ -505,7 +507,9 @@ export function createClaudeManager(): ToolManager {
 
     findByName(name: string): Provider | undefined {
       const config = loadConfig()
-      return config.providers.find((p) => p.name === name)
+      // 大小写不敏感匹配
+      const lowerName = name.toLowerCase()
+      return config.providers.find((p) => p.name.toLowerCase() === lowerName)
     },
 
     switch(id: string): void {
