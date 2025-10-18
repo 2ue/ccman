@@ -139,7 +139,7 @@ export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSect
     setIsDownloading(true)
     try {
       const backupPaths = await window.electronAPI.sync.downloadFromCloud(config, syncPassword)
-      onSuccess(`✅ 配置已从云端下载并覆盖本地\n备份: ${backupPaths.join(', ')}`)
+      onSuccess(`✅ 配置已从云端下载并应用\n备份: ${backupPaths.join(', ')}`)
     } catch (error) {
       onError('下载失败', (error as Error).message)
     } finally {

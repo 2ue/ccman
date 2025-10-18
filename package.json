@@ -1,6 +1,6 @@
 {
   "name": "ccman-monorepo",
-  "version": "3.0.18",
+  "version": "3.0.19",
   "private": true,
   "description": "Manage Codex and Claude Code API service provider configurations",
   "scripts": {
@@ -11,7 +11,8 @@
     "lint:fix": "eslint . --ext .ts,.tsx --ignore-pattern 'packages/desktop/**' --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "clean": "pnpm -r clean",
-    "version": "node scripts/bump-version.js"
+    "version": "node scripts/bump-version.js",
+    "verify:versions": "node scripts/verify-versions.js"
   },
   "engines": {
     "node": ">=18.0.0",

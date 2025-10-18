@@ -24,6 +24,8 @@ import { mergeProviders, areProvidersEqual } from './merge-advanced.js'
 import { backupConfig } from './merge.js'
 import { getCcmanDir } from '../paths.js'
 import { readJSON, writeJSON } from '../utils/file.js'
+import { writeCodexConfig } from '../writers/codex.js'
+import { writeClaudeConfig } from '../writers/claude.js'
 
 // 远程文件路径
 const CODEX_REMOTE_PATH = '.ccman/codex.json'
@@ -172,6 +174,9 @@ export async function downloadFromCloud(
         presets: currentCodexConfig.presets, // 保留本地 presets
       }
       writeJSON(codexConfigPath, newCodexConfig)
+
+      // 自动应用当前 provider 到 Codex 官方配置
+      applyCurrentProvider('codex', newCodexConfig)
     }
 
     // 更新 Claude 配置
@@ -182,9 +187,12 @@ export async function downloadFromCloud(
         presets: currentClaudeConfig.presets, // 保留本地 presets
       }
       writeJSON(claudeConfigPath, newClaudeConfig)
+
+      // 自动应用当前 provider 到 Claude 官方配置
+      applyCurrentProvider('claude', newClaudeConfig)
     }
 
-    console.log('✅ 配置已从云端下载并覆盖本地')
+    console.log('✅ 配置已从云端下载并应用')
     return backupPaths
   } catch (error) {
     // 恢复备份
@@ -316,6 +324,10 @@ export async function mergeSync(
     writeJSON(codexConfigPath, mergedCodexConfig)
     writeJSON(claudeConfigPath, mergedClaudeConfig)
 
+    // 自动应用当前 provider 到官方工具配置
+    applyCurrentProvider('codex', mergedCodexConfig)
+    applyCurrentProvider('claude', mergedClaudeConfig)
+
     // 上传合并后的配置到云端
     const encryptedCodexProviders = encryptProviders(codexMergeResult.merged, password)
     const encryptedClaudeProviders = encryptProviders(claudeMergeResult.merged, password)
@@ -351,5 +363,32 @@ export async function mergeSync(
       }
     }
     throw new Error(`合并配置失败，已恢复备份: ${(error as Error).message}`)
+  }
+}
+
+/**
+ * 应用当前 provider 到官方工具配置
+ * 用于下载/合并配置后自动应用
+ *
+ * @param tool - 工具类型 ('codex' | 'claude')
+ * @param config - 工具配置
+ */
+function applyCurrentProvider(tool: 'codex' | 'claude', config: ToolConfig): void {
+  if (!config.currentProviderId) {
+    // 没有当前 provider，跳过
+    return
+  }
+
+  const provider = config.providers.find((p) => p.id === config.currentProviderId)
+  if (!provider) {
+    // Provider 不存在（可能被删除），跳过
+    return
+  }
+
+  // 调用对应的 writer 函数
+  if (tool === 'codex') {
+    writeCodexConfig(provider)
+  } else {
+    writeClaudeConfig(provider)
   }
 }

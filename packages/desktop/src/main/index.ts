@@ -33,7 +33,6 @@ import {
   exportConfig,
   importConfig,
   validateImportDir,
-  VERSION,
 } from '@ccman/core'
 import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
 
@@ -625,8 +624,12 @@ ipcMain.handle('open-url', async (_event, url: string) => {
 })
 
 // 获取应用版本号
+// 使用 Electron 的 app.getVersion() 自动读取 package.json
+// 这比从 @ccman/core 导入 VERSION 更可靠，因为：
+// 1. Electron 在打包时一定会读取 package.json（build 配置在里面）
+// 2. app.getVersion() 在运行时从 Electron 内部获取，不依赖文件系统
 ipcMain.handle('system:get-app-version', async () => {
-  return VERSION
+  return app.getVersion()
 })
 
 // ============================================================================

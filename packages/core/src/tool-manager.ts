@@ -171,11 +171,12 @@ export function createCodexManager(): ToolManager {
    */
   function loadConfig(): ToolConfig {
     if (!fileExists(configPath)) {
-      // 初始化配置，包含内置预置
+      // 初始化配置
+      // 注意：内置预置不写入文件，在 listPresets() 中动态合并
       ensureDir(getCcmanDir())
       const initialConfig: ToolConfig = {
         providers: [],
-        presets: [...CODEX_PRESETS], // 初始化内置预置到配置文件
+        presets: [], // 只存储用户自定义预置
       }
       writeJSON(configPath, initialConfig)
       return initialConfig
@@ -443,11 +444,12 @@ export function createClaudeManager(): ToolManager {
    */
   function loadConfig(): ToolConfig {
     if (!fileExists(configPath)) {
-      // 初始化配置，包含内置预置
+      // 初始化配置
+      // 注意：内置预置不写入文件，在 listPresets() 中动态合并
       ensureDir(getCcmanDir())
       const initialConfig: ToolConfig = {
         providers: [],
-        presets: [...CC_PRESETS], // 初始化内置预置到配置文件
+        presets: [], // 只存储用户自定义预置
       }
       writeJSON(configPath, initialConfig)
       return initialConfig
