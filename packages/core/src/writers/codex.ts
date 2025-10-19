@@ -3,6 +3,7 @@ import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
 import type { Provider } from '../tool-manager.js'
 import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
 import { ensureDir, fileExists } from '../utils/file.js'
+import { deepMerge } from '../utils/template.js'
 
 /**
  * Codex config.toml 结构
@@ -12,8 +13,35 @@ interface CodexConfig {
   model?: string
   model_reasoning_effort?: string
   disable_response_storage?: boolean
+  sandbox_mode?: string
+  windows_wsl_setup_acknowledged?: boolean
+  features?: CodexFeatures
+  tools?: CodexTools
+  sandbox_workspace_write?: CodexSandboxWorkspaceWrite
   model_providers?: Record<string, CodexModelProvider>
   [key: string]: unknown // 保留其他用户自定义字段
+}
+
+interface CodexFeatures {
+  plan_tool?: boolean
+  apply_patch_freeform?: boolean
+  view_image_tool?: boolean
+  web_search_request?: boolean
+  unified_exec?: boolean
+  streamable_shell?: boolean
+  rmcp_client?: boolean
+  [key: string]: unknown
+}
+
+interface CodexTools {
+  web_search?: boolean
+  view_image?: boolean
+  [key: string]: unknown
+}
+
+interface CodexSandboxWorkspaceWrite {
+  network_access?: boolean
+  [key: string]: unknown
 }
 
 interface CodexModelProvider {
@@ -32,22 +60,55 @@ interface CodexAuth {
 }
 
 /**
+ * Codex 默认配置模板
+ *
+ * 版本迭代时直接在此对象中添加/修改字段即可
+ *
+ * 注意：
+ * - model_provider 和 model_providers 会在运行时动态设置（根据 Provider）
+ * - 这里定义的是其他默认字段
+ */
+const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
+  model_reasoning_effort: 'high',
+  disable_response_storage: true,
+  sandbox_mode: 'workspace-write',
+  windows_wsl_setup_acknowledged: true,
+  features: {
+    plan_tool: true,
+    apply_patch_freeform: true,
+    view_image_tool: true,
+    web_search_request: true,
+    unified_exec: false,
+    streamable_shell: false,
+    rmcp_client: true,
+  },
+  tools: {
+    web_search: true,
+    view_image: true,
+  },
+  sandbox_workspace_write: {
+    network_access: true,
+  },
+}
+
+
+/**
  * 写入 Codex 配置（零破坏性）
  *
- * 管理的字段（强制覆盖）：
- * - model_provider
- * - model_providers[name].name
- * - model_providers[name].base_url
- * - OPENAI_API_KEY (auth.json)
+ * 策略：
+ * 1. 深度合并默认配置和用户现有配置（用户配置优先）
+ * 2. 设置 Provider 相关字段（model_provider, model_providers）
+ * 3. 写入 config.toml（注释会丢失，但保留所有用户数据）
+ * 4. 写入 auth.json（只更新 OPENAI_API_KEY）
  *
- * 固定字段（始终设置）：
- * - model_providers[name].wire_api = "responses"
- * - model_providers[name].requires_openai_auth = true
+ * 版本迭代：
+ * - 只需修改 CODEX_DEFAULT_CONFIG 对象
+ * - 新增/删除字段会自动处理
+ * - 用户的自定义配置始终保留
  *
- * 默认字段（如果用户未设置，则设置默认值；用户已设置则保留）：
- * - model = "gpt-5"
- * - model_reasoning_effort = "high"
- * - disable_response_storage = true
+ * 注意：
+ * - TOML 解析器会丢失注释，这是已知限制
+ * - 用户如果需要注释，建议放在单独的文档文件中
  */
 export function writeCodexConfig(provider: Provider): void {
   // 确保目录存在
@@ -55,43 +116,35 @@ export function writeCodexConfig(provider: Provider): void {
 
   // 1. 处理 config.toml
   const configPath = getCodexConfigPath()
-  let config: CodexConfig
+  let userConfig: CodexConfig = {}
 
   if (fileExists(configPath)) {
     // 读取现有配置
     const content = fs.readFileSync(configPath, 'utf-8')
-    config = parseToml(content) as CodexConfig
-  } else {
-    // 创建新配置
-    config = {}
+    userConfig = parseToml(content) as CodexConfig
   }
 
-  // 1.1 ccman 管理的字段（强制覆盖）
-  config.model_provider = provider.name
-  config.model_providers = config.model_providers || {}
-  config.model_providers[provider.name] = {
+  // 2. 深度合并（用户配置优先）
+  const mergedConfig = deepMerge<CodexConfig>(CODEX_DEFAULT_CONFIG, userConfig)
+
+  // 3. 设置 Provider 相关字段
+  mergedConfig.model_provider = provider.name
+  mergedConfig.model = provider.model || mergedConfig.model || 'gpt-5-codex'
+
+  // 4. 设置 model_providers
+  mergedConfig.model_providers = mergedConfig.model_providers || {}
+  mergedConfig.model_providers[provider.name] = {
     name: provider.name,
     base_url: provider.baseUrl,
-    wire_api: 'responses',              // 固定值
-    requires_openai_auth: true,         // 固定值
+    wire_api: 'responses',
+    requires_openai_auth: true,
   }
 
-  // 1.2 默认字段（仅在不存在时设置）
-  if (!config.model) {
-    config.model = 'gpt-5'
-  }
-  if (!config.model_reasoning_effort) {
-    config.model_reasoning_effort = 'high'
-  }
-  if (!('disable_response_storage' in config)) {
-    config.disable_response_storage = true
-  }
-
-  // 写入配置文件
+  // 5. 写入配置文件
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fs.writeFileSync(configPath, stringifyToml(config as any), { mode: 0o600 })
+  fs.writeFileSync(configPath, stringifyToml(mergedConfig as any), { mode: 0o600 })
 
-  // 2. 处理 auth.json
+  // 6. 处理 auth.json
   const authPath = getCodexAuthPath()
   let auth: CodexAuth
 
@@ -108,3 +161,4 @@ export function writeCodexConfig(provider: Provider): void {
   // 写入 auth.json
   fs.writeFileSync(authPath, JSON.stringify(auth, null, 2), { mode: 0o600 })
 }
+

@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import type { Provider } from '../tool-manager.js'
 import { getClaudeConfigPath, getClaudeDir } from '../paths.js'
 import { ensureDir, fileExists } from '../utils/file.js'
+import { replaceVariables, deepMerge } from '../utils/template.js'
 
 /**
  * Claude Code settings.json 结构
@@ -18,66 +19,70 @@ interface ClaudeSettings {
 interface ClaudeEnv {
   ANTHROPIC_AUTH_TOKEN?: string
   ANTHROPIC_BASE_URL?: string
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC?: number
+  CLAUDE_CODE_MAX_OUTPUT_TOKENS?: number
   [key: string]: unknown // 保留其他环境变量
 }
 
 /**
+ * Claude Code 默认配置模板
+ *
+ * 变量说明：
+ * - {{apiKey}}: Provider 的 API Key
+ * - {{baseUrl}}: Provider 的 Base URL
+ *
+ * 版本迭代时直接在此对象中添加/修改字段即可
+ */
+const CLAUDE_CONFIG_TEMPLATE: ClaudeSettings = {
+  env: {
+    ANTHROPIC_AUTH_TOKEN: '{{apiKey}}',
+    ANTHROPIC_BASE_URL: '{{baseUrl}}',
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1,
+    CLAUDE_CODE_MAX_OUTPUT_TOKENS: 32000,
+  },
+  permissions: {
+    allow: [],
+    deny: [],
+  },
+}
+
+
+/**
  * 写入 Claude 配置（零破坏性）
  *
- * 管理的字段（强制覆盖）：
- * - ANTHROPIC_AUTH_TOKEN
- * - ANTHROPIC_BASE_URL
+ * 策略：
+ * 1. 使用模板生成默认配置（包含 Provider 的 apiKey 和 baseUrl）
+ * 2. 深度合并用户现有配置（用户配置优先）
+ * 3. 写入合并后的配置
  *
- * 默认字段（如果用户未设置，则设置默认值；用户已设置则保留）：
- * - CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
- * - CLAUDE_CODE_MAX_OUTPUT_TOKENS
- * - permissions.allow
- * - permissions.deny
+ * 版本迭代：
+ * - 只需修改 CLAUDE_CONFIG_TEMPLATE 对象
+ * - 新增/删除字段会自动处理
+ * - 用户的自定义配置始终保留
  */
 export function writeClaudeConfig(provider: Provider): void {
   // 确保目录存在
   ensureDir(getClaudeDir())
 
   const configPath = getClaudeConfigPath()
-  let settings: ClaudeSettings
 
+  // 1. 读取用户现有配置
+  let userConfig: ClaudeSettings = {}
   if (fileExists(configPath)) {
-    // 读取现有配置
     const content = fs.readFileSync(configPath, 'utf-8')
-    settings = JSON.parse(content) as ClaudeSettings
-  } else {
-    // 创建新配置
-    settings = {}
+    userConfig = JSON.parse(content) as ClaudeSettings
   }
 
-  // 确保 env 对象存在
-  if (!settings.env) {
-    settings.env = {}
-  }
+  // 2. 替换模板变量，生成默认配置
+  const defaultConfig = replaceVariables(CLAUDE_CONFIG_TEMPLATE, {
+    apiKey: provider.apiKey,
+    baseUrl: provider.baseUrl,
+  }) as ClaudeSettings
 
-  // 1. ccman 管理的字段（强制覆盖）
-  settings.env.ANTHROPIC_AUTH_TOKEN = provider.apiKey
-  settings.env.ANTHROPIC_BASE_URL = provider.baseUrl
+  // 3. 深度合并（用户配置优先）
+  const mergedConfig = deepMerge<ClaudeSettings>(defaultConfig, userConfig)
 
-  // 2. 默认字段（仅在不存在时设置）
-  if (!('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC' in settings.env)) {
-    settings.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = 1
-  }
-  if (!('CLAUDE_CODE_MAX_OUTPUT_TOKENS' in settings.env)) {
-    settings.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS = 32000
-  }
-
-  // 3. permissions 默认值（仅在不存在时设置）
-  if (!settings.permissions) {
-    settings.permissions = { allow: [], deny: [] }
-  }
-  if (!settings.permissions.allow) {
-    settings.permissions.allow = []
-  }
-  if (!settings.permissions.deny) {
-    settings.permissions.deny = []
-  }
-
-  // 写入配置文件
-  fs.writeFileSync(configPath, JSON.stringify(settings, null, 2), { mode: 0o600 })
+  // 4. 写入配置文件
+  fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2), { mode: 0o600 })
 }
+

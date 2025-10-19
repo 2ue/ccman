@@ -23,6 +23,8 @@ export interface Provider {
   baseUrl: string
   /** API Key */
   apiKey: string
+  /** 模型名称(可选,仅 Codex 使用) */
+  model?: string
   /** 创建时间(Unix timestamp) */
   createdAt: number
   /** 最后修改时间(Unix timestamp) */
@@ -62,6 +64,7 @@ export interface AddProviderInput {
   name: string
   baseUrl: string
   apiKey: string
+  model?: string // 可选,仅 Codex 使用
 }
 
 /**
@@ -71,6 +74,7 @@ export interface EditProviderInput {
   name?: string
   baseUrl?: string
   apiKey?: string
+  model?: string // 可选,仅 Codex 使用
 }
 
 /**
@@ -208,6 +212,7 @@ export function createCodexManager(): ToolManager {
         name: input.name,
         baseUrl: input.baseUrl,
         apiKey: input.apiKey,
+        model: input.model, // 保存 model 字段
         createdAt: timestamp,
         lastModified: timestamp,
       }
@@ -292,6 +297,7 @@ export function createCodexManager(): ToolManager {
       if (updates.name !== undefined) provider.name = updates.name
       if (updates.baseUrl !== undefined) provider.baseUrl = updates.baseUrl
       if (updates.apiKey !== undefined) provider.apiKey = updates.apiKey
+      if (updates.model !== undefined) provider.model = updates.model // 更新 model 字段
 
       // 更新最后修改时间
       provider.lastModified = Date.now()
