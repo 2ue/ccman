@@ -56,7 +56,6 @@
           ]
         }
       ],
-      "icon": "build/icon.icns",
       "artifactName": "${productName}-${version}-macos-${arch}.${ext}"
     },
     "win": {
@@ -68,7 +67,6 @@
           ]
         }
       ],
-      "icon": "build/icon.ico",
       "artifactName": "${productName}-${version}-windows-${arch}.${ext}"
     },
     "nsis": {
@@ -78,8 +76,6 @@
       "allowElevation": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
       "runAfterFinish": true,
       "deleteAppDataOnUninstall": false
     },
