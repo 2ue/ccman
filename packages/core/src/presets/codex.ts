@@ -15,13 +15,8 @@ export interface PresetTemplate {
  */
 export const CODEX_PRESETS: PresetTemplate[] = [
   {
-    name: 'PackyCode',
-    baseUrl: 'https://api.packycode.com',
-    description: 'PackyCode API 服务',
-  },
-  {
     name: '88Code',
-    baseUrl: 'https://www.88code.org/api',
+    baseUrl: 'https://www.88code.org/openai/v1',
     description: '88Code API 服务',
   }
 ]

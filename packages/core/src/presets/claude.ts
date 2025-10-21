@@ -30,11 +30,6 @@ export const CC_PRESETS: PresetTemplate[] = [
     description: 'PackyCode API 服务',
   },
   {
-    name: 'CoordCode',
-    baseUrl: 'https://api.coordcode.com/api',
-    description: 'CoordCode API 服务',
-  },
-  {
     name: '88Code',
     baseUrl: 'https://www.88code.org/api',
     description: '88Code API 服务',
