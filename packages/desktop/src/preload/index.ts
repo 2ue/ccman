@@ -15,8 +15,7 @@ import type {
   Provider,
   AddProviderInput,
   EditProviderInput,
-  CodexPresetTemplate,
-  ClaudePresetTemplate,
+  PresetTemplate,
   AddPresetInput,
   EditPresetInput,
   SyncConfig,
@@ -37,9 +36,9 @@ export interface CodexAPI {
   getCurrent: () => Promise<Provider | undefined>
   findByName: (name: string) => Promise<Provider | undefined>
 
-  addPreset: (input: AddPresetInput) => Promise<CodexPresetTemplate>
-  listPresets: () => Promise<CodexPresetTemplate[]>
-  editPreset: (name: string, updates: EditPresetInput) => Promise<CodexPresetTemplate>
+  addPreset: (input: AddPresetInput) => Promise<PresetTemplate>
+  listPresets: () => Promise<PresetTemplate[]>
+  editPreset: (name: string, updates: EditPresetInput) => Promise<PresetTemplate>
   removePreset: (name: string) => Promise<void>
 }
 
@@ -75,9 +74,9 @@ export interface ClaudeAPI {
   getCurrent: () => Promise<Provider | undefined>
   findByName: (name: string) => Promise<Provider | undefined>
 
-  addPreset: (input: AddPresetInput) => Promise<ClaudePresetTemplate>
-  listPresets: () => Promise<ClaudePresetTemplate[]>
-  editPreset: (name: string, updates: EditPresetInput) => Promise<ClaudePresetTemplate>
+  addPreset: (input: AddPresetInput) => Promise<PresetTemplate>
+  listPresets: () => Promise<PresetTemplate[]>
+  editPreset: (name: string, updates: EditPresetInput) => Promise<PresetTemplate>
   removePreset: (name: string) => Promise<void>
 }
 

@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import type { Provider, CodexPresetTemplate, ClaudePresetTemplate, AddProviderInput, EditProviderInput } from '@ccman/core'
+import type { Provider, PresetTemplate, AddProviderInput, EditProviderInput } from '@ccman/core'
 import { Search, Package, ExternalLink, Edit2, Trash2, Plus, FileCode2 } from 'lucide-react'
 import PresetFormModal from './PresetFormModal'
 import ConfigEditorModal from './ConfigEditorModal'
@@ -31,8 +31,8 @@ interface ExtendedPreset {
 }
 
 export default function ServiceProviderConfigPage({ onUseServiceProvider, onSuccess }: ServiceProviderConfigPageProps) {
-  const [codexPresets, setCodexPresets] = useState<CodexPresetTemplate[]>([])
-  const [claudeCodePresets, setClaudeCodePresets] = useState<ClaudePresetTemplate[]>([])
+  const [codexPresets, setCodexPresets] = useState<PresetTemplate[]>([])
+  const [claudeCodePresets, setClaudeCodePresets] = useState<PresetTemplate[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [codexProviders, setCodexProviders] = useState<Provider[]>([])
   const [claudeProviders, setClaudeProviders] = useState<Provider[]>([])
@@ -196,17 +196,15 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
     await loadPresets()
   }
 
-  // 扩展预置数据，添加 type 和 isBuiltIn 字段
-  const extendedCodexPresets: ExtendedPreset[] = codexPresets.map((p, index) => ({
+  // 扩展预置数据，添加 type 字段
+  const extendedCodexPresets: ExtendedPreset[] = codexPresets.map((p) => ({
     ...p,
     type: 'codex' as const,
-    isBuiltIn: index < 7, // 前7个是内置的
   }))
 
-  const extendedClaudeCodePresets: ExtendedPreset[] = claudeCodePresets.map((p, index) => ({
+  const extendedClaudeCodePresets: ExtendedPreset[] = claudeCodePresets.map((p) => ({
     ...p,
     type: 'claude' as const,
-    isBuiltIn: index < 7, // 前7个是内置的
   }))
 
   // 前端搜索过滤

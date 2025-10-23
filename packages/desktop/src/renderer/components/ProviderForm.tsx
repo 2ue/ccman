@@ -9,14 +9,13 @@ import type {
   Provider,
   AddProviderInput,
   EditProviderInput,
-  CodexPresetTemplate,
-  ClaudePresetTemplate,
+  PresetTemplate,
 } from '@ccman/core'
 import { BUTTON_STYLES } from '../styles/button'
 
 interface Props {
   provider?: Provider
-  preset?: CodexPresetTemplate | ClaudePresetTemplate
+  preset?: PresetTemplate
   isClone?: boolean
   existingProviders?: Provider[]
   onSubmit: (input: AddProviderInput | EditProviderInput) => void | Promise<void>

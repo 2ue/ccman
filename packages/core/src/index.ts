@@ -22,9 +22,9 @@ export {
   ProviderNotFoundError,
 } from './tool-manager.js'
 
-// Presets
-export { CODEX_PRESETS, type PresetTemplate as CodexPresetTemplate } from './presets/codex.js'
-export { CC_PRESETS, type PresetTemplate as ClaudePresetTemplate } from './presets/claude.js'
+// Presets (只导出预设数据，不导出类型)
+export { CODEX_PRESETS } from './presets/codex.js'
+export { CC_PRESETS } from './presets/claude.js'
 
 // Migration
 export { migrateConfig, rollbackMigration, migrateV2ToV3, validateMigration } from './migrate.js'

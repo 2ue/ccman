@@ -1,5 +1,6 @@
 /**
- * Codex 预设模板(不包含 API Key)
+ * Codex 预设模板(不包含 API Key 和 isBuiltIn)
+ * isBuiltIn 字段由 tool-manager 在运行时添加
  */
 export interface PresetTemplate {
   /** 预设名称 */

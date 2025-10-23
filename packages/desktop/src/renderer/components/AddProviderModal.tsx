@@ -4,8 +4,7 @@ import type {
   Provider,
   AddProviderInput,
   EditProviderInput,
-  CodexPresetTemplate,
-  ClaudePresetTemplate,
+  PresetTemplate,
 } from '@ccman/core'
 import ProviderForm from './ProviderForm'
 import { AlertDialog } from './dialogs'
@@ -20,12 +19,8 @@ interface Props {
 
 export default function AddProviderModal({ show, type, onClose, onSubmit, onSuccess }: Props) {
   const [showCustomForm, setShowCustomForm] = useState(false)
-  const [selectedPreset, setSelectedPreset] = useState<
-    CodexPresetTemplate | ClaudePresetTemplate | undefined
-  >()
-  const [presets, setPresets] = useState<
-    Array<CodexPresetTemplate | ClaudePresetTemplate>
-  >([])
+  const [selectedPreset, setSelectedPreset] = useState<PresetTemplate | undefined>()
+  const [presets, setPresets] = useState<PresetTemplate[]>([])
   const [providers, setProviders] = useState<Provider[]>([])
 
   const [alertDialog, setAlertDialog] = useState<{
@@ -67,7 +62,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
     }
   }, [show, type])
 
-  const handleSelectPreset = (preset: CodexPresetTemplate | ClaudePresetTemplate) => {
+  const handleSelectPreset = (preset: PresetTemplate) => {
     setSelectedPreset(preset)
     setShowCustomForm(true)
   }
@@ -168,11 +163,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {presets.map((preset, index) => {
-                    // 前7个为内置预设
-                    const isBuiltIn = index < 7
-
-                    return (
+                  {presets.map((preset, index) => (
                       <div
                         key={`${type}-preset-${index}-${preset.name}`}
                         className="bg-white rounded-lg border border-gray-200 p-3 hover:border-gray-300 hover:shadow-md transition-all"
@@ -181,11 +172,11 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                           <div className="flex-1 min-w-0">
                             <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
                             <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
-                              isBuiltIn
+                              preset.isBuiltIn
                                 ? 'bg-gray-100 text-gray-600 border-gray-200'
                                 : 'bg-blue-50 text-blue-700 border-blue-200'
                             }`}>
-                              {isBuiltIn ? '内置' : '自定义'}
+                              {preset.isBuiltIn ? '内置' : '自定义'}
                             </span>
                           </div>
                         </div>
@@ -211,8 +202,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                           </button>
                         </div>
                       </div>
-                    )
-                  })}
+                    ))}
                 </div>
               )}
             </div>
