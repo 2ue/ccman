@@ -100,59 +100,36 @@ export function decryptApiKey(encryptedApiKey: string, password: string): string
 }
 
 /**
- * 加密后的 Provider 接口
- */
-export interface EncryptedProvider {
-  id: string
-  name: string
-  baseUrl: string
-  encryptedApiKey: string
-  createdAt: number
-  lastModified: number
-  lastUsedAt?: number
-}
-
-/**
  * 批量加密 providers 的 apiKey 字段
  *
  * @param providers - Provider 列表
  * @param password - 用户密码
- * @returns 加密后的 Provider 列表
+ * @returns 加密后的 Provider 列表（apiKey 字段是加密后的字符串）
  */
 export function encryptProviders(
   providers: Provider[],
   password: string
-): EncryptedProvider[] {
+): Provider[] {
   return providers.map((provider) => ({
-    id: provider.id,
-    name: provider.name,
-    baseUrl: provider.baseUrl,
-    encryptedApiKey: encryptApiKey(provider.apiKey, password),
-    createdAt: provider.createdAt,
-    lastModified: provider.lastModified,
-    lastUsedAt: provider.lastUsedAt,
+    ...provider,
+    apiKey: encryptApiKey(provider.apiKey, password),
   }))
 }
 
 /**
- * 批量解密 providers 的 encryptedApiKey 字段
+ * 批量解密 providers 的 apiKey 字段
  *
- * @param encryptedProviders - 加密的 Provider 列表
+ * @param encryptedProviders - 加密的 Provider 列表（apiKey 字段是加密后的字符串）
  * @param password - 用户密码
- * @returns 解密后的 Provider 列表
+ * @returns 解密后的 Provider 列表（apiKey 字段是明文）
  * @throws Error 如果密码错误
  */
 export function decryptProviders(
-  encryptedProviders: EncryptedProvider[],
+  encryptedProviders: Provider[],
   password: string
 ): Provider[] {
   return encryptedProviders.map((provider) => ({
-    id: provider.id,
-    name: provider.name,
-    baseUrl: provider.baseUrl,
-    apiKey: decryptApiKey(provider.encryptedApiKey, password),
-    createdAt: provider.createdAt,
-    lastModified: provider.lastModified,
-    lastUsedAt: provider.lastUsedAt,
+    ...provider,
+    apiKey: decryptApiKey(provider.apiKey, password),
   }))
 }

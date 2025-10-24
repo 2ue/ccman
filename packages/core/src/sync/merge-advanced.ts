@@ -2,10 +2,11 @@
  * 智能合并逻辑
  *
  * 合并规则：
- * 1. 唯一标识：使用 id
- * 2. 相同配置判断：baseUrl + apiKey 相同 = 同一配置
- * 3. name 冲突：使用 name_2, name_3 格式
- * 4. lastModified 迁移兼容：默认为 createdAt
+ * 1. Provider 相同判断：baseUrl + apiKey 相同 = 同一配置
+ * 2. Preset 相同判断：baseUrl 相同 = 同一配置
+ * 3. 相同配置：使用云端数据（覆盖本地）
+ * 4. 不同配置：都保留
+ * 5. name 冲突：自动重命名为 name_2, name_3 ...
  */
 
 import type { Provider } from '../tool-manager.js'
@@ -20,21 +21,6 @@ export interface MergeResult {
   hasChanges: boolean
 }
 
-/**
- * 确保 provider 有 lastModified 字段（迁移兼容）
- *
- * @param provider - Provider
- * @returns 带 lastModified 的 Provider
- */
-function ensureLastModified(provider: Provider): Provider {
-  if (provider.lastModified === undefined) {
-    return {
-      ...provider,
-      lastModified: provider.createdAt,
-    }
-  }
-  return provider
-}
 
 /**
  * 判断两个 provider 是否为相同配置
@@ -101,82 +87,48 @@ function resolveNameConflict(existingProviders: Provider[], newProvider: Provide
  * 智能合并两个 provider 列表
  *
  * 合并逻辑：
- * 1. 相同 id：比较 lastModified，保留最新的
- * 2. 相同配置（baseUrl + apiKey）：合并为一个，保留最新的
- * 3. 不同 id 且不同配置：都保留，处理 name 冲突
+ * 1. 相同配置（baseUrl + apiKey）：使用云端数据
+ * 2. 不同配置：都保留
  *
  * @param local - 本地 provider 列表
  * @param remote - 远程 provider 列表
  * @returns 合并结果
  */
 export function mergeProviders(local: Provider[], remote: Provider[]): MergeResult {
-  // 确保所有 provider 都有 lastModified（迁移兼容）
-  const localProviders = local.map(ensureLastModified)
-  const remoteProviders = remote.map(ensureLastModified)
-
   // 用于存储合并结果
   const mergedMap = new Map<string, Provider>()
   let hasChanges = false
 
-  // 步骤1：处理本地 providers
-  for (const localProvider of localProviders) {
+  // 步骤1：添加所有本地 providers（作为基础）
+  for (const localProvider of local) {
     mergedMap.set(localProvider.id, localProvider)
   }
 
   // 步骤2：处理远程 providers
-  for (const remoteProvider of remoteProviders) {
-    // 情况1：相同 id（同一个 provider）
-    if (mergedMap.has(remoteProvider.id)) {
-      const localProvider = mergedMap.get(remoteProvider.id)!
+  for (const remoteProvider of remote) {
+    // 查找本地是否有相同配置（baseUrl + apiKey）
+    const existingLocal = Array.from(mergedMap.values()).find((p) =>
+      isSameConfig(p, remoteProvider)
+    )
 
-      // 比较 lastModified，保留最新的
-      if (remoteProvider.lastModified > localProvider.lastModified) {
-        console.log(`provider ${remoteProvider.id} 远程更新，使用远程版本`)
-        mergedMap.set(remoteProvider.id, remoteProvider)
+    if (existingLocal) {
+      // 相同配置 → 使用云端数据（覆盖本地）
+      mergedMap.delete(existingLocal.id)
+      mergedMap.set(remoteProvider.id, remoteProvider)
+
+      // 检查是否有实际变化
+      if (!isProviderEqual(existingLocal, remoteProvider)) {
         hasChanges = true
-      } else if (remoteProvider.lastModified < localProvider.lastModified) {
-        console.log(`provider ${remoteProvider.id} 本地更新，使用本地版本`)
-        hasChanges = true
-      } else {
-        // lastModified 相同，检查内容是否变化
-        if (!isProviderEqual(localProvider, remoteProvider)) {
-          console.log(`provider ${remoteProvider.id} 时间戳相同但内容不同，使用远程版本`)
-          mergedMap.set(remoteProvider.id, remoteProvider)
-          hasChanges = true
-        }
+        console.log(`相同配置 (${remoteProvider.baseUrl})，使用云端数据`)
       }
     } else {
-      // 情况2：不同 id，检查是否为相同配置（baseUrl + apiKey）
-      const existingWithSameConfig = Array.from(mergedMap.values()).find((p) =>
-        isSameConfig(p, remoteProvider)
-      )
+      // 不同配置 → 添加云端 provider（name 冲突时重命名）
+      const existingProviders = Array.from(mergedMap.values())
+      const resolvedProvider = resolveNameConflict(existingProviders, remoteProvider)
 
-      if (existingWithSameConfig) {
-        // 相同配置，比较 lastModified
-        if (remoteProvider.lastModified > existingWithSameConfig.lastModified) {
-          console.log(
-            `相同配置 (${remoteProvider.baseUrl})，远程更新，替换 ${existingWithSameConfig.id} 为 ${remoteProvider.id}`
-          )
-          mergedMap.delete(existingWithSameConfig.id)
-          mergedMap.set(remoteProvider.id, remoteProvider)
-          hasChanges = true
-        } else {
-          console.log(
-            `相同配置 (${remoteProvider.baseUrl})，本地更新，保留 ${existingWithSameConfig.id}`
-          )
-          hasChanges = true
-        }
-      } else {
-        // 情况3：不同 id 且不同配置，添加新 provider
-        console.log(`新 provider ${remoteProvider.id}，添加到合并列表`)
-
-        // 检查并解决 name 冲突
-        const existingProviders = Array.from(mergedMap.values())
-        const resolvedProvider = resolveNameConflict(existingProviders, remoteProvider)
-
-        mergedMap.set(resolvedProvider.id, resolvedProvider)
-        hasChanges = true
-      }
+      mergedMap.set(resolvedProvider.id, resolvedProvider)
+      hasChanges = true
+      console.log(`新 provider ${resolvedProvider.name}，添加到合并列表`)
     }
   }
 
@@ -196,6 +148,88 @@ export function mergeProviders(local: Provider[], remote: Provider[]): MergeResu
  * @param remote - 远程 provider 列表
  * @returns 是否完全相同
  */
+/**
+ * Preset 类型定义
+ */
+export interface Preset {
+  name: string
+  baseUrl: string
+  description: string
+}
+
+
+/**
+ * 解决 preset name 冲突
+ */
+function resolvePresetNameConflict(existingPresets: Preset[], newPreset: Preset): Preset {
+  const existingNames = new Set(existingPresets.map((p) => p.name))
+
+  if (!existingNames.has(newPreset.name)) {
+    return newPreset
+  }
+
+  let suffix = 2
+  let newName = `${newPreset.name}_${suffix}`
+
+  while (existingNames.has(newName)) {
+    suffix++
+    newName = `${newPreset.name}_${suffix}`
+  }
+
+  console.log(`preset name 冲突：将 "${newPreset.name}" 重命名为 "${newName}"`)
+
+  return {
+    ...newPreset,
+    name: newName,
+  }
+}
+
+/**
+ * 智能合并两个 preset 列表
+ *
+ * 合并逻辑：
+ * 1. 相同 preset（baseUrl 相同）：使用云端数据
+ * 2. 不同 preset：都保留
+ *
+ * @param local - 本地 preset 列表
+ * @param remote - 远程 preset 列表
+ * @returns 合并后的 preset 列表
+ */
+export function mergePresets(
+  local: Preset[] | undefined,
+  remote: Preset[] | undefined
+): Preset[] {
+  const localPresets = local || []
+  const remotePresets = remote || []
+
+  // 用于存储合并结果（key: baseUrl）
+  const mergedMap = new Map<string, Preset>()
+
+  // 步骤1：添加本地 presets
+  for (const preset of localPresets) {
+    mergedMap.set(preset.baseUrl, preset)
+  }
+
+  // 步骤2：处理远程 presets
+  for (const remotePreset of remotePresets) {
+    const existingLocal = mergedMap.get(remotePreset.baseUrl)
+
+    if (existingLocal) {
+      // 相同 baseUrl → 使用云端数据（覆盖本地）
+      mergedMap.set(remotePreset.baseUrl, remotePreset)
+      console.log(`preset ${remotePreset.name} (${remotePreset.baseUrl})，使用云端数据`)
+    } else {
+      // 不同 baseUrl → 添加云端 preset（name 冲突时重命名）
+      const existingPresets = Array.from(mergedMap.values())
+      const resolvedPreset = resolvePresetNameConflict(existingPresets, remotePreset)
+
+      mergedMap.set(resolvedPreset.baseUrl, resolvedPreset)
+    }
+  }
+
+  return Array.from(mergedMap.values())
+}
+
 export function areProvidersEqual(local: Provider[], remote: Provider[]): boolean {
   if (local.length !== remote.length) {
     return false
