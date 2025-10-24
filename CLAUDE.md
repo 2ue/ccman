@@ -611,7 +611,39 @@ npm run version 3.0.4
 
 ### 发布流程
 
-1. **更新 CHANGELOG.md**
+**⚠️ 发布前检查清单（必须执行）**：
+
+1. **版本号一致性检查**：
+   - ❌ **禁止**：tag 版本与 package.json 版本不一致
+   - ✅ **必须**：所有包的 package.json 版本号必须一致
+   - ✅ **必须**：tag 名称（如 v3.0.4）与 package.json 版本号（3.0.4）一致
+   - 检查命令：
+     ```bash
+     # 确保所有 package.json 版本号相同
+     grep -h '"version":' package.json packages/*/package.json
+     ```
+
+2. **业务逻辑修改检查**：
+   - ✅ **必须**：只有业务逻辑修改才打 tag 发布
+   - ❌ **禁止**：纯文档修改（README.md、docs/）打 tag
+   - ❌ **禁止**：纯配置修改（.eslintrc、tsconfig.json）打 tag
+   - ❌ **禁止**：纯依赖更新（package-lock.json）打 tag
+   - **业务逻辑修改**定义：
+     - 修改 `packages/*/src/**/*.ts` 代码文件
+     - 新增或修改功能、修复 Bug
+     - 影响用户使用的改动
+
+3. **远程 tag 检查**：
+   - ✅ **必须**：确认远程不存在同名 tag
+   - 检查命令：
+     ```bash
+     git fetch --tags
+     git tag -l | grep v3.0.4  # 如果有输出说明 tag 已存在
+     ```
+
+**发布步骤**：
+
+1. **更新 CHANGELOG.md**（可选）
 2. **修改版本号**：
    ```bash
    npm run version 3.0.4
@@ -624,17 +656,41 @@ npm run version 3.0.4
    ```bash
    pnpm build
    ```
-5. **提交并打 tag**：
+5. **执行发布前检查**：
+   ```bash
+   # 检查 1：版本号一致性
+   grep -h '"version":' package.json packages/*/package.json
+
+   # 检查 2：确认有业务逻辑修改
+   git diff --name-only HEAD~1 | grep -E '\.(ts|tsx|js|jsx)$' | grep -v -E '(test|spec|\.d\.ts)'
+
+   # 检查 3：确认 tag 不存在
+   git fetch --tags && git tag -l | grep v3.0.4
+   ```
+6. **提交并打 tag**：
    ```bash
    git add .
    git commit -m "chore: bump version to 3.0.4"
    git tag v3.0.4
    git push && git push --tags
    ```
-6. **自动发布**：GitHub Actions 会自动：
+7. **自动发布**：GitHub Actions 会自动：
    - 发布 CLI 到 npm
    - 构建并发布 Desktop 应用（macOS/Windows）
    - 创建 GitHub Release
+
+**发布失败处理**：
+
+如果发现 tag 已存在：
+```bash
+# ❌ 不要删除远程 tag！
+# ✅ 正确做法：增加版本号
+npm run version 3.0.5  # 增加版本号
+git add .
+git commit -m "chore: bump version to 3.0.5"
+git tag v3.0.5
+git push && git push --tags
+```
 
 ## 常见问题
 
