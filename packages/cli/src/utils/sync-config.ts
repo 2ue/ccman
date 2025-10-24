@@ -1,12 +1,10 @@
 /**
  * CLI 同步配置管理工具
  *
- * 使用 Core 的统一 config.json，但在 CLI 层处理密码加密
- * （Desktop 不加密密码，由系统 Keychain 保护；CLI 需要自己加密）
+ * CLI 和 Desktop 都使用明文存储 WebDAV 密码，依赖文件权限（0600）保护
+ * 只有 API Key 需要加密（通过同步密码加密，存储在云端）
  */
 
-import crypto from 'crypto'
-import os from 'os'
 import { getSyncConfig, saveSyncConfig as coreSaveSyncConfig, getConfigPath } from '@ccman/core'
 import type { SyncConfig } from '@ccman/core'
 
@@ -19,43 +17,6 @@ export interface LocalSyncConfig extends SyncConfig {
 }
 
 /**
- * 获取机器标识（用于加密）
- * 返回 32 字节的密钥（AES-256 需要）
- */
-function getMachineId(): Buffer {
-  return crypto
-    .createHash('sha256')
-    .update(os.hostname() + os.userInfo().username)
-    .digest() // 返回 Buffer (32 字节)
-}
-
-/**
- * 加密字符串
- */
-function encrypt(text: string): string {
-  const key = getMachineId()
-  const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
-  let encrypted = cipher.update(text, 'utf8', 'hex')
-  encrypted += cipher.final('hex')
-  return iv.toString('hex') + ':' + encrypted
-}
-
-/**
- * 解密字符串
- */
-function decrypt(encrypted: string): string {
-  const parts = encrypted.split(':')
-  const iv = Buffer.from(parts[0], 'hex')
-  const encryptedText = parts[1]
-  const key = getMachineId()
-  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv)
-  let decrypted = decipher.update(encryptedText, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-  return decrypted
-}
-
-/**
  * 读取同步配置（从统一的 config.json）
  */
 export function loadSyncConfig(): LocalSyncConfig | null {
@@ -64,23 +25,6 @@ export function loadSyncConfig(): LocalSyncConfig | null {
     if (!config) {
       return null
     }
-
-    // 解密密码字段（如果已加密）
-    if (config.password && config.password.includes(':')) {
-      try {
-        config.password = decrypt(config.password)
-      } catch {
-        // 解密失败，可能是未加密的明文或其他格式，保持原样
-      }
-    }
-    if (config.syncPassword && config.syncPassword.includes(':')) {
-      try {
-        config.syncPassword = decrypt(config.syncPassword)
-      } catch {
-        // 解密失败，保持原样
-      }
-    }
-
     return config
   } catch (error) {
     throw new Error(`读取同步配置失败: ${(error as Error).message}`)
@@ -92,15 +36,10 @@ export function loadSyncConfig(): LocalSyncConfig | null {
  */
 export function saveSyncConfig(config: LocalSyncConfig): void {
   try {
-    // 加密密码字段
     const configToSave = { ...config }
-    if (configToSave.password) {
-      configToSave.password = encrypt(configToSave.password)
-    }
-    if (configToSave.syncPassword && configToSave.rememberSyncPassword) {
-      configToSave.syncPassword = encrypt(configToSave.syncPassword)
-    } else {
-      // 不记住密码时删除该字段
+
+    // 不记住同步密码时删除该字段
+    if (!configToSave.rememberSyncPassword) {
       delete configToSave.syncPassword
     }
 

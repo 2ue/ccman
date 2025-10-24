@@ -149,8 +149,13 @@ export async function downloadAndOverwriteConfig(
   // 直接覆盖本地配置（保留本地 API Key）
   try {
     // 读取当前本地配置（用于保留 API Key）
-    const currentCodexConfig = readJSON<ToolConfig>(codexConfigPath)
-    const currentClaudeConfig = readJSON<ToolConfig>(claudeConfigPath)
+    // 如果本地配置不存在（新环境），使用空配置
+    const currentCodexConfig = fs.existsSync(codexConfigPath)
+      ? readJSON<ToolConfig>(codexConfigPath)
+      : { providers: [] }
+    const currentClaudeConfig = fs.existsSync(claudeConfigPath)
+      ? readJSON<ToolConfig>(claudeConfigPath)
+      : { providers: [] }
 
     // 更新 Codex 配置
     if (remoteCodexConfig) {

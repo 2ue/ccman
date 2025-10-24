@@ -35,6 +35,30 @@ program
     throw err
   })
 
+// 自定义未知命令处理
+program.on('command:*', (operands) => {
+  const unknownCommand = operands[0]
+  console.error(chalk.red(`\n❌ 未知命令: ${unknownCommand}\n`))
+
+  // 提供相似命令建议
+  const availableCommands = ['cx', 'cc', 'sync', 'export', 'import']
+  const suggestions = availableCommands.filter(cmd =>
+    cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
+  )
+
+  if (suggestions.length > 0) {
+    console.log(chalk.yellow('💡 你是不是想输入:'))
+    suggestions.forEach(cmd => {
+      console.log(chalk.cyan(`   ccman ${cmd}`))
+    })
+    console.log()
+  }
+
+  console.log(chalk.gray('查看所有可用命令: ') + chalk.cyan('ccman --help'))
+  console.log()
+  process.exit(1)
+})
+
 // 创建 cx (Codex) 子命令
 const cx = program.command('cx').description('管理 Codex 服务商')
 createCodexCommands(cx)

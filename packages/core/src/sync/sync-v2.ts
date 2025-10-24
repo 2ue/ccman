@@ -18,9 +18,8 @@ import {
 import {
   encryptProviders,
   decryptProviders,
-  type EncryptedProvider,
 } from './crypto.js'
-import { mergeProviders, areProvidersEqual } from './merge-advanced.js'
+import { mergeProviders, mergePresets, areProvidersEqual } from './merge-advanced.js'
 import { backupConfig } from './merge.js'
 import { getCcmanDir } from '../paths.js'
 import { readJSON, writeJSON } from '../utils/file.js'
@@ -38,14 +37,7 @@ interface ToolConfig {
   currentProviderId?: string
   providers: Provider[]
   presets?: any[]
-}
-
-/**
- * 加密后的工具配置
- */
-interface EncryptedToolConfig {
-  currentProviderId?: string
-  providers: EncryptedProvider[]
+  // 可能还有其他字段（通过扩展运算符自动保留）
 }
 
 /**
@@ -68,19 +60,19 @@ export async function uploadToCloud(
   const codexConfig = readJSON<ToolConfig>(codexConfigPath)
   const claudeConfig = readJSON<ToolConfig>(claudeConfigPath)
 
-  // 加密 API Key
+  // 加密 API Key（保留配置的所有其他字段）
   const encryptedCodexProviders = encryptProviders(codexConfig.providers, password)
   const encryptedClaudeProviders = encryptProviders(claudeConfig.providers, password)
 
-  // 构建加密后的配置
-  const encryptedCodexConfig: EncryptedToolConfig = {
-    currentProviderId: codexConfig.currentProviderId,
-    providers: encryptedCodexProviders,
+  // 构建加密后的配置（使用扩展运算符保留所有字段）
+  const encryptedCodexConfig = {
+    ...codexConfig,  // 保留所有字段
+    providers: encryptedCodexProviders,  // 只替换 providers（加密后的）
   }
 
-  const encryptedClaudeConfig: EncryptedToolConfig = {
-    currentProviderId: claudeConfig.currentProviderId,
-    providers: encryptedClaudeProviders,
+  const encryptedClaudeConfig = {
+    ...claudeConfig,  // 保留所有字段
+    providers: encryptedClaudeProviders,  // 只替换 providers（加密后的）
   }
 
   // 上传到 WebDAV
@@ -121,10 +113,10 @@ export async function downloadFromCloud(
     ? await downloadFromWebDAV(config, CLAUDE_REMOTE_PATH)
     : null
 
-  const remoteCodexConfig: EncryptedToolConfig | null = codexJson
+  const remoteCodexConfig: ToolConfig | null = codexJson
     ? JSON.parse(codexJson)
     : null
-  const remoteClaudeConfig: EncryptedToolConfig | null = claudeJson
+  const remoteClaudeConfig: ToolConfig | null = claudeJson
     ? JSON.parse(claudeJson)
     : null
 
@@ -160,18 +152,13 @@ export async function downloadFromCloud(
     throw new Error(`备份失败: ${(error as Error).message}`)
   }
 
-  // 直接覆盖本地配置
+  // 直接覆盖本地配置（覆盖策略：云端配置是什么就同步什么）
   try {
-    // 读取当前本地配置（用于保留 presets）
-    const currentCodexConfig = readJSON<ToolConfig>(codexConfigPath)
-    const currentClaudeConfig = readJSON<ToolConfig>(claudeConfigPath)
-
     // 更新 Codex 配置
     if (remoteCodexConfig && decryptedCodexProviders) {
-      const newCodexConfig: ToolConfig = {
-        currentProviderId: remoteCodexConfig.currentProviderId,
-        providers: decryptedCodexProviders,
-        presets: currentCodexConfig.presets, // 保留本地 presets
+      const newCodexConfig = {
+        ...remoteCodexConfig,  // 使用云端配置的所有字段
+        providers: decryptedCodexProviders,  // 只替换 providers（解密后的）
       }
       writeJSON(codexConfigPath, newCodexConfig)
 
@@ -181,10 +168,9 @@ export async function downloadFromCloud(
 
     // 更新 Claude 配置
     if (remoteClaudeConfig && decryptedClaudeProviders) {
-      const newClaudeConfig: ToolConfig = {
-        currentProviderId: remoteClaudeConfig.currentProviderId,
-        providers: decryptedClaudeProviders,
-        presets: currentClaudeConfig.presets, // 保留本地 presets
+      const newClaudeConfig = {
+        ...remoteClaudeConfig,  // 使用云端配置的所有字段
+        providers: decryptedClaudeProviders,  // 只替换 providers（解密后的）
       }
       writeJSON(claudeConfigPath, newClaudeConfig)
 
@@ -243,10 +229,10 @@ export async function mergeSync(
     ? await downloadFromWebDAV(config, CLAUDE_REMOTE_PATH)
     : null
 
-  const remoteCodexConfig: EncryptedToolConfig | null = codexJson
+  const remoteCodexConfig: ToolConfig | null = codexJson
     ? JSON.parse(codexJson)
     : null
-  const remoteClaudeConfig: EncryptedToolConfig | null = claudeJson
+  const remoteClaudeConfig: ToolConfig | null = claudeJson
     ? JSON.parse(claudeJson)
     : null
 
@@ -307,18 +293,22 @@ export async function mergeSync(
     throw new Error(`备份失败: ${(error as Error).message}`)
   }
 
-  // 写入合并后的配置到本地
+  // 合并 presets
+  const mergedCodexPresets = mergePresets(localCodexConfig.presets, remoteCodexConfig?.presets)
+  const mergedClaudePresets = mergePresets(localClaudeConfig.presets, remoteClaudeConfig?.presets)
+
+  // 写入合并后的配置到本地（使用扩展运算符保留所有字段）
   try {
-    const mergedCodexConfig: ToolConfig = {
-      currentProviderId: localCodexConfig.currentProviderId,
-      providers: codexMergeResult.merged,
-      presets: localCodexConfig.presets,
+    const mergedCodexConfig = {
+      ...localCodexConfig,  // 保留本地配置的所有字段
+      providers: codexMergeResult.merged,  // 替换为合并后的 providers
+      presets: mergedCodexPresets,  // 替换为合并后的 presets
     }
 
-    const mergedClaudeConfig: ToolConfig = {
-      currentProviderId: localClaudeConfig.currentProviderId,
-      providers: claudeMergeResult.merged,
-      presets: localClaudeConfig.presets,
+    const mergedClaudeConfig = {
+      ...localClaudeConfig,  // 保留本地配置的所有字段
+      providers: claudeMergeResult.merged,  // 替换为合并后的 providers
+      presets: mergedClaudePresets,  // 替换为合并后的 presets
     }
 
     writeJSON(codexConfigPath, mergedCodexConfig)
@@ -328,18 +318,18 @@ export async function mergeSync(
     applyCurrentProvider('codex', mergedCodexConfig)
     applyCurrentProvider('claude', mergedClaudeConfig)
 
-    // 上传合并后的配置到云端
+    // 上传合并后的配置到云端（使用扩展运算符保留所有字段）
     const encryptedCodexProviders = encryptProviders(codexMergeResult.merged, password)
     const encryptedClaudeProviders = encryptProviders(claudeMergeResult.merged, password)
 
-    const encryptedCodexConfig: EncryptedToolConfig = {
-      currentProviderId: mergedCodexConfig.currentProviderId,
-      providers: encryptedCodexProviders,
+    const encryptedCodexConfig = {
+      ...mergedCodexConfig,  // 保留合并后配置的所有字段
+      providers: encryptedCodexProviders,  // 只替换 providers（加密后的）
     }
 
-    const encryptedClaudeConfig: EncryptedToolConfig = {
-      currentProviderId: mergedClaudeConfig.currentProviderId,
-      providers: encryptedClaudeProviders,
+    const encryptedClaudeConfig = {
+      ...mergedClaudeConfig,  // 保留合并后配置的所有字段
+      providers: encryptedClaudeProviders,  // 只替换 providers（加密后的）
     }
 
     const codexJson = JSON.stringify(encryptedCodexConfig, null, 2)
