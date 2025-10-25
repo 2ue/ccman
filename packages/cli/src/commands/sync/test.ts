@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import { testWebDAVConnection } from '@ccman/core'
-import { loadSyncConfig } from '../../utils/sync-config.js'
+import { ensureConfigExists } from './helpers.js'
 
 export function testCommand(program: Command): void {
   program
@@ -9,12 +9,11 @@ export function testCommand(program: Command): void {
     .description('测试 WebDAV 连接')
     .action(async () => {
       try {
-        // 检查配置
-        const config = loadSyncConfig()
+        // 检查配置（如果不存在会询问是否配置）
+        const config = await ensureConfigExists()
         if (!config) {
-          console.log(chalk.yellow('\n⚠️  未找到 WebDAV 配置\n'))
-          console.log(chalk.blue('💡 请先配置: ccman sync config\n'))
-          process.exit(1)
+          console.log(chalk.gray('\n已取消\n'))
+          return
         }
 
         console.log(chalk.bold('\n🔍 测试 WebDAV 连接...\n'))
@@ -38,11 +37,9 @@ export function testCommand(program: Command): void {
           console.log('  2. 用户名和密码是否正确')
           console.log('  3. 网络连接是否正常')
           console.log()
-          process.exit(1)
         }
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
-        process.exit(1)
       }
     })
 }

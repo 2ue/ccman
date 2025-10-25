@@ -22,8 +22,6 @@ import {
   getCcmanDir,
   getCodexDir,
   getClaudeDir,
-  uploadConfig,
-  downloadAndOverwriteConfig,
   testWebDAVConnection,
   uploadToCloud,
   downloadFromCloud,
@@ -544,28 +542,8 @@ ipcMain.handle('sync:test-connection', async (_event, config: SyncConfig) => {
   }
 })
 
-// 上传配置到 WebDAV
-ipcMain.handle('sync:upload-config', async (_event, config: SyncConfig) => {
-  try {
-    await uploadConfig(config)
-    return { success: true }
-  } catch (error) {
-    throw new Error(`上传配置失败：${(error as Error).message}`)
-  }
-})
-
-// 从 WebDAV 下载配置
-ipcMain.handle('sync:download-config', async (_event, config: SyncConfig) => {
-  try {
-    const backupPaths = await downloadAndOverwriteConfig(config)
-    return backupPaths
-  } catch (error) {
-    throw new Error(`下载配置失败：${(error as Error).message}`)
-  }
-})
-
 // ============================================================================
-// IPC 处理器 - WebDAV 智能同步（V2）
+// IPC 处理器 - WebDAV 智能同步
 // ============================================================================
 
 // 上传到云端（加密 API Key）

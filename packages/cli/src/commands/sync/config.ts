@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import inquirer from 'inquirer'
 import type { WebDAVAuthType } from '@ccman/core'
 import { loadSyncConfig, saveSyncConfig, getSyncConfigPath } from '../../utils/sync-config.js'
+import { testWebDAVConnection } from '@ccman/core'
 
 export function configCommand(program: Command): void {
   program
@@ -132,8 +133,7 @@ export function configCommand(program: Command): void {
             hasChanges = true
           }
         } else if (!existingConfig) {
-          console.log(chalk.red('\n❌ WebDAV 地址不能为空\n'))
-          process.exit(1)
+          throw new Error('WebDAV 地址不能为空')
         }
 
         if (trimmedAnswers.username) {
@@ -142,8 +142,7 @@ export function configCommand(program: Command): void {
             hasChanges = true
           }
         } else if (!existingConfig) {
-          console.log(chalk.red('\n❌ 用户名不能为空\n'))
-          process.exit(1)
+          throw new Error('用户名不能为空')
         }
 
         if (trimmedAnswers.password) {
@@ -153,8 +152,7 @@ export function configCommand(program: Command): void {
             hasChanges = true
           }
         } else if (!existingConfig) {
-          console.log(chalk.red('\n❌ 密码不能为空\n'))
-          process.exit(1)
+          throw new Error('密码不能为空')
         }
 
         if (trimmedAnswers.authType !== existingConfig?.authType) {
@@ -178,8 +176,7 @@ export function configCommand(program: Command): void {
             hasChanges = true
           }
         } else if (!existingConfig) {
-          console.log(chalk.red('\n❌ 同步密码不能为空\n'))
-          process.exit(1)
+          throw new Error('同步密码不能为空')
         }
 
         if (trimmedAnswers.rememberSyncPassword !== existingConfig?.rememberSyncPassword) {
@@ -215,11 +212,30 @@ export function configCommand(program: Command): void {
         ])
 
         if (testNow) {
-          console.log(chalk.blue('\n💡 请运行: ccman sync test\n'))
+          console.log(chalk.bold('\n🔍 测试 WebDAV 连接...\n'))
+
+          const success = await testWebDAVConnection(newConfig)
+
+          if (success) {
+            console.log(chalk.green('✅ 连接成功'))
+            console.log()
+            console.log('  ', chalk.gray('URL:'), newConfig.webdavUrl)
+            console.log('  ', chalk.gray('用户:'), newConfig.username)
+            console.log('  ', chalk.gray('远程目录:'), newConfig.remoteDir || '/')
+            console.log('  ', chalk.gray('认证类型:'), newConfig.authType === 'password' ? 'Basic Auth' : 'Digest Auth')
+            console.log()
+          } else {
+            console.log(chalk.red('❌ 连接失败'))
+            console.log()
+            console.log(chalk.yellow('请检查:'))
+            console.log('  1. WebDAV 服务器地址是否正确')
+            console.log('  2. 用户名和密码是否正确')
+            console.log('  3. 网络连接是否正常')
+            console.log()
+          }
         }
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
-        process.exit(1)
       }
     })
 }

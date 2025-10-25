@@ -54,7 +54,6 @@ export function statusCommand(program: Command): void {
         console.log()
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
-        process.exit(1)
       }
     })
 }

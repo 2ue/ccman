@@ -38,7 +38,7 @@ export async function startSyncMenu(): Promise<void> {
           { name: '📥 从云端下载', value: 'download' },
           { name: '🔄 智能合并', value: 'merge' },
           { name: '📊 查看同步状态', value: 'status' },
-          { name: '⬅️  返回主菜单', value: 'back' },
+          { name: '⬅️  返回上一级', value: 'back' },
         ],
       },
     ])

@@ -66,13 +66,17 @@ export function createWebDAVClient(config: SyncConfig): WebDAVClient {
  * @returns 连接是否成功
  */
 export async function testWebDAVConnection(config: SyncConfig): Promise<boolean> {
+  const remoteDir = normalizePath(config.remoteDir || '/')
+
   try {
     const client = createWebDAVClient(config)
-    // 检查根目录是否可访问（任何 WebDAV 服务器都应该支持）
-    await client.exists('/')
+
+    // 尝试读取远程目录内容（真正测试连接和权限）
+    await client.getDirectoryContents(remoteDir)
     return true
   } catch (error) {
-    console.error('WebDAV 连接失败:', (error as Error).message)
+    // 连接失败就是失败，不需要过度分析原因
+    // 用户会自己检查配置
     return false
   }
 }

@@ -43,9 +43,7 @@ export function saveSyncConfig(config: LocalSyncConfig): void {
       delete configToSave.syncPassword
     }
 
-    // 保存最后同步时间
-    configToSave.lastSync = Date.now()
-
+    // 注意：lastSync 应该只在真正同步成功时更新，不在配置保存时更新
     // 使用 Core 的统一保存函数
     coreSaveSyncConfig(configToSave)
   } catch (error) {

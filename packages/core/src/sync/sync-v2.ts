@@ -10,6 +10,7 @@ import fs from 'fs'
 import path from 'path'
 import type { SyncConfig } from './types.js'
 import type { Provider } from '../tool-manager.js'
+import { updateLastSyncTime } from '../config.js'
 import {
   uploadToWebDAV,
   downloadFromWebDAV,
@@ -81,6 +82,9 @@ export async function uploadToCloud(
 
   await uploadToWebDAV(config, CODEX_REMOTE_PATH, codexJson)
   await uploadToWebDAV(config, CLAUDE_REMOTE_PATH, claudeJson)
+
+  // 更新最后同步时间
+  updateLastSyncTime()
 
   console.log('✅ 配置已上传到云端')
 }
@@ -177,6 +181,9 @@ export async function downloadFromCloud(
       // 自动应用当前 provider 到 Claude 官方配置
       applyCurrentProvider('claude', newClaudeConfig)
     }
+
+    // 更新最后同步时间
+    updateLastSyncTime()
 
     console.log('✅ 配置已从云端下载并应用')
     return backupPaths
@@ -337,6 +344,9 @@ export async function mergeSync(
 
     await uploadToWebDAV(config, CODEX_REMOTE_PATH, codexJson)
     await uploadToWebDAV(config, CLAUDE_REMOTE_PATH, claudeJson)
+
+    // 更新最后同步时间
+    updateLastSyncTime()
 
     console.log('✅ 配置已合并并同步到云端')
 

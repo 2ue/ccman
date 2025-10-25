@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { mergeSync } from '@ccman/core'
-import { loadSyncConfig } from '../../utils/sync-config.js'
+import { ensureConfigExists } from './helpers.js'
 
 export function mergeCommand(program: Command): void {
   program
@@ -10,12 +10,11 @@ export function mergeCommand(program: Command): void {
     .description('智能合并本地和云端配置')
     .action(async () => {
       try {
-        // 检查配置
-        const config = loadSyncConfig()
+        // 检查配置（如果不存在会询问是否配置）
+        const config = await ensureConfigExists()
         if (!config) {
-          console.log(chalk.yellow('\n⚠️  未找到 WebDAV 配置\n'))
-          console.log(chalk.blue('💡 请先配置: ccman sync config\n'))
-          process.exit(1)
+          console.log(chalk.gray('\n已取消\n'))
+          return
         }
 
         // 获取同步密码
@@ -64,7 +63,6 @@ export function mergeCommand(program: Command): void {
         console.log()
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
-        process.exit(1)
       }
     })
 }
