@@ -12,11 +12,12 @@ import BackupSection from './settings/BackupSection'
 interface SettingsPageProps {
   onSuccess: (message: string) => void
   onError: (title: string, message: string) => void
+  onDataChanged?: () => void
 }
 
 type SettingSection = 'sync' | 'backup'
 
-export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) {
+export default function SettingsPage({ onSuccess, onError, onDataChanged }: SettingsPageProps) {
   const [activeSection, setActiveSection] = useState<SettingSection>('sync')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -127,7 +128,7 @@ export default function SettingsPage({ onSuccess, onError }: SettingsPageProps) 
       <main className="flex-1 overflow-y-auto">
         <div className="flex items-start justify-center p-4 md:p-6 lg:p-8">
           <div className="w-full max-w-4xl">
-            {activeSection === 'sync' && <WebDAVSyncSection onSuccess={onSuccess} onError={onError} />}
+            {activeSection === 'sync' && <WebDAVSyncSection onSuccess={onSuccess} onError={onError} onDataChanged={onDataChanged} />}
             {activeSection === 'backup' && <BackupSection onSuccess={onSuccess} onError={onError} />}
           </div>
         </div>

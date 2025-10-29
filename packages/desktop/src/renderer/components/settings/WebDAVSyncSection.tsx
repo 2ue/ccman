@@ -10,9 +10,10 @@ import { BUTTON_WITH_ICON } from '../../styles/button'
 interface WebDAVSyncSectionProps {
   onSuccess: (message: string) => void
   onError: (title: string, message: string) => void
+  onDataChanged?: () => void
 }
 
-export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSectionProps) {
+export default function WebDAVSyncSection({ onSuccess, onError, onDataChanged }: WebDAVSyncSectionProps) {
   const [webdavUrl, setWebdavUrl] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -140,6 +141,7 @@ export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSect
     try {
       const backupPaths = await window.electronAPI.sync.downloadFromCloud(config, syncPassword)
       onSuccess(`✅ 配置已从云端下载并应用\n备份: ${backupPaths.join(', ')}`)
+      onDataChanged?.()
     } catch (error) {
       onError('下载失败', (error as Error).message)
     } finally {
@@ -168,6 +170,7 @@ export default function WebDAVSyncSection({ onSuccess, onError }: WebDAVSyncSect
         onSuccess('ℹ️ 配置已同步，无需操作')
       } else {
         onSuccess(`✅ 配置已智能合并并同步\n备份: ${result.backupPaths.join(', ')}`)
+        onDataChanged?.()
       }
     } catch (error) {
       onError('合并失败', (error as Error).message)

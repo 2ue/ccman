@@ -344,6 +344,7 @@ export default function App() {
               type: 'error',
             })
           }}
+          onDataChanged={loadData}
         />
       )}
 
