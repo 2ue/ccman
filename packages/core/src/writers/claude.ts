@@ -79,10 +79,15 @@ export function writeClaudeConfig(provider: Provider): void {
     baseUrl: provider.baseUrl,
   }) as ClaudeSettings
 
-  // 3. 深度合并（用户配置优先）
+  // 3. 深度合并：默认配置为基础，用户配置覆盖
   const mergedConfig = deepMerge<ClaudeSettings>(defaultConfig, userConfig)
 
-  // 4. 写入配置文件
+  // 4. 强制更新认证字段为最新值
+  mergedConfig.env = mergedConfig.env || {}
+  mergedConfig.env.ANTHROPIC_AUTH_TOKEN = provider.apiKey
+  mergedConfig.env.ANTHROPIC_BASE_URL = provider.baseUrl
+
+  // 5. 写入配置文件
   fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2), { mode: 0o600 })
 }
 
