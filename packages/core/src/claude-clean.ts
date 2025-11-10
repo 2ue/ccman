@@ -155,11 +155,8 @@ export function analyzeClaudeJson(): AnalyzeResult {
   // 按历史记录数量降序排序
   projectHistory.sort((a, b) => b.count - a.count)
 
-  // 估算缓存大小
-  const cacheSize =
-    (config.cachedChangelog?.length || 0) +
-    JSON.stringify(config.cachedDynamicConfigs || {}).length +
-    JSON.stringify(config.cachedStatsigGates || {}).length
+  // 估算缓存大小（仅计算 cachedChangelog）
+  const cacheSize = config.cachedChangelog?.length || 0
 
   // 估算可节省空间
   const historySize = fileSize - cacheSize - 20000 // 减去配置和状态数据
@@ -243,11 +240,9 @@ function applyCleanOptions(config: any, options: CleanOptions) {
     }
   }
 
-  // 清理缓存
+  // 清理缓存（仅清理 cachedChangelog）
   if (options.cleanCache) {
     delete config.cachedChangelog
-    delete config.cachedDynamicConfigs
-    delete config.cachedStatsigGates
     config.changelogLastFetched = 0
   }
 
@@ -365,7 +360,7 @@ export function getProjectDetails(): ProjectDetail[] {
 }
 
 /**
- * 获取所有缓存详情
+ * 获取所有缓存详情（仅包含 cachedChangelog）
  */
 export function getCacheDetails(): CacheDetail[] {
   const filePath = getClaudeJsonPath()
@@ -379,7 +374,7 @@ export function getCacheDetails(): CacheDetail[] {
 
   const caches: CacheDetail[] = []
 
-  // 缓存更新日志
+  // 仅返回更新日志缓存
   if (config.cachedChangelog) {
     caches.push({
       key: 'cachedChangelog',
@@ -390,44 +385,11 @@ export function getCacheDetails(): CacheDetail[] {
     })
   }
 
-  // 动态配置
-  if (config.cachedDynamicConfigs) {
-    const size = JSON.stringify(config.cachedDynamicConfigs).length
-    caches.push({
-      key: 'cachedDynamicConfigs',
-      name: '动态配置',
-      size,
-      sizeFormatted: formatBytes(size),
-    })
-  }
-
-  // 特性开关
-  if (config.cachedStatsigGates) {
-    const size = JSON.stringify(config.cachedStatsigGates).length
-    caches.push({
-      key: 'cachedStatsigGates',
-      name: '特性开关',
-      size,
-      sizeFormatted: formatBytes(size),
-    })
-  }
-
-  // 提示历史
-  if (config.tipsHistory) {
-    const size = JSON.stringify(config.tipsHistory).length
-    caches.push({
-      key: 'tipsHistory',
-      name: '提示历史',
-      size,
-      sizeFormatted: formatBytes(size),
-    })
-  }
-
   return caches
 }
 
 /**
- * 删除单个项目的历史记录
+ * 删除单个项目（删除整个项目条目，包括历史记录和配置）
  */
 export function deleteProjectHistory(projectPath: string): void {
   const filePath = getClaudeJsonPath()
@@ -443,9 +405,9 @@ export function deleteProjectHistory(projectPath: string): void {
   const content = fs.readFileSync(filePath, 'utf-8')
   const config = JSON.parse(content)
 
-  // 删除指定项目的历史
+  // 删除指定项目条目（从 config.projects 中删除该字段）
   if (config.projects && config.projects[projectPath]) {
-    config.projects[projectPath].history = []
+    delete config.projects[projectPath]
   } else {
     throw new Error(`项目不存在: ${projectPath}`)
   }
@@ -455,13 +417,18 @@ export function deleteProjectHistory(projectPath: string): void {
 }
 
 /**
- * 删除单个缓存项
+ * 删除单个缓存项（仅支持 cachedChangelog）
  */
 export function deleteCacheItem(cacheKey: string): void {
   const filePath = getClaudeJsonPath()
 
   if (!fs.existsSync(filePath)) {
     throw new Error('~/.claude.json 文件不存在')
+  }
+
+  // 只支持删除 cachedChangelog
+  if (cacheKey !== 'cachedChangelog') {
+    throw new Error(`不支持删除此缓存项: ${cacheKey}`)
   }
 
   // 备份文件
@@ -471,24 +438,9 @@ export function deleteCacheItem(cacheKey: string): void {
   const content = fs.readFileSync(filePath, 'utf-8')
   const config = JSON.parse(content)
 
-  // 删除指定缓存
-  switch (cacheKey) {
-    case 'cachedChangelog':
-      delete config.cachedChangelog
-      config.changelogLastFetched = 0
-      break
-    case 'cachedDynamicConfigs':
-      delete config.cachedDynamicConfigs
-      break
-    case 'cachedStatsigGates':
-      delete config.cachedStatsigGates
-      break
-    case 'tipsHistory':
-      config.tipsHistory = {}
-      break
-    default:
-      throw new Error(`未知的缓存项: ${cacheKey}`)
-  }
+  // 删除更新日志缓存
+  delete config.cachedChangelog
+  config.changelogLastFetched = 0
 
   // 原子写入
   saveJsonAtomic(filePath, config)

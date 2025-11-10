@@ -84,7 +84,9 @@ export default function CleanHeader({ fileSize, onPresetClean, onRefresh, loadin
       {/* 提示信息 */}
       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-xs text-blue-800">
-          💡 提示：清理操作会自动创建备份文件，您也可以使用下方表格中的删除按钮进行精确清理。
+          💡 <span className="font-semibold">安全说明</span>：此工具仅清理 ~/.claude.json 中的对话历史和缓存数据，
+          <span className="font-semibold text-blue-900">不会影响您磁盘上的任何项目代码</span>。
+          所有操作会自动创建备份文件，可随时恢复。
         </p>
       </div>
     </div>

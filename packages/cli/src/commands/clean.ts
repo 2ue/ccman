@@ -47,7 +47,7 @@ function displayAnalysis(): void {
     console.log(`  ${chalk.red('激进清理')} (清空历史):  ${chalk.bold(formatBytes(analysis.estimatedSavings.aggressive))}`)
     console.log()
 
-    console.log(chalk.blue(`💡 执行清理: ccman clean\n`))
+    console.log(chalk.blue(`💡 执行清理: ccman cc clean\n`))
   } catch (error) {
     console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
     process.exit(1)

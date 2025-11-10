@@ -331,7 +331,7 @@ function shouldCleanProject(path: string, whitelist?: string[]): boolean {
 
 ### 分析命令
 ```bash
-ccman clean:analyze ~/.claude.json
+ccman cc clean:analyze
 ```
 
 输出：
@@ -358,21 +358,21 @@ ccman clean:analyze ~/.claude.json
 ### 清理命令
 ```bash
 # 交互式清理
-ccman clean ~/.claude.json
+ccman cc clean
 
 # 保守清理（默认）
-ccman clean ~/.claude.json --preset conservative
+ccman cc clean --preset conservative
 
 # 中等清理
-ccman clean ~/.claude.json --preset moderate
+ccman cc clean --preset moderate
 
 # 激进清理
-ccman clean ~/.claude.json --preset aggressive
+ccman cc clean --preset aggressive
 
 # 自定义清理
-ccman clean ~/.claude.json \
-  --keep-history 5 \
-  --clean-cache \
+ccman cc clean \
+  --keep 5 \
+  --cache \
   --projects "antool-mono,star-man"
 ```
 
