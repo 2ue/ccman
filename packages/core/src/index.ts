@@ -70,3 +70,13 @@ export {
   type ExportResult,
   type ImportResult,
 } from './export.js'
+
+// Claude Clean (~/.claude.json 清理功能)
+export {
+  analyzeClaudeJson,
+  cleanClaudeJson,
+  CleanPresets,
+  type CleanOptions,
+  type CleanResult,
+  type AnalyzeResult,
+} from './claude-clean.js'

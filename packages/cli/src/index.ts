@@ -8,6 +8,7 @@ import { createClaudeCommands } from './commands/claude/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
+import { cleanCommand, cleanAnalyzeCommand } from './commands/clean.js'
 import { startMainMenu, startClaudeMenu, startCodexMenu } from './interactive.js'
 import { getCcmanDir, getCodexDir, getClaudeDir, VERSION } from '@ccman/core'
 
@@ -41,7 +42,7 @@ program.on('command:*', (operands) => {
   console.error(chalk.red(`\n❌ 未知命令: ${unknownCommand}\n`))
 
   // 提供相似命令建议
-  const availableCommands = ['cx', 'cc', 'sync', 'export', 'import']
+  const availableCommands = ['cx', 'cc', 'sync', 'export', 'import', 'clean', 'clean:analyze']
   const suggestions = availableCommands.filter(cmd =>
     cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
   )
@@ -92,6 +93,10 @@ sync.action(async () => {
 // 导入导出命令（顶层命令）
 exportCommand(program)
 importCommand(program)
+
+// 清理命令（顶层命令）
+cleanAnalyzeCommand(program)
+cleanCommand(program)
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式
 ;(async () => {
