@@ -293,3 +293,203 @@ export const CleanPresets = {
     cleanStats: true,
   }),
 }
+
+/**
+ * 项目详情
+ */
+export interface ProjectDetail {
+  /** 项目路径 */
+  path: string
+  /** 历史记录数量 */
+  historyCount: number
+  /** 估计大小（字节） */
+  estimatedSize: number
+  /** 最后一条消息（可选） */
+  lastMessage?: string
+}
+
+/**
+ * 缓存详情
+ */
+export interface CacheDetail {
+  /** 缓存键名 */
+  key: string
+  /** 友好名称 */
+  name: string
+  /** 大小（字节） */
+  size: number
+  /** 大小（可读格式） */
+  sizeFormatted: string
+  /** 最后更新时间（可选） */
+  lastUpdated?: number
+}
+
+/**
+ * 获取所有项目详情
+ */
+export function getProjectDetails(): ProjectDetail[] {
+  const filePath = getClaudeJsonPath()
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error('~/.claude.json 文件不存在')
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const config = JSON.parse(content)
+  const projects = config.projects || {}
+
+  const details: ProjectDetail[] = []
+
+  for (const [projectPath, projectData] of Object.entries<any>(projects)) {
+    const history = projectData.history || []
+    const historyCount = history.length
+
+    // 估算大小（JSON字符串长度）
+    const estimatedSize = JSON.stringify(projectData).length
+
+    // 获取最后一条消息
+    const lastMessage = history.length > 0 ? history[history.length - 1]?.display : undefined
+
+    details.push({
+      path: projectPath,
+      historyCount,
+      estimatedSize,
+      lastMessage,
+    })
+  }
+
+  // 按大小降序排序
+  details.sort((a, b) => b.estimatedSize - a.estimatedSize)
+
+  return details
+}
+
+/**
+ * 获取所有缓存详情
+ */
+export function getCacheDetails(): CacheDetail[] {
+  const filePath = getClaudeJsonPath()
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error('~/.claude.json 文件不存在')
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const config = JSON.parse(content)
+
+  const caches: CacheDetail[] = []
+
+  // 缓存更新日志
+  if (config.cachedChangelog) {
+    caches.push({
+      key: 'cachedChangelog',
+      name: '更新日志',
+      size: config.cachedChangelog.length,
+      sizeFormatted: formatBytes(config.cachedChangelog.length),
+      lastUpdated: config.changelogLastFetched,
+    })
+  }
+
+  // 动态配置
+  if (config.cachedDynamicConfigs) {
+    const size = JSON.stringify(config.cachedDynamicConfigs).length
+    caches.push({
+      key: 'cachedDynamicConfigs',
+      name: '动态配置',
+      size,
+      sizeFormatted: formatBytes(size),
+    })
+  }
+
+  // 特性开关
+  if (config.cachedStatsigGates) {
+    const size = JSON.stringify(config.cachedStatsigGates).length
+    caches.push({
+      key: 'cachedStatsigGates',
+      name: '特性开关',
+      size,
+      sizeFormatted: formatBytes(size),
+    })
+  }
+
+  // 提示历史
+  if (config.tipsHistory) {
+    const size = JSON.stringify(config.tipsHistory).length
+    caches.push({
+      key: 'tipsHistory',
+      name: '提示历史',
+      size,
+      sizeFormatted: formatBytes(size),
+    })
+  }
+
+  return caches
+}
+
+/**
+ * 删除单个项目的历史记录
+ */
+export function deleteProjectHistory(projectPath: string): void {
+  const filePath = getClaudeJsonPath()
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error('~/.claude.json 文件不存在')
+  }
+
+  // 备份文件
+  backupFile(filePath)
+
+  // 读取配置
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const config = JSON.parse(content)
+
+  // 删除指定项目的历史
+  if (config.projects && config.projects[projectPath]) {
+    config.projects[projectPath].history = []
+  } else {
+    throw new Error(`项目不存在: ${projectPath}`)
+  }
+
+  // 原子写入
+  saveJsonAtomic(filePath, config)
+}
+
+/**
+ * 删除单个缓存项
+ */
+export function deleteCacheItem(cacheKey: string): void {
+  const filePath = getClaudeJsonPath()
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error('~/.claude.json 文件不存在')
+  }
+
+  // 备份文件
+  backupFile(filePath)
+
+  // 读取配置
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const config = JSON.parse(content)
+
+  // 删除指定缓存
+  switch (cacheKey) {
+    case 'cachedChangelog':
+      delete config.cachedChangelog
+      config.changelogLastFetched = 0
+      break
+    case 'cachedDynamicConfigs':
+      delete config.cachedDynamicConfigs
+      break
+    case 'cachedStatsigGates':
+      delete config.cachedStatsigGates
+      break
+    case 'tipsHistory':
+      config.tipsHistory = {}
+      break
+    default:
+      throw new Error(`未知的缓存项: ${cacheKey}`)
+  }
+
+  // 原子写入
+  saveJsonAtomic(filePath, config)
+}

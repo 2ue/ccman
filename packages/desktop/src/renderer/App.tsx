@@ -16,6 +16,7 @@ import HomePage from './components/HomePage'
 import ClaudeCodePage from './components/ClaudeCodePage'
 import CodexPage from './components/CodexPage'
 import ServiceProviderConfigPage from './components/ServiceProviderConfigPage'
+import CleanPage from './components/CleanPage'
 import SettingsPage from './components/SettingsPage'
 import AboutPage from './components/AboutPage'
 import AddProviderModal from './components/AddProviderModal'
@@ -327,6 +328,22 @@ export default function App() {
           }}
           onSuccess={(message) => {
             setToast({ show: true, message })
+          }}
+        />
+      )}
+
+      {activeTab === 'clean' && (
+        <CleanPage
+          onSuccess={(message) => {
+            setToast({ show: true, message })
+          }}
+          onError={(title, message) => {
+            setAlertDialog({
+              show: true,
+              title,
+              message,
+              type: 'error',
+            })
           }}
         />
       )}

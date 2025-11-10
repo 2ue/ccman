@@ -19,6 +19,10 @@ import type {
   AddPresetInput,
   EditPresetInput,
   SyncConfig,
+  AnalyzeResult,
+  ProjectDetail,
+  CacheDetail,
+  CleanResult,
 } from '@ccman/core'
 
 // ============================================================================
@@ -186,6 +190,28 @@ const importExportAPI: ImportExportAPI = {
 }
 
 // ============================================================================
+// Clean API (~/.claude.json 清理)
+// ============================================================================
+
+export interface CleanAPI {
+  analyze: () => Promise<AnalyzeResult>
+  getProjects: () => Promise<ProjectDetail[]>
+  getCaches: () => Promise<CacheDetail[]>
+  deleteProject: (projectPath: string) => Promise<void>
+  deleteCache: (cacheKey: string) => Promise<void>
+  executePreset: (preset: 'conservative' | 'moderate' | 'aggressive') => Promise<CleanResult>
+}
+
+const cleanAPI: CleanAPI = {
+  analyze: () => ipcRenderer.invoke('clean:analyze'),
+  getProjects: () => ipcRenderer.invoke('clean:get-projects'),
+  getCaches: () => ipcRenderer.invoke('clean:get-caches'),
+  deleteProject: (projectPath) => ipcRenderer.invoke('clean:delete-project', projectPath),
+  deleteCache: (cacheKey) => ipcRenderer.invoke('clean:delete-cache', cacheKey),
+  executePreset: (preset) => ipcRenderer.invoke('clean:execute-preset', preset),
+}
+
+// ============================================================================
 // 暴露 API 给渲染进程
 // ============================================================================
 
@@ -196,6 +222,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   system: systemAPI,
   sync: syncAPI,
   importExport: importExportAPI,
+  clean: cleanAPI,
 })
 
 // ============================================================================
@@ -209,6 +236,7 @@ export interface ElectronAPI {
   system: SystemAPI
   sync: SyncAPI
   importExport: ImportExportAPI
+  clean: CleanAPI
 }
 
 declare global {

@@ -76,7 +76,13 @@ export {
   analyzeClaudeJson,
   cleanClaudeJson,
   CleanPresets,
+  getProjectDetails,
+  getCacheDetails,
+  deleteProjectHistory,
+  deleteCacheItem,
   type CleanOptions,
   type CleanResult,
   type AnalyzeResult,
+  type ProjectDetail,
+  type CacheDetail,
 } from './claude-clean.js'

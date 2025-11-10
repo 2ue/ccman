@@ -31,6 +31,13 @@ import {
   exportConfig,
   importConfig,
   validateImportDir,
+  analyzeClaudeJson,
+  getProjectDetails,
+  getCacheDetails,
+  deleteProjectHistory,
+  deleteCacheItem,
+  cleanClaudeJson,
+  CleanPresets,
 } from '@ccman/core'
 import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
 
@@ -670,6 +677,65 @@ ipcMain.handle('importexport:validate', async (_event, sourceDir: string) => {
     }
   } catch (error) {
     throw new Error(`验证目录失败：${(error as Error).message}`)
+  }
+})
+
+// ============================================================================
+// IPC 处理器 - Clean (~/.claude.json 清理)
+// ============================================================================
+
+// 分析 ~/.claude.json 文件
+ipcMain.handle('clean:analyze', async () => {
+  try {
+    return analyzeClaudeJson()
+  } catch (error) {
+    throw new Error(`分析失败：${(error as Error).message}`)
+  }
+})
+
+// 获取所有项目详情
+ipcMain.handle('clean:get-projects', async () => {
+  try {
+    return getProjectDetails()
+  } catch (error) {
+    throw new Error(`获取项目列表失败：${(error as Error).message}`)
+  }
+})
+
+// 获取所有缓存详情
+ipcMain.handle('clean:get-caches', async () => {
+  try {
+    return getCacheDetails()
+  } catch (error) {
+    throw new Error(`获取缓存列表失败：${(error as Error).message}`)
+  }
+})
+
+// 删除单个项目的历史记录
+ipcMain.handle('clean:delete-project', async (_event, projectPath: string) => {
+  try {
+    deleteProjectHistory(projectPath)
+  } catch (error) {
+    throw new Error(`删除项目历史失败：${(error as Error).message}`)
+  }
+})
+
+// 删除单个缓存项
+ipcMain.handle('clean:delete-cache', async (_event, cacheKey: string) => {
+  try {
+    deleteCacheItem(cacheKey)
+  } catch (error) {
+    throw new Error(`删除缓存失败：${(error as Error).message}`)
+  }
+})
+
+// 执行预设清理
+ipcMain.handle('clean:execute-preset', async (_event, preset: 'conservative' | 'moderate' | 'aggressive') => {
+  try {
+    const options = CleanPresets[preset]()
+    return cleanClaudeJson(options)
+  } catch (error) {
+    throw new Error(`清理失败：${(error as Error).message}`)
   }
 })
 
