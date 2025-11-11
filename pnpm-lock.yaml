@@ -57,6 +57,7 @@ importers:
       '@types/react-dom': ^18.2.0
       '@vitejs/plugin-react': ^4.2.0
       autoprefixer: ^10.4.0
+      cross-env: ^10.1.0
       electron: ^28.0.0
       electron-builder: ^24.0.0
       lucide-react: ^0.314.0
@@ -77,6 +78,7 @@ importers:
       '@types/react-dom': 18.3.7_@types+react@18.3.26
       '@vitejs/plugin-react': 4.7.0_vite@5.4.20
       autoprefixer: 10.4.21_postcss@8.5.6
+      cross-env: 10.1.0
       electron: 28.3.3
       electron-builder: 24.13.3
       postcss: 8.5.6
@@ -352,6 +354,10 @@ packages:
       plist: 3.1.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /@epic-web/invariant/1.0.0:
+    resolution: {integrity: sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==}
     dev: true
 
   /@esbuild/aix-ppc64/0.21.5:
@@ -2092,6 +2098,15 @@ packages:
       buffer: 5.7.1
     dev: true
     optional: true
+
+  /cross-env/10.1.0:
+    resolution: {integrity: sha512-GsYosgnACZTADcmEyJctkJIoqAhHjttw7RsFrVoJNXbsWWqaq6Ym+7kZjq6mS45O0jij6vtiReppKQEtqWy6Dw==}
+    engines: {node: '>=20'}
+    hasBin: true
+    dependencies:
+      '@epic-web/invariant': 1.0.0
+      cross-spawn: 7.0.6
+    dev: true
 
   /cross-spawn/7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}

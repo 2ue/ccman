@@ -4,7 +4,7 @@
   "description": "ccman Desktop GUI application",
   "main": "./dist/main/index.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "NODE_ENV=development vite",
     "build": "tsc && vite build",
     "build:electron": "electron-builder",
     "clean": "rm -rf dist"
@@ -27,6 +27,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.0",
+    "cross-env": "^10.1.0",
     "electron": "^28.0.0",
     "electron-builder": "^24.0.0",
     "postcss": "^8.4.0",
