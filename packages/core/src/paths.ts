@@ -4,29 +4,23 @@ import * as path from 'path'
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 
-let ccmanDir: string
-let codexDir: string
-let claudeDir: string
-
-// 根据环境自动切换路径
+// 根据环境确定根目录（避免重复判断）
+let rootDir: string
 if (isTest) {
   // 测试环境：使用临时目录 + 进程 ID（每个测试进程独立）
-  const testRoot = path.join(os.tmpdir(), `ccman-test-${process.pid}`)
-  ccmanDir = path.join(testRoot, '.ccman')
-  codexDir = path.join(testRoot, '.codex')
-  claudeDir = path.join(testRoot, '.claude')
+  rootDir = path.join(os.tmpdir(), `ccman-test-${process.pid}`)
 } else if (isDev) {
   // 开发环境：使用临时目录（共享）
-  const devRoot = path.join(os.tmpdir(), 'ccman-dev')
-  ccmanDir = path.join(devRoot, '.ccman')
-  codexDir = path.join(devRoot, '.codex')
-  claudeDir = path.join(devRoot, '.claude')
+  rootDir = path.join(os.tmpdir(), 'ccman-dev')
 } else {
   // 生产环境：使用用户主目录
-  ccmanDir = path.join(os.homedir(), '.ccman')
-  codexDir = path.join(os.homedir(), '.codex')
-  claudeDir = path.join(os.homedir(), '.claude')
+  rootDir = os.homedir()
 }
+
+// 所有路径基于 rootDir（统一逻辑）
+let ccmanDir: string = path.join(rootDir, '.ccman')
+let codexDir: string = path.join(rootDir, '.codex')
+let claudeDir: string = path.join(rootDir, '.claude')
 
 /**
  * 获取 ccman 配置目录
@@ -89,6 +83,14 @@ export function getCodexAuthPath(): string {
  */
 export function getClaudeConfigPath(): string {
   return path.join(claudeDir, 'settings.json')
+}
+
+/**
+ * 获取 Claude Code 历史记录文件路径 (~/.claude.json)
+ * 注意：这是一个独立文件，不在 ~/.claude/ 目录下
+ */
+export function getClaudeJsonPath(): string {
+  return path.join(rootDir, '.claude.json')
 }
 
 /**
