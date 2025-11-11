@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import { printLogo } from './utils/logo.js'
 import { createCodexCommands } from './commands/codex/index.js'
 import { createClaudeCommands } from './commands/claude/index.js'
+import { createMCPCommands } from './commands/mcp/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
@@ -41,7 +42,7 @@ program.on('command:*', (operands) => {
   console.error(chalk.red(`\n❌ 未知命令: ${unknownCommand}\n`))
 
   // 提供相似命令建议
-  const availableCommands = ['cx', 'cc', 'sync', 'export', 'import']
+  const availableCommands = ['cx', 'cc', 'mcp', 'sync', 'export', 'import']
   const suggestions = availableCommands.filter(cmd =>
     cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
   )
@@ -77,6 +78,15 @@ createClaudeCommands(cc)
 cc.action(async () => {
   printLogo()
   await startClaudeMenu()
+})
+
+// 创建 mcp 子命令
+const mcp = program.command('mcp').description('管理 MCP 服务器')
+createMCPCommands(mcp)
+
+// mcp 不带参数时显示帮助
+mcp.action(() => {
+  mcp.help()
 })
 
 // 创建 sync 子命令
