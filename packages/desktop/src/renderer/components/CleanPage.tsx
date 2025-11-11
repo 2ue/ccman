@@ -24,7 +24,7 @@ function formatBytes(bytes: number): string {
 interface ConfirmState {
   show: boolean
   title: string
-  message: string
+  message: string | React.ReactNode
   confirmText?: string
   danger?: boolean
   onConfirm: () => void

@@ -4,8 +4,7 @@
  */
 
 import * as fs from 'fs'
-import * as os from 'os'
-import * as path from 'path'
+import { getClaudeJsonPath } from './paths.js'
 
 /**
  * 清理选项
@@ -73,13 +72,6 @@ export interface AnalyzeResult {
     moderate: number // 保留5条
     aggressive: number // 清空历史
   }
-}
-
-/**
- * 获取 ~/.claude.json 路径
- */
-function getClaudeJsonPath(): string {
-  return path.join(os.homedir(), '.claude.json')
 }
 
 /**
