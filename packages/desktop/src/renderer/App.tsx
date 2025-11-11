@@ -15,6 +15,7 @@ import TabNavigation, { TabType } from './components/TabNavigation'
 import HomePage from './components/HomePage'
 import ClaudeCodePage from './components/ClaudeCodePage'
 import CodexPage from './components/CodexPage'
+import MCPManagerPage from './components/MCPManagerPage'
 import ServiceProviderConfigPage from './components/ServiceProviderConfigPage'
 import CleanPage from './components/CleanPage'
 import SettingsPage from './components/SettingsPage'
@@ -320,6 +321,8 @@ export default function App() {
           onClone={handleCodexClone}
         />
       )}
+
+      {activeTab === 'mcp' && <MCPManagerPage />}
 
       {activeTab === 'service-providers' && (
         <ServiceProviderConfigPage

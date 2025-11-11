@@ -1,4 +1,12 @@
-export type TabType = 'home' | 'claude' | 'codex' | 'service-providers' | 'clean' | 'settings' | 'about'
+export type TabType =
+  | 'home'
+  | 'claude'
+  | 'codex'
+  | 'mcp'
+  | 'service-providers'
+  | 'clean'
+  | 'settings'
+  | 'about'
 
 interface TabNavigationProps {
   activeTab: TabType
@@ -10,6 +18,7 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
     { key: 'home', label: 'CCMAN' },
     { key: 'claude', label: 'Claude Code' },
     { key: 'codex', label: 'Codex' },
+    { key: 'mcp', label: 'MCP 服务器' },
     { key: 'service-providers', label: '预置服务商' },
     { key: 'clean', label: '清理工具' },
     { key: 'settings', label: '设置' },

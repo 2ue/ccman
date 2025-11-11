@@ -23,6 +23,8 @@ import type {
   ProjectDetail,
   CacheDetail,
   CleanResult,
+  MCPServer,
+  AppType,
 } from '@ccman/core'
 
 // ============================================================================
@@ -108,7 +110,7 @@ const claudeAPI: ClaudeAPI = {
 
 export interface ConfigAPI {
   readConfigFiles: (
-    tool: 'codex' | 'claude'
+    tool: 'codex' | 'claude' | 'mcp'
   ) => Promise<Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>>
   writeConfigFiles: (
     files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
@@ -212,6 +214,32 @@ const cleanAPI: CleanAPI = {
 }
 
 // ============================================================================
+// MCP API
+// ============================================================================
+
+export interface MCPAPI {
+  addServer: (input: AddProviderInput) => Promise<Provider>
+  listServers: () => Promise<MCPServer[]>
+  getServer: (id: string) => Promise<Provider | undefined>
+  editServer: (id: string, updates: EditProviderInput) => Promise<Provider>
+  cloneServer: (sourceId: string, newName: string) => Promise<Provider>
+  removeServer: (id: string) => Promise<{ success: boolean }>
+  toggleApp: (mcpId: string, app: AppType, enabled: boolean) => Promise<{ success: boolean }>
+  getAppStatus: (mcpId: string) => Promise<Record<AppType, boolean>>
+}
+
+const mcpAPI: MCPAPI = {
+  addServer: (input) => ipcRenderer.invoke('mcp:add-server', input),
+  listServers: () => ipcRenderer.invoke('mcp:list-servers'),
+  getServer: (id) => ipcRenderer.invoke('mcp:get-server', id),
+  editServer: (id, updates) => ipcRenderer.invoke('mcp:edit-server', id, updates),
+  cloneServer: (sourceId, newName) => ipcRenderer.invoke('mcp:clone-server', sourceId, newName),
+  removeServer: (id) => ipcRenderer.invoke('mcp:remove-server', id),
+  toggleApp: (mcpId, app, enabled) => ipcRenderer.invoke('mcp:toggle-app', mcpId, app, enabled),
+  getAppStatus: (mcpId) => ipcRenderer.invoke('mcp:get-app-status', mcpId),
+}
+
+// ============================================================================
 // 暴露 API 给渲染进程
 // ============================================================================
 
@@ -223,6 +251,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sync: syncAPI,
   importExport: importExportAPI,
   clean: cleanAPI,
+  mcp: mcpAPI,
 })
 
 // ============================================================================
@@ -237,6 +266,7 @@ export interface ElectronAPI {
   sync: SyncAPI
   importExport: ImportExportAPI
   clean: CleanAPI
+  mcp: MCPAPI
 }
 
 declare global {

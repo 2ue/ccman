@@ -11,10 +11,10 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import path from 'path'
 import fs from 'fs'
-import os from 'os'
 import {
   createCodexManager,
   createClaudeManager,
+  createMCPManager,
   migrateConfig,
   getClaudeConfigPath,
   getCodexConfigPath,
@@ -38,15 +38,26 @@ import {
   deleteCacheItem,
   cleanClaudeJson,
   CleanPresets,
+  loadMCPConfig,
+  toggleMCPForApp,
+  getMCPAppStatus,
+  getMCPConfigPath,
 } from '@ccman/core'
-import type { AddProviderInput, EditProviderInput, AddPresetInput, EditPresetInput, SyncConfig } from '@ccman/core'
+import type {
+  AddProviderInput,
+  EditProviderInput,
+  AddPresetInput,
+  EditPresetInput,
+  SyncConfig,
+  AppType,
+} from '@ccman/core'
 
 // 设置日志文件（生产模式）
 const isDev = process.env.NODE_ENV === 'development'
 let logStream: fs.WriteStream | null = null
 
 if (!isDev) {
-  const logDir = path.join(os.homedir(), '.ccman', 'logs')
+  const logDir = path.join(getCcmanDir(), 'logs')
   fs.mkdirSync(logDir, { recursive: true })
   const logFile = path.join(logDir, `desktop-${Date.now()}.log`)
   logStream = fs.createWriteStream(logFile, { flags: 'a' })
@@ -333,7 +344,7 @@ ipcMain.handle('claude:remove-preset', async (_event, name: string) => {
 // ============================================================================
 
 // 读取配置文件
-ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude') => {
+ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'mcp') => {
   try {
     if (tool === 'claude') {
       const path = getClaudeConfigPath()
@@ -354,6 +365,30 @@ ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude') => 
       return [
         {
           name: 'settings.json',
+          path,
+          content,
+          language: 'json' as const,
+        },
+      ]
+    } else if (tool === 'mcp') {
+      const path = getMCPConfigPath()
+
+      // 检查文件是否存在
+      if (!fs.existsSync(path)) {
+        return [
+          {
+            name: 'mcp.json',
+            path,
+            content: '# MCP 配置文件不存在\n# 请先使用 CLI 添加 MCP 服务器：ccman mcp add',
+            language: 'json' as const,
+          },
+        ]
+      }
+
+      const content = fs.readFileSync(path, 'utf-8')
+      return [
+        {
+          name: 'mcp.json',
           path,
           content,
           language: 'json' as const,
@@ -736,6 +771,90 @@ ipcMain.handle('clean:execute-preset', async (_event, preset: 'conservative' | '
     return cleanClaudeJson(options)
   } catch (error) {
     throw new Error(`清理失败：${(error as Error).message}`)
+  }
+})
+
+// ============================================================================
+// IPC 处理器 - MCP 服务器管理
+// ============================================================================
+
+// 列出所有 MCP 服务器
+ipcMain.handle('mcp:list-servers', async () => {
+  try {
+    const config = loadMCPConfig()
+    return config.servers
+  } catch (error) {
+    throw new Error(`加载 MCP 列表失败：${(error as Error).message}`)
+  }
+})
+
+// 切换 MCP 在某个应用上的启用状态
+ipcMain.handle('mcp:toggle-app', async (_event, mcpId: string, app: AppType, enabled: boolean) => {
+  try {
+    toggleMCPForApp(mcpId, app, enabled)
+    return { success: true }
+  } catch (error) {
+    throw new Error(`切换 MCP 状态失败：${(error as Error).message}`)
+  }
+})
+
+// 获取 MCP 在各个应用上的启用状态
+ipcMain.handle('mcp:get-app-status', async (_event, mcpId: string) => {
+  try {
+    return getMCPAppStatus(mcpId)
+  } catch (error) {
+    throw new Error(`获取 MCP 状态失败：${(error as Error).message}`)
+  }
+})
+
+// 添加 MCP 服务器
+ipcMain.handle('mcp:add-server', async (_event, input: AddProviderInput) => {
+  try {
+    const manager = createMCPManager()
+    return manager.add(input)
+  } catch (error) {
+    throw new Error(`添加 MCP 失败：${(error as Error).message}`)
+  }
+})
+
+// 获取单个 MCP 服务器
+ipcMain.handle('mcp:get-server', async (_event, id: string) => {
+  try {
+    const manager = createMCPManager()
+    return manager.get(id)
+  } catch (error) {
+    throw new Error(`获取 MCP 失败：${(error as Error).message}`)
+  }
+})
+
+// 编辑 MCP 服务器
+ipcMain.handle('mcp:edit-server', async (_event, id: string, updates: EditProviderInput) => {
+  try {
+    const manager = createMCPManager()
+    return manager.edit(id, updates)
+  } catch (error) {
+    throw new Error(`编辑 MCP 失败：${(error as Error).message}`)
+  }
+})
+
+// 克隆 MCP 服务器
+ipcMain.handle('mcp:clone-server', async (_event, sourceId: string, newName: string) => {
+  try {
+    const manager = createMCPManager()
+    return manager.clone(sourceId, newName)
+  } catch (error) {
+    throw new Error(`克隆 MCP 失败：${(error as Error).message}`)
+  }
+})
+
+// 删除 MCP 服务器
+ipcMain.handle('mcp:remove-server', async (_event, id: string) => {
+  try {
+    const manager = createMCPManager()
+    manager.remove(id)
+    return { success: true }
+  } catch (error) {
+    throw new Error(`删除 MCP 失败：${(error as Error).message}`)
   }
 })
 
