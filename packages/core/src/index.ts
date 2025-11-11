@@ -11,6 +11,7 @@ export const VERSION = pkg.version as string
 export {
   createCodexManager,
   createClaudeManager,
+  createMCPManager,
   type ToolManager,
   type Provider,
   type AddProviderInput,
@@ -25,6 +26,24 @@ export {
 // Presets (只导出预设数据，不导出类型)
 export { CODEX_PRESETS } from './presets/codex.js'
 export { CC_PRESETS } from './presets/claude.js'
+export { MCP_PRESETS, MCP_PRESETS_DETAIL, type MCPPresetDetail } from './presets/mcp.js'
+
+// MCP Writers (导出辅助函数)
+export {
+  writeMCPConfig,
+  writeMCPConfigForApp,
+  loadMCPConfig,
+  saveMCPConfig,
+  providerToMCPServer,
+  mcpServerToProvider,
+  toggleMCPForApp,
+  getMCPAppStatus,
+  migrateMCPConfig,
+  getMCPConfigPath,
+  type MCPServer,
+  type MCPConfig,
+  type AppType,
+} from './writers/mcp.js'
 
 // Migration
 export { migrateConfig, rollbackMigration, migrateV2ToV3, validateMigration } from './migrate.js'
@@ -38,6 +57,7 @@ export {
   getCodexConfigPath,
   getCodexAuthPath,
   getClaudeConfigPath,
+  getClaudeJsonPath,
   __setTestPaths,
 } from './paths.js'
 
