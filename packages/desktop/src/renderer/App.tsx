@@ -1,8 +1,9 @@
 /**
  * Desktop Renderer App
  *
- * 按照架构设计方案,分别管理 Codex 和 Claude
- * 不再有混合的 providers 数组
+ * 新架构：Dashboard + 小侧边栏渐进式导航
+ * - Dashboard: 首页，展示所有功能模块的状态卡片
+ * - 详情页: 显示小侧边栏（60px），快速切换页面
  *
  * 架构:
  * - Codex Providers: 独立管理,使用 window.electronAPI.codex.*
@@ -11,8 +12,8 @@
 
 import { useState, useEffect } from 'react'
 import type { Provider, AddProviderInput, EditProviderInput } from '@ccman/core'
-import TabNavigation, { TabType } from './components/TabNavigation'
-import HomePage from './components/HomePage'
+import DashboardPage, { NavKey } from './components/DashboardPage'
+import MiniSidebar from './components/MiniSidebar'
 import ClaudeCodePage from './components/ClaudeCodePage'
 import CodexPage from './components/CodexPage'
 import MCPManagerPage from './components/MCPManagerPage'
@@ -25,8 +26,11 @@ import ProviderForm from './components/ProviderForm'
 import { ConfirmDialog, AlertDialog } from './components/dialogs'
 import Toast from './components/Toast'
 
+type ViewState = 'dashboard' | NavKey
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('home')
+  // 视图状态：'dashboard' 或具体页面
+  const [currentView, setCurrentView] = useState<ViewState>('dashboard')
 
   // Codex 数据
   const [codexProviders, setCodexProviders] = useState<Provider[]>([])
@@ -240,6 +244,24 @@ export default function App() {
   }
 
   // ============================================================================
+  // 导航操作
+  // ============================================================================
+
+  // 从 Dashboard 进入详情页
+  const handleEnterPage = (key: NavKey) => {
+    setCurrentView(key)
+  }
+
+  // 小侧边栏导航
+  const handleNavigate = (key: NavKey) => {
+    if (key === 'home') {
+      setCurrentView('dashboard')
+    } else {
+      setCurrentView(key)
+    }
+  }
+
+  // ============================================================================
   // 通用操作
   // ============================================================================
 
@@ -281,94 +303,110 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {/* 根据 activeTab 渲染不同页面 */}
-      {activeTab === 'home' && (
-        <HomePage
-          claudeProvider={currentClaude}
-          codexProvider={currentCodex}
-          claudeCount={claudeProviders.length}
-          codexCount={codexProviders.length}
-          serviceProviderCount={codexPresetsCount + claudePresetsCount}
-          onNavigate={setActiveTab}
-          onAddClaude={() => handleAddProvider('claude')}
-          onAddCodex={() => handleAddProvider('codex')}
-        />
+    <div className="flex h-screen bg-gray-50">
+      {/* 小侧边栏（仅详情页显示） */}
+      {currentView !== 'dashboard' && (
+        <MiniSidebar activeKey={currentView as NavKey} onNavigate={handleNavigate} />
       )}
 
-      {activeTab === 'claude' && (
-        <ClaudeCodePage
-          providers={claudeProviders}
-          currentProvider={currentClaude}
-          onAdd={() => handleAddProvider('claude')}
-          onSwitch={handleClaudeSwitch}
-          onEdit={handleClaudeEdit}
-          onDelete={handleClaudeDelete}
-          onClone={handleClaudeClone}
-        />
-      )}
+      {/* 主内容区 */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Dashboard 首页 */}
+        {currentView === 'dashboard' && (
+          <DashboardPage
+            claudeData={{
+              providers: claudeProviders,
+              current: currentClaude,
+              presetsCount: claudePresetsCount,
+            }}
+            codexData={{
+              providers: codexProviders,
+              current: currentCodex,
+              presetsCount: codexPresetsCount,
+            }}
+            onEnterPage={handleEnterPage}
+          />
+        )}
 
-      {activeTab === 'codex' && (
-        <CodexPage
-          providers={codexProviders}
-          currentProvider={currentCodex}
-          onAdd={() => handleAddProvider('codex')}
-          onSwitch={handleCodexSwitch}
-          onEdit={handleCodexEdit}
-          onDelete={handleCodexDelete}
-          onClone={handleCodexClone}
-        />
-      )}
+        {/* Claude Code 页面 */}
+        {currentView === 'claude' && (
+          <ClaudeCodePage
+            providers={claudeProviders}
+            currentProvider={currentClaude}
+            onAdd={() => handleAddProvider('claude')}
+            onSwitch={handleClaudeSwitch}
+            onEdit={handleClaudeEdit}
+            onDelete={handleClaudeDelete}
+            onClone={handleClaudeClone}
+          />
+        )}
 
-      {activeTab === 'mcp' && <MCPManagerPage />}
+        {/* Codex 页面 */}
+        {currentView === 'codex' && (
+          <CodexPage
+            providers={codexProviders}
+            currentProvider={currentCodex}
+            onAdd={() => handleAddProvider('codex')}
+            onSwitch={handleCodexSwitch}
+            onEdit={handleCodexEdit}
+            onDelete={handleCodexDelete}
+            onClone={handleCodexClone}
+          />
+        )}
 
-      {activeTab === 'service-providers' && (
-        <ServiceProviderConfigPage
-          onUseServiceProvider={() => {
-            loadData()
-          }}
-          onSuccess={(message) => {
-            setToast({ show: true, message })
-          }}
-        />
-      )}
+        {/* MCP 页面 */}
+        {currentView === 'mcp' && <MCPManagerPage />}
 
-      {activeTab === 'clean' && (
-        <CleanPage
-          onSuccess={(message) => {
-            setToast({ show: true, message })
-          }}
-          onError={(title, message) => {
-            setAlertDialog({
-              show: true,
-              title,
-              message,
-              type: 'error',
-            })
-          }}
-        />
-      )}
+        {/* 预置服务商页面 */}
+        {currentView === 'service-providers' && (
+          <ServiceProviderConfigPage
+            onUseServiceProvider={() => {
+              loadData()
+            }}
+            onSuccess={(message) => {
+              setToast({ show: true, message })
+            }}
+          />
+        )}
 
-      {activeTab === 'settings' && (
-        <SettingsPage
-          onSuccess={(message) => {
-            setToast({ show: true, message })
-          }}
-          onError={(title, message) => {
-            setAlertDialog({
-              show: true,
-              title,
-              message,
-              type: 'error',
-            })
-          }}
-          onDataChanged={loadData}
-        />
-      )}
+        {/* 清理工具页面 */}
+        {currentView === 'clean' && (
+          <CleanPage
+            onSuccess={(message) => {
+              setToast({ show: true, message })
+            }}
+            onError={(title, message) => {
+              setAlertDialog({
+                show: true,
+                title,
+                message,
+                type: 'error',
+              })
+            }}
+          />
+        )}
 
-      {activeTab === 'about' && <AboutPage />}
+        {/* 设置页面 */}
+        {currentView === 'settings' && (
+          <SettingsPage
+            onSuccess={(message) => {
+              setToast({ show: true, message })
+            }}
+            onError={(title, message) => {
+              setAlertDialog({
+                show: true,
+                title,
+                message,
+                type: 'error',
+              })
+            }}
+            onDataChanged={loadData}
+          />
+        )}
+
+        {/* 关于页面 */}
+        {currentView === 'about' && <AboutPage />}
+      </div>
 
       {/* Add Provider Modal */}
       <AddProviderModal

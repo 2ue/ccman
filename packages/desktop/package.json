@@ -18,6 +18,7 @@
   "license": "MIT",
   "dependencies": {
     "@ccman/core": "workspace:*",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "lucide-react": "^0.314.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
