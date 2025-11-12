@@ -100,9 +100,13 @@ export {
   getCacheDetails,
   deleteProjectHistory,
   deleteCacheItem,
+  getProjectHistory,
+  deleteHistoryEntry,
+  clearProjectHistory,
   type CleanOptions,
   type CleanResult,
   type AnalyzeResult,
   type ProjectDetail,
   type CacheDetail,
+  type HistoryEntry,
 } from './claude-clean.js'

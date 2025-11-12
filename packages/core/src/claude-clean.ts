@@ -437,3 +437,85 @@ export function deleteCacheItem(cacheKey: string): void {
   // 原子写入
   saveJsonAtomic(filePath, config)
 }
+
+/**
+ * 历史记录条目
+ */
+export interface HistoryEntry {
+  /** 显示文本 */
+  display: string
+  /** 粘贴内容 */
+  pastedContents: Record<string, any>
+}
+
+/**
+ * 获取项目的历史记录
+ */
+export function getProjectHistory(projectPath: string): HistoryEntry[] {
+  const filePath = getClaudeJsonPath()
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error('~/.claude.json 文件不存在')
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const config = JSON.parse(content)
+
+  if (!config.projects?.[projectPath]) {
+    throw new Error(`项目不存在: ${projectPath}`)
+  }
+
+  return config.projects[projectPath].history || []
+}
+
+/**
+ * 删除单条历史记录（不备份）
+ */
+export function deleteHistoryEntry(projectPath: string, index: number): void {
+  const filePath = getClaudeJsonPath()
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error('~/.claude.json 文件不存在')
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const config = JSON.parse(content)
+
+  if (!config.projects?.[projectPath]?.history) {
+    throw new Error('项目或历史记录不存在')
+  }
+
+  if (index < 0 || index >= config.projects[projectPath].history.length) {
+    throw new Error(`无效的索引: ${index}`)
+  }
+
+  // 删除指定索引的历史记录
+  config.projects[projectPath].history.splice(index, 1)
+
+  // 原子写入（不备份）
+  saveJsonAtomic(filePath, config)
+}
+
+/**
+ * 清空项目历史记录（不备份）
+ */
+export function clearProjectHistory(projectPath: string): void {
+  const filePath = getClaudeJsonPath()
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error('~/.claude.json 文件不存在')
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const config = JSON.parse(content)
+
+  if (!config.projects?.[projectPath]) {
+    throw new Error(`项目不存在: ${projectPath}`)
+  }
+
+  // 清空历史记录
+  config.projects[projectPath].history = []
+
+  // 原子写入（不备份）
+  saveJsonAtomic(filePath, config)
+}

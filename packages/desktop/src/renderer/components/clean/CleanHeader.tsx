@@ -39,9 +39,9 @@ export default function CleanHeader({ fileSize, onPresetClean, onRefresh, loadin
       {/* 文件信息 */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">~/.claude.json 清理工具</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">Claude Code 清理工具</h2>
           <p className="text-sm text-gray-600">
-            当前文件大小: <span className="font-medium text-gray-900">{fileSize}</span>
+            配置文件大小: <span className="font-medium text-gray-900">{fileSize}</span>
           </p>
         </div>
         <button
@@ -84,9 +84,8 @@ export default function CleanHeader({ fileSize, onPresetClean, onRefresh, loadin
       {/* 提示信息 */}
       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-xs text-blue-800">
-          💡 <span className="font-semibold">安全说明</span>：此工具仅清理 ~/.claude.json 中的对话历史和缓存数据，
+          💡 <span className="font-semibold">安全说明</span>：此工具仅清理 Claude Code 配置文件中的对话历史和缓存数据，
           <span className="font-semibold text-blue-900">不会影响您磁盘上的任何项目代码</span>。
-          所有操作会自动创建备份文件，可随时恢复。
         </p>
       </div>
     </div>

@@ -202,6 +202,9 @@ export interface CleanAPI {
   deleteProject: (projectPath: string) => Promise<void>
   deleteCache: (cacheKey: string) => Promise<void>
   executePreset: (preset: 'conservative' | 'moderate' | 'aggressive') => Promise<CleanResult>
+  getProjectHistory: (projectPath: string) => Promise<any[]>
+  deleteHistoryEntry: (projectPath: string, index: number) => Promise<void>
+  clearProjectHistory: (projectPath: string) => Promise<void>
 }
 
 const cleanAPI: CleanAPI = {
@@ -211,6 +214,9 @@ const cleanAPI: CleanAPI = {
   deleteProject: (projectPath) => ipcRenderer.invoke('clean:delete-project', projectPath),
   deleteCache: (cacheKey) => ipcRenderer.invoke('clean:delete-cache', cacheKey),
   executePreset: (preset) => ipcRenderer.invoke('clean:execute-preset', preset),
+  getProjectHistory: (projectPath) => ipcRenderer.invoke('clean:get-project-history', projectPath),
+  deleteHistoryEntry: (projectPath, index) => ipcRenderer.invoke('clean:delete-history-entry', projectPath, index),
+  clearProjectHistory: (projectPath) => ipcRenderer.invoke('clean:clear-project-history', projectPath),
 }
 
 // ============================================================================

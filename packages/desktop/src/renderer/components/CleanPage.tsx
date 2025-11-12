@@ -83,7 +83,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
     setConfirmState({
       show: true,
       title: `确认${presetNames[preset]}`,
-      message: `${presetDescriptions[preset]}\n\n此操作会自动创建备份文件。`,
+      message: presetDescriptions[preset],
       confirmText: '确认清理',
       danger: preset === 'aggressive',
       onConfirm: async () => {
@@ -117,7 +117,6 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
           <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded">
             💡 仅清理 Claude Code 历史记录，不会影响您的项目代码
           </div>
-          <p className="mt-2 text-xs text-gray-500">此操作会自动创建备份文件</p>
         </div>
       ),
       confirmText: '删除',
@@ -153,7 +152,6 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
           <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded">
             💡 仅清理缓存数据，不会影响您的项目代码
           </div>
-          <p className="mt-2 text-xs text-gray-500">此操作会自动创建备份文件</p>
         </div>
       ),
       confirmText: '删除',
@@ -166,6 +164,55 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
           onSuccess('缓存已删除')
         } catch (error) {
           onError('删除失败', (error as Error).message)
+        }
+      },
+    })
+  }
+
+  // 删除单条历史记录
+  const handleDeleteHistoryEntry = (projectPath: string, index: number) => {
+    setConfirmState({
+      show: true,
+      title: '删除历史记录',
+      message: '确定要删除这条历史记录吗？此操作不可恢复。',
+      confirmText: '删除',
+      danger: true,
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, show: false }))
+        try {
+          await window.electronAPI.clean.deleteHistoryEntry(projectPath, index)
+          await loadData()
+          onSuccess('历史记录已删除')
+        } catch (error) {
+          onError('删除失败', (error as Error).message)
+        }
+      },
+    })
+  }
+
+  // 清空项目历史记录
+  const handleClearHistory = (projectPath: string) => {
+    setConfirmState({
+      show: true,
+      title: '清空历史记录',
+      message: (
+        <div>
+          <p className="text-sm text-gray-700 mb-2">确定要清空该项目的所有历史记录吗？</p>
+          <div className="text-xs text-red-700 bg-red-50 p-2 rounded">
+            ⚠️ 此操作不可恢复
+          </div>
+        </div>
+      ),
+      confirmText: '清空',
+      danger: true,
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, show: false }))
+        try {
+          await window.electronAPI.clean.clearProjectHistory(projectPath)
+          await loadData()
+          onSuccess('历史记录已清空')
+        } catch (error) {
+          onError('清空失败', (error as Error).message)
         }
       },
     })
@@ -193,6 +240,8 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
           <ProjectHistoryTable
             projects={projects}
             onDelete={handleDeleteProject}
+            onDeleteHistoryEntry={handleDeleteHistoryEntry}
+            onClearHistory={handleClearHistory}
             loading={loading}
           />
 

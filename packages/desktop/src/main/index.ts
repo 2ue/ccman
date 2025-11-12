@@ -38,6 +38,9 @@ import {
   deleteCacheItem,
   cleanClaudeJson,
   CleanPresets,
+  getProjectHistory,
+  deleteHistoryEntry,
+  clearProjectHistory,
   loadMCPConfig,
   toggleMCPForApp,
   getMCPAppStatus,
@@ -771,6 +774,33 @@ ipcMain.handle('clean:execute-preset', async (_event, preset: 'conservative' | '
     return cleanClaudeJson(options)
   } catch (error) {
     throw new Error(`清理失败：${(error as Error).message}`)
+  }
+})
+
+// 获取项目历史记录
+ipcMain.handle('clean:get-project-history', async (_event, projectPath: string) => {
+  try {
+    return getProjectHistory(projectPath)
+  } catch (error) {
+    throw new Error(`获取历史记录失败：${(error as Error).message}`)
+  }
+})
+
+// 删除单条历史记录
+ipcMain.handle('clean:delete-history-entry', async (_event, projectPath: string, index: number) => {
+  try {
+    deleteHistoryEntry(projectPath, index)
+  } catch (error) {
+    throw new Error(`删除历史记录失败：${(error as Error).message}`)
+  }
+})
+
+// 清空项目历史记录
+ipcMain.handle('clean:clear-project-history', async (_event, projectPath: string) => {
+  try {
+    clearProjectHistory(projectPath)
+  } catch (error) {
+    throw new Error(`清空历史记录失败：${(error as Error).message}`)
   }
 })
 
