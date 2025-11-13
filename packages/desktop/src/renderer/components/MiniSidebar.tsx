@@ -1,5 +1,5 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { Home, Sparkles, Terminal, Server, Package, Trash2, Settings, Info } from 'lucide-react'
+import { Home, Bot, Code2, Server, Package, Trash2, Settings, Info } from 'lucide-react'
 import type { NavKey } from './DashboardPage'
 
 interface MiniSidebarProps {
@@ -27,8 +27,8 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
   const items: NavElement[] = [
     { key: 'home', icon: Home, label: '返回首页' },
     { type: 'divider' },
-    { key: 'claude', icon: Sparkles, label: 'Claude Code' },
-    { key: 'codex', icon: Terminal, label: 'Codex' },
+    { key: 'claude', icon: Bot, label: 'Claude Code' },
+    { key: 'codex', icon: Code2, label: 'Codex' },
     { key: 'mcp', icon: Server, label: 'MCP 服务器' },
     { key: 'service-providers', icon: Package, label: '预置服务商' },
     { key: 'clean', icon: Trash2, label: '清理工具' },
@@ -39,11 +39,11 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="w-[60px] bg-gray-900 flex flex-col items-center py-3 border-r border-gray-800">
+      <div className="w-[60px] bg-white flex flex-col items-center py-3 border-r border-gray-200">
         {items.map((item, index) => {
           // 分隔线
           if ('type' in item && item.type === 'divider') {
-            return <div key={`divider-${index}`} className="w-8 h-px bg-gray-700 my-2" />
+            return <div key={`divider-${index}`} className="w-8 h-px bg-gray-200 my-2" />
           }
 
           // 弹性空间
@@ -67,7 +67,7 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
                     ${
                       isActive
                         ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }
                   `}
                 >
@@ -78,10 +78,10 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
                 <Tooltip.Content
                   side="right"
                   sideOffset={8}
-                  className="bg-gray-800 text-white px-3 py-1.5 rounded-md text-sm shadow-lg z-50"
+                  className="bg-gray-900 text-white px-3 py-1.5 rounded-md text-sm shadow-lg z-50"
                 >
                   {navItem.label}
-                  <Tooltip.Arrow className="fill-gray-800" />
+                  <Tooltip.Arrow className="fill-gray-900" />
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
