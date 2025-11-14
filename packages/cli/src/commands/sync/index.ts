@@ -24,6 +24,8 @@ export function createSyncCommands(program: Command): void {
  * 交互式同步菜单
  */
 export async function startSyncMenu(): Promise<void> {
+  // 交互式菜单需要一个无限循环,直到用户选择返回
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     console.log()
     const { action } = await inquirer.prompt([

@@ -95,7 +95,12 @@ function cleanupOldBackups(configPath: string, keepCount: number): void {
 export function stripApiKeys(
   providers: Provider[]
 ): Omit<Provider, 'apiKey'>[] {
-  return providers.map(({ apiKey, ...rest }) => rest)
+  return providers.map((provider) => {
+    // 只用于移除 apiKey 字段,不需要使用其值
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { apiKey, ...rest } = provider
+    return rest
+  })
 }
 
 /**

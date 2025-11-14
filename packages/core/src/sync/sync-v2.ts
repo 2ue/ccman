@@ -20,7 +20,7 @@ import {
   encryptProviders,
   decryptProviders,
 } from './crypto.js'
-import { mergeProviders, mergePresets, areProvidersEqual } from './merge-advanced.js'
+import { mergeProviders, mergePresets } from './merge-advanced.js'
 import { backupConfig } from './merge.js'
 import { getCcmanDir } from '../paths.js'
 import { readJSON, writeJSON } from '../utils/file.js'

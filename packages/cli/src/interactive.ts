@@ -26,10 +26,12 @@ type ToolType = 'codex' | 'claude'
  */
 export async function promptProviderForm(defaults?: {
   name?: string
+  desc?: string
   baseUrl?: string
   apiKey?: string
 }): Promise<{
   name: string
+  desc?: string
   baseUrl: string
   apiKey: string
 }> {
@@ -43,6 +45,12 @@ export async function promptProviderForm(defaults?: {
         if (!value) return '名称不能为空'
         return true
       },
+    },
+    {
+      type: 'input',
+      name: 'desc',
+      message: '描述(可选):',
+      default: defaults?.desc || undefined,
     },
     {
       type: 'input',
@@ -72,14 +80,10 @@ export async function promptProviderForm(defaults?: {
 
   return {
     name: answers.name,
+    desc: answers.desc || undefined,
     baseUrl: answers.baseUrl,
     apiKey: answers.apiKey,
   }
-}
-
-interface MenuItem {
-  name: string
-  value: string
 }
 
 // ============================================================================
@@ -90,6 +94,8 @@ interface MenuItem {
  * 主菜单 - ccman 入口
  */
 export async function startMainMenu(): Promise<void> {
+  // 主菜单需要循环,直到用户选择退出
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     console.log()
     const { choice } = await inquirer.prompt([
@@ -155,6 +161,8 @@ async function showToolMenu(tool: ToolType): Promise<void> {
   const toolName = tool === 'claude' ? 'Claude' : 'Codex'
   const toolEmoji = tool === 'claude' ? '🔷' : '🔶'
 
+  // 交互式菜单需要一个无限循环,直到用户选择返回
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     console.log()
     const { action } = await inquirer.prompt([
@@ -251,6 +259,7 @@ async function handleAdd(tool: ToolType): Promise<void> {
   ])
 
   let name: string
+  let desc: string | undefined
   let baseUrl: string
   let apiKey: string
 
@@ -275,11 +284,14 @@ async function handleAdd(tool: ToolType): Promise<void> {
     // 允许修改所有字段（与命令式和 Desktop 行为一致）
     const input = await promptProviderForm({
       name: preset.name,
+      desc: '',
       baseUrl: preset.baseUrl,
       apiKey: '',
     })
 
     name = input.name
+    // 不继承预置描述,使用用户输入的 desc(可能为空)
+    desc = input.desc
     baseUrl = input.baseUrl
     apiKey = input.apiKey
   } else {
@@ -313,11 +325,12 @@ async function handleAdd(tool: ToolType): Promise<void> {
     ])
 
     name = answers.name
+    desc = undefined
     baseUrl = answers.baseUrl
     apiKey = answers.apiKey
   }
 
-  const provider = manager.add({ name, baseUrl, apiKey })
+  const provider = manager.add({ name, desc, baseUrl, apiKey })
 
   console.log()
   console.log(chalk.green('✅ 添加成功'))
@@ -340,7 +353,10 @@ async function handleAdd(tool: ToolType): Promise<void> {
     manager.switch(provider.id)
     console.log(chalk.green('✅ 已切换到新服务商\n'))
   } else {
-    console.log(chalk.blue('💡 稍后切换:') + chalk.white(` ccman ${tool === 'codex' ? 'cx' : 'cc'} use "${provider.name}"\n`))
+    console.log(
+      chalk.blue('💡 稍后切换:') +
+        chalk.white(` ccman ${tool === 'codex' ? 'cx' : 'cc'} use "${provider.name}"\n`)
+    )
   }
 }
 
@@ -383,7 +399,7 @@ async function handleList(tool: ToolType): Promise<void> {
   }
 
   console.log(chalk.bold(`\n📋 ${toolName} 服务商 (${providers.length} 个)`))
-  console.log(formatProviderTable(providers, current?.id, toolName))
+  console.log(formatProviderTable(providers, current?.id))
 }
 
 async function handleCurrent(tool: ToolType): Promise<void> {
@@ -453,6 +469,12 @@ async function handleEdit(tool: ToolType): Promise<void> {
       },
     },
     {
+      type: 'input',
+      name: 'desc',
+      message: '描述(可选):',
+      default: provider.desc || '',
+    },
+    {
       type: 'password',
       name: 'apiKey',
       message: 'API 密钥 (留空不修改):',
@@ -462,6 +484,7 @@ async function handleEdit(tool: ToolType): Promise<void> {
 
   manager.edit(providerId, {
     name: answers.name,
+    desc: answers.desc || undefined,
     baseUrl: answers.baseUrl,
     apiKey: answers.apiKey || undefined,
   })
@@ -511,6 +534,8 @@ async function handleClone(tool: ToolType): Promise<void> {
 
   const newProvider = manager.add({
     name: answers.name,
+    // 克隆时不继承描述,留空让用户后续编辑
+    desc: undefined,
     baseUrl: provider.baseUrl,
     apiKey: answers.apiKey,
   })

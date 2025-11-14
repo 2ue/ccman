@@ -18,7 +18,7 @@ export function mergeCommand(program: Command): void {
         }
 
         // 获取同步密码
-        let syncPassword = config.syncPassword
+        let syncPassword: string = config.syncPassword || ''
         if (!syncPassword) {
           const { password } = await inquirer.prompt([
             {

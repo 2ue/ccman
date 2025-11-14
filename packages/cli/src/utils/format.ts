@@ -31,6 +31,11 @@ export function formatProviderTable(
     const url = isCurrent ? chalk.green(p.baseUrl) : chalk.gray(p.baseUrl)
     lines.push(`     ${url}`)
 
+    if (p.desc) {
+      const desc = isCurrent ? chalk.green(p.desc) : chalk.gray(p.desc)
+      lines.push(`     ${desc}`)
+    }
+
     // 每个服务商之间空一行
     if (index < providers.length - 1) {
       lines.push('')

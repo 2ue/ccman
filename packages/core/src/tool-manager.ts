@@ -203,6 +203,7 @@ function createToolManager(tool: ToolType): ToolManager {
       const provider: Provider = {
         id: generateId(),
         name: input.name,
+        desc: input.desc,
         baseUrl: input.baseUrl,
         apiKey: input.apiKey,
         model: input.model,
@@ -291,6 +292,7 @@ function createToolManager(tool: ToolType): ToolManager {
 
       // 更新字段
       if (updates.name !== undefined) provider.name = updates.name
+      if (updates.desc !== undefined) provider.desc = updates.desc
       if (updates.baseUrl !== undefined) provider.baseUrl = updates.baseUrl
       if (updates.apiKey !== undefined) provider.apiKey = updates.apiKey
       if (updates.model !== undefined) provider.model = updates.model
@@ -343,10 +345,14 @@ function createToolManager(tool: ToolType): ToolManager {
       }
 
       const timestamp = Date.now()
+
+      // 使用展开操作符复制所有字段，然后覆盖需要改变的字段
+      // 克隆时不继承 desc（显式设置为 undefined）
       const newProvider: Provider = {
         ...source,
         id: generateId(),
         name: newName,
+        desc: undefined,
         createdAt: timestamp,
         lastModified: timestamp,
         lastUsedAt: undefined,

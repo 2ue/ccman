@@ -48,7 +48,8 @@ export function cloneCommand(program: Command): void {
         let cloned
 
         if (newName) {
-          // 非交互模式：只改名，其他字段完全复制（向后兼容）
+          // 非交互模式：只改名，其他字段完全复制
+          // 注意：desc 字段不会被继承（clone 内部设置为 undefined）
           cloned = manager.clone(sourceId, newName)
         } else {
           // 交互模式：允许修改所有字段
@@ -56,6 +57,8 @@ export function cloneCommand(program: Command): void {
 
           const input = await promptProviderForm({
             name: `${source.name}（副本）`,
+            // 克隆时不继承描述
+            desc: '',
             baseUrl: source.baseUrl,
             apiKey: source.apiKey,
           })

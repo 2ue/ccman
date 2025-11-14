@@ -73,9 +73,14 @@ export default function ProviderGrid({
                 </div>
               </div>
 
-              <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={provider.baseUrl}>
+              <p className="text-xs text-gray-600 font-mono mb-1 truncate" title={provider.baseUrl}>
                 {provider.baseUrl}
               </p>
+              {provider.desc && (
+                <p className="text-xs text-gray-500 mb-2 truncate" title={provider.desc}>
+                  {provider.desc}
+                </p>
+              )}
 
               <div className="flex gap-2 pt-2 border-t border-gray-100">
                 {!isActive && (

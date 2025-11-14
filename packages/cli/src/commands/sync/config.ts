@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import type { WebDAVAuthType } from '@ccman/core'
-import { loadSyncConfig, saveSyncConfig, getSyncConfigPath } from '../../utils/sync-config.js'
+import { loadSyncConfig, saveSyncConfig, getSyncConfigPath, type LocalSyncConfig } from '../../utils/sync-config.js'
 import { testWebDAVConnection } from '@ccman/core'
 
 export function configCommand(program: Command): void {
@@ -123,65 +123,76 @@ export function configCommand(program: Command): void {
         }
 
         // 构建新配置
-        const newConfig = { ...existingConfig }
+        let newConfig: LocalSyncConfig
+        if (existingConfig) {
+          // 更新模式：以现有配置为基础
+          newConfig = { ...existingConfig }
+        } else {
+          // 新建模式：验证必填项并创建配置
+          if (!trimmedAnswers.webdavUrl) {
+            throw new Error('WebDAV 地址不能为空')
+          }
+          if (!trimmedAnswers.username) {
+            throw new Error('用户名不能为空')
+          }
+          if (!trimmedAnswers.password) {
+            throw new Error('密码不能为空')
+          }
+          if (!trimmedAnswers.syncPassword) {
+            throw new Error('同步密码不能为空')
+          }
+
+          newConfig = {
+            webdavUrl: trimmedAnswers.webdavUrl,
+            username: trimmedAnswers.username,
+            password: trimmedAnswers.password,
+            authType: trimmedAnswers.authType as WebDAVAuthType,
+            remoteDir: trimmedAnswers.remoteDir || '/',
+            syncPassword: trimmedAnswers.syncPassword,
+            rememberSyncPassword: trimmedAnswers.rememberSyncPassword,
+            lastSync: undefined,
+          }
+        }
         let hasChanges = false
 
-        // 只更新非空字段
-        if (trimmedAnswers.webdavUrl) {
-          if (trimmedAnswers.webdavUrl !== existingConfig?.webdavUrl) {
+        // 只更新非空字段（仅在更新模式下需要）
+        if (existingConfig) {
+          if (trimmedAnswers.webdavUrl && trimmedAnswers.webdavUrl !== existingConfig.webdavUrl) {
             newConfig.webdavUrl = trimmedAnswers.webdavUrl
             hasChanges = true
           }
-        } else if (!existingConfig) {
-          throw new Error('WebDAV 地址不能为空')
-        }
 
-        if (trimmedAnswers.username) {
-          if (trimmedAnswers.username !== existingConfig?.username) {
+          if (trimmedAnswers.username && trimmedAnswers.username !== existingConfig.username) {
             newConfig.username = trimmedAnswers.username
             hasChanges = true
           }
-        } else if (!existingConfig) {
-          throw new Error('用户名不能为空')
-        }
 
-        if (trimmedAnswers.password) {
-          // 只有当密码真的不同时才更新（避免重复加密）
-          if (trimmedAnswers.password !== existingConfig?.password) {
+          if (trimmedAnswers.password && trimmedAnswers.password !== existingConfig.password) {
+            // 只有当密码真的不同时才更新（避免重复加密）
             newConfig.password = trimmedAnswers.password
             hasChanges = true
           }
-        } else if (!existingConfig) {
-          throw new Error('密码不能为空')
-        }
 
-        if (trimmedAnswers.authType !== existingConfig?.authType) {
-          newConfig.authType = trimmedAnswers.authType as WebDAVAuthType
-          hasChanges = true
-        }
+          if (trimmedAnswers.authType !== existingConfig.authType) {
+            newConfig.authType = trimmedAnswers.authType as WebDAVAuthType
+            hasChanges = true
+          }
 
-        if (trimmedAnswers.remoteDir) {
-          if (trimmedAnswers.remoteDir !== existingConfig?.remoteDir) {
+          if (trimmedAnswers.remoteDir && trimmedAnswers.remoteDir !== existingConfig.remoteDir) {
             newConfig.remoteDir = trimmedAnswers.remoteDir
             hasChanges = true
           }
-        } else if (!existingConfig) {
-          newConfig.remoteDir = '/'
-        }
 
-        if (trimmedAnswers.syncPassword) {
-          // 只有当密码真的不同时才更新（避免重复加密）
-          if (trimmedAnswers.syncPassword !== existingConfig?.syncPassword) {
+          if (trimmedAnswers.syncPassword && trimmedAnswers.syncPassword !== existingConfig.syncPassword) {
+            // 只有当密码真的不同时才更新（避免重复加密）
             newConfig.syncPassword = trimmedAnswers.syncPassword
             hasChanges = true
           }
-        } else if (!existingConfig) {
-          throw new Error('同步密码不能为空')
-        }
 
-        if (trimmedAnswers.rememberSyncPassword !== existingConfig?.rememberSyncPassword) {
-          newConfig.rememberSyncPassword = trimmedAnswers.rememberSyncPassword
-          hasChanges = true
+          if (trimmedAnswers.rememberSyncPassword !== existingConfig.rememberSyncPassword) {
+            newConfig.rememberSyncPassword = trimmedAnswers.rememberSyncPassword
+            hasChanges = true
+          }
         }
 
         // 再次检查是否有改动

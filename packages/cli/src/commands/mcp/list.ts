@@ -1,7 +1,6 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import { createMCPManager, mcpServerToProvider } from '@ccman/core'
-import { formatProviderTable } from '../../utils/format.js'
+import { createMCPManager } from '@ccman/core'
 
 export function listCommand(program: Command): void {
   program
@@ -21,7 +20,7 @@ export function listCommand(program: Command): void {
 
         console.log(chalk.bold(`\n📋 MCP 服务器 (${providers.length} 个)\n`))
 
-        // 将 Provider 转回 MCPServer 格式以便显示
+        // MCP 当前没有“激活”概念,所有配置的服务器都会被加载
         providers.forEach((provider) => {
           const isActive = false // MCP 没有 "当前激活" 的概念，所有配置的 MCP 都会加载
 

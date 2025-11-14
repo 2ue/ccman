@@ -16,8 +16,10 @@ export type ToolType = 'codex' | 'claude' | 'mcp'
 export interface Provider {
   /** 唯一标识符(自动生成) */
   id: string
-  /** 显示名称 */
+ /** 显示名称 */
   name: string
+  /** 描述(可选,用于 UI 展示) */
+  desc?: string
   /** API Base URL */
   baseUrl: string
   /** API Key */
@@ -72,6 +74,7 @@ export interface ToolConfig {
  */
 export interface AddProviderInput {
   name: string
+  desc?: string
   baseUrl: string
   apiKey: string
   model?: string // 可选,仅 Codex 使用
@@ -82,6 +85,7 @@ export interface AddProviderInput {
  */
 export interface EditProviderInput {
   name?: string
+  desc?: string
   baseUrl?: string
   apiKey?: string
   model?: string // 可选,仅 Codex 使用

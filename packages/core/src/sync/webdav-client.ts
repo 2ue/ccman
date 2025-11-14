@@ -17,7 +17,7 @@ export function normalizePath(dir?: string): string {
   }
 
   // 移除开头和结尾的斜线
-  let normalized = dir.trim().replace(/^\/+/, '').replace(/\/+$/, '')
+  const normalized = dir.trim().replace(/^\/+/, '').replace(/\/+$/, '')
 
   // 添加开头的斜线
   return `/${normalized}`
@@ -234,4 +234,3 @@ export async function existsOnWebDAV(config: SyncConfig, filename: string): Prom
     return false
   }
 }
-

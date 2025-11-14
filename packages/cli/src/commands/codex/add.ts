@@ -33,6 +33,7 @@ export function addCommand(program: Command): void {
         ])
 
         let name: string
+        let desc: string | undefined
         let baseUrl: string
         let apiKey: string
 
@@ -57,11 +58,14 @@ export function addCommand(program: Command): void {
           // 允许修改所有字段
           const input = await promptProviderForm({
             name: preset.name,
+            desc: '',
             baseUrl: preset.baseUrl,
             apiKey: '',
           })
 
           name = input.name
+          // 不继承预置描述,使用用户输入的 desc(可能为空)
+          desc = input.desc
           baseUrl = input.baseUrl
           apiKey = input.apiKey
         } else {
@@ -101,11 +105,12 @@ export function addCommand(program: Command): void {
           ])
 
           name = answers.name
+          desc = undefined
           baseUrl = answers.baseUrl
           apiKey = answers.apiKey
         }
 
-        const provider = manager.add({ name, baseUrl, apiKey })
+        const provider = manager.add({ name, desc, baseUrl, apiKey })
 
         console.log()
         console.log(chalk.green('✅ 添加成功'))

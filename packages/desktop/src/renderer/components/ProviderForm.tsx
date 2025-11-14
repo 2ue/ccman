@@ -24,24 +24,29 @@ interface Props {
 
 export default function ProviderForm({ provider, preset, isClone = false, existingProviders = [], onSubmit, onCancel }: Props) {
   const [name, setName] = useState('')
+  const [desc, setDesc] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [nameError, setNameError] = useState('')
 
   useEffect(() => {
     if (provider) {
-      // 编辑模式:预填充 provider 数据
+      // 编辑/克隆模式:预填充 provider 数据
       setName(provider.name)
+      setDesc(provider.desc || '')
       setBaseUrl(provider.baseUrl)
       setApiKey('') // 编辑时 API Key 不显示,需重新输入
     } else if (preset) {
       // Preset 模式:预填充 preset 数据
       setName(preset.name)
+      // 不继承预置描述,留空让用户自行填写
+      setDesc('')
       setBaseUrl(preset.baseUrl)
       setApiKey('')
     } else {
       // 空白模式
       setName('')
+      setDesc('')
       setBaseUrl('')
       setApiKey('')
     }
@@ -98,9 +103,13 @@ export default function ProviderForm({ provider, preset, isClone = false, existi
       finalApiKey = apiKey || undefined
     }
 
-    const input: AddProviderInput | EditProviderInput = finalApiKey !== undefined
-      ? { name, baseUrl, apiKey: finalApiKey }
-      : { name, baseUrl }
+    const trimmedName = name.trim()
+    const trimmedDesc = desc.trim()
+
+    const input: AddProviderInput | EditProviderInput =
+      finalApiKey !== undefined
+        ? { name: trimmedName, desc: trimmedDesc || undefined, baseUrl, apiKey: finalApiKey }
+        : { name: trimmedName, desc: trimmedDesc || undefined, baseUrl }
 
     onSubmit(input)
   }
@@ -135,6 +144,19 @@ export default function ProviderForm({ provider, preset, isClone = false, existi
         {nameError && (
           <p className="text-sm text-red-600 mt-1">{nameError}</p>
         )}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          描述(可选)
+        </label>
+        <input
+          type="text"
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="例如: 官方 Anthropic API, 只读环境等"
+        />
       </div>
 
       <div>

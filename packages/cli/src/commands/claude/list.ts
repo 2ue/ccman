@@ -21,7 +21,7 @@ export function listCommand(program: Command): void {
         }
 
         console.log(chalk.bold(`\n📋 Claude Code 服务商 (${providers.length} 个)`))
-        console.log(formatProviderTable(providers, current?.id, 'Claude Code'))
+        console.log(formatProviderTable(providers, current?.id))
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
         process.exit(1)
