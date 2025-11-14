@@ -35,6 +35,13 @@ function deriveKey(password: string, salt: Buffer): Buffer {
  * @returns 加密后的字符串（base64 编码）
  */
 export function encryptApiKey(apiKey: string, password: string): string {
+  if (typeof apiKey !== 'string') {
+    throw new Error('API Key 缺失或类型错误，无法加密')
+  }
+  if (!password) {
+    throw new Error('同步密码不能为空')
+  }
+
   // 生成随机 salt 和 IV
   const salt = crypto.randomBytes(SALT_LENGTH)
   const iv = crypto.randomBytes(IV_LENGTH)
@@ -110,10 +117,18 @@ export function encryptProviders(
   providers: Provider[],
   password: string
 ): Provider[] {
-  return providers.map((provider) => ({
-    ...provider,
-    apiKey: encryptApiKey(provider.apiKey, password),
-  }))
+  return providers.map((provider) => {
+    if (typeof provider.apiKey !== 'string' || provider.apiKey.length === 0) {
+      throw new Error(
+        `服务商 "${provider.name}" 的 API Key 为空或缺失，请先在 ccman 中补全后再进行同步`
+      )
+    }
+
+    return {
+      ...provider,
+      apiKey: encryptApiKey(provider.apiKey, password),
+    }
+  })
 }
 
 /**

@@ -81,8 +81,28 @@ export default function ProviderForm({ provider, preset, isClone = false, existi
       return
     }
 
-    // HTML5 表单验证会自动处理必填项
-    onSubmit({ name, baseUrl, apiKey: apiKey ? apiKey : undefined })
+    // 计算最终 API Key:
+    // - 新增模式(provider 为空): 必填,直接使用表单值
+    // - 编辑模式(provider 存在且非克隆): 为空表示不修改,不向上层传 apiKey
+    // - 克隆模式(provider 存在且 isClone): 为空表示沿用原 provider 的 apiKey
+    let finalApiKey: string | undefined
+
+    if (!provider) {
+      // 新增模式(包括从预置添加): HTML5 required 已经保证有值
+      finalApiKey = apiKey
+    } else if (isClone) {
+      // 克隆模式: 允许留空表示复用原有 Key
+      finalApiKey = apiKey || provider.apiKey
+    } else {
+      // 编辑模式: 留空表示不修改
+      finalApiKey = apiKey || undefined
+    }
+
+    const input: AddProviderInput | EditProviderInput = finalApiKey !== undefined
+      ? { name, baseUrl, apiKey: finalApiKey }
+      : { name, baseUrl }
+
+    onSubmit(input)
   }
 
   return (

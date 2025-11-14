@@ -1,0 +1,106 @@
+########################################
+# 基础设置：保持和当前 88Code 能正常工作的部分一致
+########################################
+
+model = "gpt-5.1"
+model_provider = "88Code"
+
+# 保留你原来的推理力度设置
+model_reasoning_effort = "high"
+
+# 保留你原来的存储策略
+disable_response_storage = true
+
+# 沙箱模式
+sandbox_mode = "workspace-write"
+windows_wsl_setup_acknowledged = true
+
+# 命令审批策略（只影响本地行为，不会影响 88Code）
+#  - "never"：尽量自动执行命令（自动模式）
+approval_policy = "never"
+
+# 默认使用的 profile（下面定义，只改行为，不改 model）
+profile = "auto-max"
+
+# 打开文件用哪个编辑器
+file_opener = "vscode"
+
+
+########################################
+# 历史记录 & 终端 UI（纯本地）
+########################################
+
+[history]
+persistence = "save-all"
+
+[tui]
+notifications = true
+
+
+########################################
+# Shell 环境（纯本地）
+########################################
+
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = false
+# 如有需要可以再加 exclude / include_only / set
+
+
+########################################
+# workspace-write 沙箱设置（纯本地）
+########################################
+
+[sandbox_workspace_write]
+network_access = true
+# 可按需再加 writable_roots / exclude_tmpdir_env_var / exclude_slash_tmp
+
+
+########################################
+# Features（完全沿用你原来的 + 本地能力）
+########################################
+
+[features]
+plan_tool = true
+apply_patch_freeform = true
+view_image_tool = true
+web_search_request = true
+unified_exec = false
+streamable_shell = false
+rmcp_client = true
+# 如以后确认 88Code 完全兼容，可以考虑再打开 ghost_commit 等
+
+
+########################################
+# Profiles：只改“行为”，不改模型/提供方
+########################################
+
+[profiles.auto-max]
+# 使用顶层的 model / model_provider（即 gpt-5.1-codex + 88Code）
+# 这里只覆盖“本地行为”，例如审批和沙箱
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+
+[profiles.review]
+# 审核模式：命令前多问一句（适合公司仓库）
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+
+########################################
+# 模型提供方：保持你原来的配置
+########################################
+
+[model_providers.88Code]
+name = "88Code"
+base_url = "https://www.88code.org/openai/v1"
+wire_api = "responses"
+requires_openai_auth = true
+
+
+########################################
+# 其它提示 / 杂项
+########################################
+
+[notice]
+hide_gpt5_1_migration_prompt = true

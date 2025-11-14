@@ -55,7 +55,19 @@ export default function MCPManagerPage() {
     try {
       setLoading(true)
       const data = await window.electronAPI.mcp.listServers()
-      setServers(data)
+      // 防御性处理: 确保始终为数组,即使后端返回了异常结构也不至于打崩页面
+      if (Array.isArray(data)) {
+        setServers(data)
+      } else {
+        console.error('Invalid MCP servers data:', data)
+        setServers([])
+        setAlertDialog({
+          show: true,
+          title: '加载失败',
+          message: 'MCP 配置格式异常，请检查 ~/.ccman/mcp.json 或通过 CLI 重新生成。',
+          type: 'error',
+        })
+      }
     } catch (error) {
       setAlertDialog({
         show: true,

@@ -57,6 +57,7 @@ import type {
 
 // 设置日志文件（生产模式）
 const isDev = process.env.NODE_ENV === 'development'
+const isDebugMode = process.env.CCMAN_DEBUG === '1'
 let logStream: fs.WriteStream | null = null
 
 if (!isDev) {
@@ -106,7 +107,6 @@ function createWindow() {
   // 获取正确的资源路径
   // 开发模式：__dirname = /path/to/dist/main
   // 生产模式：__dirname = /path/to/app.asar/dist/main
-  const isDev = process.env.NODE_ENV === 'development'
   const preloadPath = isDev
     ? path.join(__dirname, '../preload/index.js')
     : path.join(__dirname, '../preload/index.js')
@@ -141,7 +141,6 @@ function createWindow() {
   if (isDev) {
     console.log('[Main] Loading dev server: http://localhost:5173')
     mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
   } else {
     const htmlPath = path.join(__dirname, '../renderer/index.html')
     console.log('[Main] Loading production file:', htmlPath)
@@ -153,6 +152,11 @@ function createWindow() {
         console.error('[Main] Failed to load HTML:', err)
         dialog.showErrorBox('加载失败', `无法加载应用界面：${err.message}`)
       })
+  }
+
+  // 在开发模式或显式开启调试模式(CCMAN_DEBUG=1)时打开 DevTools
+  if (isDev || isDebugMode) {
+    mainWindow.webContents.openDevTools()
   }
 
   mainWindow.on('closed', () => {

@@ -94,6 +94,10 @@ export function migrateMCPConfig(config: any): MCPConfig {
         server.enabledApps = ['claude']
       }
     }
+  } else {
+    // 旧版本可能没有 servers 字段(例如只包含 providers/presets)
+    // 为了兼容,显式初始化为空数组,避免上层拿到 undefined
+    config.servers = []
   }
 
   return config as MCPConfig
