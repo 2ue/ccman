@@ -12,7 +12,7 @@ export default defineConfig({
           build: {
             outDir: 'dist/main',
             rollupOptions: {
-              external: ['electron', 'path', 'fs', 'os'],
+              external: ['electron', 'path', 'fs', 'os', 'http', 'https', 'url', 'child_process'],
             },
           },
         },

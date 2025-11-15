@@ -1,6 +1,6 @@
 {
   "name": "@ccman/desktop",
-  "version": "3.0.28",
+  "version": "4.0.1",
   "description": "ccman Desktop GUI application",
   "main": "./dist/main/index.js",
   "scripts": {
@@ -19,6 +19,7 @@
   "dependencies": {
     "@ccman/core": "workspace:*",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "electron-updater": "^6.1.8",
     "lucide-react": "^0.314.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -46,11 +47,26 @@
     "files": [
       "dist/**/*"
     ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "2ue",
+        "repo": "ccman"
+      }
+    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
         {
           "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64",
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
           "arch": [
             "x64",
             "arm64",

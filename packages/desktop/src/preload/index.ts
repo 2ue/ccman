@@ -130,6 +130,27 @@ export interface SystemAPI {
   getAppVersion: () => Promise<string>
 }
 
+// ============================================================================
+// Update API
+// ============================================================================
+
+export type UpdateEvent =
+  | { type: 'checking' }
+  | { type: 'available'; version: string; notes?: string | null }
+  | { type: 'not-available'; version: string }
+  | { type: 'error'; message: string }
+  | { type: 'progress'; percent: number; bytesPerSecond: number; transferred: number; total: number }
+  | { type: 'downloaded'; version: string }
+  | { type: 'manual-downloaded'; filePath: string }
+
+export interface UpdateAPI {
+  check: () => Promise<{ started: boolean; error?: string }>
+  download: () => Promise<{ ok: boolean; path?: string; manual?: boolean; error?: string }>
+  install: (manualPath?: string) => Promise<{ ok: boolean; error?: string }>
+  backgroundCheck: () => Promise<{ started: boolean; error?: string }>
+  onEvent: (handler: (e: UpdateEvent) => void) => () => void
+}
+
 const configAPI: ConfigAPI = {
   readConfigFiles: (tool) => ipcRenderer.invoke('read-config-files', tool),
   writeConfigFiles: (files) => ipcRenderer.invoke('write-config-files', files),
@@ -142,6 +163,18 @@ const systemAPI: SystemAPI = {
   openFolder: () => ipcRenderer.invoke('open-folder'),
   openUrl: (url) => ipcRenderer.invoke('open-url', url),
   getAppVersion: () => ipcRenderer.invoke('system:get-app-version'),
+}
+
+const updateAPI: UpdateAPI = {
+  check: () => ipcRenderer.invoke('update:check'),
+  download: () => ipcRenderer.invoke('update:download'),
+  install: (manualPath?: string) => ipcRenderer.invoke('update:install', { manualPath }),
+  backgroundCheck: () => ipcRenderer.invoke('update:background-check'),
+  onEvent: (handler) => {
+    const listener = (_: any, payload: UpdateEvent) => handler(payload)
+    ipcRenderer.on('update:event', listener)
+    return () => ipcRenderer.removeListener('update:event', listener)
+  },
 }
 
 // ============================================================================
@@ -254,6 +287,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   claude: claudeAPI,
   config: configAPI,
   system: systemAPI,
+  update: updateAPI,
   sync: syncAPI,
   importExport: importExportAPI,
   clean: cleanAPI,
@@ -269,6 +303,7 @@ export interface ElectronAPI {
   claude: ClaudeAPI
   config: ConfigAPI
   system: SystemAPI
+  update: UpdateAPI
   sync: SyncAPI
   importExport: ImportExportAPI
   clean: CleanAPI

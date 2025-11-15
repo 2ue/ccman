@@ -104,6 +104,8 @@ jobs:
           path: |
             packages/desktop/release/*.dmg
             packages/desktop/release/*.dmg.blockmap
+            packages/desktop/release/*.zip
+            packages/desktop/release/*-mac.yml
 
   build-desktop-win:
     runs-on: windows-latest
@@ -153,6 +155,7 @@ jobs:
           path: |
             packages/desktop/release/*.exe
             packages/desktop/release/*.exe.blockmap
+            packages/desktop/release/latest.yml
 
   # ============================================================================
   # 阶段 2: 发布 npm 包
@@ -284,8 +287,11 @@ jobs:
           files: |
             desktop-mac/*.dmg
             desktop-mac/*.dmg.blockmap
+            desktop-mac/*.zip
+            desktop-mac/*-mac.yml
             desktop-win/*.exe
             desktop-win/*.exe.blockmap
+            desktop-win/latest.yml
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') }}
         env:

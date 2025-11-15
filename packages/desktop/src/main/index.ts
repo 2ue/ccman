@@ -9,6 +9,8 @@
  */
 
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { autoUpdater } from 'electron-updater'
+import { registerUpdaterHandlers, backgroundCheckOnce } from './updater'
 import path from 'path'
 import fs from 'fs'
 import {
@@ -100,6 +102,7 @@ if (isDev) {
 }
 
 let mainWindow: BrowserWindow | null = null
+const getMainWindow = () => mainWindow
 
 function createWindow() {
   console.log('[Main] Creating window...')
@@ -898,6 +901,20 @@ ipcMain.handle('mcp:remove-server', async (_event, id: string) => {
 
 app.whenReady().then(() => {
   createWindow()
+  // Register auto-updater IPC and events
+  registerUpdaterHandlers(getMainWindow)
+
+  // Background check 15s after launch, then every 6 hours
+  setTimeout(() => {
+    backgroundCheckOnce().catch((e) => {
+      console.error('[Updater] Background check failed:', e?.message || e)
+    })
+  }, 15000)
+  setInterval(() => {
+    backgroundCheckOnce().catch((e) => {
+      console.error('[Updater] Periodic check failed:', e?.message || e)
+    })
+  }, 6 * 60 * 60 * 1000)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

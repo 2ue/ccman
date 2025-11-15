@@ -5,9 +5,10 @@
  */
 
 import { useState } from 'react'
-import { Cloud, HardDrive, Menu, X } from 'lucide-react'
+import { Cloud, HardDrive, Menu, X, DownloadCloud } from 'lucide-react'
 import WebDAVSyncSection from './settings/WebDAVSyncSection'
 import BackupSection from './settings/BackupSection'
+import UpdateSection from './settings/UpdateSection'
 
 interface SettingsPageProps {
   onSuccess: (message: string) => void
@@ -15,7 +16,7 @@ interface SettingsPageProps {
   onDataChanged?: () => void
 }
 
-type SettingSection = 'sync' | 'backup'
+type SettingSection = 'sync' | 'backup' | 'update'
 
 export default function SettingsPage({ onSuccess, onError, onDataChanged }: SettingsPageProps) {
   const [activeSection, setActiveSection] = useState<SettingSection>('sync')
@@ -33,6 +34,12 @@ export default function SettingsPage({ onSuccess, onError, onDataChanged }: Sett
       name: '本地备份',
       icon: HardDrive,
       description: '导入/导出配置',
+    },
+    {
+      id: 'update' as const,
+      name: '更新',
+      icon: DownloadCloud,
+      description: '检查并自动下载更新',
     },
   ]
 
@@ -130,6 +137,7 @@ export default function SettingsPage({ onSuccess, onError, onDataChanged }: Sett
           <div className="w-full max-w-4xl">
             {activeSection === 'sync' && <WebDAVSyncSection onSuccess={onSuccess} onError={onError} onDataChanged={onDataChanged} />}
             {activeSection === 'backup' && <BackupSection onSuccess={onSuccess} onError={onError} />}
+            {activeSection === 'update' && <UpdateSection />}
           </div>
         </div>
       </main>
