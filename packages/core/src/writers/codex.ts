@@ -16,7 +16,6 @@ interface CodexConfig {
   sandbox_mode?: string
   windows_wsl_setup_acknowledged?: boolean
   features?: CodexFeatures
-  tools?: CodexTools
   sandbox_workspace_write?: CodexSandboxWorkspaceWrite
   model_providers?: Record<string, CodexModelProvider>
   [key: string]: unknown // 保留其他用户自定义字段
@@ -30,12 +29,6 @@ interface CodexFeatures {
   unified_exec?: boolean
   streamable_shell?: boolean
   rmcp_client?: boolean
-  [key: string]: unknown
-}
-
-interface CodexTools {
-  web_search?: boolean
-  view_image?: boolean
   [key: string]: unknown
 }
 
@@ -81,10 +74,6 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
     unified_exec: false,
     streamable_shell: false,
     rmcp_client: true,
-  },
-  tools: {
-    web_search: true,
-    view_image: true,
   },
   sandbox_workspace_write: {
     network_access: true,
