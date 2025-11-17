@@ -47,13 +47,6 @@
     "files": [
       "dist/**/*"
     ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "2ue",
-        "repo": "ccman"
-      }
-    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
