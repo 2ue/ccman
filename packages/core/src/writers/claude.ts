@@ -1,4 +1,6 @@
 import * as fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 import type { Provider } from '../tool-manager.js'
 import { getClaudeConfigPath, getClaudeDir } from '../paths.js'
 import { ensureDir, fileExists } from '../utils/file.js'
@@ -24,6 +26,10 @@ interface ClaudeEnv {
   [key: string]: unknown // 保留其他环境变量
 }
 
+// ESM 环境下获取当前文件所在目录
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 /**
  * Claude Code 默认配置模板
  *
@@ -44,6 +50,25 @@ const CLAUDE_CONFIG_TEMPLATE: ClaudeSettings = {
     allow: [],
     deny: [],
   },
+}
+
+/**
+ * 加载 Claude Code 模板配置
+ *
+ * 优先从 templates/claude/settings.json 读取，
+ * 如果不存在或读取失败，则回退到内置 CLAUDE_CONFIG_TEMPLATE
+ */
+function loadClaudeTemplateConfig(): ClaudeSettings {
+  try {
+    const templatePath = path.resolve(__dirname, '../../templates/claude/settings.json')
+    if (fs.existsSync(templatePath)) {
+      const content = fs.readFileSync(templatePath, 'utf-8')
+      return JSON.parse(content) as ClaudeSettings
+    }
+  } catch {
+    // 忽略错误，使用内置默认配置
+  }
+  return CLAUDE_CONFIG_TEMPLATE
 }
 
 
@@ -74,7 +99,8 @@ export function writeClaudeConfig(provider: Provider): void {
   }
 
   // 2. 替换模板变量，生成默认配置
-  const defaultConfig = replaceVariables(CLAUDE_CONFIG_TEMPLATE, {
+  const defaultTemplate = loadClaudeTemplateConfig()
+  const defaultConfig = replaceVariables(defaultTemplate, {
     apiKey: provider.apiKey,
     baseUrl: provider.baseUrl,
   }) as ClaudeSettings
@@ -90,4 +116,3 @@ export function writeClaudeConfig(provider: Provider): void {
   // 5. 写入配置文件
   fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2), { mode: 0o600 })
 }
-

@@ -1,4 +1,6 @@
 import * as fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
 import type { Provider } from '../tool-manager.js'
 import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
@@ -52,6 +54,10 @@ interface CodexAuth {
   [key: string]: unknown // 保留其他字段
 }
 
+// ESM 环境下获取当前文件所在目录
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 /**
  * Codex 默认配置模板
  *
@@ -78,6 +84,25 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
   sandbox_workspace_write: {
     network_access: true,
   },
+}
+
+/**
+ * 加载 Codex 模板配置
+ *
+ * 优先从 templates/codex/config.toml 读取，
+ * 如果不存在或读取失败，则回退到 CODEX_DEFAULT_CONFIG
+ */
+function loadCodexTemplateConfig(): Partial<CodexConfig> {
+  try {
+    const templatePath = path.resolve(__dirname, '../../templates/codex/config.toml')
+    if (fs.existsSync(templatePath)) {
+      const content = fs.readFileSync(templatePath, 'utf-8')
+      return parseToml(content) as CodexConfig
+    }
+  } catch {
+    // 忽略错误，使用内置默认配置
+  }
+  return CODEX_DEFAULT_CONFIG
 }
 
 
@@ -114,7 +139,8 @@ export function writeCodexConfig(provider: Provider): void {
   }
 
   // 2. 深度合并（用户配置优先）
-  const mergedConfig = deepMerge<CodexConfig>(CODEX_DEFAULT_CONFIG, userConfig)
+  const templateConfig = loadCodexTemplateConfig()
+  const mergedConfig = deepMerge<CodexConfig>(templateConfig, userConfig)
 
   // 3. 设置 Provider 相关字段
   mergedConfig.model_provider = provider.name
@@ -150,4 +176,3 @@ export function writeCodexConfig(provider: Provider): void {
   // 写入 auth.json
   fs.writeFileSync(authPath, JSON.stringify(auth, null, 2), { mode: 0o600 })
 }
-

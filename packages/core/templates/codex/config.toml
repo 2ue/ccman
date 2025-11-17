@@ -1,9 +1,12 @@
 ########################################
-# 基础设置：保持和当前 88Code 能正常工作的部分一致
+# 基础设置：通用 Codex 默认配置
 ########################################
 
 model = "gpt-5.1"
-model_provider = "88Code"
+
+# model_provider 与 model_providers 由 ccman 根据当前服务商自动写入
+# 如需手动指定可自行在此添加:
+# model_provider = "YourProviderName"
 
 # 保留你原来的推理力度设置
 model_reasoning_effort = "high"
@@ -15,7 +18,7 @@ disable_response_storage = true
 sandbox_mode = "workspace-write"
 windows_wsl_setup_acknowledged = true
 
-# 命令审批策略（只影响本地行为，不会影响 88Code）
+# 命令审批策略（只影响本地行为，不会影响上游服务商）
 #  - "never"：尽量自动执行命令（自动模式）
 approval_policy = "never"
 
@@ -88,19 +91,19 @@ sandbox_mode = "workspace-write"
 
 
 ########################################
-# 模型提供方：保持你原来的配置
-########################################
-
-[model_providers.88Code]
-name = "88Code"
-base_url = "https://www.88code.org/openai/v1"
-wire_api = "responses"
-requires_openai_auth = true
-
-
-########################################
 # 其它提示 / 杂项
 ########################################
 
 [notice]
 hide_gpt5_1_migration_prompt = true
+
+########################################
+# 模型提供方示例（仅注释示例，不会生效）
+########################################
+
+# [model_providers.88Code]
+# name = "88Code"
+# base_url = "https://www.88code.org/openai/v1"
+# wire_api = "responses"
+# requires_openai_auth = true
+
