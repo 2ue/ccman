@@ -298,6 +298,10 @@ export function registerUpdaterHandlers(winProvider: () => BrowserWindow | null)
     if (state.manualPath || options?.manualPath) {
       // 仅允许使用主进程记录的下载路径，避免任意路径执行
       const filePath = state.manualPath || options?.manualPath
+      // Narrow type so TS knows we only proceed with a valid string path
+      if (!filePath) {
+        return { ok: false, error: '安装器路径无效' }
+      }
       if (process.platform === 'win32') {
         try {
           spawn(filePath, [], { detached: true, stdio: 'ignore' }).unref()
