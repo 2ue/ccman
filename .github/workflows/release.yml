@@ -89,7 +89,7 @@ jobs:
       - name: Package for macOS
         run: |
           cd packages/desktop
-          pnpm build:electron -- --publish=never
+          pnpm build:electron:ci
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
@@ -139,7 +139,7 @@ jobs:
       - name: Package for Windows
         run: |
           cd packages/desktop
-          pnpm build:electron -- --publish=never
+          pnpm build:electron:ci
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 

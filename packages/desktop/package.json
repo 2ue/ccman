@@ -7,6 +7,7 @@
     "dev": "NODE_ENV=development vite",
     "build": "tsc && vite build",
     "build:electron": "electron-builder",
+    "build:electron:ci": "electron-builder --publish never",
     "clean": "rm -rf dist"
   },
   "keywords": [
