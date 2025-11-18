@@ -23,16 +23,22 @@ importers:
   packages/cli:
     specifiers:
       '@ccman/core': workspace:*
+      '@iarna/toml': ^2.2.5
       '@types/inquirer': ^8.2.5
       chalk: ^4.1.2
       commander: ^11.0.0
       inquirer: ^8.2.6
+      proper-lockfile: ^4.1.2
       tsx: ^4.0.0
+      webdav: ^5.8.0
     dependencies:
       '@ccman/core': link:../core
+      '@iarna/toml': 2.2.5
       chalk: 4.1.2
       commander: 11.1.0
       inquirer: 8.2.7
+      proper-lockfile: 4.1.2
+      webdav: 5.8.0
     devDependencies:
       '@types/inquirer': 8.2.12
       tsx: 4.20.6

@@ -19,6 +19,7 @@ export default defineConfig({
     'proper-lockfile',
     'webdav',
   ],
+  noExternal: ['@ccman/core'],  // 强制打包 @ccman/core 源码（Core 不会发布到 npm）
   bundle: true,
   platform: 'node',
   onSuccess: async () => {
