@@ -118,12 +118,26 @@ function saveJsonAtomic(filePath: string, data: any): void {
 
 /**
  * 分析 ~/.claude.json 文件
+ * 如果文件不存在，返回空的分析结果
  */
 export function analyzeClaudeJson(): AnalyzeResult {
   const filePath = getClaudeJsonPath()
 
+  // 文件不存在时返回空结果
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    return {
+      fileSize: 0,
+      fileSizeFormatted: '0 B',
+      projectCount: 0,
+      totalHistoryCount: 0,
+      projectHistory: [],
+      cacheSize: 0,
+      estimatedSavings: {
+        conservative: 0,
+        moderate: 0,
+        aggressive: 0,
+      },
+    }
   }
 
   const fileSize = getFileSize(filePath)
@@ -178,7 +192,7 @@ export function cleanClaudeJson(options: CleanOptions = {}): CleanResult {
   const filePath = getClaudeJsonPath()
 
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    throw new Error(`${filePath} 文件不存在`)
   }
 
   // 1. 备份文件
@@ -317,8 +331,9 @@ export interface CacheDetail {
 export function getProjectDetails(): ProjectDetail[] {
   const filePath = getClaudeJsonPath()
 
+  // 文件不存在时返回空数组
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    return []
   }
 
   const content = fs.readFileSync(filePath, 'utf-8')
@@ -357,8 +372,9 @@ export function getProjectDetails(): ProjectDetail[] {
 export function getCacheDetails(): CacheDetail[] {
   const filePath = getClaudeJsonPath()
 
+  // 文件不存在时返回空数组
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    return []
   }
 
   const content = fs.readFileSync(filePath, 'utf-8')
@@ -387,7 +403,7 @@ export function deleteProjectHistory(projectPath: string): void {
   const filePath = getClaudeJsonPath()
 
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    throw new Error(`${filePath} 文件不存在`)
   }
 
   // 备份文件
@@ -415,7 +431,7 @@ export function deleteCacheItem(cacheKey: string): void {
   const filePath = getClaudeJsonPath()
 
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    throw new Error(`${filePath} 文件不存在`)
   }
 
   // 只支持删除 cachedChangelog
@@ -454,15 +470,16 @@ export interface HistoryEntry {
 export function getProjectHistory(projectPath: string): HistoryEntry[] {
   const filePath = getClaudeJsonPath()
 
+  // 文件不存在时返回空数组
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    return []
   }
 
   const content = fs.readFileSync(filePath, 'utf-8')
   const config = JSON.parse(content)
 
   if (!config.projects?.[projectPath]) {
-    throw new Error(`项目不存在: ${projectPath}`)
+    return []
   }
 
   return config.projects[projectPath].history || []
@@ -475,7 +492,7 @@ export function deleteHistoryEntry(projectPath: string, index: number): void {
   const filePath = getClaudeJsonPath()
 
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    throw new Error(`${filePath} 文件不存在`)
   }
 
   const content = fs.readFileSync(filePath, 'utf-8')
@@ -503,7 +520,7 @@ export function clearProjectHistory(projectPath: string): void {
   const filePath = getClaudeJsonPath()
 
   if (!fs.existsSync(filePath)) {
-    throw new Error('~/.claude.json 文件不存在')
+    throw new Error(`${filePath} 文件不存在`)
   }
 
   const content = fs.readFileSync(filePath, 'utf-8')

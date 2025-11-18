@@ -16,8 +16,8 @@ export default function AboutPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-8">
-      <div className="max-w-4xl w-full bg-white rounded-lg shadow-sm p-8">
+    <div className="flex-1 overflow-y-auto bg-white p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8">
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">ccman</h1>

@@ -49,7 +49,7 @@ export default function SettingsPage({ onSuccess, onError, onDataChanged }: Sett
   }
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-gray-50">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
       {/* 移动端顶部标题栏 */}
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">设置</h2>

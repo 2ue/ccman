@@ -303,11 +303,12 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* 小侧边栏（仅详情页显示） */}
-      {currentView !== 'dashboard' && (
-        <MiniSidebar activeKey={currentView as NavKey} onNavigate={handleNavigate} />
-      )}
+    <div className="flex h-screen bg-white">
+      {/* 小侧边栏（始终显示） */}
+      <MiniSidebar
+        activeKey={currentView === 'dashboard' ? 'home' : (currentView as NavKey)}
+        onNavigate={handleNavigate}
+      />
 
       {/* 主内容区 */}
       <div className="flex-1 flex flex-col overflow-hidden">
