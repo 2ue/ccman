@@ -89,6 +89,35 @@ async function fetchLatestRelease() {
   })
 }
 
+function hasAutoUpdateConfig(): boolean {
+  try {
+    const configPath = path.join(process.resourcesPath, 'app-update.yml')
+    return fs.existsSync(configPath)
+  } catch {
+    return false
+  }
+}
+
+async function checkManualUpdate(win: BrowserWindow | null) {
+  state.status = 'checking'
+  send(win, { type: 'checking' })
+
+  const rel = await fetchLatestRelease()
+  const tag: string = rel.tag_name
+  const remoteVersion = tag?.startsWith('v') ? tag.slice(1) : tag
+  const currentVersion = app.getVersion()
+
+  if (remoteVersion !== currentVersion) {
+    state.status = 'available'
+    state.version = remoteVersion
+    send(win, { type: 'available', version: remoteVersion, notes: rel.body })
+  } else {
+    state.status = 'not-available'
+    state.version = currentVersion
+    send(win, { type: 'not-available', version: currentVersion })
+  }
+}
+
 function followableGet(u: string) {
   const parsed = new URL(u)
   return parsed.protocol === 'http:' ? http.get : https.get
@@ -245,17 +274,29 @@ export function registerUpdaterHandlers(winProvider: () => BrowserWindow | null)
       // 无需重复检查
       return { started: true }
     }
+
+    // Strategy selection: check if app-update.yml exists
+    const useAutoUpdater = hasAutoUpdateConfig()
+
     try {
-      autoUpdater.autoDownload = false
-      state.status = 'checking'
-      const p = autoUpdater.checkForUpdates()
-      state.checkingPromise = p
-      await p
-      state.checkingPromise = null
-      return { started: true }
+      if (useAutoUpdater) {
+        // Has app-update.yml → use electron-updater
+        autoUpdater.autoDownload = false
+        state.status = 'checking'
+        const p = autoUpdater.checkForUpdates()
+        state.checkingPromise = p
+        await p
+        state.checkingPromise = null
+        return { started: true }
+      } else {
+        // No app-update.yml → use GitHub API manual check
+        state.checkingPromise = checkManualUpdate(win())
+        await state.checkingPromise
+        state.checkingPromise = null
+        return { started: true }
+      }
     } catch (e: any) {
       state.checkingPromise = null
-      // Fallback to manual flow will发生在 download 阶段，由 UI 决定是否下载
       return { started: false, error: e?.message || String(e) }
     }
   })
