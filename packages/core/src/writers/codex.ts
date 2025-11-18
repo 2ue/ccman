@@ -17,10 +17,34 @@ interface CodexConfig {
   disable_response_storage?: boolean
   sandbox_mode?: string
   windows_wsl_setup_acknowledged?: boolean
+  approval_policy?: string
+  profile?: string
+  file_opener?: string
+  history?: CodexHistory
+  tui?: CodexTui
+  shell_environment_policy?: CodexShellEnvironmentPolicy
   features?: CodexFeatures
   sandbox_workspace_write?: CodexSandboxWorkspaceWrite
+  profiles?: Record<string, CodexProfile>
+  notice?: CodexNotice
   model_providers?: Record<string, CodexModelProvider>
   [key: string]: unknown // 保留其他用户自定义字段
+}
+
+interface CodexHistory {
+  persistence?: string
+  [key: string]: unknown
+}
+
+interface CodexTui {
+  notifications?: boolean
+  [key: string]: unknown
+}
+
+interface CodexShellEnvironmentPolicy {
+  inherit?: string
+  ignore_default_excludes?: boolean
+  [key: string]: unknown
 }
 
 interface CodexFeatures {
@@ -36,6 +60,17 @@ interface CodexFeatures {
 
 interface CodexSandboxWorkspaceWrite {
   network_access?: boolean
+  [key: string]: unknown
+}
+
+interface CodexProfile {
+  approval_policy?: string
+  sandbox_mode?: string
+  [key: string]: unknown
+}
+
+interface CodexNotice {
+  hide_gpt5_1_migration_prompt?: boolean
   [key: string]: unknown
 }
 
@@ -61,6 +96,7 @@ const __dirname = path.dirname(__filename)
 /**
  * Codex 默认配置模板
  *
+ * 与 templates/codex/config.toml 保持一致
  * 版本迭代时直接在此对象中添加/修改字段即可
  *
  * 注意：
@@ -68,10 +104,24 @@ const __dirname = path.dirname(__filename)
  * - 这里定义的是其他默认字段
  */
 const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
+  model: 'gpt-5.1',
   model_reasoning_effort: 'high',
   disable_response_storage: true,
   sandbox_mode: 'workspace-write',
   windows_wsl_setup_acknowledged: true,
+  approval_policy: 'never',
+  profile: 'auto-max',
+  file_opener: 'vscode',
+  history: {
+    persistence: 'save-all',
+  },
+  tui: {
+    notifications: true,
+  },
+  shell_environment_policy: {
+    inherit: 'all',
+    ignore_default_excludes: false,
+  },
   features: {
     plan_tool: true,
     apply_patch_freeform: true,
@@ -83,6 +133,19 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
   },
   sandbox_workspace_write: {
     network_access: true,
+  },
+  profiles: {
+    'auto-max': {
+      approval_policy: 'never',
+      sandbox_mode: 'workspace-write',
+    },
+    'review': {
+      approval_policy: 'on-request',
+      sandbox_mode: 'workspace-write',
+    },
+  },
+  notice: {
+    hide_gpt5_1_migration_prompt: true,
   },
 }
 
