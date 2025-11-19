@@ -11,7 +11,7 @@ import { AlertDialog } from './dialogs'
 
 interface Props {
   show: boolean
-  type: 'codex' | 'claude'
+  type: 'codex' | 'claude' | 'gemini'
   onClose: () => void
   onSubmit: () => void
   onSuccess?: (message: string) => void
@@ -37,6 +37,11 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const loadPresets = async () => {
     try {
+      if (type === 'gemini') {
+        // 目前 Gemini 不在 Desktop 中展示预置，直接清空即可
+        setPresets([])
+        return
+      }
       const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
       const presetsData = await api.listPresets()
       setPresets(presetsData)
@@ -47,7 +52,12 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const loadProviders = async () => {
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api =
+        type === 'codex'
+          ? window.electronAPI.codex
+          : type === 'claude'
+            ? window.electronAPI.claude
+            : window.electronAPI.gemini
       const providersData = await api.listProviders()
       setProviders(providersData)
     } catch (error) {
@@ -74,7 +84,12 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const handleProviderSubmit = async (input: AddProviderInput | EditProviderInput) => {
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api =
+        type === 'codex'
+          ? window.electronAPI.codex
+          : type === 'claude'
+            ? window.electronAPI.claude
+            : window.electronAPI.gemini
       await api.addProvider(input as AddProviderInput)
       onSubmit()
       onClose()
@@ -111,7 +126,8 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
       <div className={`bg-white rounded-lg shadow-xl w-full ${showCustomForm ? 'max-w-md' : 'max-w-4xl'} max-h-[90vh] overflow-hidden flex flex-col`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            添加 {type === 'claude' ? 'Claude' : 'Codex'} 服务商
+            添加{' '}
+            {type === 'claude' ? 'Claude' : type === 'codex' ? 'Codex' : 'Gemini CLI'} 服务商
           </h2>
           <button
             onClick={handleClose}

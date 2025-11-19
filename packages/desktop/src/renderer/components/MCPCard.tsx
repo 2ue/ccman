@@ -20,17 +20,12 @@ const APP_INFO: Record<
   codex: {
     name: 'Codex',
     icon: '\ud83d\udce6',
-    supported: false, // Codex 不支持 MCP
+    supported: false, // Codex 暂不支持 MCP
   },
-  cursor: {
-    name: 'Cursor',
-    icon: '\u2328\ufe0f',
-    supported: true, // 未来支持
-  },
-  windsurf: {
-    name: 'Windsurf',
-    icon: '\ud83c\udfc4',
-    supported: true, // 未来支持
+  gemini: {
+    name: 'Gemini CLI',
+    icon: '\ud83d\udca1',
+    supported: true,
   },
 }
 

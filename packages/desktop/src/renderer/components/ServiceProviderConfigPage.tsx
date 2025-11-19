@@ -45,7 +45,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
   // Settings Modal
   const [showConfigEditor, setShowConfigEditor] = useState(false)
   const [configFiles, setConfigFiles] = useState<
-    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   >([])
 
   // Use Preset Modal
@@ -190,7 +190,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
   }
 
   const handleSaveConfig = async (
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => {
     await window.electronAPI.config.writeCcmanConfigFiles(files)
     await loadPresets()

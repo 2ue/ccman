@@ -34,7 +34,7 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
       const result = await window.electronAPI.importExport.exportConfig(targetDir)
 
       if (result.success) {
-        onSuccess(`✅ 配置已导出到：${targetDir}\n包含文件：${result.exportedFiles.join(', ')}`)
+        onSuccess(`配置已导出到：${targetDir}\n包含文件：${result.exportedFiles.join(', ')}`)
       }
     } catch (error) {
       onError('导出失败', (error as Error).message)
@@ -78,7 +78,7 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
       const result = await window.electronAPI.importExport.importConfig(importDir)
 
       if (result.success) {
-        let message = `✅ 配置已导入\n导入文件：${result.importedFiles.join(', ')}`
+        let message = `配置已导入\n导入文件：${result.importedFiles.join(', ')}`
         if (result.backupPaths.length > 0) {
           message += `\n\n备份文件：\n${result.backupPaths.join('\n')}`
         }

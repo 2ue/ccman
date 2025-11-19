@@ -6,6 +6,7 @@ export type NavKey =
   | 'home'
   | 'claude'
   | 'codex'
+  | 'gemini'
   | 'mcp'
   | 'service-providers'
   | 'clean'
@@ -21,12 +22,14 @@ interface ToolData {
 interface DashboardPageProps {
   claudeData: ToolData
   codexData: ToolData
+  geminiData: ToolData
   onEnterPage: (key: NavKey) => void
 }
 
 export default function DashboardPage({
   claudeData,
   codexData,
+  geminiData,
   onEnterPage,
 }: DashboardPageProps) {
   return (
@@ -60,7 +63,7 @@ export default function DashboardPage({
               icon={Bot}
               title="Claude Code"
               statusLines={[
-                claudeData.current ? `✅ ${claudeData.current.name}` : '⚠️ 未配置',
+                claudeData.current ? `已配置：${claudeData.current.name}` : '未配置',
                 `${claudeData.providers.length} 个服务商`,
               ]}
               statusType={claudeData.current ? 'success' : 'warning'}
@@ -72,24 +75,24 @@ export default function DashboardPage({
               icon={Code2}
               title="Codex"
               statusLines={[
-                codexData.current ? `✅ ${codexData.current.name}` : '⚠️ 未配置',
+                codexData.current ? `已配置：${codexData.current.name}` : '未配置',
                 `${codexData.providers.length} 个服务商`,
               ]}
               statusType={codexData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('codex')}
             />
 
-            {/* 未来工具示例（取消注释即可） */}
-            {/* <DashboardCard
-              icon={Sparkle}
+            {/* Gemini CLI */}
+            <DashboardCard
+              icon={Code2}
               title="Gemini CLI"
               statusLines={[
-                geminiData.current ? `✅ ${geminiData.current.name}` : '⚠️ 未配置',
+                geminiData.current ? `已配置：${geminiData.current.name}` : '未配置',
                 `${geminiData.providers.length} 个服务商`,
               ]}
               statusType={geminiData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('gemini')}
-            /> */}
+            />
           </div>
         </div>
 

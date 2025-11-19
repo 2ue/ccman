@@ -29,6 +29,7 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
     { type: 'divider' },
     { key: 'claude', icon: Bot, label: 'Claude Code' },
     { key: 'codex', icon: Code2, label: 'Codex' },
+    { key: 'gemini', icon: Code2, label: 'Gemini CLI' },
     { key: 'mcp', icon: Server, label: 'MCP 服务器' },
     { key: 'service-providers', icon: Package, label: '预置服务商' },
     { key: 'clean', icon: Trash2, label: '清理工具' },

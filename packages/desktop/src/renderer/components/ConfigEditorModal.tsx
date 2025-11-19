@@ -7,7 +7,7 @@ interface ConfigFile {
   name: string
   path: string
   content: string
-  language: 'json' | 'toml'
+  language: 'json' | 'toml' | 'env'
 }
 
 interface Props {
@@ -71,6 +71,16 @@ export default function ConfigEditorModal({ show, title, files, onSave, onClose 
             if (!line.match(/^\[.*\]$/) && !line.match(/^[\w\d_-]+\s*=/) && !line.startsWith('[[')) {
               return `第 ${i + 1} 行：TOML 格式错误`
             }
+          }
+        }
+      } else if (file.language === 'env') {
+        // .env 简单校验：允许空行和注释, 其他行需包含 "="
+        const lines = file.content.split('\n')
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim()
+          if (!line || line.startsWith('#')) continue
+          if (!line.includes('=')) {
+            return `第 ${i + 1} 行：.env 格式错误，应为 KEY=VALUE`
           }
         }
       }
@@ -145,7 +155,7 @@ export default function ConfigEditorModal({ show, title, files, onSave, onClose 
                 `}
               >
                 {file.name}
-                {errors[index] && <span className="ml-1">⚠️</span>}
+                {errors[index] && <span className="ml-1 text-red-500">!</span>}
               </button>
             ))}
           </div>

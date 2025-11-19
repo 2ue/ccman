@@ -12,6 +12,7 @@ export {
   createCodexManager,
   createClaudeManager,
   createMCPManager,
+  createGeminiManager,
   type ToolManager,
   type Provider,
   type AddProviderInput,
@@ -27,6 +28,7 @@ export {
 export { CODEX_PRESETS } from './presets/codex.js'
 export { CC_PRESETS } from './presets/claude.js'
 export { MCP_PRESETS, MCP_PRESETS_DETAIL, type MCPPresetDetail } from './presets/mcp.js'
+export { GEMINI_PRESETS } from './presets/gemini.js'
 
 // MCP Writers (导出辅助函数)
 export {
@@ -53,11 +55,14 @@ export {
   getCcmanDir,
   getCodexDir,
   getClaudeDir,
+  getGeminiDir,
   getConfigPath,
   getCodexConfigPath,
   getCodexAuthPath,
   getClaudeConfigPath,
   getClaudeJsonPath,
+  getGeminiSettingsPath,
+  getGeminiEnvPath,
   __setTestPaths,
 } from './paths.js'
 

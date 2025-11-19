@@ -115,7 +115,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
           </p>
           <p className="text-sm text-gray-700 mb-2">确定要删除该项目的对话历史吗？</p>
           <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded">
-            💡 仅清理 Claude Code 历史记录，不会影响您的项目代码
+            提示：仅清理 Claude Code 历史记录，不会影响您的项目代码
           </div>
         </div>
       ),
@@ -150,7 +150,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
           </div>
           <p className="text-sm text-gray-700 mb-2">确定要删除此缓存项吗？</p>
           <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded">
-            💡 仅清理缓存数据，不会影响您的项目代码
+            提示：仅清理缓存数据，不会影响您的项目代码
           </div>
         </div>
       ),
@@ -199,7 +199,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
         <div>
           <p className="text-sm text-gray-700 mb-2">确定要清空该项目的所有历史记录吗？</p>
           <div className="text-xs text-red-700 bg-red-50 p-2 rounded">
-            ⚠️ 此操作不可恢复
+            警告：此操作不可恢复
           </div>
         </div>
       ),

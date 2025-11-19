@@ -19,7 +19,7 @@ export default function MCPManagerPage() {
   const [showCloneModal, setShowCloneModal] = useState(false)
   const [selectedServer, setSelectedServer] = useState<MCPServer | undefined>()
   const [configFiles, setConfigFiles] = useState<
-    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   >([])
 
   const [alertDialog, setAlertDialog] = useState<{
@@ -178,7 +178,7 @@ export default function MCPManagerPage() {
 
   // 保存配置文件
   const handleSaveConfig = async (
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => {
     try {
       await window.electronAPI.config.writeConfigFiles(files)

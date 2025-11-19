@@ -1,13 +1,14 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { getClaudeConfigPath, getCcmanDir, getClaudeDir } from '../paths.js'
+import { getClaudeConfigPath, getCcmanDir, getClaudeDir, getGeminiDir, getGeminiSettingsPath } from '../paths.js'
 import { fileExists, readJSON, writeJSON, ensureDir } from '../utils/file.js'
 import type { Provider } from '../tool-manager.js'
 
 /**
  * 支持的应用类型
+ * 当前仅支持 Claude Code / Codex / Gemini CLI
  */
-export type AppType = 'claude' | 'codex' | 'cursor' | 'windsurf'
+export type AppType = 'claude' | 'codex' | 'gemini'
 
 /**
  * MCP 服务器配置（存储在 ~/.ccman/mcp.json）
@@ -74,15 +75,13 @@ export function migrateMCPConfig(config: any): MCPConfig {
     config.managedServerNames = {
       claude: config.managedServerNames,
       codex: [],
-      cursor: [],
-      windsurf: [],
+      gemini: [],
     }
   } else if (!config.managedServerNames) {
     config.managedServerNames = {
       claude: [],
       codex: [],
-      cursor: [],
-      windsurf: [],
+      gemini: [],
     }
   }
 
@@ -114,8 +113,7 @@ export function loadMCPConfig(): MCPConfig {
       managedServerNames: {
         claude: [],
         codex: [],
-        cursor: [],
-        windsurf: [],
+        gemini: [],
       },
     }
   }
@@ -229,12 +227,10 @@ export function writeMCPConfigForApp(app: AppType, _provider: Provider): void {
     case 'codex':
       // Codex 暂不支持 MCP
       return
-    case 'cursor':
-      // TODO: 获取 Cursor 配置路径
-      return
-    case 'windsurf':
-      // TODO: 获取 Windsurf 配置路径
-      return
+    case 'gemini':
+      configPath = getGeminiSettingsPath()
+      configDir = getGeminiDir()
+      break
   }
 
   // 3. 确保配置目录存在
@@ -366,7 +362,6 @@ export function getMCPAppStatus(mcpId: string): Record<AppType, boolean> {
   return {
     claude: server.enabledApps.includes('claude'),
     codex: server.enabledApps.includes('codex'),
-    cursor: server.enabledApps.includes('cursor'),
-    windsurf: server.enabledApps.includes('windsurf'),
+    gemini: server.enabledApps.includes('gemini'),
   }
 }
