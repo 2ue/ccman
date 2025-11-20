@@ -2,7 +2,7 @@
  * ccman Core Module
  * Business logic for managing Codex and Claude Code service providers
  */
-import pkg from '../package.json' assert { type: 'json' }
+import pkg from '../package.json' with { type: 'json' }
 
 /** Core version */
 export const VERSION = pkg.version as string
