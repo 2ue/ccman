@@ -1,6 +1,6 @@
 {
   "name": "ccman-monorepo",
-  "version": "3.0.33",
+  "version": "3.1.0",
   "private": true,
   "description": "Manage Codex and Claude Code API service provider configurations",
   "scripts": {
