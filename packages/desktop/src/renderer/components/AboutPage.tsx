@@ -66,7 +66,7 @@ export default function AboutPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-3">社区与支持</h2>
           <div className="space-y-3">
             <button
-              onClick={() => handleOpenUrl('https://github.com/2ue/ccm')}
+              onClick={() => handleOpenUrl('https://github.com/2ue/ccman')}
               className="flex items-center text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -75,7 +75,7 @@ export default function AboutPage() {
               GitHub 仓库
             </button>
             <button
-              onClick={() => handleOpenUrl('https://github.com/2ue/ccm/issues')}
+              onClick={() => handleOpenUrl('https://github.com/2ue/ccman/issues')}
               className="flex items-center text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +84,7 @@ export default function AboutPage() {
               问题反馈
             </button>
             <button
-              onClick={() => handleOpenUrl('https://github.com/2ue/ccm#readme')}
+              onClick={() => handleOpenUrl('https://github.com/2ue/ccman#readme')}
               className="flex items-center text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

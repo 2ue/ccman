@@ -30,12 +30,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/2ue/ccm.git",
+    "url": "https://github.com/2ue/ccman.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/2ue/ccm#readme",
+  "homepage": "https://github.com/2ue/ccman#readme",
   "bugs": {
-    "url": "https://github.com/2ue/ccm/issues"
+    "url": "https://github.com/2ue/ccman/issues"
   },
   "dependencies": {
     "@ccman/core": "workspace:*",
