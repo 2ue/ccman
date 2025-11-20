@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+
+# Commitlint hook - 仅警告模式，不阻塞提交
+#
+# 如果不符合 Conventional Commits 规范，会显示警告，但仍允许提交
+# 目的是逐步推广规范，而不是强制要求
+
+pnpm exec commitlint --edit $1 || {
+  echo ""
+  echo "⚠️  提示：Commit message 建议使用 Conventional Commits 格式"
+  echo ""
+  echo "推荐格式："
+  echo "  feat(scope): 添加新功能"
+  echo "  fix(scope): 修复问题"
+  echo "  refactor(scope): 重构代码"
+  echo ""
+  echo "当前提交将继续，但建议逐步采用规范格式以获得更好的 changelog"
+  echo ""
+  exit 0  # 即使 commitlint 失败，也继续提交
+}

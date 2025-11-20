@@ -215,7 +215,7 @@ async function showToolMenu(tool: MainToolType): Promise<void> {
           { name: '📋 列出所有服务商', value: 'list' },
           { name: '👁️  查看当前服务商', value: 'current' },
           { name: '✏️  编辑服务商', value: 'edit' },
-          { name: '📋 克隆服务商', value: 'clone' },
+          { name: '🔁 克隆服务商', value: 'clone' },
           { name: '🗑️  删除服务商', value: 'remove' },
           { name: '⬅️  返回上级', value: 'back' },
         ],
@@ -392,10 +392,7 @@ async function handleAdd(tool: MainToolType): Promise<void> {
     manager.switch(provider.id)
     console.log(chalk.green('✅ 已切换到新服务商\n'))
   } else {
-    console.log(
-      chalk.blue('💡 稍后切换:') +
-        chalk.white(` ccman ${cmd} use "${provider.name}"\n`)
-    )
+    console.log(chalk.blue('💡 稍后切换:') + chalk.white(` ccman ${cmd} use "${provider.name}"\n`))
   }
 }
 

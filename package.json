@@ -1,6 +1,6 @@
 {
   "name": "ccman-monorepo",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "private": true,
   "description": "Manage Codex and Claude Code API service provider configurations",
   "scripts": {
@@ -13,6 +13,9 @@
     "clean": "pnpm -r clean",
     "version": "node scripts/bump-version.js",
     "verify:versions": "node scripts/verify-versions.js",
+    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0 --config .changelogrc.js",
+    "changelog:latest": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s --config .changelogrc.js",
+    "changelog:dry": "conventional-changelog -p conventionalcommits --config .changelogrc.js",
     "prepare": "husky"
   },
   "engines": {
@@ -20,9 +23,13 @@
     "pnpm": ">=7.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "conventional-changelog-cli": "^5.0.0",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
     "eslint": "^8.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",

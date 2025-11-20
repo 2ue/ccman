@@ -11,25 +11,54 @@ import path from 'path'
 import type { SyncConfig } from './types.js'
 import type { Provider } from '../tool-manager.js'
 import { updateLastSyncTime } from '../config.js'
-import {
-  uploadToWebDAV,
-  downloadFromWebDAV,
-  existsOnWebDAV,
-} from './webdav-client.js'
-import {
-  encryptProviders,
-  decryptProviders,
-} from './crypto.js'
+import { uploadToWebDAV, downloadFromWebDAV, existsOnWebDAV } from './webdav-client.js'
+import { encryptProviders, decryptProviders } from './crypto.js'
 import { mergeProviders, mergePresets } from './merge-advanced.js'
 import { backupConfig } from './merge.js'
 import { getCcmanDir } from '../paths.js'
 import { readJSON, writeJSON } from '../utils/file.js'
 import { writeCodexConfig } from '../writers/codex.js'
 import { writeClaudeConfig } from '../writers/claude.js'
+import { writeGeminiConfig } from '../writers/gemini.js'
+import { MAIN_TOOL_TYPES, type MainToolType } from '../constants.js'
 
-// 远程文件路径
-const CODEX_REMOTE_PATH = '.ccman/codex.json'
-const CLAUDE_REMOTE_PATH = '.ccman/claude.json'
+/**
+ * 单个工具的同步配置
+ */
+interface ToolSyncConfig {
+  /** 远程文件路径（相对于 WebDAV 根目录） */
+  remotePath: string
+  /** 本地配置文件名 */
+  configFilename: string
+  /** 写入官方配置的函数 */
+  writerFunc: (provider: Provider) => void
+}
+
+/**
+ * 所有工具的同步配置映射
+ *
+ * 使用 Record<MainToolType, ...> 确保编译时类型安全：
+ * - 如果在 constants.ts 的 MAIN_TOOL_TYPES 添加新工具
+ * - 但忘记在此处添加配置
+ * - TypeScript 会在编译时报错
+ */
+const TOOL_SYNC_CONFIG: Record<MainToolType, ToolSyncConfig> = {
+  [MAIN_TOOL_TYPES.CODEX]: {
+    remotePath: '.ccman/codex.json',
+    configFilename: 'codex.json',
+    writerFunc: writeCodexConfig,
+  },
+  [MAIN_TOOL_TYPES.CLAUDE]: {
+    remotePath: '.ccman/claude.json',
+    configFilename: 'claude.json',
+    writerFunc: writeClaudeConfig,
+  },
+  [MAIN_TOOL_TYPES.GEMINI]: {
+    remotePath: '.ccman/gemini.json',
+    configFilename: 'gemini.json',
+    writerFunc: writeGeminiConfig,
+  },
+} as const
 
 /**
  * 工具配置文件结构
@@ -48,40 +77,31 @@ interface ToolConfig {
  * @param config - WebDAV 配置
  * @param password - 同步密码
  */
-export async function uploadToCloud(
-  config: SyncConfig,
-  password: string
-): Promise<void> {
+export async function uploadToCloud(config: SyncConfig, password: string): Promise<void> {
   const ccmanDir = getCcmanDir()
+  const toolKeys = Object.keys(TOOL_SYNC_CONFIG) as MainToolType[]
 
-  // 读取本地配置
-  const codexConfigPath = path.join(ccmanDir, 'codex.json')
-  const claudeConfigPath = path.join(ccmanDir, 'claude.json')
+  // 遍历所有工具，上传配置到云端
+  for (const tool of toolKeys) {
+    const { remotePath, configFilename } = TOOL_SYNC_CONFIG[tool]
+    const configPath = path.join(ccmanDir, configFilename)
 
-  const codexConfig = readJSON<ToolConfig>(codexConfigPath)
-  const claudeConfig = readJSON<ToolConfig>(claudeConfigPath)
+    // 读取本地配置
+    const localConfig = readJSON<ToolConfig>(configPath)
 
-  // 加密 API Key（保留配置的所有其他字段）
-  const encryptedCodexProviders = encryptProviders(codexConfig.providers, password)
-  const encryptedClaudeProviders = encryptProviders(claudeConfig.providers, password)
+    // 加密 API Key（保留配置的所有其他字段）
+    const encryptedProviders = encryptProviders(localConfig.providers, password)
 
-  // 构建加密后的配置（使用扩展运算符保留所有字段）
-  const encryptedCodexConfig = {
-    ...codexConfig,  // 保留所有字段
-    providers: encryptedCodexProviders,  // 只替换 providers（加密后的）
+    // 构建加密后的配置（使用扩展运算符保留所有字段）
+    const encryptedConfig = {
+      ...localConfig, // 保留所有字段
+      providers: encryptedProviders, // 只替换 providers（加密后的）
+    }
+
+    // 上传到 WebDAV
+    const jsonContent = JSON.stringify(encryptedConfig, null, 2)
+    await uploadToWebDAV(config, remotePath, jsonContent)
   }
-
-  const encryptedClaudeConfig = {
-    ...claudeConfig,  // 保留所有字段
-    providers: encryptedClaudeProviders,  // 只替换 providers（加密后的）
-  }
-
-  // 上传到 WebDAV
-  const codexJson = JSON.stringify(encryptedCodexConfig, null, 2)
-  const claudeJson = JSON.stringify(encryptedClaudeConfig, null, 2)
-
-  await uploadToWebDAV(config, CODEX_REMOTE_PATH, codexJson)
-  await uploadToWebDAV(config, CLAUDE_REMOTE_PATH, claudeJson)
 
   // 更新最后同步时间
   updateLastSyncTime()
@@ -97,60 +117,61 @@ export async function uploadToCloud(
  * @param password - 同步密码
  * @returns 备份文件路径列表
  */
-export async function downloadFromCloud(
-  config: SyncConfig,
-  password: string
-): Promise<string[]> {
-  // 检查远程是否存在配置文件
-  const codexExists = await existsOnWebDAV(config, CODEX_REMOTE_PATH)
-  const claudeExists = await existsOnWebDAV(config, CLAUDE_REMOTE_PATH)
+export async function downloadFromCloud(config: SyncConfig, password: string): Promise<string[]> {
+  const ccmanDir = getCcmanDir()
+  const toolKeys = Object.keys(TOOL_SYNC_CONFIG) as MainToolType[]
 
-  if (!codexExists && !claudeExists) {
+  // 检查远程是否存在至少一个配置文件
+  const existsChecks = await Promise.all(
+    toolKeys.map(async (tool) => {
+      const { remotePath } = TOOL_SYNC_CONFIG[tool]
+      return existsOnWebDAV(config, remotePath)
+    })
+  )
+
+  if (!existsChecks.some((exists) => exists)) {
     throw new Error('远程配置不存在，请先上传配置')
   }
 
-  // 下载远程配置
-  const codexJson = codexExists
-    ? await downloadFromWebDAV(config, CODEX_REMOTE_PATH)
-    : null
-  const claudeJson = claudeExists
-    ? await downloadFromWebDAV(config, CLAUDE_REMOTE_PATH)
-    : null
+  // 下载所有工具的远程配置
+  type RemoteConfigData = {
+    tool: MainToolType
+    config: ToolConfig | null
+    decryptedProviders: Provider[] | null
+  }
 
-  const remoteCodexConfig: ToolConfig | null = codexJson
-    ? JSON.parse(codexJson)
-    : null
-  const remoteClaudeConfig: ToolConfig | null = claudeJson
-    ? JSON.parse(claudeJson)
-    : null
+  const remoteConfigs: RemoteConfigData[] = []
 
-  // 解密 API Key
-  let decryptedCodexProviders: Provider[] | null = null
-  let decryptedClaudeProviders: Provider[] | null = null
+  for (let i = 0; i < toolKeys.length; i++) {
+    const tool = toolKeys[i]
+    const { remotePath } = TOOL_SYNC_CONFIG[tool]
 
-  try {
-    if (remoteCodexConfig) {
-      decryptedCodexProviders = decryptProviders(remoteCodexConfig.providers, password)
+    if (existsChecks[i]) {
+      const jsonContent = await downloadFromWebDAV(config, remotePath)
+      const remoteConfig: ToolConfig = JSON.parse(jsonContent)
+
+      try {
+        const decryptedProviders = decryptProviders(remoteConfig.providers, password)
+        remoteConfigs.push({ tool, config: remoteConfig, decryptedProviders })
+      } catch (error) {
+        throw new Error('解密失败：密码错误或数据损坏')
+      }
+    } else {
+      remoteConfigs.push({ tool, config: null, decryptedProviders: null })
     }
-    if (remoteClaudeConfig) {
-      decryptedClaudeProviders = decryptProviders(remoteClaudeConfig.providers, password)
-    }
-  } catch (error) {
-    throw new Error('解密失败：密码错误或数据损坏')
   }
 
   // 备份本地配置
   const backupPaths: string[] = []
-  const ccmanDir = getCcmanDir()
-  const codexConfigPath = path.join(ccmanDir, 'codex.json')
-  const claudeConfigPath = path.join(ccmanDir, 'claude.json')
 
   try {
-    if (fs.existsSync(codexConfigPath)) {
-      backupPaths.push(backupConfig(codexConfigPath))
-    }
-    if (fs.existsSync(claudeConfigPath)) {
-      backupPaths.push(backupConfig(claudeConfigPath))
+    for (const tool of toolKeys) {
+      const { configFilename } = TOOL_SYNC_CONFIG[tool]
+      const configPath = path.join(ccmanDir, configFilename)
+
+      if (fs.existsSync(configPath)) {
+        backupPaths.push(backupConfig(configPath))
+      }
     }
   } catch (error) {
     throw new Error(`备份失败: ${(error as Error).message}`)
@@ -158,28 +179,21 @@ export async function downloadFromCloud(
 
   // 直接覆盖本地配置（覆盖策略：云端配置是什么就同步什么）
   try {
-    // 更新 Codex 配置
-    if (remoteCodexConfig && decryptedCodexProviders) {
-      const newCodexConfig = {
-        ...remoteCodexConfig,  // 使用云端配置的所有字段
-        providers: decryptedCodexProviders,  // 只替换 providers（解密后的）
+    for (const { tool, config: remoteConfig, decryptedProviders } of remoteConfigs) {
+      if (!remoteConfig || !decryptedProviders) continue
+
+      const { configFilename } = TOOL_SYNC_CONFIG[tool]
+      const configPath = path.join(ccmanDir, configFilename)
+
+      const newConfig = {
+        ...remoteConfig, // 使用云端配置的所有字段
+        providers: decryptedProviders, // 只替换 providers（解密后的）
       }
-      writeJSON(codexConfigPath, newCodexConfig)
 
-      // 自动应用当前 provider 到 Codex 官方配置
-      applyCurrentProvider('codex', newCodexConfig)
-    }
+      writeJSON(configPath, newConfig)
 
-    // 更新 Claude 配置
-    if (remoteClaudeConfig && decryptedClaudeProviders) {
-      const newClaudeConfig = {
-        ...remoteClaudeConfig,  // 使用云端配置的所有字段
-        providers: decryptedClaudeProviders,  // 只替换 providers（解密后的）
-      }
-      writeJSON(claudeConfigPath, newClaudeConfig)
-
-      // 自动应用当前 provider 到 Claude 官方配置
-      applyCurrentProvider('claude', newClaudeConfig)
+      // 自动应用当前 provider 到官方工具配置
+      applyCurrentProvider(tool, newConfig)
     }
 
     // 更新最后同步时间
@@ -214,11 +228,18 @@ export async function mergeSync(
   hasChanges: boolean
   backupPaths: string[]
 }> {
-  // 检查远程是否存在配置文件
-  const codexExists = await existsOnWebDAV(config, CODEX_REMOTE_PATH)
-  const claudeExists = await existsOnWebDAV(config, CLAUDE_REMOTE_PATH)
+  const ccmanDir = getCcmanDir()
+  const toolKeys = Object.keys(TOOL_SYNC_CONFIG) as MainToolType[]
 
-  if (!codexExists && !claudeExists) {
+  // 检查远程是否存在至少一个配置文件
+  const existsChecks = await Promise.all(
+    toolKeys.map(async (tool) => {
+      const { remotePath } = TOOL_SYNC_CONFIG[tool]
+      return existsOnWebDAV(config, remotePath)
+    })
+  )
+
+  if (!existsChecks.some((exists) => exists)) {
     // 远程不存在，直接上传本地配置
     console.log('远程配置不存在，执行上传操作')
     await uploadToCloud(config, password)
@@ -228,56 +249,50 @@ export async function mergeSync(
     }
   }
 
-  // 下载远程配置
-  const codexJson = codexExists
-    ? await downloadFromWebDAV(config, CODEX_REMOTE_PATH)
-    : null
-  const claudeJson = claudeExists
-    ? await downloadFromWebDAV(config, CLAUDE_REMOTE_PATH)
-    : null
-
-  const remoteCodexConfig: ToolConfig | null = codexJson
-    ? JSON.parse(codexJson)
-    : null
-  const remoteClaudeConfig: ToolConfig | null = claudeJson
-    ? JSON.parse(claudeJson)
-    : null
-
-  // 解密远程配置
-  let remoteCodexProviders: Provider[] = []
-  let remoteClaudeProviders: Provider[] = []
-
-  try {
-    if (remoteCodexConfig) {
-      remoteCodexProviders = decryptProviders(remoteCodexConfig.providers, password)
-    }
-    if (remoteClaudeConfig) {
-      remoteClaudeProviders = decryptProviders(remoteClaudeConfig.providers, password)
-    }
-  } catch (error) {
-    throw new Error('解密失败：密码错误或数据损坏')
+  // 下载并解密所有工具的远程配置
+  type MergeData = {
+    tool: MainToolType
+    localConfig: ToolConfig
+    remoteProviders: Provider[]
+    mergeResult: { merged: Provider[]; hasChanges: boolean }
   }
 
-  // 读取本地配置
-  const ccmanDir = getCcmanDir()
-  const codexConfigPath = path.join(ccmanDir, 'codex.json')
-  const claudeConfigPath = path.join(ccmanDir, 'claude.json')
+  const mergeDataList: MergeData[] = []
 
-  const localCodexConfig = readJSON<ToolConfig>(codexConfigPath)
-  const localClaudeConfig = readJSON<ToolConfig>(claudeConfigPath)
+  for (let i = 0; i < toolKeys.length; i++) {
+    const tool = toolKeys[i]
+    const { remotePath, configFilename } = TOOL_SYNC_CONFIG[tool]
+    const configPath = path.join(ccmanDir, configFilename)
 
-  // 执行智能合并
-  const codexMergeResult = mergeProviders(
-    localCodexConfig.providers,
-    remoteCodexProviders
-  )
-  const claudeMergeResult = mergeProviders(
-    localClaudeConfig.providers,
-    remoteClaudeProviders
-  )
+    // 读取本地配置
+    const localConfig = readJSON<ToolConfig>(configPath)
+
+    // 下载并解密远程配置
+    let remoteProviders: Provider[] = []
+
+    if (existsChecks[i]) {
+      try {
+        const jsonContent = await downloadFromWebDAV(config, remotePath)
+        const remoteConfig: ToolConfig = JSON.parse(jsonContent)
+        remoteProviders = decryptProviders(remoteConfig.providers, password)
+      } catch (error) {
+        throw new Error('解密失败：密码错误或数据损坏')
+      }
+    }
+
+    // 执行智能合并
+    const mergeResult = mergeProviders(localConfig.providers, remoteProviders)
+
+    mergeDataList.push({
+      tool,
+      localConfig,
+      remoteProviders,
+      mergeResult,
+    })
+  }
 
   // 检查是否有变化
-  const hasChanges = codexMergeResult.hasChanges || claudeMergeResult.hasChanges
+  const hasChanges = mergeDataList.some((data) => data.mergeResult.hasChanges)
 
   if (!hasChanges) {
     console.log('ℹ️ 配置已同步，无需操作')
@@ -289,61 +304,60 @@ export async function mergeSync(
 
   // 备份本地配置
   const backupPaths: string[] = []
+
   try {
-    if (fs.existsSync(codexConfigPath)) {
-      backupPaths.push(backupConfig(codexConfigPath))
-    }
-    if (fs.existsSync(claudeConfigPath)) {
-      backupPaths.push(backupConfig(claudeConfigPath))
+    for (const tool of toolKeys) {
+      const { configFilename } = TOOL_SYNC_CONFIG[tool]
+      const configPath = path.join(ccmanDir, configFilename)
+
+      if (fs.existsSync(configPath)) {
+        backupPaths.push(backupConfig(configPath))
+      }
     }
   } catch (error) {
     throw new Error(`备份失败: ${(error as Error).message}`)
   }
 
-  // 合并 presets
-  const mergedCodexPresets = mergePresets(localCodexConfig.presets, remoteCodexConfig?.presets)
-  const mergedClaudePresets = mergePresets(localClaudeConfig.presets, remoteClaudeConfig?.presets)
-
-  // 写入合并后的配置到本地（使用扩展运算符保留所有字段）
+  // 写入合并后的配置到本地并上传到云端
   try {
-    const mergedCodexConfig = {
-      ...localCodexConfig,  // 保留本地配置的所有字段
-      providers: codexMergeResult.merged,  // 替换为合并后的 providers
-      presets: mergedCodexPresets,  // 替换为合并后的 presets
+    for (let i = 0; i < mergeDataList.length; i++) {
+      const { tool, localConfig, mergeResult } = mergeDataList[i]
+      const { remotePath, configFilename } = TOOL_SYNC_CONFIG[tool]
+      const configPath = path.join(ccmanDir, configFilename)
+
+      // 获取远程配置（如果存在）用于合并 presets
+      let remoteConfig: ToolConfig | null = null
+      if (existsChecks[i]) {
+        const jsonContent = await downloadFromWebDAV(config, remotePath)
+        remoteConfig = JSON.parse(jsonContent)
+      }
+
+      // 合并 presets
+      const mergedPresets = mergePresets(localConfig.presets, remoteConfig?.presets)
+
+      // 构建合并后的配置（使用扩展运算符保留所有字段）
+      const mergedConfig = {
+        ...localConfig, // 保留本地配置的所有字段
+        providers: mergeResult.merged, // 替换为合并后的 providers
+        presets: mergedPresets, // 替换为合并后的 presets
+      }
+
+      // 写入本地
+      writeJSON(configPath, mergedConfig)
+
+      // 自动应用当前 provider 到官方工具配置
+      applyCurrentProvider(tool, mergedConfig)
+
+      // 上传到云端（加密）
+      const encryptedProviders = encryptProviders(mergeResult.merged, password)
+      const encryptedConfig = {
+        ...mergedConfig, // 保留合并后配置的所有字段
+        providers: encryptedProviders, // 只替换 providers（加密后的）
+      }
+
+      const jsonContent = JSON.stringify(encryptedConfig, null, 2)
+      await uploadToWebDAV(config, remotePath, jsonContent)
     }
-
-    const mergedClaudeConfig = {
-      ...localClaudeConfig,  // 保留本地配置的所有字段
-      providers: claudeMergeResult.merged,  // 替换为合并后的 providers
-      presets: mergedClaudePresets,  // 替换为合并后的 presets
-    }
-
-    writeJSON(codexConfigPath, mergedCodexConfig)
-    writeJSON(claudeConfigPath, mergedClaudeConfig)
-
-    // 自动应用当前 provider 到官方工具配置
-    applyCurrentProvider('codex', mergedCodexConfig)
-    applyCurrentProvider('claude', mergedClaudeConfig)
-
-    // 上传合并后的配置到云端（使用扩展运算符保留所有字段）
-    const encryptedCodexProviders = encryptProviders(codexMergeResult.merged, password)
-    const encryptedClaudeProviders = encryptProviders(claudeMergeResult.merged, password)
-
-    const encryptedCodexConfig = {
-      ...mergedCodexConfig,  // 保留合并后配置的所有字段
-      providers: encryptedCodexProviders,  // 只替换 providers（加密后的）
-    }
-
-    const encryptedClaudeConfig = {
-      ...mergedClaudeConfig,  // 保留合并后配置的所有字段
-      providers: encryptedClaudeProviders,  // 只替换 providers（加密后的）
-    }
-
-    const codexJson = JSON.stringify(encryptedCodexConfig, null, 2)
-    const claudeJson = JSON.stringify(encryptedClaudeConfig, null, 2)
-
-    await uploadToWebDAV(config, CODEX_REMOTE_PATH, codexJson)
-    await uploadToWebDAV(config, CLAUDE_REMOTE_PATH, claudeJson)
 
     // 更新最后同步时间
     updateLastSyncTime()
@@ -370,10 +384,10 @@ export async function mergeSync(
  * 应用当前 provider 到官方工具配置
  * 用于下载/合并配置后自动应用
  *
- * @param tool - 工具类型 ('codex' | 'claude')
+ * @param tool - 工具类型
  * @param config - 工具配置
  */
-function applyCurrentProvider(tool: 'codex' | 'claude', config: ToolConfig): void {
+function applyCurrentProvider(tool: MainToolType, config: ToolConfig): void {
   if (!config.currentProviderId) {
     // 没有当前 provider，跳过
     return
@@ -385,10 +399,7 @@ function applyCurrentProvider(tool: 'codex' | 'claude', config: ToolConfig): voi
     return
   }
 
-  // 调用对应的 writer 函数
-  if (tool === 'codex') {
-    writeCodexConfig(provider)
-  } else {
-    writeClaudeConfig(provider)
-  }
+  // 从配置映射中获取对应的 writer 函数
+  const { writerFunc } = TOOL_SYNC_CONFIG[tool]
+  writerFunc(provider)
 }

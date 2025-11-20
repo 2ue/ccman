@@ -233,6 +233,27 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
+      - name: Extract changelog for current version
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+
+          # 提取当前版本的 changelog（从版本标题到下一个版本标题之间的内容）
+          # 匹配 "## [x.y.z]" 格式，提取到下一个 "## [" 之前的所有内容
+          CHANGELOG=$(awk "/^## \[${VERSION}\]/,/^## \[/" CHANGELOG.md | sed '1!{/^## \[/d;}')
+
+          # 如果提取失败或为空，使用默认消息
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="查看完整更新日志：[CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)"
+          fi
+
+          # 保存到 GitHub Output（处理多行内容）
+          {
+            echo 'content<<EOF'
+            echo "$CHANGELOG"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
@@ -244,6 +265,12 @@ jobs:
         with:
           name: Release ${{ steps.version.outputs.VERSION }}
           body: |
+            ## 📝 更新内容
+
+            ${{ steps.changelog.outputs.content }}
+
+            ---
+
             ## 📦 npm 包已发布
 
             - [ccman@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/ccman)
@@ -283,7 +310,7 @@ jobs:
 
             ---
 
-            详见 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+            完整更新日志：[CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
           files: |
             desktop-mac/*.dmg
             desktop-mac/*.dmg.blockmap
