@@ -1,5 +1,6 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { Home, Bot, Code2, Server, Package, Trash2, Settings, Info } from 'lucide-react'
+import { Home, Server, Package, Trash2, Settings, Info } from 'lucide-react'
+import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
 import type { NavKey } from './DashboardPage'
 
 interface MiniSidebarProps {
@@ -11,6 +12,7 @@ interface NavItem {
   key: NavKey
   icon: React.ElementType
   label: string
+  isBrandIcon?: boolean
 }
 
 interface NavDivider {
@@ -27,8 +29,9 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
   const items: NavElement[] = [
     { key: 'home', icon: Home, label: '返回首页' },
     { type: 'divider' },
-    { key: 'claude', icon: Bot, label: 'Claude Code' },
-    { key: 'codex', icon: Code2, label: 'Codex' },
+    { key: 'claude', icon: ClaudeIcon, label: 'Claude Code', isBrandIcon: true },
+    { key: 'codex', icon: OpenAIIcon, label: 'Codex', isBrandIcon: true },
+    { key: 'gemini', icon: GeminiIcon, label: 'Gemini CLI', isBrandIcon: true },
     { key: 'mcp', icon: Server, label: 'MCP 服务器' },
     { key: 'service-providers', icon: Package, label: '预置服务商' },
     { key: 'clean', icon: Trash2, label: '清理工具' },
@@ -71,7 +74,11 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
                     }
                   `}
                 >
-                  <Icon className="w-6 h-6" />
+                  {navItem.isBrandIcon ? (
+                    <Icon size={24} />
+                  ) : (
+                    <Icon className="w-6 h-6" />
+                  )}
                 </button>
               </Tooltip.Trigger>
               <Tooltip.Portal>

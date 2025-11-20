@@ -26,26 +26,28 @@ interface ExtendedPreset {
   name: string
   baseUrl: string
   description: string
-  type: 'codex' | 'claude'
+  type: 'codex' | 'claude' | 'gemini'
   isBuiltIn: boolean
 }
 
 export default function ServiceProviderConfigPage({ onUseServiceProvider, onSuccess }: ServiceProviderConfigPageProps) {
   const [codexPresets, setCodexPresets] = useState<PresetTemplate[]>([])
   const [claudeCodePresets, setClaudeCodePresets] = useState<PresetTemplate[]>([])
+  const [geminiPresets, setGeminiPresets] = useState<PresetTemplate[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [codexProviders, setCodexProviders] = useState<Provider[]>([])
   const [claudeProviders, setClaudeProviders] = useState<Provider[]>([])
+  const [geminiProviders, setGeminiProviders] = useState<Provider[]>([])
 
   // 预置表单 Modal
   const [showPresetModal, setShowPresetModal] = useState(false)
-  const [presetModalType, setPresetModalType] = useState<'codex' | 'claude'>('codex')
+  const [presetModalType, setPresetModalType] = useState<'codex' | 'claude' | 'gemini'>('codex')
   const [editingPreset, setEditingPreset] = useState<{ name: string; baseUrl: string; description: string } | undefined>()
 
   // Settings Modal
   const [showConfigEditor, setShowConfigEditor] = useState(false)
   const [configFiles, setConfigFiles] = useState<
-    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   >([])
 
   // Use Preset Modal
@@ -81,8 +83,10 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
     try {
       const codex = await window.electronAPI.codex.listPresets()
       const claude = await window.electronAPI.claude.listPresets()
+      const gemini = await window.electronAPI.gemini.listPresets()
       setCodexPresets(codex)
       setClaudeCodePresets(claude)
+      setGeminiPresets(gemini)
     } catch (error) {
       console.error('加载预置失败:', error)
     }
@@ -98,13 +102,19 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
 
     // Load providers list for validation
     try {
-      const api = preset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api = preset.type === 'codex'
+        ? window.electronAPI.codex
+        : preset.type === 'claude'
+        ? window.electronAPI.claude
+        : window.electronAPI.gemini
       const providersData = await api.listProviders()
 
       if (preset.type === 'codex') {
         setCodexProviders(providersData)
-      } else {
+      } else if (preset.type === 'claude') {
         setClaudeProviders(providersData)
+      } else {
+        setGeminiProviders(providersData)
       }
     } catch (error) {
       console.error('Failed to load providers:', error)
@@ -115,7 +125,11 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
     if (!usingPreset) return
 
     try {
-      const api = usingPreset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api = usingPreset.type === 'codex'
+        ? window.electronAPI.codex
+        : usingPreset.type === 'claude'
+        ? window.electronAPI.claude
+        : window.electronAPI.gemini
 
       await api.addProvider(input as AddProviderInput)
 
@@ -133,7 +147,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
     }
   }
 
-  const handleAddPreset = (type: 'codex' | 'claude') => {
+  const handleAddPreset = (type: 'codex' | 'claude' | 'gemini') => {
     setPresetModalType(type)
     setEditingPreset(undefined)
     setShowPresetModal(true)
@@ -158,7 +172,11 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
         setConfirmDialog({ ...confirmDialog, show: false })
 
         try {
-          const api = preset.type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+          const api = preset.type === 'codex'
+            ? window.electronAPI.codex
+            : preset.type === 'claude'
+            ? window.electronAPI.claude
+            : window.electronAPI.gemini
           await api.removePreset(preset.name)
           await loadPresets()
           onSuccess?.('删除成功')
@@ -190,7 +208,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
   }
 
   const handleSaveConfig = async (
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => {
     await window.electronAPI.config.writeCcmanConfigFiles(files)
     await loadPresets()
@@ -205,6 +223,11 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
   const extendedClaudeCodePresets: ExtendedPreset[] = claudeCodePresets.map((p) => ({
     ...p,
     type: 'claude' as const,
+  }))
+
+  const extendedGeminiPresets: ExtendedPreset[] = geminiPresets.map((p) => ({
+    ...p,
+    type: 'gemini' as const,
   }))
 
   // 前端搜索过滤
@@ -222,6 +245,13 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
       p.baseUrl.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const filteredGeminiPresets = extendedGeminiPresets.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.baseUrl.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-white">
       {/* Header */}
@@ -230,7 +260,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
           <div>
             <h1 className="text-2xl font-bold text-gray-900">预置服务商</h1>
             <p className="text-sm text-gray-500 mt-1">
-              从预置模板快速添加服务商（共 {codexPresets.length + claudeCodePresets.length} 个预置）
+              从预置模板快速添加服务商（共 {codexPresets.length + claudeCodePresets.length + geminiPresets.length} 个预置）
             </p>
           </div>
           <div className="flex gap-2">
@@ -360,11 +390,11 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
           </div>
 
           {filteredClaudeCodePresets.length === 0 ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 mb-8">
               {searchQuery ? '没有匹配的 Claude Code 预置' : '暂无 Claude Code 预置'}
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
               {filteredClaudeCodePresets.map((preset) => (
                 <div
                   key={`claudecode-${preset.name}`}
@@ -393,6 +423,89 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
                     <button
                       onClick={() => handleUsePreset(preset)}
                       className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
+                      title="使用此预置"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      使用
+                    </button>
+                    {!preset.isBuiltIn && (
+                      <>
+                        <button
+                          onClick={() => handleEditPreset(preset)}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          title="编辑预置"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePreset(preset)}
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="删除预置"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Gemini CLI 预置组 */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-green-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Gemini CLI 预置</h2>
+              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                {filteredGeminiPresets.length}
+              </span>
+            </div>
+            <button
+              onClick={() => handleAddPreset('gemini')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              添加 Gemini CLI 预置
+            </button>
+          </div>
+
+          {filteredGeminiPresets.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              {searchQuery ? '没有匹配的 Gemini CLI 预置' : '暂无 Gemini CLI 预置'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredGeminiPresets.map((preset) => (
+                <div
+                  key={`gemini-${preset.name}`}
+                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        preset.isBuiltIn
+                          ? 'bg-gray-100 text-gray-600 border-gray-200'
+                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
+                        {preset.isBuiltIn ? '内置' : '自定义'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
+
+                  <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
+                    {preset.baseUrl}
+                  </p>
+
+                  <div className="flex gap-2 pt-2 border-t border-gray-100">
+                    <button
+                      onClick={() => handleUsePreset(preset)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -476,7 +589,13 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
             </h2>
             <ProviderForm
               preset={usingPreset}
-              existingProviders={usingPreset.type === 'codex' ? codexProviders : claudeProviders}
+              existingProviders={
+                usingPreset.type === 'codex'
+                  ? codexProviders
+                  : usingPreset.type === 'claude'
+                  ? claudeProviders
+                  : geminiProviders
+              }
               onSubmit={handleUsePresetSubmit}
               onCancel={() => {
                 setShowUsePresetModal(false)

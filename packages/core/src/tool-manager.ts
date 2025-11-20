@@ -29,6 +29,8 @@ import {
 import { CODEX_PRESETS } from './presets/codex.js'
 import { CC_PRESETS } from './presets/claude.js'
 import { MCP_PRESETS } from './presets/mcp.js'
+import { GEMINI_PRESETS } from './presets/gemini.js'
+import { writeGeminiConfig } from './writers/gemini.js'
 import type {
   ToolType,
   Provider,
@@ -115,14 +117,19 @@ const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
         }
         return mcpServer
       })
-      // 更新 managedServerNames
-      for (const app of ['claude', 'codex', 'cursor', 'windsurf'] as const) {
+      // 更新 managedServerNames（仅支持 claude/codex/gemini）
+      for (const app of ['claude', 'codex', 'gemini'] as const) {
         mcpConfig.managedServerNames[app] = mcpConfig.servers
           .filter((s) => s.enabledApps.includes(app))
           .map((s) => s.name)
       }
       saveMCPConfig(mcpConfig)
     },
+  },
+  gemini: {
+    configPath: path.join(getCcmanDir(), 'gemini.json'),
+    builtinPresets: GEMINI_PRESETS,
+    writer: writeGeminiConfig,
   },
 }
 
@@ -486,4 +493,11 @@ export function createClaudeManager(): ToolManager {
  */
 export function createMCPManager(): ToolManager {
   return createToolManager('mcp')
+}
+
+/**
+ * 创建 Gemini CLI 管理器（对外 API）
+ */
+export function createGeminiManager(): ToolManager {
+  return createToolManager('gemini')
 }

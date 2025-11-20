@@ -15,7 +15,7 @@
   - 从本地文件夹导入配置
   - 自动备份防止误操作
 
-👉 从 [GitHub Releases](https://github.com/2ue/ccm/releases) 下载 Desktop 版本体验完整功能
+👉 从 [GitHub Releases](https://github.com/2ue/ccman/releases) 下载 Desktop 版本体验完整功能
 
 ---
 
@@ -64,7 +64,7 @@ npm install -g ccman
 
 ### Desktop
 
-从 [GitHub Releases](https://github.com/2ue/ccm/releases) 下载：
+从 [GitHub Releases](https://github.com/2ue/ccman/releases) 下载：
 
 - **macOS**:
   - Intel: `ccman-VERSION-macos-x64.dmg`
@@ -326,6 +326,6 @@ MIT
 
 ## 相关链接
 
-- [GitHub 仓库](https://github.com/2ue/ccm)
-- [问题反馈](https://github.com/2ue/ccm/issues)
-- [更新日志](https://github.com/2ue/ccm/blob/main/CHANGELOG.md)
+- [GitHub 仓库](https://github.com/2ue/ccman)
+- [问题反馈](https://github.com/2ue/ccman/issues)
+- [更新日志](https://github.com/2ue/ccman/blob/main/CHANGELOG.md)

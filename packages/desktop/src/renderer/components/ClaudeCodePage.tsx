@@ -27,7 +27,7 @@ export default function ClaudeCodePage({
 }: ClaudeCodePageProps) {
   const [showConfigEditor, setShowConfigEditor] = useState(false)
   const [configFiles, setConfigFiles] = useState<
-    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   >([])
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -59,7 +59,7 @@ export default function ClaudeCodePage({
   }
 
   const handleSaveConfig = async (
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => {
     await window.electronAPI.config.writeConfigFiles(files)
   }

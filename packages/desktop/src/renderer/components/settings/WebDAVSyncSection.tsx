@@ -116,7 +116,7 @@ export default function WebDAVSyncSection({ onSuccess, onError, onDataChanged }:
     setIsUploading(true)
     try {
       await window.electronAPI.sync.uploadToCloud(config, syncPassword)
-      onSuccess('✅ 配置已上传到云端')
+      onSuccess('配置已上传到云端')
     } catch (error) {
       onError('上传失败', (error as Error).message)
     } finally {
@@ -140,7 +140,7 @@ export default function WebDAVSyncSection({ onSuccess, onError, onDataChanged }:
     setIsDownloading(true)
     try {
       const backupPaths = await window.electronAPI.sync.downloadFromCloud(config, syncPassword)
-      onSuccess(`✅ 配置已从云端下载并应用\n备份: ${backupPaths.join(', ')}`)
+      onSuccess(`配置已从云端下载并应用\n备份: ${backupPaths.join(', ')}`)
       onDataChanged?.()
     } catch (error) {
       onError('下载失败', (error as Error).message)
@@ -169,7 +169,7 @@ export default function WebDAVSyncSection({ onSuccess, onError, onDataChanged }:
       if (!result.hasChanges) {
         onSuccess('ℹ️ 配置已同步，无需操作')
       } else {
-        onSuccess(`✅ 配置已智能合并并同步\n备份: ${result.backupPaths.join(', ')}`)
+        onSuccess(`配置已智能合并并同步\n备份: ${result.backupPaths.join(', ')}`)
         onDataChanged?.()
       }
     } catch (error) {
@@ -319,7 +319,7 @@ export default function WebDAVSyncSection({ onSuccess, onError, onDataChanged }:
               </button>
             </div>
             <p className="mt-1 text-sm text-red-600 font-medium">
-              ⚠️ 用于加密 API Key，请妥善保管。忘记密码将无法解密云端配置
+              警告：用于加密 API Key，请妥善保管。忘记密码将无法解密云端配置
             </p>
           </div>
 

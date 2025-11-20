@@ -21,6 +21,7 @@ if (isTest) {
 let ccmanDir: string = path.join(rootDir, '.ccman')
 let codexDir: string = path.join(rootDir, '.codex')
 let claudeDir: string = path.join(rootDir, '.claude')
+let geminiDir: string = path.join(rootDir, '.gemini')
 
 /**
  * 获取 ccman 配置目录
@@ -41,6 +42,13 @@ export function getCodexDir(): string {
  */
 export function getClaudeDir(): string {
   return claudeDir
+}
+
+/**
+ * 获取 Gemini CLI 配置目录
+ */
+export function getGeminiDir(): string {
+  return geminiDir
 }
 
 /**
@@ -91,6 +99,20 @@ export function getClaudeConfigPath(): string {
  */
 export function getClaudeJsonPath(): string {
   return path.join(rootDir, '.claude.json')
+}
+
+/**
+ * 获取 Gemini CLI 用户配置文件路径 (~/.gemini/settings.json)
+ */
+export function getGeminiSettingsPath(): string {
+  return path.join(geminiDir, 'settings.json')
+}
+
+/**
+ * 获取 Gemini CLI 环境变量文件路径 (~/.gemini/.env)
+ */
+export function getGeminiEnvPath(): string {
+  return path.join(geminiDir, '.env')
 }
 
 /**

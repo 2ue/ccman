@@ -11,7 +11,7 @@ interface PresetData {
 interface Props {
   show: boolean
   preset?: PresetData
-  type: 'codex' | 'claude'
+  type: 'codex' | 'claude' | 'gemini'
   onClose: () => void
   onSubmit: () => void
   onSuccess?: (message: string) => void
@@ -50,7 +50,11 @@ export default function PresetFormModal({ show, preset, type, onClose, onSubmit,
     e.preventDefault()
 
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api = type === 'codex'
+        ? window.electronAPI.codex
+        : type === 'claude'
+        ? window.electronAPI.claude
+        : window.electronAPI.gemini
 
       if (preset) {
         // 编辑模式
@@ -81,7 +85,7 @@ export default function PresetFormModal({ show, preset, type, onClose, onSubmit,
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            {preset ? '编辑预置服务商' : '添加预置服务商'} - {type === 'codex' ? 'Codex' : 'Claude'}
+            {preset ? '编辑预置服务商' : '添加预置服务商'} - {type === 'codex' ? 'Codex' : type === 'claude' ? 'Claude' : 'Gemini'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />

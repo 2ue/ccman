@@ -8,7 +8,7 @@
 /**
  * 工具类型
  */
-export type ToolType = 'codex' | 'claude' | 'mcp'
+export type ToolType = 'codex' | 'claude' | 'mcp' | 'gemini'
 
 /**
  * Provider 配置(不包含 type 字段,因为配置已分离)

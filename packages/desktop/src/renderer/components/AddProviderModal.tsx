@@ -11,7 +11,7 @@ import { AlertDialog } from './dialogs'
 
 interface Props {
   show: boolean
-  type: 'codex' | 'claude'
+  type: 'codex' | 'claude' | 'gemini'
   onClose: () => void
   onSubmit: () => void
   onSuccess?: (message: string) => void
@@ -37,8 +37,14 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const loadPresets = async () => {
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api = type === 'codex'
+        ? window.electronAPI.codex
+        : type === 'claude'
+        ? window.electronAPI.claude
+        : window.electronAPI.gemini
+      console.log(`[AddProviderModal] Loading ${type} presets...`)
       const presetsData = await api.listPresets()
+      console.log(`[AddProviderModal] Loaded ${type} presets:`, presetsData)
       setPresets(presetsData)
     } catch (error) {
       console.error('Failed to load presets:', error)
@@ -47,7 +53,12 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const loadProviders = async () => {
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api =
+        type === 'codex'
+          ? window.electronAPI.codex
+          : type === 'claude'
+            ? window.electronAPI.claude
+            : window.electronAPI.gemini
       const providersData = await api.listProviders()
       setProviders(providersData)
     } catch (error) {
@@ -63,6 +74,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
   }, [show, type])
 
   const handleSelectPreset = (preset: PresetTemplate) => {
+    console.log('[AddProviderModal] Selected preset:', preset)
     setSelectedPreset(preset)
     setShowCustomForm(true)
   }
@@ -74,7 +86,12 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const handleProviderSubmit = async (input: AddProviderInput | EditProviderInput) => {
     try {
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api =
+        type === 'codex'
+          ? window.electronAPI.codex
+          : type === 'claude'
+            ? window.electronAPI.claude
+            : window.electronAPI.gemini
       await api.addProvider(input as AddProviderInput)
       onSubmit()
       onClose()
@@ -111,7 +128,8 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
       <div className={`bg-white rounded-lg shadow-xl w-full ${showCustomForm ? 'max-w-md' : 'max-w-4xl'} max-h-[90vh] overflow-hidden flex flex-col`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            添加 {type === 'claude' ? 'Claude' : 'Codex'} 服务商
+            添加{' '}
+            {type === 'claude' ? 'Claude' : type === 'codex' ? 'Codex' : 'Gemini CLI'} 服务商
           </h2>
           <button
             onClick={handleClose}
@@ -141,13 +159,19 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Package className={`w-5 h-5 ${type === 'codex' ? 'text-blue-600' : 'text-purple-600'}`} />
+                  <Package className={`w-5 h-5 ${
+                    type === 'codex' ? 'text-blue-600' : type === 'claude' ? 'text-purple-600' : 'text-green-600'
+                  }`} />
                   <h3 className="text-base font-semibold text-gray-900">选择预置服务商</h3>
                 </div>
                 <button
                   onClick={handleAddCustom}
                   className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
-                    type === 'codex' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
+                    type === 'codex'
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : type === 'claude'
+                      ? 'bg-purple-600 hover:bg-purple-700'
+                      : 'bg-green-600 hover:bg-green-700'
                   }`}
                 >
                   <Plus className="w-4 h-4" />
@@ -193,7 +217,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
                               type === 'codex'
                                 ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-                                : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                                : type === 'claude'
+                                ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                                : 'text-green-700 bg-green-50 hover:bg-green-100'
                             }`}
                             title="使用此预置"
                           >

@@ -4,7 +4,7 @@ import type { Provider } from '@ccman/core'
 interface Props {
   providers: Provider[]
   currentProviderId: string | undefined
-  tool: 'codex' | 'claude'
+  tool: 'codex' | 'claude' | 'gemini'
   onSwitch: (id: string) => void
   onEdit: (provider: Provider) => void
   onDelete: (id: string, name: string) => void
@@ -45,7 +45,9 @@ export default function ProviderGrid({
                 isActive
                   ? tool === 'codex'
                     ? 'border border-blue-500'
-                    : 'border border-purple-500'
+                    : tool === 'claude'
+                      ? 'border border-purple-500'
+                      : 'border border-teal-500'
                   : 'border border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -56,16 +58,28 @@ export default function ProviderGrid({
                       {provider.name}
                     </h3>
                     {isActive && (
-                      <Check className={`w-4 h-4 flex-shrink-0 ${tool === 'codex' ? 'text-blue-500' : 'text-purple-500'}`} />
+                      <Check
+                        className={`w-4 h-4 flex-shrink-0 ${
+                          tool === 'codex'
+                            ? 'text-blue-500'
+                            : tool === 'claude'
+                              ? 'text-purple-500'
+                              : 'text-teal-500'
+                        }`}
+                      />
                     )}
                   </div>
                   {isActive && (
                     <div>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        tool === 'codex'
-                          ? 'bg-blue-100 text-blue-700 border-blue-200'
-                          : 'bg-purple-100 text-purple-700 border-purple-200'
-                      }`}>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                          tool === 'codex'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                            : tool === 'claude'
+                              ? 'bg-purple-100 text-purple-700 border-purple-200'
+                              : 'bg-teal-100 text-teal-700 border-teal-200'
+                        }`}
+                      >
                         激活中
                       </span>
                     </div>
@@ -89,7 +103,9 @@ export default function ProviderGrid({
                     className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
                       tool === 'codex'
                         ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-                        : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                        : tool === 'claude'
+                          ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                          : 'text-teal-700 bg-teal-50 hover:bg-teal-100'
                     }`}
                     title="切换到此服务商"
                   >

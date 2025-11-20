@@ -6,10 +6,11 @@ import { printLogo } from './utils/logo.js'
 import { createCodexCommands } from './commands/codex/index.js'
 import { createClaudeCommands } from './commands/claude/index.js'
 import { createMCPCommands } from './commands/mcp/index.js'
+import { createGeminiCommands } from './commands/gemini/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
-import { startMainMenu, startClaudeMenu, startCodexMenu } from './interactive.js'
+import { startMainMenu, startClaudeMenu, startCodexMenu, startGeminiMenu } from './interactive.js'
 import { getCcmanDir, getCodexDir, getClaudeDir, VERSION } from '@ccman/core'
 
 // 开发模式：输出配置目录
@@ -42,7 +43,7 @@ program.on('command:*', (operands) => {
   console.error(chalk.red(`\n❌ 未知命令: ${unknownCommand}\n`))
 
   // 提供相似命令建议
-  const availableCommands = ['cx', 'cc', 'mcp', 'sync', 'export', 'import']
+  const availableCommands = ['cx', 'cc', 'gm', 'mcp', 'sync', 'export', 'import']
   const suggestions = availableCommands.filter(cmd =>
     cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
   )
@@ -78,6 +79,16 @@ createClaudeCommands(cc)
 cc.action(async () => {
   printLogo()
   await startClaudeMenu()
+})
+
+// 创建 gm (Gemini CLI) 子命令
+const gm = program.command('gm').description('管理 Gemini CLI 服务商')
+createGeminiCommands(gm)
+
+// gm 不带参数时进入交互模式
+gm.action(async () => {
+  printLogo()
+  await startGeminiMenu()
 })
 
 // 创建 mcp 子命令

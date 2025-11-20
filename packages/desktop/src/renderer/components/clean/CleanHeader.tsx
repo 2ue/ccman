@@ -84,7 +84,7 @@ export default function CleanHeader({ fileSize, onPresetClean, onRefresh, loadin
       {/* 提示信息 */}
       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-xs text-blue-800">
-          💡 <span className="font-semibold">安全说明</span>：此工具仅清理 Claude Code 配置文件中的对话历史和缓存数据，
+          提示：<span className="font-semibold">安全说明</span>：此工具仅清理 Claude Code 配置文件中的对话历史和缓存数据，
           <span className="font-semibold text-blue-900">不会影响您磁盘上的任何项目代码</span>。
         </p>
       </div>

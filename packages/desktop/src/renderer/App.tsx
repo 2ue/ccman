@@ -16,6 +16,7 @@ import DashboardPage, { NavKey } from './components/DashboardPage'
 import MiniSidebar from './components/MiniSidebar'
 import ClaudeCodePage from './components/ClaudeCodePage'
 import CodexPage from './components/CodexPage'
+import GeminiPage from './components/GeminiPage'
 import MCPManagerPage from './components/MCPManagerPage'
 import ServiceProviderConfigPage from './components/ServiceProviderConfigPage'
 import CleanPage from './components/CleanPage'
@@ -40,17 +41,22 @@ export default function App() {
   const [claudeProviders, setClaudeProviders] = useState<Provider[]>([])
   const [currentClaude, setCurrentClaude] = useState<Provider | undefined>()
 
+  // Gemini 数据
+  const [geminiProviders, setGeminiProviders] = useState<Provider[]>([])
+  const [currentGemini, setCurrentGemini] = useState<Provider | undefined>()
+
   // Modal 状态
   const [showAddModal, setShowAddModal] = useState(false)
-  const [addModalTool, setAddModalTool] = useState<'codex' | 'claude'>('claude')
+  const [addModalTool, setAddModalTool] = useState<'codex' | 'claude' | 'gemini'>('claude')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingProvider, setEditingProvider] = useState<Provider | undefined>()
-  const [editingTool, setEditingTool] = useState<'codex' | 'claude'>('claude')
+  const [editingTool, setEditingTool] = useState<'codex' | 'claude' | 'gemini'>('claude')
   const [isCloneMode, setIsCloneMode] = useState(false)
 
   // Presets 数量
   const [codexPresetsCount, setCodexPresetsCount] = useState(0)
   const [claudePresetsCount, setClaudePresetsCount] = useState(0)
+  const [geminiPresetsCount, setGeminiPresetsCount] = useState(0)
 
   // Dialog 状态
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -104,6 +110,16 @@ export default function App() {
       setCurrentClaude(claudeCurrent)
       const claudePresets = await window.electronAPI.claude.listPresets()
       setClaudePresetsCount(claudePresets.length)
+
+      // 加载 Gemini 数据
+      if (window.electronAPI.gemini) {
+        const geminiList = await window.electronAPI.gemini.listProviders()
+        setGeminiProviders(geminiList)
+        const geminiCurrent = await window.electronAPI.gemini.getCurrent()
+        setCurrentGemini(geminiCurrent)
+        const geminiPresets = await window.electronAPI.gemini.listPresets()
+        setGeminiPresetsCount(geminiPresets.length)
+      }
     } catch (error) {
       console.error('加载数据失败：', error)
     }
@@ -244,6 +260,71 @@ export default function App() {
   }
 
   // ============================================================================
+  // Gemini 操作
+  // ============================================================================
+
+  const handleGeminiSwitch = async (id: string) => {
+    try {
+      await window.electronAPI.gemini.switchProvider(id)
+      await loadData()
+      setToast({
+        show: true,
+        message: '切换成功',
+      })
+    } catch (error) {
+      setAlertDialog({
+        show: true,
+        title: '切换失败',
+        message: (error as Error).message,
+        type: 'error',
+      })
+    }
+  }
+
+  const handleGeminiDelete = (id: string, name: string) => {
+    setConfirmDialog({
+      show: true,
+      title: '确认删除',
+      message: `确定要删除 "${name}" 吗？`,
+      onConfirm: async () => {
+        setConfirmDialog({ ...confirmDialog, show: false })
+        try {
+          await window.electronAPI.gemini.removeProvider(id)
+          await loadData()
+          setToast({
+            show: true,
+            message: '删除成功',
+          })
+        } catch (error) {
+          setAlertDialog({
+            show: true,
+            title: '删除失败',
+            message: (error as Error).message,
+            type: 'error',
+          })
+        }
+      },
+    })
+  }
+
+  const handleGeminiClone = (provider: Provider) => {
+    setEditingProvider({
+      ...provider,
+      name: `${provider.name}（副本）`,
+    })
+    setEditingTool('gemini')
+    setIsCloneMode(true)
+    setShowEditModal(true)
+  }
+
+  const handleGeminiEdit = (provider: Provider) => {
+    setEditingProvider(provider)
+    setEditingTool('gemini')
+    setIsCloneMode(false)
+    setShowEditModal(true)
+  }
+
+  // ============================================================================
   // 导航操作
   // ============================================================================
 
@@ -265,7 +346,7 @@ export default function App() {
   // 通用操作
   // ============================================================================
 
-  const handleAddProvider = (tool: 'codex' | 'claude') => {
+  const handleAddProvider = (tool: 'codex' | 'claude' | 'gemini') => {
     setAddModalTool(tool)
     setShowAddModal(true)
   }
@@ -274,7 +355,12 @@ export default function App() {
     if (!editingProvider) return
 
     try {
-      const api = editingTool === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api =
+        editingTool === 'codex'
+          ? window.electronAPI.codex
+          : editingTool === 'claude'
+            ? window.electronAPI.claude
+            : window.electronAPI.gemini
 
       if (isCloneMode) {
         // 克隆模式：创建新服务商
@@ -325,6 +411,11 @@ export default function App() {
               current: currentCodex,
               presetsCount: codexPresetsCount,
             }}
+            geminiData={{
+              providers: geminiProviders,
+              current: currentGemini,
+              presetsCount: geminiPresetsCount,
+            }}
             onEnterPage={handleEnterPage}
           />
         )}
@@ -352,6 +443,19 @@ export default function App() {
             onEdit={handleCodexEdit}
             onDelete={handleCodexDelete}
             onClone={handleCodexClone}
+          />
+        )}
+
+        {/* Gemini 页面 */}
+        {currentView === 'gemini' && (
+          <GeminiPage
+            providers={geminiProviders}
+            currentProvider={currentGemini}
+            onAdd={() => handleAddProvider('gemini')}
+            onSwitch={handleGeminiSwitch}
+            onEdit={handleGeminiEdit}
+            onDelete={handleGeminiDelete}
+            onClone={handleGeminiClone}
           />
         )}
 
@@ -428,12 +532,19 @@ export default function App() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {isCloneMode ? '克隆' : '编辑'}服务商 - {editingTool === 'claude' ? 'Claude' : 'Codex'}
+              {isCloneMode ? '克隆' : '编辑'}服务商 -{' '}
+              {editingTool === 'claude' ? 'Claude' : editingTool === 'codex' ? 'Codex' : 'Gemini'}
             </h2>
             <ProviderForm
               provider={editingProvider}
               isClone={isCloneMode}
-              existingProviders={editingTool === 'codex' ? codexProviders : claudeProviders}
+              existingProviders={
+                editingTool === 'codex'
+                  ? codexProviders
+                  : editingTool === 'claude'
+                    ? claudeProviders
+                    : geminiProviders
+              }
               onSubmit={handleEditSubmit}
               onCancel={() => {
                 setShowEditModal(false)

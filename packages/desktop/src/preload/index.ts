@@ -105,21 +105,62 @@ const claudeAPI: ClaudeAPI = {
 }
 
 // ============================================================================
+// Gemini API
+// ============================================================================
+
+export interface GeminiAPI {
+  addProvider: (input: AddProviderInput) => Promise<Provider>
+  listProviders: () => Promise<Provider[]>
+  getProvider: (id: string) => Promise<Provider | undefined>
+  switchProvider: (id: string) => Promise<void>
+  editProvider: (id: string, updates: EditProviderInput) => Promise<Provider>
+  removeProvider: (id: string) => Promise<void>
+  cloneProvider: (sourceId: string, newName: string) => Promise<Provider>
+  getCurrent: () => Promise<Provider | undefined>
+  findByName: (name: string) => Promise<Provider | undefined>
+
+  addPreset: (input: AddPresetInput) => Promise<PresetTemplate>
+  listPresets: () => Promise<PresetTemplate[]>
+  editPreset: (name: string, updates: EditPresetInput) => Promise<PresetTemplate>
+  removePreset: (name: string) => Promise<void>
+}
+
+const geminiAPI: GeminiAPI = {
+  addProvider: (input) => ipcRenderer.invoke('gemini:add-provider', input),
+  listProviders: () => ipcRenderer.invoke('gemini:list-providers'),
+  getProvider: (id) => ipcRenderer.invoke('gemini:get-provider', id),
+  switchProvider: (id) => ipcRenderer.invoke('gemini:switch-provider', id),
+  editProvider: (id, updates) => ipcRenderer.invoke('gemini:edit-provider', id, updates),
+  removeProvider: (id) => ipcRenderer.invoke('gemini:remove-provider', id),
+  cloneProvider: (sourceId, newName) =>
+    ipcRenderer.invoke('gemini:clone-provider', sourceId, newName),
+  getCurrent: () => ipcRenderer.invoke('gemini:get-current'),
+  findByName: (name) => ipcRenderer.invoke('gemini:find-by-name', name),
+
+  addPreset: (input) => ipcRenderer.invoke('gemini:add-preset', input),
+  listPresets: () => ipcRenderer.invoke('gemini:list-presets'),
+  editPreset: (name, updates) => ipcRenderer.invoke('gemini:edit-preset', name, updates),
+  removePreset: (name) => ipcRenderer.invoke('gemini:remove-preset', name),
+}
+
+// ============================================================================
 // 配置文件 API
 // ============================================================================
 
 export interface ConfigAPI {
   readConfigFiles: (
-    tool: 'codex' | 'claude' | 'mcp'
-  ) => Promise<Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>>
+    tool: 'codex' | 'claude' | 'mcp' | 'gemini'
+  ) => Promise<
+    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
+  >
   writeConfigFiles: (
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => Promise<{ success: boolean }>
   readCcmanConfigFiles: () => Promise<
-    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   >
   writeCcmanConfigFiles: (
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => Promise<{ success: boolean }>
   migrate: () => Promise<{ success: boolean; message: string }>
 }
@@ -285,6 +326,7 @@ const mcpAPI: MCPAPI = {
 contextBridge.exposeInMainWorld('electronAPI', {
   codex: codexAPI,
   claude: claudeAPI,
+  gemini: geminiAPI,
   config: configAPI,
   system: systemAPI,
   update: updateAPI,
@@ -301,6 +343,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 export interface ElectronAPI {
   codex: CodexAPI
   claude: ClaudeAPI
+  gemini: GeminiAPI
   config: ConfigAPI
   system: SystemAPI
   update: UpdateAPI

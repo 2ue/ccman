@@ -3,11 +3,12 @@ import { LucideIcon, ArrowRight, CheckCircle2, AlertCircle, XCircle, Info } from
 export type StatusType = 'success' | 'warning' | 'error' | 'info'
 
 interface DashboardCardProps {
-  icon: LucideIcon
+  icon: LucideIcon | React.ElementType
   title: string
   statusLines: string[]
   statusType?: StatusType
   onClick: () => void
+  isBrandIcon?: boolean
 }
 
 export default function DashboardCard({
@@ -16,6 +17,7 @@ export default function DashboardCard({
   statusLines,
   statusType = 'info',
   onClick,
+  isBrandIcon = false,
 }: DashboardCardProps) {
   const statusColors = {
     success: 'bg-green-50 border-green-200 hover:border-green-300',
@@ -50,7 +52,11 @@ export default function DashboardCard({
 
       {/* 图标 + 标题 */}
       <div className="flex items-center gap-2.5 mb-3">
-        <Icon className="w-9 h-9 text-gray-700" />
+        {isBrandIcon ? (
+          <Icon size={36} />
+        ) : (
+          <Icon className="w-9 h-9 text-gray-700" />
+        )}
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       </div>
 

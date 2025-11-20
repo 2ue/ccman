@@ -1,6 +1,6 @@
 {
   "name": "@ccman/core",
-  "version": "3.0.33",
+  "version": "3.1.0",
   "type": "module",
   "description": "Core business logic for ccman",
   "main": "./dist/index.js",
@@ -28,12 +28,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/2ue/ccm.git",
+    "url": "https://github.com/2ue/ccman.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/2ue/ccm#readme",
+  "homepage": "https://github.com/2ue/ccman#readme",
   "bugs": {
-    "url": "https://github.com/2ue/ccm/issues"
+    "url": "https://github.com/2ue/ccman/issues"
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",

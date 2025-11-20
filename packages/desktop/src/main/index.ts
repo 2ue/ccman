@@ -17,13 +17,17 @@ import {
   createCodexManager,
   createClaudeManager,
   createMCPManager,
+  createGeminiManager,
   migrateConfig,
   getClaudeConfigPath,
   getCodexConfigPath,
   getCodexAuthPath,
+  getGeminiSettingsPath,
   getCcmanDir,
   getCodexDir,
   getClaudeDir,
+  getGeminiDir,
+  getGeminiEnvPath,
   testWebDAVConnection,
   uploadToCloud,
   downloadFromCloud,
@@ -91,12 +95,14 @@ if (isDev) {
   console.log(`  ccman: ${getCcmanDir()}`)
   console.log(`  codex:  ${getCodexDir()}`)
   console.log(`  claude: ${getClaudeDir()}`)
+  console.log(`  gemini: ${getGeminiDir()}`)
   console.log()
 } else {
   console.log('\n[生产模式] 启动信息:')
   console.log(`  ccman: ${getCcmanDir()}`)
   console.log(`  codex:  ${getCodexDir()}`)
   console.log(`  claude: ${getClaudeDir()}`)
+  console.log(`  gemini: ${getGeminiDir()}`)
   console.log(`  app.isPackaged: ${app.isPackaged}`)
   console.log()
 }
@@ -236,6 +242,92 @@ ipcMain.handle('codex:find-by-name', async (_event, name: string) => {
 })
 
 // ============================================================================
+// IPC 处理器 - Gemini
+// ============================================================================
+
+// 添加 Gemini provider
+ipcMain.handle('gemini:add-provider', async (_event, input: AddProviderInput) => {
+  const manager = createGeminiManager()
+  return manager.add(input)
+})
+
+// 列出所有 Gemini providers
+ipcMain.handle('gemini:list-providers', async () => {
+  const manager = createGeminiManager()
+  return manager.list()
+})
+
+// 获取 Gemini provider
+ipcMain.handle('gemini:get-provider', async (_event, id: string) => {
+  const manager = createGeminiManager()
+  return manager.get(id)
+})
+
+// 切换 Gemini provider
+ipcMain.handle('gemini:switch-provider', async (_event, id: string) => {
+  const manager = createGeminiManager()
+  return manager.switch(id)
+})
+
+// 编辑 Gemini provider
+ipcMain.handle('gemini:edit-provider', async (_event, id: string, updates: EditProviderInput) => {
+  const manager = createGeminiManager()
+  return manager.edit(id, updates)
+})
+
+// 删除 Gemini provider
+ipcMain.handle('gemini:remove-provider', async (_event, id: string) => {
+  const manager = createGeminiManager()
+  return manager.remove(id)
+})
+
+// 克隆 Gemini provider
+ipcMain.handle('gemini:clone-provider', async (_event, sourceId: string, newName: string) => {
+  const manager = createGeminiManager()
+  return manager.clone(sourceId, newName)
+})
+
+// 获取当前 Gemini provider
+ipcMain.handle('gemini:get-current', async () => {
+  const manager = createGeminiManager()
+  return manager.getCurrent()
+})
+
+// 根据名称查找 Gemini provider
+ipcMain.handle('gemini:find-by-name', async (_event, name: string) => {
+  const manager = createGeminiManager()
+  return manager.findByName(name)
+})
+
+// ============================================================================
+// IPC 处理器 - Gemini Presets
+// ============================================================================
+
+// 获取 Gemini presets
+ipcMain.handle('gemini:list-presets', async () => {
+  const manager = createGeminiManager()
+  return manager.listPresets()
+})
+
+// 添加 Gemini preset
+ipcMain.handle('gemini:add-preset', async (_event, input: AddPresetInput) => {
+  const manager = createGeminiManager()
+  return manager.addPreset(input)
+})
+
+// 编辑 Gemini preset
+ipcMain.handle('gemini:edit-preset', async (_event, name: string, updates: EditPresetInput) => {
+  const manager = createGeminiManager()
+  return manager.editPreset(name, updates)
+})
+
+// 删除 Gemini preset
+ipcMain.handle('gemini:remove-preset', async (_event, name: string) => {
+  const manager = createGeminiManager()
+  return manager.removePreset(name)
+})
+
+// ============================================================================
 // IPC 处理器 - Claude
 // ============================================================================
 
@@ -354,7 +446,7 @@ ipcMain.handle('claude:remove-preset', async (_event, name: string) => {
 // ============================================================================
 
 // 读取配置文件
-ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'mcp') => {
+ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'mcp' | 'gemini') => {
   try {
     if (tool === 'claude') {
       const path = getClaudeConfigPath()
@@ -445,6 +537,58 @@ ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'm
       }
 
       return result
+    } else if (tool === 'gemini') {
+      const settingsPath = getGeminiSettingsPath()
+      const envPath = getGeminiEnvPath()
+
+      const result: Array<{
+        name: string
+        path: string
+        content: string
+        language: 'json' | 'toml' | 'env'
+      }> = []
+
+      // settings.json
+      if (fs.existsSync(settingsPath)) {
+        result.push({
+          name: 'settings.json',
+          path: settingsPath,
+          content: fs.readFileSync(settingsPath, 'utf-8'),
+          language: 'json',
+        })
+      } else {
+        result.push({
+          name: 'settings.json',
+          path: settingsPath,
+          content:
+            '# 配置文件不存在\n# 请先使用 ccman gm add 添加服务商，配置文件将自动创建',
+          language: 'json',
+        })
+      }
+
+      // .env
+      if (fs.existsSync(envPath)) {
+        result.push({
+          name: '.env',
+          path: envPath,
+          content: fs.readFileSync(envPath, 'utf-8'),
+          language: 'env',
+        })
+      } else {
+        result.push({
+          name: '.env',
+          path: envPath,
+          content:
+            '# .env 文件不存在\n# 将在切换到带有 baseUrl/apiKey 的服务商时自动创建\n' +
+            '# 也可以手动创建，例如：\n' +
+            '# GOOGLE_GEMINI_BASE_URL=https://www.packyapi.com\n' +
+            '# GEMINI_API_KEY=YOUR_PACKYAPI_TOKEN_HERE\n' +
+            '# GEMINI_MODEL=gemini-2.5-pro\n',
+          language: 'env',
+        })
+      }
+
+      return result
     }
     return []
   } catch (error) {
@@ -457,7 +601,7 @@ ipcMain.handle(
   'write-config-files',
   async (
     _event,
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => {
     try {
       // 备份所有文件
@@ -495,21 +639,41 @@ ipcMain.handle('read-ccman-config-files', async () => {
   try {
     const codexPath = path.join(getCcmanDir(), 'codex.json')
     const claudePath = path.join(getCcmanDir(), 'claude.json')
+    const geminiPath = path.join(getCcmanDir(), 'gemini.json')
 
-    return [
-      {
-        name: 'codex.json',
-        path: codexPath,
-        content: fs.readFileSync(codexPath, 'utf-8'),
-        language: 'json' as const,
-      },
-      {
-        name: 'claude.json',
-        path: claudePath,
-        content: fs.readFileSync(claudePath, 'utf-8'),
-        language: 'json' as const,
-      },
-    ]
+    const files: Array<{ name: string; path: string; content: string; language: 'json' }> = []
+
+    // Codex
+    files.push({
+      name: 'codex.json',
+      path: codexPath,
+      content: fs.existsSync(codexPath)
+        ? fs.readFileSync(codexPath, 'utf-8')
+        : '{\n  "providers": [],\n  "presets": []\n}\n',
+      language: 'json',
+    })
+
+    // Claude
+    files.push({
+      name: 'claude.json',
+      path: claudePath,
+      content: fs.existsSync(claudePath)
+        ? fs.readFileSync(claudePath, 'utf-8')
+        : '{\n  "providers": [],\n  "presets": []\n}\n',
+      language: 'json',
+    })
+
+    // Gemini
+    files.push({
+      name: 'gemini.json',
+      path: geminiPath,
+      content: fs.existsSync(geminiPath)
+        ? fs.readFileSync(geminiPath, 'utf-8')
+        : '{\n  "providers": [],\n  "presets": []\n}\n',
+      language: 'json',
+    })
+
+    return files
   } catch (error) {
     throw new Error(`读取 ccman 配置文件失败：${(error as Error).message}`)
   }
@@ -520,7 +684,7 @@ ipcMain.handle(
   'write-ccman-config-files',
   async (
     _event,
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' }>
+    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   ) => {
     try {
       // 备份所有文件

@@ -6,7 +6,7 @@ import { AlertDialog } from './dialogs'
 import { Plus, Inbox, FileCode2, Search } from 'lucide-react'
 import { BUTTON_WITH_ICON, BUTTON_STYLES } from '../styles/button'
 
-interface CodexPageProps {
+interface GeminiPageProps {
   providers: Provider[]
   currentProvider?: Provider
   onAdd: () => void
@@ -16,7 +16,7 @@ interface CodexPageProps {
   onClone: (provider: Provider) => void
 }
 
-export default function CodexPage({
+export default function GeminiPage({
   providers,
   currentProvider,
   onAdd,
@@ -24,7 +24,7 @@ export default function CodexPage({
   onEdit,
   onDelete,
   onClone,
-}: CodexPageProps) {
+}: GeminiPageProps) {
   const [showConfigEditor, setShowConfigEditor] = useState(false)
   const [configFiles, setConfigFiles] = useState<
     Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
@@ -45,7 +45,7 @@ export default function CodexPage({
 
   const handleEditConfig = async () => {
     try {
-      const files = await window.electronAPI.config.readConfigFiles('codex')
+      const files = await window.electronAPI.config.readConfigFiles('gemini')
       setConfigFiles(files)
       setShowConfigEditor(true)
     } catch (error) {
@@ -77,9 +77,9 @@ export default function CodexPage({
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Codex 服务商管理</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Gemini CLI 服务商管理</h1>
             <p className="text-sm text-gray-500 mt-1">
-              管理 Codex 的 API 配置，当前共 {providers.length} 个服务商
+              管理 Gemini CLI 的 API 配置，当前共 {providers.length} 个服务商
               {searchQuery && ` · 搜索结果: ${filteredProviders.length} 个`}
             </p>
           </div>
@@ -114,8 +114,8 @@ export default function CodexPage({
         {providers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Inbox className="w-16 h-16 mb-4 text-gray-400" />
-            <p className="text-lg font-medium mb-2">还没有 Codex 服务商</p>
-            <p className="text-sm text-gray-400 mb-4">点击右上角"添加服务商"按钮开始配置</p>
+            <p className="text-lg font-medium mb-2">还没有 Gemini CLI 服务商</p>
+            <p className="text-sm text-gray-400 mb-4">点击右上角&quot;添加服务商&quot;按钮开始配置</p>
             <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
               <Plus className="w-4 h-4" />
               添加
@@ -131,7 +131,7 @@ export default function CodexPage({
           <ProviderGrid
             providers={filteredProviders}
             currentProviderId={currentProvider?.id}
-            tool="codex"
+            tool="gemini"
             onSwitch={onSwitch}
             onEdit={(provider) => onEdit(provider)}
             onDelete={onDelete}
@@ -143,7 +143,7 @@ export default function CodexPage({
       {/* Config Editor Modal */}
       <ConfigEditorModal
         show={showConfigEditor}
-        title="编辑 Codex 配置"
+        title="编辑 Gemini CLI 配置"
         files={configFiles}
         onSave={handleSaveConfig}
         onClose={() => setShowConfigEditor(false)}

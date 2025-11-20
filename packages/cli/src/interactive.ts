@@ -9,10 +9,16 @@
 
 import inquirer from 'inquirer'
 import chalk from 'chalk'
-import { createCodexManager, createClaudeManager } from '@ccman/core'
+import { createCodexManager, createClaudeManager, createGeminiManager } from '@ccman/core'
 import { formatProviderTable } from './utils/format.js'
 
-type ToolType = 'codex' | 'claude'
+type ToolType = 'codex' | 'claude' | 'gemini'
+
+const TOOL_CONFIG = {
+  codex: { name: 'Codex', emoji: '🔶', cmd: 'cx' },
+  claude: { name: 'Claude', emoji: '🔷', cmd: 'cc' },
+  gemini: { name: 'Gemini', emoji: '💎', cmd: 'gm' },
+} as const
 
 // ============================================================================
 // 通用表单函数
@@ -106,6 +112,7 @@ export async function startMainMenu(): Promise<void> {
         choices: [
           { name: '🔷 Claude 管理', value: 'claude' },
           { name: '🔶 Codex 管理', value: 'codex' },
+          { name: '💎 Gemini 管理', value: 'gemini' },
           { name: '🔄 WebDAV 同步', value: 'sync' },
           { name: '📦 预置服务商管理', value: 'presets' },
           { name: '❌ 退出', value: 'exit' },
@@ -122,6 +129,8 @@ export async function startMainMenu(): Promise<void> {
       await startClaudeMenu()
     } else if (choice === 'codex') {
       await startCodexMenu()
+    } else if (choice === 'gemini') {
+      await startGeminiMenu()
     } else if (choice === 'sync') {
       const { startSyncMenu } = await import('./commands/sync/index.js')
       await startSyncMenu()
@@ -154,12 +163,22 @@ export async function startCodexMenu(): Promise<void> {
 }
 
 // ============================================================================
+// Gemini 菜单
+// ============================================================================
+
+/**
+ * Gemini 菜单 - ccman gm 入口
+ */
+export async function startGeminiMenu(): Promise<void> {
+  await showToolMenu('gemini')
+}
+
+// ============================================================================
 // 工具菜单（通用）
 // ============================================================================
 
 async function showToolMenu(tool: ToolType): Promise<void> {
-  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
-  const toolEmoji = tool === 'claude' ? '🔷' : '🔶'
+  const { name: toolName, emoji: toolEmoji } = TOOL_CONFIG[tool]
 
   // 交互式菜单需要一个无限循环,直到用户选择返回
   // eslint-disable-next-line no-constant-condition
@@ -239,8 +258,8 @@ async function showPresetsMenu(): Promise<void> {
 // ============================================================================
 
 async function handleAdd(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
-  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
+  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
+  const { name: toolName, cmd } = TOOL_CONFIG[tool]
   const presets = manager.listPresets()
 
   console.log(chalk.bold(`\n📝 添加 ${toolName} 服务商\n`))
@@ -355,13 +374,13 @@ async function handleAdd(tool: ToolType): Promise<void> {
   } else {
     console.log(
       chalk.blue('💡 稍后切换:') +
-        chalk.white(` ccman ${tool === 'codex' ? 'cx' : 'cc'} use "${provider.name}"\n`)
+        chalk.white(` ccman ${cmd} use "${provider.name}"\n`)
     )
   }
 }
 
 async function handleSwitch(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
+  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
   const providers = manager.list()
   const current = manager.getCurrent()
 
@@ -388,10 +407,10 @@ async function handleSwitch(tool: ToolType): Promise<void> {
 }
 
 async function handleList(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
+  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
   const providers = manager.list()
   const current = manager.getCurrent()
-  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
+  const { name: toolName } = TOOL_CONFIG[tool]
 
   if (providers.length === 0) {
     console.log(chalk.yellow(`\n⚠️  暂无 ${toolName} 服务商\n`))
@@ -403,9 +422,9 @@ async function handleList(tool: ToolType): Promise<void> {
 }
 
 async function handleCurrent(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
+  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
   const current = manager.getCurrent()
-  const toolName = tool === 'claude' ? 'Claude' : 'Codex'
+  const { name: toolName } = TOOL_CONFIG[tool]
 
   if (!current) {
     console.log(chalk.yellow(`\n⚠️  未选择任何 ${toolName} 服务商\n`))
@@ -425,7 +444,7 @@ async function handleCurrent(tool: ToolType): Promise<void> {
 }
 
 async function handleEdit(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
+  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
   const providers = manager.list()
 
   if (providers.length === 0) {
@@ -493,7 +512,7 @@ async function handleEdit(tool: ToolType): Promise<void> {
 }
 
 async function handleClone(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
+  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
   const providers = manager.list()
 
   if (providers.length === 0) {
@@ -547,7 +566,7 @@ async function handleClone(tool: ToolType): Promise<void> {
 }
 
 async function handleRemove(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : createClaudeManager()
+  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
   const providers = manager.list()
 
   if (providers.length === 0) {
