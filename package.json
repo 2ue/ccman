@@ -1,6 +1,6 @@
 {
   "name": "ccman-monorepo",
-  "version": "3.1.2",
+  "version": "3.1.1",
   "private": true,
   "description": "Manage Codex and Claude Code API service provider configurations",
   "scripts": {
@@ -41,16 +41,16 @@
     "packages/core/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write",
-      "bash -c 'cd packages/core && tsc --noEmit'"
+      "bash -c 'cd packages/core && pnpm exec tsc --noEmit'"
     ],
     "packages/cli/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write",
-      "bash -c 'cd packages/cli && tsc --noEmit'"
+      "bash -c 'cd packages/cli && pnpm exec tsc --noEmit'"
     ],
     "packages/desktop/**/*.{ts,tsx}": [
       "prettier --write",
-      "bash -c 'cd packages/desktop && tsc --noEmit'"
+      "bash -c 'cd packages/desktop && pnpm exec tsc --noEmit'"
     ]
   }
 }

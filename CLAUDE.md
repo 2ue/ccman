@@ -637,6 +637,33 @@ Closes #1
 - **Minor (0.x.0)**：新功能（如添加新命令）
 - **Patch (0.0.x)**：Bug 修复
 
+### 包发布说明
+
+**⚠️ 重要：CLI 是唯一发布到 npm 的包**
+
+- **发布包**：只有 `packages/cli`（npm 包名：`ccman`）
+- **不发布**：`@ccman/core`、`@ccman/desktop` 不发布到 npm
+- **构建方式**：CLI 直接打包 @ccman/core 源码到 bundle 中
+
+**CLI 构建原理**：
+
+```typescript
+// tsup.config.ts
+export default defineConfig({
+  noExternal: ['@ccman/core'],  // 强制打包 @ccman/core 源码
+  esbuildOptions(options) {
+    options.alias = {
+      '@ccman/core': resolve(__dirname, '../core/src/index.ts'),  // 源码路径
+    }
+  },
+})
+```
+
+**为什么这样设计**：
+- ✅ 用户只需要 `npm install -g ccman`，无需关心 core 包
+- ✅ CLI bundle 包含完整功能，无外部依赖
+- ✅ Core 作为内部模块，不需要发布和维护单独的 npm 包
+
 ### 版本号管理
 
 **使用脚本统一修改所有包版本号**：
@@ -736,14 +763,37 @@ npm run version 3.0.4
 
 **发布失败处理**：
 
-如果发现 tag 已存在：
+**⚠️ 重要原则：发布失败不要增加版本号**
+
+- ❌ **错误做法**：发布 v3.1.1 失败，立即增加到 v3.1.2
+- ✅ **正确做法**：修复问题，删除失败的 tag，继续使用 v3.1.1
+
+**步骤**：
+
 ```bash
-# ❌ 不要删除远程 tag！
-# ✅ 正确做法：增加版本号
-npm run version 3.0.5  # 增加版本号
+# 1. 删除本地和远程的失败 tag
+git tag -d v3.1.1
+git push origin :refs/tags/v3.1.1
+
+# 2. 修复构建问题（如 tsup 配置、TypeScript 错误等）
+
+# 3. 本地测试构建
+pnpm build  # 确保构建成功
+
+# 4. 重新提交并打 tag（继续使用相同版本号）
 git add .
-git commit -m "chore: bump version to 3.0.5"
-git tag v3.0.5
+git commit -m "fix(build): 修复构建问题"
+git tag v3.1.1
+git push && git push --tags
+```
+
+**如果 tag 已存在且无法删除**（极少数情况）：
+```bash
+# 最后手段：增加版本号
+npm run version 3.1.2
+git add .
+git commit -m "chore: bump version to 3.1.2"
+git tag v3.1.2
 git push && git push --tags
 ```
 
