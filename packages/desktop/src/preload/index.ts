@@ -118,6 +118,11 @@ export interface GeminiAPI {
   cloneProvider: (sourceId: string, newName: string) => Promise<Provider>
   getCurrent: () => Promise<Provider | undefined>
   findByName: (name: string) => Promise<Provider | undefined>
+
+  addPreset: (input: AddPresetInput) => Promise<PresetTemplate>
+  listPresets: () => Promise<PresetTemplate[]>
+  editPreset: (name: string, updates: EditPresetInput) => Promise<PresetTemplate>
+  removePreset: (name: string) => Promise<void>
 }
 
 const geminiAPI: GeminiAPI = {
@@ -131,6 +136,11 @@ const geminiAPI: GeminiAPI = {
     ipcRenderer.invoke('gemini:clone-provider', sourceId, newName),
   getCurrent: () => ipcRenderer.invoke('gemini:get-current'),
   findByName: (name) => ipcRenderer.invoke('gemini:find-by-name', name),
+
+  addPreset: (input) => ipcRenderer.invoke('gemini:add-preset', input),
+  listPresets: () => ipcRenderer.invoke('gemini:list-presets'),
+  editPreset: (name, updates) => ipcRenderer.invoke('gemini:edit-preset', name, updates),
+  removePreset: (name) => ipcRenderer.invoke('gemini:remove-preset', name),
 }
 
 // ============================================================================

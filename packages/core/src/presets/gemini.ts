@@ -15,6 +15,11 @@ export const GEMINI_PRESETS: InternalPresetTemplate[] = [
     description: '使用官方 Gemini API（通过 GEMINI_API_KEY 或 GOOGLE_API_KEY 认证）',
   },
   {
+    name: 'PackyAPI',
+    baseUrl: 'https://www.packyapi.com',
+    description: 'PackyAPI Gemini 兼容服务',
+  },
+  {
     name: 'LiteLLM Proxy',
     baseUrl: 'http://localhost:4000',
     description: '使用本地 LiteLLM Proxy 作为 Gemini 兼容代理',

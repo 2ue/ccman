@@ -37,13 +37,14 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const loadPresets = async () => {
     try {
-      if (type === 'gemini') {
-        // 目前 Gemini 不在 Desktop 中展示预置，直接清空即可
-        setPresets([])
-        return
-      }
-      const api = type === 'codex' ? window.electronAPI.codex : window.electronAPI.claude
+      const api = type === 'codex'
+        ? window.electronAPI.codex
+        : type === 'claude'
+        ? window.electronAPI.claude
+        : window.electronAPI.gemini
+      console.log(`[AddProviderModal] Loading ${type} presets...`)
       const presetsData = await api.listPresets()
+      console.log(`[AddProviderModal] Loaded ${type} presets:`, presetsData)
       setPresets(presetsData)
     } catch (error) {
       console.error('Failed to load presets:', error)
@@ -73,6 +74,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
   }, [show, type])
 
   const handleSelectPreset = (preset: PresetTemplate) => {
+    console.log('[AddProviderModal] Selected preset:', preset)
     setSelectedPreset(preset)
     setShowCustomForm(true)
   }
@@ -157,13 +159,19 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Package className={`w-5 h-5 ${type === 'codex' ? 'text-blue-600' : 'text-purple-600'}`} />
+                  <Package className={`w-5 h-5 ${
+                    type === 'codex' ? 'text-blue-600' : type === 'claude' ? 'text-purple-600' : 'text-green-600'
+                  }`} />
                   <h3 className="text-base font-semibold text-gray-900">选择预置服务商</h3>
                 </div>
                 <button
                   onClick={handleAddCustom}
                   className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
-                    type === 'codex' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
+                    type === 'codex'
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : type === 'claude'
+                      ? 'bg-purple-600 hover:bg-purple-700'
+                      : 'bg-green-600 hover:bg-green-700'
                   }`}
                 >
                   <Plus className="w-4 h-4" />
@@ -209,7 +217,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
                               type === 'codex'
                                 ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-                                : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                                : type === 'claude'
+                                ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                                : 'text-green-700 bg-green-50 hover:bg-green-100'
                             }`}
                             title="使用此预置"
                           >

@@ -300,6 +300,34 @@ ipcMain.handle('gemini:find-by-name', async (_event, name: string) => {
 })
 
 // ============================================================================
+// IPC 处理器 - Gemini Presets
+// ============================================================================
+
+// 获取 Gemini presets
+ipcMain.handle('gemini:list-presets', async () => {
+  const manager = createGeminiManager()
+  return manager.listPresets()
+})
+
+// 添加 Gemini preset
+ipcMain.handle('gemini:add-preset', async (_event, input: AddPresetInput) => {
+  const manager = createGeminiManager()
+  return manager.addPreset(input)
+})
+
+// 编辑 Gemini preset
+ipcMain.handle('gemini:edit-preset', async (_event, name: string, updates: EditPresetInput) => {
+  const manager = createGeminiManager()
+  return manager.editPreset(name, updates)
+})
+
+// 删除 Gemini preset
+ipcMain.handle('gemini:remove-preset', async (_event, name: string) => {
+  const manager = createGeminiManager()
+  return manager.removePreset(name)
+})
+
+// ============================================================================
 // IPC 处理器 - Claude
 // ============================================================================
 

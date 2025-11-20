@@ -1,5 +1,6 @@
 import { Provider } from '@ccman/core'
-import { Bot, Code2, Server, Package, Trash2, Settings, Target } from 'lucide-react'
+import { Server, Package, Trash2, Settings, Target } from 'lucide-react'
+import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
 import DashboardCard from './DashboardCard'
 
 export type NavKey =
@@ -60,7 +61,7 @@ export default function DashboardPage({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Claude Code */}
             <DashboardCard
-              icon={Bot}
+              icon={ClaudeIcon}
               title="Claude Code"
               statusLines={[
                 claudeData.current ? `已配置：${claudeData.current.name}` : '未配置',
@@ -68,11 +69,12 @@ export default function DashboardPage({
               ]}
               statusType={claudeData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('claude')}
+              isBrandIcon
             />
 
             {/* Codex */}
             <DashboardCard
-              icon={Code2}
+              icon={OpenAIIcon}
               title="Codex"
               statusLines={[
                 codexData.current ? `已配置：${codexData.current.name}` : '未配置',
@@ -80,11 +82,12 @@ export default function DashboardPage({
               ]}
               statusType={codexData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('codex')}
+              isBrandIcon
             />
 
             {/* Gemini CLI */}
             <DashboardCard
-              icon={Code2}
+              icon={GeminiIcon}
               title="Gemini CLI"
               statusLines={[
                 geminiData.current ? `已配置：${geminiData.current.name}` : '未配置',
@@ -92,6 +95,7 @@ export default function DashboardPage({
               ]}
               statusType={geminiData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('gemini')}
+              isBrandIcon
             />
           </div>
         </div>

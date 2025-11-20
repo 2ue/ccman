@@ -23,40 +23,8 @@ interface GeminiSettings {
     // 预留其他字段
     [key: string]: unknown
   }
-  model?: {
-    name?: string
-    [key: string]: unknown
-  }
   // 其他字段使用索引签名保留
   [key: string]: unknown
-}
-
-interface GeminiProviderMeta {
-  defaultModel?: string
-  env?: Record<string, string | number>
-}
-
-/**
- * 从 Provider.model 字段解析 Gemini 额外配置
- * - 如果是合法 JSON，则读取 defaultModel / env
- * - 否则忽略，保持安全
- */
-function parseGeminiMeta(provider: Provider): GeminiProviderMeta {
-  if (!provider.model) return {}
-  try {
-    const parsed = JSON.parse(provider.model) as Partial<GeminiProviderMeta>
-    const meta: GeminiProviderMeta = {}
-    if (typeof parsed.defaultModel === 'string') {
-      meta.defaultModel = parsed.defaultModel
-    }
-    if (parsed.env && typeof parsed.env === 'object') {
-      meta.env = parsed.env as Record<string, string | number>
-    }
-    return meta
-  } catch {
-    // 非 JSON 或结构不符合时，忽略 meta
-    return {}
-  }
 }
 
 /**
@@ -95,16 +63,18 @@ function saveEnvFile(envPath: string, env: Record<string, string>): void {
 }
 
 /**
- * 将 Provider 应用到 Gemini CLI 的配置
+ * 将 Provider 应用到 Gemini CLI 的配置（按照官方文档）
  *
- * 策略：
- * - settings.json:
- *   - 仅在 meta.defaultModel 存在时更新 model.name
- *   - 其他字段全部保留
- * - ~/.gemini/.env:
- *   - baseUrl → GOOGLE_GEMINI_BASE_URL（空则删除该键）
- *   - apiKey → GEMINI_API_KEY（空则删除该键）
- *   - meta.env 中的键值合并进去
+ * settings.json（官方配置）:
+ * {
+ *   "ide": { "enabled": true },
+ *   "security": { "auth": { "selectedType": "gemini-api-key" } }
+ * }
+ *
+ * ~/.gemini/.env（官方配置）:
+ * GOOGLE_GEMINI_BASE_URL=https://www.packyapi.com
+ * GEMINI_API_KEY=YOUR_API_KEY
+ * GEMINI_MODEL=gemini-2.5-pro
  */
 export function writeGeminiConfig(provider: Provider): void {
   const settingsPath = getGeminiSettingsPath()
@@ -114,9 +84,7 @@ export function writeGeminiConfig(provider: Provider): void {
   // 确保目录存在
   ensureDir(dir)
 
-  const meta = parseGeminiMeta(provider)
-
-  // 1. 更新 settings.json（只管 model.name）
+  // 1. 更新 settings.json
   let settings: GeminiSettings = {}
 
   if (fileExists(settingsPath)) {
@@ -131,15 +99,7 @@ export function writeGeminiConfig(provider: Provider): void {
     }
   }
 
-  // 更新 model.name（如果提供了 defaultModel）
-  if (meta.defaultModel) {
-    if (!settings.model || typeof settings.model !== 'object') {
-      settings.model = {}
-    }
-    settings.model.name = meta.defaultModel
-  }
-
-  // 确保启用 IDE 集成（默认开启，但不覆盖用户显式关闭）
+  // 确保启用 IDE 集成
   if (!settings.ide || typeof settings.ide !== 'object') {
     settings.ide = {}
   }
@@ -186,16 +146,9 @@ export function writeGeminiConfig(provider: Provider): void {
     delete env.GEMINI_API_KEY
   }
 
-  // defaultModel → GEMINI_MODEL（如果未在现有 env 或 meta.env 中显式指定）
-  if (meta.defaultModel && env.GEMINI_MODEL === undefined) {
-    env.GEMINI_MODEL = meta.defaultModel
-  }
-
-  // 合并 meta.env
-  if (meta.env) {
-    for (const [key, value] of Object.entries(meta.env)) {
-      env[key] = String(value)
-    }
+  // model → GEMINI_MODEL
+  if (provider.model && provider.model.trim().length > 0) {
+    env.GEMINI_MODEL = provider.model
   }
 
   saveEnvFile(envPath, env)

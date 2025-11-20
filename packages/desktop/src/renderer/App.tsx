@@ -56,6 +56,7 @@ export default function App() {
   // Presets 数量
   const [codexPresetsCount, setCodexPresetsCount] = useState(0)
   const [claudePresetsCount, setClaudePresetsCount] = useState(0)
+  const [geminiPresetsCount, setGeminiPresetsCount] = useState(0)
 
   // Dialog 状态
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -116,6 +117,8 @@ export default function App() {
         setGeminiProviders(geminiList)
         const geminiCurrent = await window.electronAPI.gemini.getCurrent()
         setCurrentGemini(geminiCurrent)
+        const geminiPresets = await window.electronAPI.gemini.listPresets()
+        setGeminiPresetsCount(geminiPresets.length)
       }
     } catch (error) {
       console.error('加载数据失败：', error)
@@ -411,7 +414,7 @@ export default function App() {
             geminiData={{
               providers: geminiProviders,
               current: currentGemini,
-              presetsCount: 0,
+              presetsCount: geminiPresetsCount,
             }}
             onEnterPage={handleEnterPage}
           />
