@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Provider, PresetTemplate, AddProviderInput, EditProviderInput } from '@ccman/core'
+import { TOOL_TYPES, type MainToolType } from '@ccman/core'
 import { Search, Package, ExternalLink, Edit2, Trash2, Plus, FileCode2 } from 'lucide-react'
 import PresetFormModal from './PresetFormModal'
 import ConfigEditorModal from './ConfigEditorModal'
@@ -26,8 +27,22 @@ interface ExtendedPreset {
   name: string
   baseUrl: string
   description: string
-  type: 'codex' | 'claude' | 'gemini'
+  type: MainToolType
   isBuiltIn: boolean
+}
+
+/**
+ * 获取对应工具类型的 API
+ */
+function getToolAPI(type: MainToolType) {
+  switch (type) {
+    case TOOL_TYPES.CODEX:
+      return window.electronAPI.codex
+    case TOOL_TYPES.CLAUDE:
+      return window.electronAPI.claude
+    case TOOL_TYPES.GEMINI:
+      return window.electronAPI.gemini
+  }
 }
 
 export default function ServiceProviderConfigPage({ onUseServiceProvider, onSuccess }: ServiceProviderConfigPageProps) {
@@ -41,7 +56,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
 
   // 预置表单 Modal
   const [showPresetModal, setShowPresetModal] = useState(false)
-  const [presetModalType, setPresetModalType] = useState<'codex' | 'claude' | 'gemini'>('codex')
+  const [presetModalType, setPresetModalType] = useState<MainToolType>(TOOL_TYPES.CODEX)
   const [editingPreset, setEditingPreset] = useState<{ name: string; baseUrl: string; description: string } | undefined>()
 
   // Settings Modal
@@ -102,19 +117,19 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
 
     // Load providers list for validation
     try {
-      const api = preset.type === 'codex'
-        ? window.electronAPI.codex
-        : preset.type === 'claude'
-        ? window.electronAPI.claude
-        : window.electronAPI.gemini
+      const api = getToolAPI(preset.type)
       const providersData = await api.listProviders()
 
-      if (preset.type === 'codex') {
-        setCodexProviders(providersData)
-      } else if (preset.type === 'claude') {
-        setClaudeProviders(providersData)
-      } else {
-        setGeminiProviders(providersData)
+      switch (preset.type) {
+        case TOOL_TYPES.CODEX:
+          setCodexProviders(providersData)
+          break
+        case TOOL_TYPES.CLAUDE:
+          setClaudeProviders(providersData)
+          break
+        case TOOL_TYPES.GEMINI:
+          setGeminiProviders(providersData)
+          break
       }
     } catch (error) {
       console.error('Failed to load providers:', error)
@@ -125,11 +140,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
     if (!usingPreset) return
 
     try {
-      const api = usingPreset.type === 'codex'
-        ? window.electronAPI.codex
-        : usingPreset.type === 'claude'
-        ? window.electronAPI.claude
-        : window.electronAPI.gemini
+      const api = getToolAPI(usingPreset.type)
 
       await api.addProvider(input as AddProviderInput)
 
@@ -147,7 +158,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
     }
   }
 
-  const handleAddPreset = (type: 'codex' | 'claude' | 'gemini') => {
+  const handleAddPreset = (type: MainToolType) => {
     setPresetModalType(type)
     setEditingPreset(undefined)
     setShowPresetModal(true)
@@ -172,11 +183,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
         setConfirmDialog({ ...confirmDialog, show: false })
 
         try {
-          const api = preset.type === 'codex'
-            ? window.electronAPI.codex
-            : preset.type === 'claude'
-            ? window.electronAPI.claude
-            : window.electronAPI.gemini
+          const api = getToolAPI(preset.type)
           await api.removePreset(preset.name)
           await loadPresets()
           onSuccess?.('删除成功')
@@ -217,17 +224,17 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
   // 扩展预置数据，添加 type 字段
   const extendedCodexPresets: ExtendedPreset[] = codexPresets.map((p) => ({
     ...p,
-    type: 'codex' as const,
+    type: TOOL_TYPES.CODEX,
   }))
 
   const extendedClaudeCodePresets: ExtendedPreset[] = claudeCodePresets.map((p) => ({
     ...p,
-    type: 'claude' as const,
+    type: TOOL_TYPES.CLAUDE,
   }))
 
   const extendedGeminiPresets: ExtendedPreset[] = geminiPresets.map((p) => ({
     ...p,
-    type: 'gemini' as const,
+    type: TOOL_TYPES.GEMINI,
   }))
 
   // 前端搜索过滤
@@ -298,7 +305,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
               </span>
             </div>
             <button
-              onClick={() => handleAddPreset('codex')}
+              onClick={() => handleAddPreset(TOOL_TYPES.CODEX)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -381,7 +388,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
               </span>
             </div>
             <button
-              onClick={() => handleAddPreset('claude')}
+              onClick={() => handleAddPreset(TOOL_TYPES.CLAUDE)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -464,7 +471,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
               </span>
             </div>
             <button
-              onClick={() => handleAddPreset('gemini')}
+              onClick={() => handleAddPreset(TOOL_TYPES.GEMINI)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -589,13 +596,16 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
             </h2>
             <ProviderForm
               preset={usingPreset}
-              existingProviders={
-                usingPreset.type === 'codex'
-                  ? codexProviders
-                  : usingPreset.type === 'claude'
-                  ? claudeProviders
-                  : geminiProviders
-              }
+              existingProviders={(() => {
+                switch (usingPreset.type) {
+                  case TOOL_TYPES.CODEX:
+                    return codexProviders
+                  case TOOL_TYPES.CLAUDE:
+                    return claudeProviders
+                  case TOOL_TYPES.GEMINI:
+                    return geminiProviders
+                }
+              })()}
               onSubmit={handleUsePresetSubmit}
               onCancel={() => {
                 setShowUsePresetModal(false)

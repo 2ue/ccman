@@ -5,10 +5,14 @@
  * 从 tool-manager.ts 拆分出来，保持类型定义的稳定性和可维护性
  */
 
+import type { ToolType } from './constants.js'
+
 /**
  * 工具类型
+ * @deprecated 请直接从 '@ccman/core' 或 './constants.js' 导入 ToolType
+ * 此处仅作为向后兼容保留
  */
-export type ToolType = 'codex' | 'claude' | 'mcp' | 'gemini'
+export type { ToolType }
 
 /**
  * Provider 配置(不包含 type 字段,因为配置已分离)

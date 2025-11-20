@@ -9,16 +9,36 @@
 
 import inquirer from 'inquirer'
 import chalk from 'chalk'
-import { createCodexManager, createClaudeManager, createGeminiManager } from '@ccman/core'
+import {
+  createCodexManager,
+  createClaudeManager,
+  createGeminiManager,
+  TOOL_TYPES,
+  type MainToolType,
+  type ToolManager,
+} from '@ccman/core'
 import { formatProviderTable } from './utils/format.js'
 
-type ToolType = 'codex' | 'claude' | 'gemini'
-
-const TOOL_CONFIG = {
-  codex: { name: 'Codex', emoji: '🔶', cmd: 'cx' },
-  claude: { name: 'Claude', emoji: '🔷', cmd: 'cc' },
-  gemini: { name: 'Gemini', emoji: '💎', cmd: 'gm' },
+// CLI 专用配置（emoji 和命令缩写）
+const CLI_TOOL_CONFIG = {
+  [TOOL_TYPES.CODEX]: { name: 'Codex', emoji: '🔶', cmd: 'cx' },
+  [TOOL_TYPES.CLAUDE]: { name: 'Claude', emoji: '🔷', cmd: 'cc' },
+  [TOOL_TYPES.GEMINI]: { name: 'Gemini', emoji: '💎', cmd: 'gm' },
 } as const
+
+/**
+ * 根据工具类型创建对应的 manager
+ */
+function getManager(tool: MainToolType): ToolManager {
+  switch (tool) {
+    case TOOL_TYPES.CODEX:
+      return createCodexManager()
+    case TOOL_TYPES.CLAUDE:
+      return createClaudeManager()
+    case TOOL_TYPES.GEMINI:
+      return createGeminiManager()
+  }
+}
 
 // ============================================================================
 // 通用表单函数
@@ -148,7 +168,7 @@ export async function startMainMenu(): Promise<void> {
  * Claude 菜单 - ccman cc 入口
  */
 export async function startClaudeMenu(): Promise<void> {
-  await showToolMenu('claude')
+  await showToolMenu(TOOL_TYPES.CLAUDE)
 }
 
 // ============================================================================
@@ -159,7 +179,7 @@ export async function startClaudeMenu(): Promise<void> {
  * Codex 菜单 - ccman cx 入口
  */
 export async function startCodexMenu(): Promise<void> {
-  await showToolMenu('codex')
+  await showToolMenu(TOOL_TYPES.CODEX)
 }
 
 // ============================================================================
@@ -170,15 +190,15 @@ export async function startCodexMenu(): Promise<void> {
  * Gemini 菜单 - ccman gm 入口
  */
 export async function startGeminiMenu(): Promise<void> {
-  await showToolMenu('gemini')
+  await showToolMenu(TOOL_TYPES.GEMINI)
 }
 
 // ============================================================================
 // 工具菜单（通用）
 // ============================================================================
 
-async function showToolMenu(tool: ToolType): Promise<void> {
-  const { name: toolName, emoji: toolEmoji } = TOOL_CONFIG[tool]
+async function showToolMenu(tool: MainToolType): Promise<void> {
+  const { name: toolName, emoji: toolEmoji } = CLI_TOOL_CONFIG[tool]
 
   // 交互式菜单需要一个无限循环,直到用户选择返回
   // eslint-disable-next-line no-constant-condition
@@ -257,9 +277,9 @@ async function showPresetsMenu(): Promise<void> {
 // 操作处理函数
 // ============================================================================
 
-async function handleAdd(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
-  const { name: toolName, cmd } = TOOL_CONFIG[tool]
+async function handleAdd(tool: MainToolType): Promise<void> {
+  const manager = getManager(tool)
+  const { name: toolName, cmd } = CLI_TOOL_CONFIG[tool]
   const presets = manager.listPresets()
 
   console.log(chalk.bold(`\n📝 添加 ${toolName} 服务商\n`))
@@ -379,8 +399,8 @@ async function handleAdd(tool: ToolType): Promise<void> {
   }
 }
 
-async function handleSwitch(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
+async function handleSwitch(tool: MainToolType): Promise<void> {
+  const manager = getManager(tool)
   const providers = manager.list()
   const current = manager.getCurrent()
 
@@ -406,11 +426,11 @@ async function handleSwitch(tool: ToolType): Promise<void> {
   console.log(chalk.green(`\n✅ 已切换到: ${provider.name}\n`))
 }
 
-async function handleList(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
+async function handleList(tool: MainToolType): Promise<void> {
+  const manager = getManager(tool)
   const providers = manager.list()
   const current = manager.getCurrent()
-  const { name: toolName } = TOOL_CONFIG[tool]
+  const { name: toolName } = CLI_TOOL_CONFIG[tool]
 
   if (providers.length === 0) {
     console.log(chalk.yellow(`\n⚠️  暂无 ${toolName} 服务商\n`))
@@ -421,10 +441,10 @@ async function handleList(tool: ToolType): Promise<void> {
   console.log(formatProviderTable(providers, current?.id))
 }
 
-async function handleCurrent(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
+async function handleCurrent(tool: MainToolType): Promise<void> {
+  const manager = getManager(tool)
   const current = manager.getCurrent()
-  const { name: toolName } = TOOL_CONFIG[tool]
+  const { name: toolName } = CLI_TOOL_CONFIG[tool]
 
   if (!current) {
     console.log(chalk.yellow(`\n⚠️  未选择任何 ${toolName} 服务商\n`))
@@ -443,8 +463,8 @@ async function handleCurrent(tool: ToolType): Promise<void> {
   console.log()
 }
 
-async function handleEdit(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
+async function handleEdit(tool: MainToolType): Promise<void> {
+  const manager = getManager(tool)
   const providers = manager.list()
 
   if (providers.length === 0) {
@@ -511,8 +531,8 @@ async function handleEdit(tool: ToolType): Promise<void> {
   console.log(chalk.green('\n✅ 编辑成功\n'))
 }
 
-async function handleClone(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
+async function handleClone(tool: MainToolType): Promise<void> {
+  const manager = getManager(tool)
   const providers = manager.list()
 
   if (providers.length === 0) {
@@ -565,8 +585,8 @@ async function handleClone(tool: ToolType): Promise<void> {
   console.log()
 }
 
-async function handleRemove(tool: ToolType): Promise<void> {
-  const manager = tool === 'codex' ? createCodexManager() : tool === 'claude' ? createClaudeManager() : createGeminiManager()
+async function handleRemove(tool: MainToolType): Promise<void> {
+  const manager = getManager(tool)
   const providers = manager.list()
 
   if (providers.length === 0) {

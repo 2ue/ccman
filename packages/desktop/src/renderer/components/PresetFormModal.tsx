@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { TOOL_TYPES, TOOL_CONFIG, type MainToolType } from '@ccman/core'
 import { AlertDialog } from './dialogs'
 
 interface PresetData {
@@ -11,7 +12,7 @@ interface PresetData {
 interface Props {
   show: boolean
   preset?: PresetData
-  type: 'codex' | 'claude' | 'gemini'
+  type: MainToolType
   onClose: () => void
   onSubmit: () => void
   onSuccess?: (message: string) => void
@@ -50,11 +51,16 @@ export default function PresetFormModal({ show, preset, type, onClose, onSubmit,
     e.preventDefault()
 
     try {
-      const api = type === 'codex'
-        ? window.electronAPI.codex
-        : type === 'claude'
-        ? window.electronAPI.claude
-        : window.electronAPI.gemini
+      const api = (() => {
+        switch (type) {
+          case TOOL_TYPES.CODEX:
+            return window.electronAPI.codex
+          case TOOL_TYPES.CLAUDE:
+            return window.electronAPI.claude
+          case TOOL_TYPES.GEMINI:
+            return window.electronAPI.gemini
+        }
+      })()
 
       if (preset) {
         // 编辑模式
@@ -85,7 +91,7 @@ export default function PresetFormModal({ show, preset, type, onClose, onSubmit,
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            {preset ? '编辑预置服务商' : '添加预置服务商'} - {type === 'codex' ? 'Codex' : type === 'claude' ? 'Claude' : 'Gemini'}
+            {preset ? '编辑预置服务商' : '添加预置服务商'} - {TOOL_CONFIG[type].displayName}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />

@@ -7,6 +7,18 @@ import pkg from '../package.json' assert { type: 'json' }
 /** Core version */
 export const VERSION = pkg.version as string
 
+// Constants (全局常量和配置)
+export {
+  TOOL_TYPES,
+  MAIN_TOOL_TYPES,
+  TOOL_CONFIG,
+  getToolConfig,
+  isValidToolType,
+  isMainToolType,
+  type ToolType,
+  type MainToolType,
+} from './constants.js'
+
 // Tool Manager (Factory Functions)
 export {
   createCodexManager,
@@ -20,7 +32,6 @@ export {
   type PresetTemplate,
   type AddPresetInput,
   type EditPresetInput,
-  type ToolType,
   ProviderNotFoundError,
 } from './tool-manager.js'
 
