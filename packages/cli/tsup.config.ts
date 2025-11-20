@@ -8,20 +8,26 @@ const __dirname = dirname(__filename)
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  format: ['esm'],  // 改为 ESM
+  format: ['esm'], // 改为 ESM
   clean: true,
   splitting: false,
   external: [
     'commander',
     'inquirer',
     'chalk',
-    '@iarna/toml',  // TOML 库需要 external（使用 require('stream')）
+    '@iarna/toml', // TOML 库需要 external（使用 require('stream')）
     'proper-lockfile',
     'webdav',
   ],
-  noExternal: ['@ccman/core'],  // 强制打包 @ccman/core 源码（Core 不会发布到 npm）
+  noExternal: ['@ccman/core'], // 强制打包 @ccman/core 源码（Core 不会发布到 npm）
   bundle: true,
   platform: 'node',
+  esbuildOptions(options) {
+    // 配置 esbuild 正确解析 @ccman/core 到源码路径
+    options.alias = {
+      '@ccman/core': resolve(__dirname, '../core/src/index.ts'),
+    }
+  },
   onSuccess: async () => {
     // 复制模板文件到 dist 目录
     const templatesSource = resolve(__dirname, '../core/templates')
