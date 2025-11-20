@@ -14,7 +14,17 @@ export default defineConfig({
           build: {
             outDir: 'dist/main',
             rollupOptions: {
-              external: ['electron', 'path', 'fs', 'os', 'http', 'https', 'url', 'child_process'],
+              external: [
+                'electron',
+                'path',
+                'fs',
+                'os',
+                'http',
+                'https',
+                'url',
+                'child_process',
+                '@ccman/core',
+              ],
             },
           },
         },
@@ -25,7 +35,7 @@ export default defineConfig({
           build: {
             outDir: 'dist/preload',
             rollupOptions: {
-              external: ['electron'],
+              external: ['electron', '@ccman/core'],
             },
           },
         },
@@ -37,6 +47,12 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist/renderer',
+    rollupOptions: {
+      external: ['@ccman/core'],
+    },
+  },
+  optimizeDeps: {
+    exclude: ['@ccman/core'],
   },
   server: {
     port: 5173,
