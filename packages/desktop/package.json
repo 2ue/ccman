@@ -5,6 +5,9 @@
   "main": "./dist/main/index.js",
   "scripts": {
     "dev": "NODE_ENV=development vite",
+    "dev:full": "concurrently -n \"vite,tsc\" -c \"blue,yellow\" \"pnpm dev\" \"pnpm type-check:watch\"",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch --preserveWatchOutput",
     "build": "tsc && vite build",
     "build:electron": "electron-builder",
     "build:electron:ci": "electron-builder --publish never",
@@ -31,6 +34,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.0",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^28.0.0",
     "electron-builder": "^24.0.0",
