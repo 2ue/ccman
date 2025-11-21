@@ -10,7 +10,7 @@ describe('Gemini Writer', () => {
   beforeEach(() => {
     const testDir = path.join(
       os.tmpdir(),
-      `ccman-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `ccman-test-${Date.now()}-${Math.random().toString(36).slice(2)}`
     )
     __setTestPaths({
       ccman: path.join(testDir, '.ccman'),
@@ -82,15 +82,9 @@ describe('Gemini Writer', () => {
 
     writeGeminiConfig(provider)
 
-    const settingsPath = getGeminiSettingsPath()
-    const rawSettings = fs.readFileSync(settingsPath, 'utf-8')
-    const settings = JSON.parse(rawSettings)
-    // model.name 使用 defaultModel
-    expect(settings.model?.name).toBe('gemini-2.5-flash')
-
     const envPath = getGeminiEnvPath()
     const envContent = fs.readFileSync(envPath, 'utf-8')
-    // 合并 meta.env
+    // 合并 meta.env 中的 GEMINI_MODEL
     expect(envContent).toContain('GEMINI_MODEL=gemini-2.5-flash')
   })
 

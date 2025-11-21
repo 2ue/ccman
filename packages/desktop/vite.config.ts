@@ -23,7 +23,7 @@ export default defineConfig({
                 'https',
                 'url',
                 'child_process',
-                '@ccman/core',
+                // @ccman/core 应该被打包到 bundle 中，不作为外部依赖
               ],
             },
           },
@@ -35,7 +35,10 @@ export default defineConfig({
           build: {
             outDir: 'dist/preload',
             rollupOptions: {
-              external: ['electron', '@ccman/core'],
+              external: [
+                'electron',
+                // @ccman/core 应该被打包到 bundle 中，不作为外部依赖
+              ],
             },
           },
         },
@@ -48,11 +51,12 @@ export default defineConfig({
   build: {
     outDir: 'dist/renderer',
     rollupOptions: {
-      external: ['@ccman/core'],
+      external: [
+        // 渲染进程只引用类型，不需要运行时代码
+        // 标记为 external 避免 Vite 尝试打包 Node.js 模块
+        '@ccman/core',
+      ],
     },
-  },
-  optimizeDeps: {
-    exclude: ['@ccman/core'],
   },
   server: {
     port: 5173,
