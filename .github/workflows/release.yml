@@ -76,6 +76,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build Types module
+        run: |
+          cd packages/types
+          pnpm build
+
       - name: Build Core module
         run: |
           cd packages/core
@@ -125,6 +130,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build Types module
+        run: |
+          cd packages/types
+          pnpm build
 
       - name: Build Core module
         run: |
