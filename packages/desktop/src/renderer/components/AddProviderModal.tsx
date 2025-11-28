@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Plus, Package, ExternalLink } from 'lucide-react'
-import type {
-  Provider,
-  AddProviderInput,
-  EditProviderInput,
-  PresetTemplate,
-} from '@ccman/core'
+import type { Provider, AddProviderInput, EditProviderInput, PresetTemplate } from '@ccman/types'
 import ProviderForm from './ProviderForm'
 import { AlertDialog } from './dialogs'
 
@@ -37,11 +32,12 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const loadPresets = async () => {
     try {
-      const api = type === 'codex'
-        ? window.electronAPI.codex
-        : type === 'claude'
-        ? window.electronAPI.claude
-        : window.electronAPI.gemini
+      const api =
+        type === 'codex'
+          ? window.electronAPI.codex
+          : type === 'claude'
+            ? window.electronAPI.claude
+            : window.electronAPI.gemini
       console.log(`[AddProviderModal] Loading ${type} presets...`)
       const presetsData = await api.listPresets()
       console.log(`[AddProviderModal] Loaded ${type} presets:`, presetsData)
@@ -125,11 +121,12 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-white rounded-lg shadow-xl w-full ${showCustomForm ? 'max-w-md' : 'max-w-4xl'} max-h-[90vh] overflow-hidden flex flex-col`}>
+      <div
+        className={`bg-white rounded-lg shadow-xl w-full ${showCustomForm ? 'max-w-md' : 'max-w-4xl'} max-h-[90vh] overflow-hidden flex flex-col`}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            添加{' '}
-            {type === 'claude' ? 'Claude' : type === 'codex' ? 'Codex' : 'Gemini CLI'} 服务商
+            添加 {type === 'claude' ? 'Claude' : type === 'codex' ? 'Codex' : 'Gemini CLI'} 服务商
           </h2>
           <button
             onClick={handleClose}
@@ -159,9 +156,15 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Package className={`w-5 h-5 ${
-                    type === 'codex' ? 'text-blue-600' : type === 'claude' ? 'text-purple-600' : 'text-green-600'
-                  }`} />
+                  <Package
+                    className={`w-5 h-5 ${
+                      type === 'codex'
+                        ? 'text-blue-600'
+                        : type === 'claude'
+                          ? 'text-purple-600'
+                          : 'text-green-600'
+                    }`}
+                  />
                   <h3 className="text-base font-semibold text-gray-900">选择预置服务商</h3>
                 </div>
                 <button
@@ -170,8 +173,8 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                     type === 'codex'
                       ? 'bg-blue-600 hover:bg-blue-700'
                       : type === 'claude'
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : 'bg-green-600 hover:bg-green-700'
+                        ? 'bg-purple-600 hover:bg-purple-700'
+                        : 'bg-green-600 hover:bg-green-700'
                   }`}
                 >
                   <Plus className="w-4 h-4" />
@@ -188,47 +191,54 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {presets.map((preset, index) => (
-                      <div
-                        key={`${type}-preset-${index}-${preset.name}`}
-                        className="bg-white rounded-lg border border-gray-200 p-3 hover:border-gray-300 hover:shadow-md transition-all"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                    <div
+                      key={`${type}-preset-${index}-${preset.name}`}
+                      className="bg-white rounded-lg border border-gray-200 p-3 hover:border-gray-300 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-medium text-gray-900 truncate mb-1">
+                            {preset.name}
+                          </h3>
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
                               preset.isBuiltIn
                                 ? 'bg-gray-100 text-gray-600 border-gray-200'
                                 : 'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}>
-                              {preset.isBuiltIn ? '内置' : '自定义'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
-
-                        <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
-                          {preset.baseUrl}
-                        </p>
-
-                        <div className="flex gap-2 pt-2 border-t border-gray-100">
-                          <button
-                            onClick={() => handleSelectPreset(preset)}
-                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
-                              type === 'codex'
-                                ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-                                : type === 'claude'
-                                ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
-                                : 'text-green-700 bg-green-50 hover:bg-green-100'
                             }`}
-                            title="使用此预置"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            使用
-                          </button>
+                            {preset.isBuiltIn ? '内置' : '自定义'}
+                          </span>
                         </div>
                       </div>
-                    ))}
+
+                      <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
+
+                      <p
+                        className="text-xs text-gray-600 font-mono mb-3 truncate"
+                        title={preset.baseUrl}
+                      >
+                        {preset.baseUrl}
+                      </p>
+
+                      <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        <button
+                          onClick={() => handleSelectPreset(preset)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                            type === 'codex'
+                              ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                              : type === 'claude'
+                                ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                                : 'text-green-700 bg-green-50 hover:bg-green-100'
+                          }`}
+                          title="使用此预置"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          使用
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

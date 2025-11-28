@@ -1,5 +1,5 @@
 import { Play, Edit2, Trash2, Copy } from 'lucide-react'
-import type { Provider } from '@ccman/core'
+import type { Provider } from '@ccman/types'
 
 interface Props {
   providers: Provider[]
@@ -52,9 +52,7 @@ export default function ProviderList({
                     )}
                   </div>
                   <p className="text-sm text-gray-600 font-mono">{provider.baseUrl}</p>
-                  {provider.desc && (
-                    <p className="text-xs text-gray-500 mt-1">{provider.desc}</p>
-                  )}
+                  {provider.desc && <p className="text-xs text-gray-500 mt-1">{provider.desc}</p>}
                 </div>
 
                 <div className="flex gap-2 ml-4">

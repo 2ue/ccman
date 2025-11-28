@@ -3,8 +3,19 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Save, Network, Upload, Download, RefreshCw, Eye, EyeOff, Cloud, BookOpen, AlertTriangle } from 'lucide-react'
-import type { SyncConfig, WebDAVAuthType } from '@ccman/core'
+import {
+  Save,
+  Network,
+  Upload,
+  Download,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Cloud,
+  BookOpen,
+  AlertTriangle,
+} from 'lucide-react'
+import type { SyncConfig, WebDAVAuthType } from '@ccman/types'
 import { BUTTON_WITH_ICON } from '../../styles/button'
 
 interface WebDAVSyncSectionProps {
@@ -13,7 +24,11 @@ interface WebDAVSyncSectionProps {
   onDataChanged?: () => void
 }
 
-export default function WebDAVSyncSection({ onSuccess, onError, onDataChanged }: WebDAVSyncSectionProps) {
+export default function WebDAVSyncSection({
+  onSuccess,
+  onError,
+  onDataChanged,
+}: WebDAVSyncSectionProps) {
   const [webdavUrl, setWebdavUrl] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')

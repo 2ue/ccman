@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Provider } from '@ccman/core'
+import type { Provider } from '@ccman/types'
 import ProviderGrid from './ProviderGrid'
 import ConfigEditorModal from './ConfigEditorModal'
 import { AlertDialog } from './dialogs'

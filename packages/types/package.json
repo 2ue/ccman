@@ -1,0 +1,31 @@
+{
+  "name": "@ccman/types",
+  "version": "3.1.2",
+  "type": "module",
+  "description": "Shared TypeScript type definitions for ccman",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ccman",
+    "types"
+  ],
+  "author": "2ue",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/2ue/ccman.git",
+    "directory": "packages/types"
+  },
+  "homepage": "https://github.com/2ue/ccman#readme",
+  "bugs": {
+    "url": "https://github.com/2ue/ccman/issues"
+  }
+}
+

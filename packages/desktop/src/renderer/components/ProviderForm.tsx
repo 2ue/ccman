@@ -5,12 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import type {
-  Provider,
-  AddProviderInput,
-  EditProviderInput,
-  PresetTemplate,
-} from '@ccman/core'
+import type { Provider, AddProviderInput, EditProviderInput, PresetTemplate } from '@ccman/types'
 import { BUTTON_STYLES } from '../styles/button'
 
 interface Props {
@@ -22,7 +17,14 @@ interface Props {
   onCancel: () => void
 }
 
-export default function ProviderForm({ provider, preset, isClone = false, existingProviders = [], onSubmit, onCancel }: Props) {
+export default function ProviderForm({
+  provider,
+  preset,
+  isClone = false,
+  existingProviders = [],
+  onSubmit,
+  onCancel,
+}: Props) {
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
@@ -63,9 +65,7 @@ export default function ProviderForm({ provider, preset, isClone = false, existi
     // 编辑模式且克隆模式：需要排除正在编辑的服务商
     const currentId = provider && !isClone ? provider.id : null
 
-    return existingProviders.some(
-      (p) => p.name === inputName.trim() && p.id !== currentId
-    )
+    return existingProviders.some((p) => p.name === inputName.trim() && p.id !== currentId)
   }
 
   // 处理名称输入变化
@@ -138,22 +138,16 @@ export default function ProviderForm({ provider, preset, isClone = false, existi
           value={name}
           onChange={handleNameChange}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-            nameError
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:ring-blue-500'
+            nameError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
           }`}
           placeholder="例如：我的 Anthropic API"
           required
         />
-        {nameError && (
-          <p className="text-sm text-red-600 mt-1">{nameError}</p>
-        )}
+        {nameError && <p className="text-sm text-red-600 mt-1">{nameError}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          描述(可选)
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">描述(可选)</label>
         <input
           type="text"
           value={desc}
@@ -191,9 +185,7 @@ export default function ProviderForm({ provider, preset, isClone = false, existi
           required={!provider}
         />
         {provider && (
-          <p className="text-xs text-gray-500 mt-1">
-            编辑时不显示现有密钥,如需修改请重新输入
-          </p>
+          <p className="text-xs text-gray-500 mt-1">编辑时不显示现有密钥,如需修改请重新输入</p>
         )}
       </div>
 

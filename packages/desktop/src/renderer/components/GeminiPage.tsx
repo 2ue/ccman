@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Provider } from '@ccman/core'
+import type { Provider } from '@ccman/types'
 import ProviderGrid from './ProviderGrid'
 import ConfigEditorModal from './ConfigEditorModal'
 import { AlertDialog } from './dialogs'
@@ -115,7 +115,9 @@ export default function GeminiPage({
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Inbox className="w-16 h-16 mb-4 text-gray-400" />
             <p className="text-lg font-medium mb-2">还没有 Gemini CLI 服务商</p>
-            <p className="text-sm text-gray-400 mb-4">点击右上角&quot;添加服务商&quot;按钮开始配置</p>
+            <p className="text-sm text-gray-400 mb-4">
+              点击右上角&quot;添加服务商&quot;按钮开始配置
+            </p>
             <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
               <Plus className="w-4 h-4" />
               添加

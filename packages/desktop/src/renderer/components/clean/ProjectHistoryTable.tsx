@@ -5,7 +5,7 @@
 
 import { useState, Fragment } from 'react'
 import { Trash2, Folder, Eye, EyeOff } from 'lucide-react'
-import type { ProjectDetail } from '@ccman/core'
+import type { ProjectDetail } from '@ccman/types'
 import ProjectHistoryDetail from './ProjectHistoryDetail'
 
 interface ProjectHistoryTableProps {
@@ -44,7 +44,12 @@ function truncatePath(path: string, maxLength: number = 50): string {
 // ProjectHistoryRow 子组件
 // ============================================================================
 
-function ProjectHistoryRow({ project, onDelete, onDeleteHistoryEntry, onClearHistory }: ProjectHistoryRowProps) {
+function ProjectHistoryRow({
+  project,
+  onDelete,
+  onDeleteHistoryEntry,
+  onClearHistory,
+}: ProjectHistoryRowProps) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -58,7 +63,10 @@ function ProjectHistoryRow({ project, onDelete, onDeleteHistoryEntry, onClearHis
               <p className="text-sm font-medium text-gray-900 truncate" title={project.path}>
                 {truncatePath(project.path)}
               </p>
-              <button onClick={() => setExpanded(!expanded)} className="md:hidden mt-1 space-y-1 text-left w-full">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="md:hidden mt-1 space-y-1 text-left w-full"
+              >
                 <p className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1">
                   {expanded ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                   {project.historyCount} 条记录 · {formatBytes(project.estimatedSize)}

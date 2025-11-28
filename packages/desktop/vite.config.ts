@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron'
 import svgr from 'vite-plugin-svgr'
+import path from 'path'
 
 export default defineConfig({
   plugins: [
@@ -56,6 +57,15 @@ export default defineConfig({
         // 标记为 external 避免 Vite 尝试打包 Node.js 模块
         '@ccman/core',
       ],
+    },
+  },
+  // 开发模式：告诉 Vite 不要预打包 @ccman/core（它是 Node.js 模块）
+  optimizeDeps: {
+    exclude: ['@ccman/core'],
+  },
+  resolve: {
+    alias: {
+      '@ccman/types': path.resolve(__dirname, '../types/dist/index.js'),
     },
   },
   server: {

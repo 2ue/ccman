@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Plus, Server, ExternalLink, AlertCircle } from 'lucide-react'
-import type { MCPServer } from '@ccman/core'
+import type { MCPServer } from '@ccman/types'
 import { MCP_PRESETS_DETAIL, type MCPPresetDetail } from '../constants/mcpPresets'
 import MCPForm from './MCPForm'
 import { AlertDialog } from './dialogs'
@@ -21,7 +21,13 @@ interface Props {
   existingServers: MCPServer[]
 }
 
-export default function AddMCPModal({ show, onClose, onSubmit, onSuccess, existingServers }: Props) {
+export default function AddMCPModal({
+  show,
+  onClose,
+  onSubmit,
+  onSuccess,
+  existingServers,
+}: Props) {
   const [showCustomForm, setShowCustomForm] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<MCPPresetDetail | undefined>()
 
@@ -171,7 +177,9 @@ export default function AddMCPModal({ show, onClose, onSubmit, onSuccess, existi
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-medium text-gray-900 mb-1">{preset.name}</h3>
+                          <h3 className="text-base font-medium text-gray-900 mb-1">
+                            {preset.name}
+                          </h3>
                           <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
                             官方预设
                           </span>

@@ -1,6 +1,6 @@
 {
   "name": "@ccman/core",
-  "version": "3.1.2",
+  "version": "3.2.0",
   "type": "module",
   "description": "Core business logic for ccman",
   "main": "./dist/index.js",
@@ -36,6 +36,7 @@
     "url": "https://github.com/2ue/ccman/issues"
   },
   "dependencies": {
+    "@ccman/types": "workspace:*",
     "@iarna/toml": "^2.2.5",
     "proper-lockfile": "^4.1.2",
     "webdav": "^5.8.0"

@@ -57,11 +57,13 @@ importers:
 
   packages/core:
     specifiers:
+      '@ccman/types': workspace:*
       '@iarna/toml': ^2.2.5
       proper-lockfile: ^4.1.2
       vitest: ^1.0.0
       webdav: ^5.8.0
     dependencies:
+      '@ccman/types': link:../types
       '@iarna/toml': 2.2.5
       proper-lockfile: 4.1.2
       webdav: 5.8.0
@@ -71,6 +73,7 @@ importers:
   packages/desktop:
     specifiers:
       '@ccman/core': workspace:*
+      '@ccman/types': workspace:*
       '@lobehub/icons-static-svg': ^1.73.0
       '@radix-ui/react-tooltip': ^1.2.8
       '@types/react': ^18.2.0
@@ -93,6 +96,7 @@ importers:
       vite-plugin-svgr: ^4.5.0
     dependencies:
       '@ccman/core': link:../core
+      '@ccman/types': link:../types
       '@lobehub/icons-static-svg': 1.73.0
       '@radix-ui/react-tooltip': 1.2.8_pjaunvshsggv36wxj2eymod3ti
       electron-updater: 6.6.2
@@ -114,6 +118,9 @@ importers:
       vite: 5.4.20
       vite-plugin-electron: 0.28.8
       vite-plugin-svgr: 4.5.0_ypmgiwisbnmdgzwfzylnj5ipgu
+
+  packages/types:
+    specifiers: {}
 
 packages:
 

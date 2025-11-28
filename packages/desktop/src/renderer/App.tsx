@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import type { Provider, AddProviderInput, EditProviderInput } from '@ccman/core'
+import type { Provider, AddProviderInput, EditProviderInput } from '@ccman/types'
 import DashboardPage, { NavKey } from './components/DashboardPage'
 import MiniSidebar from './components/MiniSidebar'
 import ClaudeCodePage from './components/ClaudeCodePage'
@@ -94,7 +94,7 @@ export default function App() {
   // 加载数据
   const loadData = async () => {
     try {
-      console.log('window.electronAPI', window.electronAPI);
+      console.log('window.electronAPI', window.electronAPI)
       // 加载 Codex 数据
       const codexList = await window.electronAPI.codex.listProviders()
       setCodexProviders(codexList)

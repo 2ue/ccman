@@ -1,5 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
-import type { Provider } from '@ccman/core'
+import type { Provider } from '@ccman/types'
 
 interface Props {
   provider: Provider | undefined

@@ -1,5 +1,14 @@
-import { Provider } from '@ccman/core'
-import { Target, CheckCircle2, AlertCircle, Zap, Plus, FolderCog, BarChart3, FolderOpen } from 'lucide-react'
+import type { Provider } from '@ccman/types'
+import {
+  Target,
+  CheckCircle2,
+  AlertCircle,
+  Zap,
+  Plus,
+  FolderCog,
+  BarChart3,
+  FolderOpen,
+} from 'lucide-react'
 import { BUTTON_STYLES } from '../styles/button'
 
 interface HomePageProps {
@@ -47,9 +56,7 @@ export default function HomePage({
             <Target className="w-10 h-10 text-blue-600" />
             <h1 className="text-4xl font-bold text-gray-900">ccman</h1>
           </div>
-          <p className="text-xl text-gray-600">
-            AI 服务商配置管理工具
-          </p>
+          <p className="text-xl text-gray-600">AI 服务商配置管理工具</p>
           <p className="text-sm text-gray-500 mt-2">
             统一管理 Claude Code 和 Codex 的 API 配置，快速切换服务商
           </p>
@@ -87,7 +94,10 @@ export default function HomePage({
             </div>
 
             <div className="flex gap-2 mt-auto">
-              <button onClick={() => onNavigate('claude')} className={`flex-1 ${BUTTON_STYLES.primary}`}>
+              <button
+                onClick={() => onNavigate('claude')}
+                className={`flex-1 ${BUTTON_STYLES.primary}`}
+              >
                 管理 →
               </button>
             </div>

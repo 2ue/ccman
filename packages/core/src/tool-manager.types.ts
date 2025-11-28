@@ -1,59 +1,33 @@
 /**
  * 工具管理器类型定义
  *
- * 本文件包含所有工具管理相关的类型定义和错误类
- * 从 tool-manager.ts 拆分出来，保持类型定义的稳定性和可维护性
+ * 本文件从 @ccman/types 重新导出共享的类型，
+ * 并定义 Core 模块内部使用的专用类型和接口。
  */
 
-import type { ToolType } from './constants.js'
+// 从 @ccman/types 重新导出共享类型
+export {
+  type ToolType,
+  type Provider,
+  type PresetTemplate,
+  type AddProviderInput,
+  type EditProviderInput,
+  type AddPresetInput,
+  type EditPresetInput,
+} from '@ccman/types'
 
-/**
- * 工具类型
- * @deprecated 请直接从 '@ccman/core' 或 './constants.js' 导入 ToolType
- * 此处仅作为向后兼容保留
- */
-export type { ToolType }
-
-/**
- * Provider 配置(不包含 type 字段,因为配置已分离)
- */
-export interface Provider {
-  /** 唯一标识符(自动生成) */
-  id: string
- /** 显示名称 */
-  name: string
-  /** 描述(可选,用于 UI 展示) */
-  desc?: string
-  /** API Base URL */
-  baseUrl: string
-  /** API Key */
-  apiKey: string
-  /** 模型名称(可选,仅 Codex 使用) */
-  model?: string
-  /** 创建时间(Unix timestamp) */
-  createdAt: number
-  /** 最后修改时间(Unix timestamp) */
-  lastModified: number
-  /** 最后使用时间(Unix timestamp,可选) */
-  lastUsedAt?: number
-}
-
-/**
- * 预置模板(不包含 API Key)
- */
-export interface PresetTemplate {
-  /** 预设名称 */
-  name: string
-  /** 默认 Base URL */
-  baseUrl: string
-  /** 描述 */
-  description: string
-  /** 是否为内置预设 */
-  isBuiltIn: boolean
-}
+import type {
+  Provider,
+  PresetTemplate,
+  AddProviderInput,
+  EditProviderInput,
+  AddPresetInput,
+  EditPresetInput,
+} from '@ccman/types'
 
 /**
  * 内部预设模板（不含 isBuiltIn 字段）
+ * Core 内部使用，用于存储用户自定义预设
  */
 export interface InternalPresetTemplate {
   name: string
@@ -63,6 +37,7 @@ export interface InternalPresetTemplate {
 
 /**
  * 工具配置文件结构
+ * Core 内部使用，定义配置文件的存储格式
  */
 export interface ToolConfig {
   /** 当前激活的 provider ID */
@@ -71,46 +46,6 @@ export interface ToolConfig {
   providers: Provider[]
   /** 用户自定义预置列表（不含 isBuiltIn） */
   presets?: InternalPresetTemplate[]
-}
-
-/**
- * 添加 provider 的输入参数
- */
-export interface AddProviderInput {
-  name: string
-  desc?: string
-  baseUrl: string
-  apiKey: string
-  model?: string // 可选,仅 Codex 使用
-}
-
-/**
- * 编辑 provider 的输入参数
- */
-export interface EditProviderInput {
-  name?: string
-  desc?: string
-  baseUrl?: string
-  apiKey?: string
-  model?: string // 可选,仅 Codex 使用
-}
-
-/**
- * 添加预置的输入参数
- */
-export interface AddPresetInput {
-  name: string
-  baseUrl: string
-  description: string
-}
-
-/**
- * 编辑预置的输入参数
- */
-export interface EditPresetInput {
-  name?: string
-  baseUrl?: string
-  description?: string
 }
 
 /**

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Server } from 'lucide-react'
-import type { MCPServer } from '@ccman/core'
+import type { MCPServer } from '@ccman/types'
 import MCPForm from './MCPForm'
 import { AlertDialog } from './dialogs'
 
@@ -94,10 +94,7 @@ export default function EditMCPModal({
             <Server className="w-5 h-5 text-purple-600" />
             编辑 MCP 服务器
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

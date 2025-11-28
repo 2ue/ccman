@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import type { MCPServer } from '@ccman/core'
+import type { MCPServer } from '@ccman/types'
 import { BUTTON_STYLES } from '../styles/button'
 
 interface MCPFormData {
@@ -209,9 +209,7 @@ export default function MCPForm({
           value={env}
           onChange={handleEnvChange}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-mono text-sm ${
-            envError
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:ring-purple-500'
+            envError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
           }`}
           placeholder='{\n  "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_...",\n  "API_KEY": "your-key"\n}'
           rows={4}

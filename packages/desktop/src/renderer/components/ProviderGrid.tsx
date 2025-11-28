@@ -1,5 +1,5 @@
 import { Play, Edit2, Trash2, Copy, Check } from 'lucide-react'
-import type { Provider } from '@ccman/core'
+import type { Provider } from '@ccman/types'
 
 interface Props {
   providers: Provider[]
@@ -25,9 +25,7 @@ export default function ProviderGrid({
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
         <p className="text-gray-500">暂无服务商</p>
-        <p className="text-sm text-gray-400 mt-2">
-          点击"添加服务商"创建配置
-        </p>
+        <p className="text-sm text-gray-400 mt-2">点击"添加服务商"创建配置</p>
       </div>
     )
   }

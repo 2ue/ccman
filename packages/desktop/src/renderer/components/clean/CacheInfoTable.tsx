@@ -4,7 +4,7 @@
  */
 
 import { Trash2, Database, Clock } from 'lucide-react'
-import type { CacheDetail } from '@ccman/core'
+import type { CacheDetail } from '@ccman/types'
 
 interface CacheInfoTableProps {
   caches: CacheDetail[]

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MCPServer, AppType } from '@ccman/core'
+import type { MCPServer, AppType } from '@ccman/types'
 import MCPCard from './MCPCard'
 import ConfigEditorModal from './ConfigEditorModal'
 import AddMCPModal from './AddMCPModal'

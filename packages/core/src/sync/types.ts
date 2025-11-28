@@ -1,31 +1,14 @@
 /**
  * WebDAV 同步相关类型定义
+ *
+ * 本文件从 @ccman/types 重新导出共享的同步相关类型，
+ * 并定义 Core 内部使用的同步数据结构。
  */
+
+// 从 @ccman/types 重新导出共享类型
+export { type WebDAVAuthType, type SyncConfig } from '@ccman/types'
 
 import type { Provider } from '../tool-manager.js'
-
-/**
- * WebDAV 认证类型
- */
-export type WebDAVAuthType = 'password' | 'digest'
-
-/**
- * WebDAV 配置
- */
-export interface SyncConfig {
-  /** WebDAV 服务器地址（如 https://dav.example.com） */
-  webdavUrl: string
-  /** 用户名 */
-  username: string
-  /** 密码（WebDAV 认证密码） */
-  password: string
-  /** 认证类型（可选，默认 password = Basic Auth） */
-  authType?: WebDAVAuthType
-  /** 远程同步目录（可选，默认 / 根目录） */
-  remoteDir?: string
-  /** 同步密码（用于加密 API Key，可选存储） */
-  syncPassword?: string
-}
 
 /**
  * 工具配置（用于同步）

@@ -6,73 +6,24 @@
 import * as fs from 'fs'
 import { getClaudeJsonPath } from './paths.js'
 
-/**
- * 清理选项
- */
-export interface CleanOptions {
-  /** 清理项目历史记录 */
-  cleanProjectHistory?: boolean
-  /** 每个项目保留最近N条记录（默认10条） */
-  keepRecentCount?: number
-  /** 只清理指定的项目路径（为空则清理所有项目） */
-  projectPaths?: string[]
+// 从 @ccman/types 重新导出共享的 Clean 相关类型
+export {
+  type CleanOptions,
+  type CleanResult,
+  type AnalyzeResult,
+  type ProjectDetail,
+  type CacheDetail,
+  type HistoryEntry,
+} from '@ccman/types'
 
-  /** 清理缓存数据 */
-  cleanCache?: boolean
-
-  /** 重置使用统计 */
-  cleanStats?: boolean
-}
-
-/**
- * 清理结果
- */
-export interface CleanResult {
-  /** 清理前文件大小（字节） */
-  sizeBefore: number
-  /** 清理后文件大小（字节） */
-  sizeAfter: number
-  /** 节省的空间（字节） */
-  saved: number
-  /** 清理的项目数量 */
-  cleanedItems: {
-    /** 清理的历史记录数量 */
-    projectHistory: number
-    /** 是否清理了缓存 */
-    cache: boolean
-    /** 是否清理了统计 */
-    stats: boolean
-  }
-  /** 备份文件路径 */
-  backupPath: string
-}
-
-/**
- * 分析结果
- */
-export interface AnalyzeResult {
-  /** 文件大小（字节） */
-  fileSize: number
-  /** 文件大小（可读格式） */
-  fileSizeFormatted: string
-  /** 项目总数 */
-  projectCount: number
-  /** 总历史记录数 */
-  totalHistoryCount: number
-  /** 各项目的历史记录数 */
-  projectHistory: Array<{
-    path: string
-    count: number
-  }>
-  /** 缓存大小估计（字节） */
-  cacheSize: number
-  /** 预计可节省空间（字节） */
-  estimatedSavings: {
-    conservative: number // 保留10条
-    moderate: number // 保留5条
-    aggressive: number // 清空历史
-  }
-}
+import type {
+  CleanOptions,
+  CleanResult,
+  AnalyzeResult,
+  ProjectDetail,
+  CacheDetail,
+  HistoryEntry,
+} from '@ccman/types'
 
 /**
  * 格式化字节大小
@@ -169,8 +120,12 @@ export function analyzeClaudeJson(): AnalyzeResult {
   const avgHistorySize = totalHistoryCount > 0 ? historySize / totalHistoryCount : 0
 
   const estimatedSavings = {
-    conservative: Math.floor(avgHistorySize * Math.max(0, totalHistoryCount - projectHistory.length * 10)) + cacheSize,
-    moderate: Math.floor(avgHistorySize * Math.max(0, totalHistoryCount - projectHistory.length * 5)) + cacheSize,
+    conservative:
+      Math.floor(avgHistorySize * Math.max(0, totalHistoryCount - projectHistory.length * 10)) +
+      cacheSize,
+    moderate:
+      Math.floor(avgHistorySize * Math.max(0, totalHistoryCount - projectHistory.length * 5)) +
+      cacheSize,
     aggressive: Math.floor(historySize) + cacheSize,
   }
 
@@ -293,36 +248,6 @@ export const CleanPresets = {
     cleanCache: true,
     cleanStats: true,
   }),
-}
-
-/**
- * 项目详情
- */
-export interface ProjectDetail {
-  /** 项目路径 */
-  path: string
-  /** 历史记录数量 */
-  historyCount: number
-  /** 估计大小（字节） */
-  estimatedSize: number
-  /** 最后一条消息（可选） */
-  lastMessage?: string
-}
-
-/**
- * 缓存详情
- */
-export interface CacheDetail {
-  /** 缓存键名 */
-  key: string
-  /** 友好名称 */
-  name: string
-  /** 大小（字节） */
-  size: number
-  /** 大小（可读格式） */
-  sizeFormatted: string
-  /** 最后更新时间（可选） */
-  lastUpdated?: number
 }
 
 /**
@@ -452,16 +377,6 @@ export function deleteCacheItem(cacheKey: string): void {
 
   // 原子写入
   saveJsonAtomic(filePath, config)
-}
-
-/**
- * 历史记录条目
- */
-export interface HistoryEntry {
-  /** 显示文本 */
-  display: string
-  /** 粘贴内容 */
-  pastedContents: Record<string, any>
 }
 
 /**

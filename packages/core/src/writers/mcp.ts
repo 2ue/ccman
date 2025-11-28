@@ -1,48 +1,18 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { getClaudeConfigPath, getCcmanDir, getClaudeDir, getGeminiDir, getGeminiSettingsPath } from '../paths.js'
+import {
+  getClaudeConfigPath,
+  getCcmanDir,
+  getClaudeDir,
+  getGeminiDir,
+  getGeminiSettingsPath,
+} from '../paths.js'
 import { fileExists, readJSON, writeJSON, ensureDir } from '../utils/file.js'
 import type { Provider } from '../tool-manager.js'
 
-/**
- * 支持的应用类型
- * 当前仅支持 Claude Code / Codex / Gemini CLI
- */
-export type AppType = 'claude' | 'codex' | 'gemini'
-
-/**
- * MCP 服务器配置（存储在 ~/.ccman/mcp.json）
- */
-export interface MCPServer {
-  /** 唯一标识符 */
-  id: string
-  /** 服务器名称（写入 ~/.claude.json 的 key）*/
-  name: string
-  /** 启动命令 */
-  command: string
-  /** 命令参数 */
-  args: string[]
-  /** 环境变量（可选）*/
-  env?: Record<string, string | number>
-  /** 描述（可选）*/
-  description?: string
-  /** 创建时间 */
-  createdAt: number
-  /** 最后修改时间 */
-  lastModified: number
-  /** 启用此 MCP 的应用列表 */
-  enabledApps: AppType[]
-}
-
-/**
- * ccman MCP 配置文件结构
- */
-export interface MCPConfig {
-  /** MCP 服务器列表 */
-  servers: MCPServer[]
-  /** ccman 管理的 MCP 名称列表（按应用分组，用于区分用户手动配置）*/
-  managedServerNames: Record<AppType, string[]>
-}
+// 从 @ccman/types 重新导出共享的 MCP 类型
+export { type AppType, type MCPServer, type MCPConfig } from '@ccman/types'
+import type { AppType, MCPServer, MCPConfig } from '@ccman/types'
 
 /**
  * Claude Code MCP 配置格式（~/.claude.json 中的 mcpServers 字段）
@@ -211,9 +181,7 @@ export function mcpServerToProvider(server: MCPServer): Provider {
 export function writeMCPConfigForApp(app: AppType, _provider: Provider): void {
   // 1. 读取所有 ccman 管理的 MCP，过滤出启用了该应用的
   const mcpConfig = loadMCPConfig()
-  const enabledServers = mcpConfig.servers.filter((server) =>
-    server.enabledApps.includes(app)
-  )
+  const enabledServers = mcpConfig.servers.filter((server) => server.enabledApps.includes(app))
 
   // 2. 确定配置文件路径和目录
   let configPath: string

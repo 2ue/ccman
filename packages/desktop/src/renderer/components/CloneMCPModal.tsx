@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Copy, Server } from 'lucide-react'
-import type { MCPServer } from '@ccman/core'
+import type { MCPServer } from '@ccman/types'
 import { AlertDialog } from './dialogs'
 import { BUTTON_STYLES } from '../styles/button'
 
@@ -87,10 +87,7 @@ export default function CloneMCPModal({
             <Copy className="w-5 h-5 text-green-600" />
             克隆 MCP 服务器
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

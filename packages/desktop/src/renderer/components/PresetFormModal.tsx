@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { TOOL_TYPES, TOOL_CONFIG, type MainToolType } from '@ccman/core'
+import { TOOL_TYPES, TOOL_CONFIG, type MainToolType } from '@ccman/types'
 import { AlertDialog } from './dialogs'
 
 interface PresetData {
@@ -18,7 +18,14 @@ interface Props {
   onSuccess?: (message: string) => void
 }
 
-export default function PresetFormModal({ show, preset, type, onClose, onSubmit, onSuccess }: Props) {
+export default function PresetFormModal({
+  show,
+  preset,
+  type,
+  onClose,
+  onSubmit,
+  onSuccess,
+}: Props) {
   const [name, setName] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
   const [description, setDescription] = useState('')

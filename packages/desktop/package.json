@@ -1,6 +1,6 @@
 {
   "name": "@ccman/desktop",
-  "version": "3.1.2",
+  "version": "3.2.0",
   "description": "ccman Desktop GUI application",
   "main": "./dist/main/index.js",
   "scripts": {
@@ -21,6 +21,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@ccman/types": "workspace:*",
     "@ccman/core": "workspace:*",
     "@lobehub/icons-static-svg": "^1.73.0",
     "@radix-ui/react-tooltip": "^1.2.8",

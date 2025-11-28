@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import type { ProjectDetail, CacheDetail, CleanResult } from '@ccman/core'
+import type { ProjectDetail, CacheDetail, CleanResult } from '@ccman/types'
 import CleanHeader from './clean/CleanHeader'
 import ProjectHistoryTable from './clean/ProjectHistoryTable'
 import CacheInfoTable from './clean/CacheInfoTable'
@@ -92,9 +92,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
         try {
           const result: CleanResult = await window.electronAPI.clean.executePreset(preset)
           await loadData()
-          onSuccess(
-            `清理成功！节省了 ${formatBytes(result.saved)} 空间（${presetNames[preset]}）`
-          )
+          onSuccess(`清理成功！节省了 ${formatBytes(result.saved)} 空间（${presetNames[preset]}）`)
         } catch (error) {
           onError('清理失败', (error as Error).message)
           setLoading(false)
@@ -198,9 +196,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
       message: (
         <div>
           <p className="text-sm text-gray-700 mb-2">确定要清空该项目的所有历史记录吗？</p>
-          <div className="text-xs text-red-700 bg-red-50 p-2 rounded">
-            警告：此操作不可恢复
-          </div>
+          <div className="text-xs text-red-700 bg-red-50 p-2 rounded">警告：此操作不可恢复</div>
         </div>
       ),
       confirmText: '清空',
@@ -246,11 +242,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
           />
 
           {/* 缓存信息表格 */}
-          <CacheInfoTable
-            caches={caches}
-            onDelete={handleDeleteCache}
-            loading={loading}
-          />
+          <CacheInfoTable caches={caches} onDelete={handleDeleteCache} loading={loading} />
         </div>
       </main>
 

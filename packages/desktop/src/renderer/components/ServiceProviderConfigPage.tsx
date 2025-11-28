@@ -9,8 +9,14 @@
  */
 
 import { useState, useEffect } from 'react'
-import type { Provider, PresetTemplate, AddProviderInput, EditProviderInput } from '@ccman/core'
-import { TOOL_TYPES, type MainToolType } from '@ccman/core'
+import type {
+  Provider,
+  PresetTemplate,
+  AddProviderInput,
+  EditProviderInput,
+  MainToolType,
+} from '@ccman/types'
+import { TOOL_TYPES } from '@ccman/types'
 import { Search, Package, ExternalLink, Edit2, Trash2, Plus, FileCode2 } from 'lucide-react'
 import PresetFormModal from './PresetFormModal'
 import ConfigEditorModal from './ConfigEditorModal'
@@ -45,7 +51,10 @@ function getToolAPI(type: MainToolType) {
   }
 }
 
-export default function ServiceProviderConfigPage({ onUseServiceProvider, onSuccess }: ServiceProviderConfigPageProps) {
+export default function ServiceProviderConfigPage({
+  onUseServiceProvider,
+  onSuccess,
+}: ServiceProviderConfigPageProps) {
   const [codexPresets, setCodexPresets] = useState<PresetTemplate[]>([])
   const [claudeCodePresets, setClaudeCodePresets] = useState<PresetTemplate[]>([])
   const [geminiPresets, setGeminiPresets] = useState<PresetTemplate[]>([])
@@ -57,7 +66,9 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
   // 预置表单 Modal
   const [showPresetModal, setShowPresetModal] = useState(false)
   const [presetModalType, setPresetModalType] = useState<MainToolType>(TOOL_TYPES.CODEX)
-  const [editingPreset, setEditingPreset] = useState<{ name: string; baseUrl: string; description: string } | undefined>()
+  const [editingPreset, setEditingPreset] = useState<
+    { name: string; baseUrl: string; description: string } | undefined
+  >()
 
   // Settings Modal
   const [showConfigEditor, setShowConfigEditor] = useState(false)
@@ -267,11 +278,16 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
           <div>
             <h1 className="text-2xl font-bold text-gray-900">预置服务商</h1>
             <p className="text-sm text-gray-500 mt-1">
-              从预置模板快速添加服务商（共 {codexPresets.length + claudeCodePresets.length + geminiPresets.length} 个预置）
+              从预置模板快速添加服务商（共{' '}
+              {codexPresets.length + claudeCodePresets.length + geminiPresets.length} 个预置）
             </p>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleEditConfig} className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors" title="编辑预置配置文件">
+            <button
+              onClick={handleEditConfig}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              title="编辑预置配置文件"
+            >
               <FileCode2 className="w-5 h-5" />
             </button>
           </div>
@@ -326,12 +342,16 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        preset.isBuiltIn
-                          ? 'bg-gray-100 text-gray-600 border-gray-200'
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}>
+                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">
+                        {preset.name}
+                      </h3>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                          preset.isBuiltIn
+                            ? 'bg-gray-100 text-gray-600 border-gray-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}
+                      >
                         {preset.isBuiltIn ? '内置' : '自定义'}
                       </span>
                     </div>
@@ -339,7 +359,10 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
 
                   <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
 
-                  <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
+                  <p
+                    className="text-xs text-gray-600 font-mono mb-3 truncate"
+                    title={preset.baseUrl}
+                  >
                     {preset.baseUrl}
                   </p>
 
@@ -409,12 +432,16 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        preset.isBuiltIn
-                          ? 'bg-gray-100 text-gray-600 border-gray-200'
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}>
+                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">
+                        {preset.name}
+                      </h3>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                          preset.isBuiltIn
+                            ? 'bg-gray-100 text-gray-600 border-gray-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}
+                      >
                         {preset.isBuiltIn ? '内置' : '自定义'}
                       </span>
                     </div>
@@ -422,7 +449,10 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
 
                   <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
 
-                  <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
+                  <p
+                    className="text-xs text-gray-600 font-mono mb-3 truncate"
+                    title={preset.baseUrl}
+                  >
                     {preset.baseUrl}
                   </p>
 
@@ -492,12 +522,16 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">{preset.name}</h3>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        preset.isBuiltIn
-                          ? 'bg-gray-100 text-gray-600 border-gray-200'
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}>
+                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">
+                        {preset.name}
+                      </h3>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                          preset.isBuiltIn
+                            ? 'bg-gray-100 text-gray-600 border-gray-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}
+                      >
                         {preset.isBuiltIn ? '内置' : '自定义'}
                       </span>
                     </div>
@@ -505,7 +539,10 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
 
                   <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
 
-                  <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
+                  <p
+                    className="text-xs text-gray-600 font-mono mb-3 truncate"
+                    title={preset.baseUrl}
+                  >
                     {preset.baseUrl}
                   </p>
 
@@ -591,9 +628,7 @@ export default function ServiceProviderConfigPage({ onUseServiceProvider, onSucc
       {showUsePresetModal && usingPreset && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              使用预置服务商
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">使用预置服务商</h2>
             <ProviderForm
               preset={usingPreset}
               existingProviders={(() => {

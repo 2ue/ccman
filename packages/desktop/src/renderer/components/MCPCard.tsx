@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MCPServer, AppType } from '@ccman/core'
+import type { MCPServer, AppType } from '@ccman/types'
 import { Server, Edit2, Trash2, Copy, Terminal, Settings } from 'lucide-react'
 import { CARD_STYLES } from '../styles/card'
 
@@ -67,9 +67,7 @@ export default function MCPCard({
         </div>
 
         {/* Actions */}
-        <div
-          className={`flex gap-1 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-        >
+        <div className={`flex gap-1 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
           <button
             onClick={onEdit}
             className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"

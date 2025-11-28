@@ -1,4 +1,4 @@
-import { Provider } from '@ccman/core'
+import type { Provider } from '@ccman/types'
 import { Server, Package, Trash2, Settings, Target } from 'lucide-react'
 import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
 import DashboardCard from './DashboardCard'
