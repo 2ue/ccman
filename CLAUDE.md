@@ -1,8 +1,27 @@
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
+
+These instructions are for AI assistants working in this project.
+
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
+
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
+
+Keep this managed block so 'openspec update' can refresh the instructions.
+
+<!-- OPENSPEC:END -->
+
 # ccman 项目开发规范
 
 ## 项目简介
 
-ccman 是一个 API 服务商配置管理工具，用于管理 Codex 和 Claude Code 的服务商配置。
+ccman 是一个 API 服务商配置管理工具，用于管理 Codex、Claude Code、Gemini CLI 和 MCP 的服务商配置。
 
 **交付形式**：
 - CLI：命令行工具（快速切换，可脚本化）

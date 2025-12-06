@@ -2,7 +2,7 @@
   "name": "ccman",
   "version": "3.2.0",
   "type": "module",
-  "description": "Manage Codex and Claude Code API service provider configurations",
+  "description": "Manage Codex, Claude Code, Gemini CLI, and MCP API service provider configurations",
   "main": "./dist/index.js",
   "bin": {
     "ccman": "./dist/index.js"
@@ -20,6 +20,10 @@
     "codex",
     "claude",
     "claude-code",
+    "gemini",
+    "gemini-cli",
+    "mcp",
+    "model-context-protocol",
     "ai",
     "api",
     "config",

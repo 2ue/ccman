@@ -1,6 +1,6 @@
 # @ccman/desktop
 
-Desktop GUI application for managing Codex and Claude Code API service provider configurations.
+Desktop GUI application for managing Codex, Claude Code, Gemini CLI, and MCP API service provider configurations.
 
 ## Tech Stack
 
@@ -45,8 +45,9 @@ pnpm build:electron
 
 ### Current Status Display
 - Shows active provider
-- Provider type badge (Codex/Claude)
+- Provider type badge (Codex/Claude/Gemini)
 - Base URL and ID information
+- MCP server status
 
 ### Provider List
 - View all configured providers

@@ -413,7 +413,7 @@ ccman current
 - **使用 ccman**：一行命令搞定，零出错，推荐日常使用
 
 ```bash
-npm install -g @ccman/cli
+npm install -g ccman
 ```
 
 更多信息请参考：[ccman 官方文档](https://github.com/2ue/ccman)

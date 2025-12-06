@@ -1,8 +1,8 @@
 {
-  "name": "ccman-monorepo",
+  "name": "ccmam",
   "version": "3.2.0",
   "private": true,
-  "description": "Manage Codex and Claude Code API service provider configurations",
+  "description": "Manage Codex, Claude Code, Gemini CLI, and MCP API service provider configurations",
   "scripts": {
     "build": "pnpm --filter=!@ccman/desktop -r build",
     "build:all": "pnpm -r build",

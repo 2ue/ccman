@@ -1,16 +1,16 @@
 # ccman
 
-> Codex 和 Claude Code 的 API 服务商配置管理工具，一键切换 Codex 和 Claude Code 的 API 服务商配置。
+> Codex、Claude Code、Gemini CLI 和 MCP 的配置管理工具，一键切换 API 服务商配置和管理 MCP 服务器。
 
 ---
 
 ## ✨ 核心特性
 
 - 🔄 **一键切换**：一条命令切换服务商，自动修改配置文件
-- 📦 **内置预设**：7 个常用服务商模板，只需填写 API Key
+- 📦 **内置预设**：提供多个预设模板（Claude: 7 个，Gemini: 3 个，Codex: 1 个，MCP: 多个），只需填写 API Key
 - 🛠️ **自定义配置**：支持添加任意第三方服务商
 - 🔐 **零破坏性**：只修改管理的字段，写入前备份，失败回滚
-- 🎯 **双工具支持**：同时管理 Codex 和 Claude Code
+- 🎯 **多工具支持**：同时管理 Codex、Claude Code、Gemini CLI 和 MCP 服务器
 - 📱 **双界面**：提供 CLI（命令行）和 Desktop（图形界面）
 - 🔁 **克隆功能**：快速复制配置，管理多个 API Key
 - ☁️ **WebDAV 同步**（可选）：同步配置到你自己的 WebDAV 服务器（iCloud/Dropbox）
@@ -23,8 +23,10 @@
 
 ccman 的核心功能是自动化配置文件的切换：
 
-- **Codex**：自动修改 `~/.codex/config.toml` 和 `~/.codex/auth.json`
+- **Codex**：自动修改 `~/.codex/config.toml`
 - **Claude Code**：自动修改 `~/.claude/settings.json`
+- **Gemini CLI**：自动修改 `~/.gemini/settings.json` 和 `~/.gemini/.env`
+- **MCP**：管理 MCP 服务器配置，并同步到 Claude Code 和 Gemini CLI
 - **备份机制**：写入前自动备份，失败时自动回滚
 
 如果你更喜欢手动编辑配置文件，或者只使用一个服务商从不切换，可能不需要这个工具。
@@ -63,7 +65,11 @@ Options:
 Commands:
   cx              管理 Codex 服务商
   cc              管理 Claude 服务商
+  gm              管理 Gemini CLI 服务商
+  mcp             管理 MCP 服务器
   sync            WebDAV 同步配置
+  export [dir]    导出配置
+  import [dir]    导入配置
   help [command]  display help for command
 ```
 
@@ -135,13 +141,32 @@ $ ccman cc current
   最后使用: 2025/10/11 20:14:08
 ```
 
+### 管理 Gemini CLI 服务商
+
+```bash
+ccman gm           # 进入交互式菜单
+ccman gm add       # 添加服务商
+ccman gm use       # 切换服务商
+ccman gm list      # 查看所有服务商
+```
+
+### 管理 MCP 服务器
+
+```bash
+ccman mcp add      # 添加 MCP 服务器
+ccman mcp list     # 查看所有 MCP 服务器
+ccman mcp edit     # 编辑 MCP 服务器
+ccman mcp remove   # 删除 MCP 服务器
+```
+
 ---
 
 ## 完整命令
 
 | 命令 | 说明 |
 |------|------|
-| `ccman` | 主菜单（选择 Codex 或 Claude Code） |
+| `ccman` | 主菜单（选择 Codex、Claude Code 或 Gemini CLI） |
+| **Codex 管理** | |
 | `ccman cx` | Codex 交互式菜单 |
 | `ccman cx add` | 添加 Codex 服务商（支持预设模板和自定义） |
 | `ccman cx list` | 列出所有 Codex 服务商 |
@@ -149,7 +174,8 @@ $ ccman cc current
 | `ccman cx current` | 查看当前 Codex 服务商 |
 | `ccman cx edit [name]` | 编辑 Codex 服务商 |
 | `ccman cx remove [name]` | 删除 Codex 服务商 |
-| `ccman cx clone [source]` | 克隆 Codex 服务商（复制配置，改名称和 Key） |
+| `ccman cx clone [source]` | 克隆 Codex 服务商 |
+| **Claude Code 管理** | |
 | `ccman cc` | Claude Code 交互式菜单 |
 | `ccman cc add` | 添加 Claude Code 服务商 |
 | `ccman cc list` | 列出所有 Claude Code 服务商 |
@@ -158,7 +184,24 @@ $ ccman cc current
 | `ccman cc edit [name]` | 编辑 Claude Code 服务商 |
 | `ccman cc remove [name]` | 删除 Claude Code 服务商 |
 | `ccman cc clone [source]` | 克隆 Claude Code 服务商 |
+| **Gemini CLI 管理** | |
+| `ccman gm` | Gemini CLI 交互式菜单 |
+| `ccman gm add` | 添加 Gemini CLI 服务商 |
+| `ccman gm list` | 列出所有 Gemini CLI 服务商 |
+| `ccman gm use [name]` | 切换 Gemini CLI 服务商 |
+| `ccman gm current` | 查看当前 Gemini CLI 服务商 |
+| `ccman gm edit [name]` | 编辑 Gemini CLI 服务商 |
+| `ccman gm remove [name]` | 删除 Gemini CLI 服务商 |
+| `ccman gm clone [source]` | 克隆 Gemini CLI 服务商 |
+| **MCP 服务器管理** | |
+| `ccman mcp add` | 添加 MCP 服务器 |
+| `ccman mcp list` | 列出所有 MCP 服务器 |
+| `ccman mcp edit [name]` | 编辑 MCP 服务器 |
+| `ccman mcp remove [name]` | 删除 MCP 服务器 |
+| **配置同步和导入导出** | |
 | `ccman sync` | WebDAV 同步配置（备份/恢复/合并） |
+| `ccman export [dir]` | 导出配置到本地目录 |
+| `ccman import [dir]` | 从本地目录导入配置 |
 
 ---
 
@@ -166,15 +209,35 @@ $ ccman cc current
 
 添加服务商时可以选择"使用预设模板"，只需填写 API Key：
 
+### Claude Code 预设（7 个）
+
 | 预设名称 | Base URL |
 |---------|----------|
 | Anthropic Official | `https://api.anthropic.com` |
 | AnyRouter | `https://anyrouter.top` |
 | PackyCode | `https://api.packycode.com` |
-| CoordCode | `https://api.coordcode.com/api` |
 | 88Code | `https://www.88code.org/api` |
+| KKYYXX | `https://api.kkyyxx.cc` |
 | BigModel | `https://open.bigmodel.cn/api/anthropic` |
 | ModelScope | `https://api-inference.modelscope.cn/v1/chat/completions` |
+
+### Gemini CLI 预设（3 个）
+
+| 预设名称 | Base URL |
+|---------|----------|
+| Google Gemini | `https://generativelanguage.googleapis.com` |
+| PackyAPI | `https://api.packyapi.com` |
+| LiteLLM Proxy | `http://localhost:4000` |
+
+### Codex 预设（1 个）
+
+| 预设名称 | Base URL |
+|---------|----------|
+| 88Code | `https://www.88code.org/api` |
+
+### MCP 预设（多个）
+
+MCP 服务器预设包括：filesystem、github、postgres、brave-search、fetch、memory 等多个常用 MCP 服务器模板。
 
 也可以选择"自定义配置"，手动填写 Base URL。
 
@@ -256,14 +319,16 @@ $ ccman cc use "Claude Test"
 
 ## 配置文件
 
-**ccman 配置**：`~/.ccman/config.json`
+**ccman 配置**：
+- `~/.ccman/codex.json` - Codex 服务商配置
+- `~/.ccman/claude.json` - Claude Code 服务商配置
+- `~/.ccman/gemini.json` - Gemini CLI 服务商配置
+- `~/.ccman/mcp.json` - MCP 服务器配置
 
-**Codex 配置**（ccman 会自动修改）：
-- `~/.codex/config.toml`
-- `~/.codex/auth.json`
-
-**Claude Code 配置**（ccman 会自动修改）：
-- `~/.claude/settings.json`
+**工具配置**（ccman 会自动修改）：
+- **Codex**: `~/.codex/config.toml`
+- **Claude Code**: `~/.claude/settings.json`
+- **Gemini CLI**: `~/.gemini/settings.json` 和 `~/.gemini/.env`
 
 **零破坏性承诺**：
 - 只修改管理的字段，保留其他所有配置

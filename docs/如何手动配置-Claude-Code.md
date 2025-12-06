@@ -246,7 +246,7 @@ ccman current
 如果你需要频繁切换服务商，强烈建议安装 ccman：
 
 ```bash
-npm install -g @ccman/cli
+npm install -g ccman
 ```
 
 更多信息请参考：[ccman 官方文档](https://github.com/2ue/ccman)
