@@ -1,11 +1,83 @@
 /**
  * ccman Core Module
- * Business logic for managing Codex and Claude Code service providers
+ * Business logic for managing Codex, Claude Code, and Gemini CLI service providers
  */
 import pkg from '../package.json' assert { type: 'json' }
 
 /** Core version */
 export const VERSION = pkg.version as string
+
+// =============================================================================
+// New Plugin-Based Architecture (Recommended)
+// =============================================================================
+
+// Core Services
+export {
+  ToolRegistry,
+  ProviderService,
+  ProviderNotFoundError as NewProviderNotFoundError,
+  ValidationFailedError,
+  McpService,
+  McpServerNotFoundError,
+  McpValidationError,
+  ConfigService,
+  ConfigPathNotFoundError,
+  ConfigOperationError,
+} from './services/index.js'
+
+// Tool Descriptors and Adapters
+export {
+  claudeDescriptor,
+  ClaudeConfigAdapter,
+  ClaudeServiceAdapter,
+  ClaudeMcpAdapter,
+  CLAUDE_PRESETS as CLAUDE_PRESETS_NEW,
+} from './tools/claude-code/index.js'
+
+export {
+  codexDescriptor,
+  CodexConfigAdapter,
+  CodexServiceAdapter,
+  CODEX_PRESETS as CODEX_PRESETS_NEW,
+} from './tools/codex/index.js'
+
+export {
+  geminiDescriptor,
+  GeminiConfigAdapter,
+  GeminiServiceAdapter,
+  GeminiMcpAdapter,
+  GEMINI_PRESETS as GEMINI_PRESETS_NEW,
+} from './tools/gemini-cli/index.js'
+
+export { ccmanDescriptor, CcmanConfigAdapter } from './tools/ccman/index.js'
+
+// Adapters
+export { getRootDir, setRootDir, resetRootDir } from './adapters/path-resolver.js'
+
+export { safeReadFile, safeWriteFileSync } from './adapters/filesystem.js'
+
+export { renderTemplate, deepMerge, loadTemplate } from './adapters/template-engine.js'
+
+// Types
+export type {
+  Tool,
+  ToolDescriptor,
+  ConfigPath,
+  ConfigAdapter,
+  ServiceAdapter,
+  McpAdapter,
+  PresetSpec,
+  TemplateSpec,
+  Provider,
+  ProviderInput,
+  MCPServer,
+  MCPServerInput,
+  MergeMode,
+} from './types.js'
+
+// =============================================================================
+// Legacy APIs (Backward Compatibility)
+// =============================================================================
 
 // Constants (全局常量和配置)
 export {
@@ -26,13 +98,13 @@ export {
   createMCPManager,
   createGeminiManager,
   type ToolManager,
-  type Provider,
+  type Provider as LegacyProvider, // Renamed to avoid conflict with new types
   type AddProviderInput,
   type EditProviderInput,
   type PresetTemplate,
   type AddPresetInput,
   type EditPresetInput,
-  ProviderNotFoundError,
+  ProviderNotFoundError as LegacyProviderNotFoundError, // Renamed to avoid conflict
 } from './tool-manager.js'
 
 // Presets (只导出预设数据，不导出类型)
@@ -53,7 +125,7 @@ export {
   getMCPAppStatus,
   migrateMCPConfig,
   getMCPConfigPath,
-  type MCPServer,
+  type MCPServer as LegacyMCPServer, // Renamed to avoid conflict with new types
   type MCPConfig,
   type AppType,
 } from './writers/mcp.js'

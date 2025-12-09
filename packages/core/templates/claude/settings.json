@@ -1,7 +1,7 @@
 {
   "env": {
-    "ANTHROPIC_AUTH_TOKEN": "{{apiKey}}",
-    "ANTHROPIC_BASE_URL": "{{baseUrl}}",
+    "ANTHROPIC_AUTH_TOKEN": "{{provider.apiKey}}",
+    "ANTHROPIC_BASE_URL": "{{provider.baseUrl}}",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1,
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": 32000
   },
