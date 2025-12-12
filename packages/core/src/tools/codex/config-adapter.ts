@@ -5,19 +5,18 @@
 import * as TOML from '@iarna/toml'
 import fs from 'fs'
 import path from 'path'
-import os from 'os'
 import type { ConfigAdapter, MergeMode } from '../../types.js'
 import { safeReadFile, safeWriteFileSync } from '../../adapters/filesystem.js'
 import { deepMerge } from '../../adapters/template-engine.js'
+import { getCodexConfigPath, getCodexAuthPath } from '../../adapters/path-resolver.js'
 
 export class CodexConfigAdapter implements ConfigAdapter {
   private getConfigPath(pathId: string): string {
-    const base = path.join(os.homedir(), '.codex')
     switch (pathId) {
       case 'main':
-        return path.join(base, 'config.toml')
+        return getCodexConfigPath()
       case 'auth':
-        return path.join(base, 'auth.json')
+        return getCodexAuthPath()
       default:
         throw new Error(`Unknown pathId: ${pathId}`)
     }
