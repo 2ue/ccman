@@ -28,7 +28,7 @@ describe('migrate v3.2 → v3.3', () => {
     // 清理测试目录
     resetRootDir()
     if (testDir && fs.existsSync(testDir)) {
-      fs.rmSync(testDir, { recursive: true })
+      fs.rmSync(testDir, { recursive: true, force: true })
     }
   })
 
