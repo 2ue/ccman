@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createGeminiManager } from '@ccman/core'
+import { ProviderService } from '@ccman/core'
 
 export function removeCommand(program: Command): void {
   program
@@ -10,8 +10,8 @@ export function removeCommand(program: Command): void {
     .description('删除 Gemini CLI 服务商')
     .action(async (name?: string) => {
       try {
-        const manager = createGeminiManager()
-        const providers = manager.list()
+        const tool = 'gemini-cli'
+        const providers = ProviderService.list(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Gemini CLI 服务商\n'))
@@ -19,32 +19,28 @@ export function removeCommand(program: Command): void {
           return
         }
 
-        let targetId: string
         let targetName: string
 
         if (name) {
-          const provider = manager.findByName(name)
+          const provider = ProviderService.get(tool, name)
           if (!provider) {
             console.log(chalk.red(`\n❌ 服务商不存在: ${name}\n`))
             process.exit(1)
           }
-          targetId = provider.id
           targetName = provider.name
         } else {
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要删除的服务商:',
               choices: providers.map((p) => ({
                 name: `${p.name} - ${p.baseUrl || '(默认端点)'}`,
-                value: p.id,
+                value: p.name,
               })),
             },
           ])
-          const provider = manager.get(selectedId)
-          targetId = provider.id
-          targetName = provider.name
+          targetName = selectedName
         }
 
         const { confirm } = await inquirer.prompt([
@@ -61,7 +57,7 @@ export function removeCommand(program: Command): void {
           return
         }
 
-        manager.remove(targetId)
+        ProviderService.delete(tool, targetName)
         console.log(chalk.green('\n✅ 已删除服务商\n'))
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
@@ -69,4 +65,3 @@ export function removeCommand(program: Command): void {
       }
     })
 }
-

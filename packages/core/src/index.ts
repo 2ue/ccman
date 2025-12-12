@@ -15,6 +15,7 @@ export const VERSION = pkg.version as string
 export {
   ToolRegistry,
   ProviderService,
+  ProviderNotFoundError,
   ProviderNotFoundError as NewProviderNotFoundError,
   ValidationFailedError,
   McpService,

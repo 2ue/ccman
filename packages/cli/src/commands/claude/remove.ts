@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createClaudeManager, ProviderNotFoundError } from '@ccman/core'
+import { ProviderService, ProviderNotFoundError } from '@ccman/core'
 
 export function removeCommand(program: Command): void {
   program
@@ -10,41 +10,38 @@ export function removeCommand(program: Command): void {
     .description('删除 Claude Code 服务商')
     .action(async (name?: string) => {
       try {
-        const manager = createClaudeManager()
-        const providers = manager.list()
+        const tool = 'claude-code'
+        const providers = ProviderService.list(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Claude Code 服务商\n'))
           return
         }
 
-        let targetId: string
         let targetName: string
 
         if (name) {
           // 通过名称查找
-          const provider = manager.findByName(name)
-          if (!provider) {
-            throw new ProviderNotFoundError(name)
+          try {
+            const provider = ProviderService.get(tool, name)
+            targetName = provider.name
+          } catch (error) {
+            throw new ProviderNotFoundError(tool, name)
           }
-          targetId = provider.id
-          targetName = provider.name
         } else {
           // 交互式选择
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要删除的服务商:',
               choices: providers.map((p) => ({
                 name: `${p.name} - ${p.baseUrl}`,
-                value: p.id,
+                value: p.name,
               })),
             },
           ])
-          const provider = manager.get(selectedId)
-          targetId = selectedId
-          targetName = provider.name
+          targetName = selectedName
         }
 
         // 确认删除
@@ -62,7 +59,7 @@ export function removeCommand(program: Command): void {
           return
         }
 
-        manager.remove(targetId)
+        ProviderService.delete(tool, targetName)
 
         console.log()
         console.log(chalk.green(`✅ 已删除: ${targetName}`))

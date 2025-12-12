@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createGeminiManager } from '@ccman/core'
+import { ProviderService } from '@ccman/core'
 
 export function cloneCommand(program: Command): void {
   program
@@ -9,8 +9,8 @@ export function cloneCommand(program: Command): void {
     .description('克隆 Gemini CLI 服务商')
     .action(async (name?: string) => {
       try {
-        const manager = createGeminiManager()
-        const providers = manager.list()
+        const tool = 'gemini-cli'
+        const providers = ProviderService.list(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Gemini CLI 服务商\n'))
@@ -18,28 +18,28 @@ export function cloneCommand(program: Command): void {
           return
         }
 
-        let sourceId: string
+        let sourceProviderName: string
 
         if (name) {
-          const provider = manager.findByName(name)
+          const provider = ProviderService.get(tool, name)
           if (!provider) {
             console.log(chalk.red(`\n❌ 服务商不存在: ${name}\n`))
             process.exit(1)
           }
-          sourceId = provider.id
+          sourceProviderName = provider.name
         } else {
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要克隆的服务商:',
               choices: providers.map((p) => ({
                 name: `${p.name} - ${p.baseUrl || '(默认端点)'}`,
-                value: p.id,
+                value: p.name,
               })),
             },
           ])
-          sourceId = selectedId
+          sourceProviderName = selectedName
         }
 
         const { newName } = await inquirer.prompt([
@@ -54,7 +54,7 @@ export function cloneCommand(program: Command): void {
           },
         ])
 
-        const newProvider = manager.clone(sourceId, newName)
+        const newProvider = ProviderService.clone(tool, sourceProviderName, newName)
 
         console.log()
         console.log(chalk.green('✅ 克隆成功'))
@@ -68,4 +68,3 @@ export function cloneCommand(program: Command): void {
       }
     })
 }
-

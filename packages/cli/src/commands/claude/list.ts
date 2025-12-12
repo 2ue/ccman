@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import { createClaudeManager } from '@ccman/core'
+import { ProviderService } from '@ccman/core'
 import { formatProviderTable } from '../../utils/format.js'
 
 export function listCommand(program: Command): void {
@@ -10,9 +10,9 @@ export function listCommand(program: Command): void {
     .description('列出所有 Claude Code 服务商')
     .action(async () => {
       try {
-        const manager = createClaudeManager()
-        const providers = manager.list()
-        const current = manager.getCurrent()
+        const tool = 'claude-code'
+        const providers = ProviderService.list(tool)
+        const current = ProviderService.current(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Claude Code 服务商\n'))

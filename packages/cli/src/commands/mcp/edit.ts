@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createMCPManager, ProviderNotFoundError, getClaudeConfigPath } from '@ccman/core'
+import { McpService, McpServerNotFoundError, getClaudeConfigPath } from '@ccman/core'
 
 export function editCommand(program: Command): void {
   program
@@ -9,44 +9,40 @@ export function editCommand(program: Command): void {
     .description('编辑 MCP 服务器')
     .action(async (name?: string) => {
       try {
-        const manager = createMCPManager()
-        const providers = manager.list()
+        const servers = McpService.list()
 
-        if (providers.length === 0) {
+        if (servers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 MCP 服务器\n'))
           return
         }
 
-        let targetId: string
+        let targetName: string
 
         if (name) {
-          const provider = manager.findByName(name)
-          if (!provider) {
-            throw new ProviderNotFoundError(name)
+          // Validate that server exists
+          try {
+            McpService.get(name)
+            targetName = name
+          } catch (error) {
+            throw new McpServerNotFoundError(name)
           }
-          targetId = provider.id
         } else {
           // 交互式选择
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要编辑的 MCP 服务器:',
-              choices: providers.map((p) => ({
-                name: `${p.name} - ${p.baseUrl} ${p.apiKey}`,
-                value: p.id,
+              choices: servers.map((s) => ({
+                name: `${s.name} - ${s.command} ${(s.args || []).join(' ')}`,
+                value: s.name,
               })),
             },
           ])
-          targetId = selectedId
+          targetName = selectedName
         }
 
-        const provider = manager.get(targetId)
-
-        // 解析现有的字段（从 Provider 映射回 MCP 格式）
-        const currentCommand = provider.baseUrl
-        const currentArgs = provider.apiKey
-        const currentEnv = provider.model
+        const server = McpService.get(targetName)
 
         console.log(chalk.bold('\n✏️  编辑 MCP 服务器\n'))
         console.log(chalk.gray('提示: 留空则保持原值\n'))
@@ -56,42 +52,50 @@ export function editCommand(program: Command): void {
             type: 'input',
             name: 'name',
             message: 'MCP 服务器名称:',
-            default: provider.name,
+            default: server.name,
           },
           {
             type: 'input',
             name: 'command',
             message: '启动命令:',
-            default: currentCommand,
+            default: server.command,
           },
           {
             type: 'input',
             name: 'args',
             message: '命令参数 (空格分隔, 留空保持不变):',
-            default: currentArgs,
+            default: (server.args || []).join(' '),
           },
           {
             type: 'input',
             name: 'env',
             message: '环境变量 (JSON 格式, 留空保持不变):',
-            default: currentEnv || '',
+            default: server.env ? JSON.stringify(server.env) : '',
           },
         ])
 
-        // 字段映射：command → baseUrl, args → apiKey, env → model
-        const updates: { name?: string; baseUrl?: string; apiKey?: string; model?: string } = {}
+        // Build updates object
+        const updates: {
+          name?: string
+          command?: string
+          args?: string[]
+          env?: Record<string, string>
+        } = {}
 
-        if (answers.name && answers.name !== provider.name) {
+        if (answers.name && answers.name !== server.name) {
           updates.name = answers.name
         }
-        if (answers.command && answers.command !== currentCommand) {
-          updates.baseUrl = answers.command
+        if (answers.command && answers.command !== server.command) {
+          updates.command = answers.command
         }
-        if (answers.args && answers.args !== currentArgs) {
-          updates.apiKey = answers.args
+        if (answers.args) {
+          const newArgs = answers.args.split(' ').filter((arg: string) => arg.length > 0)
+          if (newArgs.join(' ') !== (server.args || []).join(' ')) {
+            updates.args = newArgs
+          }
         }
-        if (answers.env !== currentEnv) {
-          updates.model = answers.env || undefined
+        if (answers.env !== (server.env ? JSON.stringify(server.env) : '')) {
+          updates.env = answers.env ? JSON.parse(answers.env) : {}
         }
 
         if (Object.keys(updates).length === 0) {
@@ -99,20 +103,15 @@ export function editCommand(program: Command): void {
           return
         }
 
-        const updated = manager.edit(targetId, updates)
+        const updated = McpService.update(targetName, updates)
 
         console.log()
         console.log(chalk.green('✅ 编辑成功'))
         console.log()
         console.log(`  ${chalk.bold(updated.name)} ${chalk.blue('[MCP]')}`)
-        console.log(`  ${chalk.gray(`命令: ${updated.baseUrl} ${updated.apiKey}`)}`)
-        if (updated.model) {
-          try {
-            const env = JSON.parse(updated.model)
-            console.log(chalk.gray(`  环境变量: ${Object.keys(env).join(', ')}`))
-          } catch {
-            // 忽略 JSON 解析错误
-          }
+        console.log(`  ${chalk.gray(`命令: ${updated.command} ${(updated.args || []).join(' ')}`)}`)
+        if (updated.env && Object.keys(updated.env).length > 0) {
+          console.log(chalk.gray(`  环境变量: ${Object.keys(updated.env).join(', ')}`))
         }
         console.log()
         console.log(chalk.green('✅ 配置已自动同步到 ~/.claude.json'))

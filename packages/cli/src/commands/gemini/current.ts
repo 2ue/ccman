@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import { createGeminiManager } from '@ccman/core'
+import { ProviderService } from '@ccman/core'
 
 export function currentCommand(program: Command): void {
   program
@@ -8,8 +8,8 @@ export function currentCommand(program: Command): void {
     .description('显示当前 Gemini CLI 服务商')
     .action(async () => {
       try {
-        const manager = createGeminiManager()
-        const current = manager.getCurrent()
+        const tool = 'gemini-cli'
+        const current = ProviderService.current(tool)
 
         if (!current) {
           console.log(chalk.yellow('\n⚠️  当前没有激活的 Gemini CLI 服务商\n'))
@@ -27,4 +27,3 @@ export function currentCommand(program: Command): void {
       }
     })
 }
-

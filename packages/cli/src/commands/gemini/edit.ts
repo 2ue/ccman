@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createGeminiManager } from '@ccman/core'
+import { ProviderService } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
 
 export function editCommand(program: Command): void {
@@ -10,8 +10,8 @@ export function editCommand(program: Command): void {
     .description('编辑 Gemini CLI 服务商')
     .action(async (name?: string) => {
       try {
-        const manager = createGeminiManager()
-        const providers = manager.list()
+        const tool = 'gemini-cli'
+        const providers = ProviderService.list(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Gemini CLI 服务商\n'))
@@ -19,31 +19,31 @@ export function editCommand(program: Command): void {
           return
         }
 
-        let targetId: string
+        let targetName: string
 
         if (name) {
-          const provider = manager.findByName(name)
+          const provider = ProviderService.get(tool, name)
           if (!provider) {
             console.log(chalk.red(`\n❌ 服务商不存在: ${name}\n`))
             process.exit(1)
           }
-          targetId = provider.id
+          targetName = provider.name
         } else {
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要编辑的服务商:',
               choices: providers.map((p) => ({
                 name: `${p.name} - ${p.baseUrl || '(默认端点)'}`,
-                value: p.id,
+                value: p.name,
               })),
             },
           ])
-          targetId = selectedId
+          targetName = selectedName
         }
 
-        const provider = manager.get(targetId)
+        const provider = ProviderService.get(tool, targetName)!
 
         const input = await promptProviderForm({
           name: provider.name,
@@ -52,7 +52,7 @@ export function editCommand(program: Command): void {
           apiKey: provider.apiKey,
         })
 
-        manager.edit(targetId, {
+        ProviderService.update(tool, targetName, {
           name: input.name,
           desc: input.desc,
           baseUrl: input.baseUrl,
@@ -66,4 +66,3 @@ export function editCommand(program: Command): void {
       }
     })
 }
-

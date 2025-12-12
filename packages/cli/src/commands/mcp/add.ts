@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createMCPManager, MCP_PRESETS_DETAIL, getClaudeConfigPath } from '@ccman/core'
+import { McpService, MCP_PRESETS_DETAIL, getClaudeConfigPath } from '@ccman/core'
 
 export function addCommand(program: Command): void {
   program
@@ -9,8 +9,6 @@ export function addCommand(program: Command): void {
     .description('添加新的 MCP 服务器(交互式)')
     .action(async () => {
       try {
-        const manager = createMCPManager()
-
         console.log(chalk.bold('\n📝 添加 MCP 服务器\n'))
 
         // 询问是否使用预置服务器
@@ -29,7 +27,7 @@ export function addCommand(program: Command): void {
         let name: string
         let command: string
         let args: string[]
-        let env: Record<string, string | number> | undefined
+        let env: Record<string, string> | undefined
 
         if (usePreset) {
           // 使用预置服务器
@@ -146,20 +144,20 @@ export function addCommand(program: Command): void {
           env = answers.env ? JSON.parse(answers.env) : undefined
         }
 
-        // 字段映射：command → baseUrl, args → apiKey, env → model
-        const provider = manager.add({
+        // Add MCP server
+        const server = McpService.add({
           name,
-          baseUrl: command,
-          apiKey: args.join(' '),
-          model: env ? JSON.stringify(env) : undefined,
+          command,
+          args,
+          env,
         })
 
         console.log()
         console.log(chalk.green('✅ MCP 服务器添加成功'))
         console.log()
-        console.log(`  ${chalk.bold(provider.name)} ${chalk.blue('[MCP]')}`)
-        console.log(`  ${chalk.gray(`${command} ${args.join(' ')}`)  }`)
-        if (env) {
+        console.log(`  ${chalk.bold(server.name)} ${chalk.blue('[MCP]')}`)
+        console.log(`  ${chalk.gray(`${command} ${args.join(' ')}`)}`)
+        if (env && Object.keys(env).length > 0) {
           console.log(chalk.gray(`  环境变量: ${Object.keys(env).join(', ')}`))
         }
         console.log()

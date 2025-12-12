@@ -1,5 +1,14 @@
 import chalk from 'chalk'
-import type { Provider } from '@ccman/core'
+
+/**
+ * Provider display type (compatible with both legacy and new Provider types)
+ */
+interface ProviderDisplay {
+  id: string
+  name: string
+  baseUrl?: string
+  desc?: string
+}
 
 /**
  * 格式化 Provider 列表为 Vercel CLI 风格
@@ -10,7 +19,7 @@ import type { Provider } from '@ccman/core'
  * @returns 格式化后的列表字符串
  */
 export function formatProviderTable(
-  providers: Provider[],
+  providers: ProviderDisplay[],
   currentId: string | undefined
 ): string {
   const lines: string[] = []
@@ -28,7 +37,8 @@ export function formatProviderTable(
     lines.push(`  ${marker}  ${name}${tag}`)
 
     // URL 行
-    const url = isCurrent ? chalk.green(p.baseUrl) : chalk.gray(p.baseUrl)
+    const urlText = p.baseUrl || '(默认端点)'
+    const url = isCurrent ? chalk.green(urlText) : chalk.gray(urlText)
     lines.push(`     ${url}`)
 
     if (p.desc) {

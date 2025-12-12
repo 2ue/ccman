@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import { createCodexManager } from '@ccman/core'
+import { ProviderService } from '@ccman/core'
 
 export function currentCommand(program: Command): void {
   program
@@ -8,8 +8,8 @@ export function currentCommand(program: Command): void {
     .description('显示当前使用的 Codex 服务商')
     .action(async () => {
       try {
-        const manager = createCodexManager()
-        const current = manager.getCurrent()
+        const tool = 'codex'
+        const current = ProviderService.current(tool)
 
         if (!current) {
           console.log(chalk.yellow('\n⚠️  未选择任何 Codex 服务商\n'))

@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createCodexManager, ProviderNotFoundError } from '@ccman/core'
+import { ProviderService, ProviderNotFoundError } from '@ccman/core'
 
 export function editCommand(program: Command): void {
   program
@@ -9,39 +9,40 @@ export function editCommand(program: Command): void {
     .description('编辑 Codex 服务商')
     .action(async (name?: string) => {
       try {
-        const manager = createCodexManager()
-        const providers = manager.list()
+        const tool = 'codex'
+        const providers = ProviderService.list(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Codex 服务商\n'))
           return
         }
 
-        let targetId: string
+        let targetName: string
 
         if (name) {
-          const provider = manager.findByName(name)
-          if (!provider) {
-            throw new ProviderNotFoundError(name)
+          try {
+            const provider = ProviderService.get(tool, name)
+            targetName = provider.name
+          } catch (error) {
+            throw new ProviderNotFoundError(tool, name)
           }
-          targetId = provider.id
         } else {
           // 交互式选择
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要编辑的服务商:',
               choices: providers.map((p) => ({
                 name: `${p.name} - ${p.baseUrl}`,
-                value: p.id,
+                value: p.name,
               })),
             },
           ])
-          targetId = selectedId
+          targetName = selectedName
         }
 
-        const provider = manager.get(targetId)
+        const provider = ProviderService.get(tool, targetName)!
 
         console.log(chalk.bold('\n✏️  编辑服务商\n'))
         console.log(chalk.gray('提示: 留空则保持原值\n'))
@@ -75,7 +76,8 @@ export function editCommand(program: Command): void {
 
         const updates: { name?: string; baseUrl?: string; apiKey?: string } = {}
         if (answers.name && answers.name !== provider.name) updates.name = answers.name
-        if (answers.baseUrl && answers.baseUrl !== provider.baseUrl) updates.baseUrl = answers.baseUrl
+        if (answers.baseUrl && answers.baseUrl !== provider.baseUrl)
+          updates.baseUrl = answers.baseUrl
         if (answers.apiKey) updates.apiKey = answers.apiKey
 
         if (Object.keys(updates).length === 0) {
@@ -83,7 +85,7 @@ export function editCommand(program: Command): void {
           return
         }
 
-        const updated = manager.edit(targetId, updates)
+        const updated = ProviderService.update(tool, targetName, updates)
 
         console.log()
         console.log(chalk.green('✅ 编辑成功'))

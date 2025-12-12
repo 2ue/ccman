@@ -1,12 +1,9 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import {
-  createClaudeManager,
-  CC_PRESETS,
-  getClaudeConfigPath,
-} from '@ccman/core'
+import { ProviderService, CLAUDE_PRESETS_NEW as CC_PRESETS } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
+import { getClaudeConfigPath } from '@ccman/core'
 
 export function addCommand(program: Command): void {
   program
@@ -14,7 +11,7 @@ export function addCommand(program: Command): void {
     .description('添加新的 Claude Code 服务商(交互式)')
     .action(async () => {
       try {
-        const manager = createClaudeManager()
+        const tool = 'claude-code'
 
         console.log(chalk.bold('\n📝 添加 Claude Code 服务商\n'))
 
@@ -109,7 +106,7 @@ export function addCommand(program: Command): void {
           apiKey = answers.apiKey
         }
 
-        const provider = manager.add({ name, desc, baseUrl, apiKey })
+        const provider = ProviderService.add(tool, { name, desc, baseUrl, apiKey })
 
         console.log()
         console.log(chalk.green('✅ 添加成功'))
@@ -129,7 +126,7 @@ export function addCommand(program: Command): void {
         ])
 
         if (switchNow) {
-          manager.switch(provider.id)
+          ProviderService.apply(tool, provider.name)
           console.log(chalk.green('✅ 已切换到新服务商'))
           console.log()
           console.log(chalk.gray('配置已更新:'))

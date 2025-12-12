@@ -2,8 +2,8 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import {
-  createGeminiManager,
-  GEMINI_PRESETS,
+  ProviderService,
+  GEMINI_PRESETS_NEW as GEMINI_PRESETS,
   getGeminiSettingsPath,
   getGeminiEnvPath,
 } from '@ccman/core'
@@ -15,7 +15,7 @@ export function addCommand(program: Command): void {
     .description('添加新的 Gemini CLI 服务商(交互式)')
     .action(async () => {
       try {
-        const manager = createGeminiManager()
+        const tool = 'gemini-cli'
 
         console.log(chalk.bold('\n📝 添加 Gemini CLI 服务商\n'))
 
@@ -106,7 +106,7 @@ export function addCommand(program: Command): void {
           apiKey = answers.apiKey || ''
         }
 
-        const provider = manager.add({ name, desc, baseUrl, apiKey })
+        const provider = ProviderService.add(tool, { name, desc, baseUrl, apiKey })
 
         console.log()
         console.log(chalk.green('✅ 添加成功'))
@@ -126,7 +126,7 @@ export function addCommand(program: Command): void {
         ])
 
         if (switchNow) {
-          manager.switch(provider.id)
+          ProviderService.apply(tool, provider.name)
           console.log(chalk.green('✅ 已切换到新服务商'))
           console.log()
           console.log(chalk.gray('配置已更新:'))

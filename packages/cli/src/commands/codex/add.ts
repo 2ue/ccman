@@ -2,8 +2,8 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import {
-  createCodexManager,
-  CODEX_PRESETS,
+  ProviderService,
+  CODEX_PRESETS_NEW as CODEX_PRESETS,
   getCodexConfigPath,
   getCodexAuthPath,
 } from '@ccman/core'
@@ -15,7 +15,7 @@ export function addCommand(program: Command): void {
     .description('添加新的 Codex 服务商(交互式)')
     .action(async () => {
       try {
-        const manager = createCodexManager()
+        const tool = 'codex'
 
         console.log(chalk.bold('\n📝 添加 Codex 服务商\n'))
 
@@ -110,7 +110,7 @@ export function addCommand(program: Command): void {
           apiKey = answers.apiKey
         }
 
-        const provider = manager.add({ name, desc, baseUrl, apiKey })
+        const provider = ProviderService.add(tool, { name, desc, baseUrl, apiKey })
 
         console.log()
         console.log(chalk.green('✅ 添加成功'))
@@ -130,7 +130,7 @@ export function addCommand(program: Command): void {
         ])
 
         if (switchNow) {
-          manager.switch(provider.id)
+          ProviderService.apply(tool, provider.name)
           console.log(chalk.green('✅ 已切换到新服务商'))
           console.log()
           console.log(chalk.gray('配置已更新:'))

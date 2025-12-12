@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createMCPManager, ProviderNotFoundError, getClaudeConfigPath } from '@ccman/core'
+import { McpService, McpServerNotFoundError, getClaudeConfigPath } from '@ccman/core'
 
 export function removeCommand(program: Command): void {
   program
@@ -10,41 +10,37 @@ export function removeCommand(program: Command): void {
     .description('删除 MCP 服务器')
     .action(async (name?: string) => {
       try {
-        const manager = createMCPManager()
-        const providers = manager.list()
+        const servers = McpService.list()
 
-        if (providers.length === 0) {
+        if (servers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 MCP 服务器\n'))
           return
         }
 
-        let targetId: string
         let targetName: string
 
         if (name) {
-          // 通过名称查找
-          const provider = manager.findByName(name)
-          if (!provider) {
-            throw new ProviderNotFoundError(name)
+          // Validate that server exists
+          try {
+            McpService.get(name)
+            targetName = name
+          } catch (error) {
+            throw new McpServerNotFoundError(name)
           }
-          targetId = provider.id
-          targetName = provider.name
         } else {
           // 交互式选择
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要删除的 MCP 服务器:',
-              choices: providers.map((p) => ({
-                name: `${p.name} - ${p.baseUrl} ${p.apiKey}`,
-                value: p.id,
+              choices: servers.map((s) => ({
+                name: `${s.name} - ${s.command} ${(s.args || []).join(' ')}`,
+                value: s.name,
               })),
             },
           ])
-          const provider = manager.get(selectedId)
-          targetId = selectedId
-          targetName = provider.name
+          targetName = selectedName
         }
 
         // 确认删除
@@ -62,7 +58,7 @@ export function removeCommand(program: Command): void {
           return
         }
 
-        manager.remove(targetId)
+        McpService.delete(targetName)
 
         console.log()
         console.log(chalk.green(`✅ 已删除: ${targetName}`))
@@ -73,7 +69,7 @@ export function removeCommand(program: Command): void {
         console.log(chalk.gray(`  - ${getClaudeConfigPath()}`))
         console.log()
       } catch (error) {
-        if (error instanceof ProviderNotFoundError) {
+        if (error instanceof McpServerNotFoundError) {
           console.error(chalk.red(`\n❌ MCP 服务器不存在\n`))
           console.log(chalk.blue('💡 查看所有 MCP 服务器:') + chalk.white(' ccman mcp list\n'))
         } else {

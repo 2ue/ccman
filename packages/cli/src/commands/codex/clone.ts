@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { createCodexManager, ProviderNotFoundError } from '@ccman/core'
+import { ProviderService, ProviderNotFoundError } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
 
 export function cloneCommand(program: Command): void {
@@ -10,47 +10,48 @@ export function cloneCommand(program: Command): void {
     .description('克隆 Codex 服务商')
     .action(async (sourceName?: string, newName?: string) => {
       try {
-        const manager = createCodexManager()
-        const providers = manager.list()
+        const tool = 'codex'
+        const providers = ProviderService.list(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Codex 服务商\n'))
           return
         }
 
-        let sourceId: string
+        let sourceProviderName: string
 
         if (sourceName) {
-          const provider = manager.findByName(sourceName)
-          if (!provider) {
-            throw new ProviderNotFoundError(sourceName)
+          try {
+            const provider = ProviderService.get(tool, sourceName)
+            sourceProviderName = provider.name
+          } catch (error) {
+            throw new ProviderNotFoundError(tool, sourceName)
           }
-          sourceId = provider.id
         } else {
           // 交互式选择源
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要克隆的服务商:',
               choices: providers.map((p) => ({
                 name: `${p.name} - ${p.baseUrl}`,
-                value: p.id,
+                value: p.name,
               })),
             },
           ])
-          sourceId = selectedId
+          sourceProviderName = selectedName
         }
 
         // 获取源 provider
-        const source = manager.get(sourceId)
+        const source = ProviderService.get(tool, sourceProviderName)!
 
         let cloned
 
         if (newName) {
           // 非交互模式：只改名，其他字段完全复制
           // 注意：desc 字段不会被继承（clone 内部设置为 undefined）
-          cloned = manager.clone(sourceId, newName)
+          cloned = ProviderService.clone(tool, sourceProviderName, newName)
         } else {
           // 交互模式：允许修改所有字段
           console.log(chalk.blue(`\n克隆自: ${source.name}\n`))
@@ -63,7 +64,7 @@ export function cloneCommand(program: Command): void {
             apiKey: source.apiKey,
           })
 
-          cloned = manager.add(input)
+          cloned = ProviderService.add(tool, input)
         }
 
         console.log()

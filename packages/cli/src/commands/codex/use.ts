@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import {
-  createCodexManager,
+  ProviderService,
   ProviderNotFoundError,
   getCodexConfigPath,
   getCodexAuthPath,
@@ -14,8 +14,8 @@ export function useCommand(program: Command): void {
     .description('切换 Codex 服务商')
     .action(async (name?: string) => {
       try {
-        const manager = createCodexManager()
-        const providers = manager.list()
+        const tool = 'codex'
+        const providers = ProviderService.list(tool)
 
         if (providers.length === 0) {
           console.log(chalk.yellow('\n⚠️  暂无 Codex 服务商\n'))
@@ -23,33 +23,34 @@ export function useCommand(program: Command): void {
           return
         }
 
-        let targetId: string
+        let targetName: string
 
         if (name) {
           // 通过名称查找
-          const provider = manager.findByName(name)
-          if (!provider) {
-            throw new ProviderNotFoundError(name)
+          try {
+            const provider = ProviderService.get(tool, name)
+            targetName = provider.name
+          } catch (error) {
+            throw new ProviderNotFoundError(tool, name)
           }
-          targetId = provider.id
         } else {
           // 交互式选择
-          const { selectedId } = await inquirer.prompt([
+          const { selectedName } = await inquirer.prompt([
             {
               type: 'list',
-              name: 'selectedId',
+              name: 'selectedName',
               message: '选择要切换的服务商:',
               choices: providers.map((p) => ({
                 name: `${p.name} - ${p.baseUrl}`,
-                value: p.id,
+                value: p.name,
               })),
             },
           ])
-          targetId = selectedId
+          targetName = selectedName
         }
 
-        manager.switch(targetId)
-        const provider = manager.get(targetId)
+        ProviderService.apply(tool, targetName)
+        const provider = ProviderService.get(tool, targetName)!
 
         console.log()
         console.log(chalk.green('✅ 切换成功'))
