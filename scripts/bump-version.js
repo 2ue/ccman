@@ -31,6 +31,7 @@ if (!versionRegex.test(newVersion)) {
 // 需要修改的文件
 const files = [
   'package.json',
+  'packages/types/package.json',
   'packages/core/package.json',
   'packages/cli/package.json',
   'packages/desktop/package.json',

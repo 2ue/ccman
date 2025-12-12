@@ -58,7 +58,7 @@ import { getCcmanDir } from '@ccman/core'  // ✅
 // ✅ 应该有统一的 rootDir 变量
 let rootDir: string
 if (isTest) {
-  rootDir = path.join(os.tmpdir(), `ccman-test-${process.pid}`)
+  rootDir = path.join(os.tmpdir(), 'ccman-test')
 } else if (isDev) {
   rootDir = path.join(os.tmpdir(), 'ccman-dev')
 } else {
@@ -108,7 +108,7 @@ console.log('生产环境:', getClaudeJsonPath());
 
 **预期输出**：
 - 开发环境: `/tmp/ccman-dev/.claude.json`
-- 测试环境: `/tmp/ccman-test-{PID}/.claude.json`
+- 测试环境: `/tmp/ccman-test/.claude.json`
 - 生产环境: `~/.claude.json`
 
 ## 6. 如果发现问题
