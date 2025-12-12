@@ -215,7 +215,7 @@ function createToolManager(tool: ToolType): ToolManager {
         apiKey: input.apiKey,
         model: input.model,
         createdAt: timestamp,
-        lastModified: timestamp,
+        updatedAt: timestamp,
       }
 
       config.providers.push(provider)
@@ -304,7 +304,7 @@ function createToolManager(tool: ToolType): ToolManager {
       if (updates.apiKey !== undefined) provider.apiKey = updates.apiKey
       if (updates.model !== undefined) provider.model = updates.model
 
-      provider.lastModified = Date.now()
+      provider.updatedAt = Date.now()
       saveConfig(config)
 
       // 如果是当前激活的 provider,重新写入配置
@@ -361,7 +361,7 @@ function createToolManager(tool: ToolType): ToolManager {
         name: newName,
         desc: undefined,
         createdAt: timestamp,
-        lastModified: timestamp,
+        updatedAt: timestamp,
         lastUsedAt: undefined,
       }
 
@@ -397,7 +397,7 @@ function createToolManager(tool: ToolType): ToolManager {
       // 返回时添加 isBuiltIn 标记
       return {
         ...preset,
-        isBuiltIn: false
+        isBuiltIn: false,
       }
     },
 
@@ -406,15 +406,15 @@ function createToolManager(tool: ToolType): ToolManager {
       const userPresets = config.presets || []
 
       // 给内置预设添加 isBuiltIn 标记
-      const builtinWithFlag = toolConfig.builtinPresets.map(p => ({
+      const builtinWithFlag = toolConfig.builtinPresets.map((p) => ({
         ...p,
-        isBuiltIn: true
+        isBuiltIn: true,
       }))
 
       // 给用户预设添加 isBuiltIn 标记
-      const userWithFlag = userPresets.map(p => ({
+      const userWithFlag = userPresets.map((p) => ({
         ...p,
-        isBuiltIn: false
+        isBuiltIn: false,
       }))
 
       return [...builtinWithFlag, ...userWithFlag]
@@ -451,7 +451,7 @@ function createToolManager(tool: ToolType): ToolManager {
       // 返回时添加 isBuiltIn 标记
       return {
         ...preset,
-        isBuiltIn: false
+        isBuiltIn: false,
       }
     },
 

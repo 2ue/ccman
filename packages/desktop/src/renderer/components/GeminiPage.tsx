@@ -68,7 +68,7 @@ export default function GeminiPage({
   const filteredProviders = providers.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.baseUrl.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.baseUrl || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (

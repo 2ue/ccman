@@ -146,17 +146,25 @@ export function writeGeminiConfig(provider: Provider): void {
     delete env.GEMINI_API_KEY
   }
 
-  // 解析 provider.model（可能是 JSON 元数据或纯字符串）
+  // 解析 provider.model（可能是 JSON 元数据、纯字符串或 Record 对象）
   let modelMeta: { defaultModel?: string; env?: Record<string, string> } | null = null
-  if (provider.model && provider.model.trim().length > 0) {
-    try {
-      const parsed = JSON.parse(provider.model)
-      if (parsed && typeof parsed === 'object') {
-        modelMeta = parsed
+  if (provider.model) {
+    if (typeof provider.model === 'string') {
+      // model 是字符串
+      if (provider.model.trim().length > 0) {
+        try {
+          const parsed = JSON.parse(provider.model)
+          if (parsed && typeof parsed === 'object') {
+            modelMeta = parsed
+          }
+        } catch {
+          // 不是 JSON，当作普通模型名称
+          env.GEMINI_MODEL = provider.model
+        }
       }
-    } catch {
-      // 不是 JSON，当作普通模型名称
-      env.GEMINI_MODEL = provider.model
+    } else if (typeof provider.model === 'object') {
+      // model 已经是对象
+      modelMeta = provider.model as { defaultModel?: string; env?: Record<string, string> }
     }
   }
 

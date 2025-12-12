@@ -205,7 +205,7 @@ export default function MCPManagerPage() {
     (s) =>
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.command.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      (s.desc && s.desc.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   if (loading) {

@@ -21,7 +21,7 @@ if (isTest) {
 let ccmanDir: string = path.join(rootDir, '.ccman')
 let codexDir: string = path.join(rootDir, '.codex')
 let claudeDir: string = path.join(rootDir, '.claude')
-let geminiDir: string = path.join(rootDir, '.gemini')
+const geminiDir: string = path.join(rootDir, '.gemini')
 
 /**
  * 获取 ccman 配置目录
@@ -119,11 +119,7 @@ export function getGeminiEnvPath(): string {
  * 测试专用 API：设置自定义路径
  * 仅在测试环境可用，用于精确控制测试路径
  */
-export function __setTestPaths(paths: {
-  ccman?: string
-  codex?: string
-  claude?: string
-}): void {
+export function __setTestPaths(paths: { ccman?: string; codex?: string; claude?: string }): void {
   if (process.env.NODE_ENV !== 'test') {
     throw new Error('__setTestPaths can only be used in test environment')
   }

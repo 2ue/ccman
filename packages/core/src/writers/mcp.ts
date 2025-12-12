@@ -109,29 +109,37 @@ export function saveMCPConfig(config: MCPConfig): void {
  */
 export function providerToMCPServer(provider: Provider): MCPServer {
   // 从 model 字段中解析 env 和 description
-  let env: Record<string, string | number> | undefined
-  let description: string | undefined
+  let env: Record<string, string> | undefined
+  let desc: string | undefined
 
   if (provider.model) {
     try {
-      const modelData = JSON.parse(provider.model)
+      // model 可能是 string 或 Record<string, any>
+      const modelData =
+        typeof provider.model === 'string' ? JSON.parse(provider.model) : provider.model
       env = modelData.env
-      description = modelData.description
+      desc = modelData.description || modelData.desc
     } catch (error) {
       // 向后兼容：如果 model 不是 JSON 对象，尝试作为 env 解析
-      env = JSON.parse(provider.model)
+      if (typeof provider.model === 'string') {
+        try {
+          env = JSON.parse(provider.model)
+        } catch {
+          // 忽略解析错误
+        }
+      }
     }
   }
 
   return {
     id: provider.id,
     name: provider.name,
-    command: provider.baseUrl,
-    args: provider.apiKey.split(' ').filter((arg) => arg.length > 0),
+    command: provider.baseUrl || '',
+    args: provider.apiKey ? provider.apiKey.split(' ').filter((arg) => arg.length > 0) : [],
     env,
-    description,
+    desc,
     createdAt: provider.createdAt,
-    lastModified: provider.lastModified,
+    updatedAt: provider.updatedAt,
     enabledApps: ['claude'], // 新创建的 MCP 默认启用 Claude
   }
 }
@@ -142,15 +150,15 @@ export function providerToMCPServer(provider: Provider): MCPServer {
  * 字段映射：
  * - command → baseUrl
  * - args → apiKey (空格分隔的字符串)
- * - { env, description } → model (JSON 字符串)
+ * - { env, desc } → model (JSON 字符串)
  */
 export function mcpServerToProvider(server: MCPServer): Provider {
-  // 将 env 和 description 编码到 model 字段
+  // 将 env 和 desc 编码到 model 字段
   let model: string | undefined
-  if (server.env || server.description) {
+  if (server.env || server.desc) {
     model = JSON.stringify({
       env: server.env,
-      description: server.description,
+      description: server.desc,
     })
   }
 
@@ -158,10 +166,10 @@ export function mcpServerToProvider(server: MCPServer): Provider {
     id: server.id,
     name: server.name,
     baseUrl: server.command,
-    apiKey: server.args.join(' '),
+    apiKey: (server.args || []).join(' '),
     model,
     createdAt: server.createdAt,
-    lastModified: server.lastModified,
+    updatedAt: server.updatedAt,
   }
 }
 
@@ -236,7 +244,7 @@ export function writeMCPConfigForApp(app: AppType, _provider: Provider): void {
   for (const server of enabledServers) {
     ccmanMCPs[server.name] = {
       command: server.command,
-      args: server.args,
+      args: server.args || [],
       env: server.env,
     }
   }

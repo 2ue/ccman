@@ -71,7 +71,6 @@ function loadClaudeTemplateConfig(): ClaudeSettings {
   return CLAUDE_CONFIG_TEMPLATE
 }
 
-
 /**
  * 写入 Claude 配置（零破坏性）
  *
@@ -101,17 +100,21 @@ export function writeClaudeConfig(provider: Provider): void {
   // 2. 替换模板变量，生成默认配置
   const defaultTemplate = loadClaudeTemplateConfig()
   const defaultConfig = replaceVariables(defaultTemplate, {
-    apiKey: provider.apiKey,
-    baseUrl: provider.baseUrl,
+    apiKey: provider.apiKey || '',
+    baseUrl: provider.baseUrl || '',
   }) as ClaudeSettings
 
   // 3. 深度合并：默认配置为基础，用户配置覆盖
   const mergedConfig = deepMerge<ClaudeSettings>(defaultConfig, userConfig)
 
-  // 4. 强制更新认证字段为最新值
+  // 4. 强制更新认证字段为最新值（仅在有值时更新）
   mergedConfig.env = mergedConfig.env || {}
-  mergedConfig.env.ANTHROPIC_AUTH_TOKEN = provider.apiKey
-  mergedConfig.env.ANTHROPIC_BASE_URL = provider.baseUrl
+  if (provider.apiKey) {
+    mergedConfig.env.ANTHROPIC_AUTH_TOKEN = provider.apiKey
+  }
+  if (provider.baseUrl) {
+    mergedConfig.env.ANTHROPIC_BASE_URL = provider.baseUrl
+  }
 
   // 5. 写入配置文件
   fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2), { mode: 0o600 })

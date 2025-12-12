@@ -51,9 +51,9 @@ export default function MCPForm({
       // 编辑/克隆模式
       setName(server.name)
       setCommand(server.command)
-      setArgs(server.args.join('\n'))
+      setArgs((server.args || []).join('\n'))
       setEnv(server.env ? JSON.stringify(server.env, null, 2) : '')
-      setDescription(server.description || '')
+      setDescription(server.desc || '')
     } else if (preset) {
       // 预设模式
       setName(preset.name)

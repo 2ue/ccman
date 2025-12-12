@@ -75,15 +75,15 @@ export interface Provider {
   /** 描述(可选,用于 UI 展示) */
   desc?: string
   /** API Base URL */
-  baseUrl: string
+  baseUrl?: string
   /** API Key */
-  apiKey: string
-  /** 模型名称(可选,仅 Codex 使用) */
-  model?: string
+  apiKey?: string
+  /** 模型名称(可选,字符串或 JSON 元数据) */
+  model?: string | Record<string, any>
   /** 创建时间(Unix timestamp) */
   createdAt: number
   /** 最后修改时间(Unix timestamp) */
-  lastModified: number
+  updatedAt: number
   /** 最后使用时间(Unix timestamp,可选) */
   lastUsedAt?: number
 }
@@ -102,8 +102,8 @@ export interface PresetTemplate {
 export interface AddProviderInput {
   name: string
   desc?: string
-  baseUrl: string
-  apiKey: string
+  baseUrl?: string // 可选，Gemini CLI 不需要 baseUrl
+  apiKey?: string // 可选，Gemini CLI 不需要 apiKey
   model?: string // 可选,仅 Codex 使用
 }
 
@@ -138,12 +138,12 @@ export interface MCPServer {
   id: string
   name: string
   command: string
-  args: string[]
-  env?: Record<string, string | number>
-  description?: string
+  args?: string[]
+  env?: Record<string, string>
+  desc?: string
   createdAt: number
-  lastModified: number
-  enabledApps: AppType[]
+  updatedAt: number
+  enabledApps: string[] // 使用 string[] 以兼容 core 的 Tool[] 类型
 }
 
 export interface MCPConfig {

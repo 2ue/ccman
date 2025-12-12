@@ -38,7 +38,7 @@ export default function ProviderForm({
       console.log('[ProviderForm] Using provider data:', provider)
       setName(provider.name)
       setDesc(provider.desc || '')
-      setBaseUrl(provider.baseUrl)
+      setBaseUrl(provider.baseUrl || '')
       setApiKey('') // 编辑时 API Key 不显示,需重新输入
     } else if (preset) {
       // Preset 模式:预填充 preset 数据

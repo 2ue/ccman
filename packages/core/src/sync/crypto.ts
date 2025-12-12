@@ -83,10 +83,7 @@ export function decryptApiKey(encryptedApiKey: string, password: string): string
     // 提取各部分
     const salt = data.subarray(0, SALT_LENGTH)
     const iv = data.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
-    const tag = data.subarray(
-      SALT_LENGTH + IV_LENGTH,
-      SALT_LENGTH + IV_LENGTH + TAG_LENGTH
-    )
+    const tag = data.subarray(SALT_LENGTH + IV_LENGTH, SALT_LENGTH + IV_LENGTH + TAG_LENGTH)
     const encrypted = data.subarray(SALT_LENGTH + IV_LENGTH + TAG_LENGTH)
 
     // 从密码派生密钥
@@ -113,10 +110,7 @@ export function decryptApiKey(encryptedApiKey: string, password: string): string
  * @param password - 用户密码
  * @returns 加密后的 Provider 列表（apiKey 字段是加密后的字符串）
  */
-export function encryptProviders(
-  providers: Provider[],
-  password: string
-): Provider[] {
+export function encryptProviders(providers: Provider[], password: string): Provider[] {
   return providers.map((provider) => {
     if (typeof provider.apiKey !== 'string' || provider.apiKey.length === 0) {
       throw new Error(
@@ -139,12 +133,9 @@ export function encryptProviders(
  * @returns 解密后的 Provider 列表（apiKey 字段是明文）
  * @throws Error 如果密码错误
  */
-export function decryptProviders(
-  encryptedProviders: Provider[],
-  password: string
-): Provider[] {
+export function decryptProviders(encryptedProviders: Provider[], password: string): Provider[] {
   return encryptedProviders.map((provider) => ({
     ...provider,
-    apiKey: decryptApiKey(provider.apiKey, password),
+    apiKey: provider.apiKey ? decryptApiKey(provider.apiKey, password) : undefined,
   }))
 }

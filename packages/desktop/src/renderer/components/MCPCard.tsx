@@ -31,7 +31,7 @@ const APP_INFO: Record<
 
 interface MCPCardProps {
   server: MCPServer
-  enabledApps: AppType[]
+  enabledApps: string[] // 使用 string[] 以兼容 core 的 Tool[] 类型
   onToggleApp: (app: AppType, enabled: boolean) => void
   onEdit: () => void
   onClone: () => void
@@ -99,7 +99,7 @@ export default function MCPCard({
           <span className="font-medium">启动命令</span>
         </div>
         <code className="text-xs text-gray-700 bg-gray-50 px-2 py-1 rounded block overflow-x-auto whitespace-nowrap">
-          {server.command} {server.args.join(' ')}
+          {server.command} {(server.args || []).join(' ')}
         </code>
       </div>
 
@@ -171,9 +171,9 @@ export default function MCPCard({
       </div>
 
       {/* Description */}
-      {server.description && (
+      {server.desc && (
         <div className="mt-4 pt-4 border-t border-gray-100">
-          <p className="text-xs text-gray-500">{server.description}</p>
+          <p className="text-xs text-gray-500">{server.desc}</p>
         </div>
       )}
     </div>

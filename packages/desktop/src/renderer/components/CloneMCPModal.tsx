@@ -101,7 +101,7 @@ export default function CloneMCPModal({
             </div>
             <p className="text-base font-medium text-gray-900">{server.name}</p>
             <code className="text-xs text-gray-600 mt-1 block">
-              {server.command} {server.args.join(' ')}
+              {server.command} {(server.args || []).join(' ')}
             </code>
           </div>
 

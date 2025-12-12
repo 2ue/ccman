@@ -139,7 +139,7 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
       approval_policy: 'never',
       sandbox_mode: 'workspace-write',
     },
-    'review': {
+    review: {
       approval_policy: 'on-request',
       sandbox_mode: 'workspace-write',
     },
@@ -167,7 +167,6 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
   }
   return CODEX_DEFAULT_CONFIG
 }
-
 
 /**
  * 写入 Codex 配置（零破坏性）
@@ -207,13 +206,15 @@ export function writeCodexConfig(provider: Provider): void {
 
   // 3. 设置 Provider 相关字段
   mergedConfig.model_provider = provider.name
-  mergedConfig.model = provider.model || mergedConfig.model || 'gpt-5-codex'
+  // model 可能是字符串或对象，只取字符串值
+  const modelValue = typeof provider.model === 'string' ? provider.model : undefined
+  mergedConfig.model = modelValue || mergedConfig.model || 'gpt-5-codex'
 
   // 4. 设置 model_providers
   mergedConfig.model_providers = mergedConfig.model_providers || {}
   mergedConfig.model_providers[provider.name] = {
     name: provider.name,
-    base_url: provider.baseUrl,
+    base_url: provider.baseUrl || '',
     wire_api: 'responses',
     requires_openai_auth: true,
   }
@@ -233,8 +234,10 @@ export function writeCodexConfig(provider: Provider): void {
     auth = { OPENAI_API_KEY: '' }
   }
 
-  // 只修改 OPENAI_API_KEY
-  auth.OPENAI_API_KEY = provider.apiKey
+  // 只修改 OPENAI_API_KEY（如果有值）
+  if (provider.apiKey) {
+    auth.OPENAI_API_KEY = provider.apiKey
+  }
 
   // 写入 auth.json
   fs.writeFileSync(authPath, JSON.stringify(auth, null, 2), { mode: 0o600 })
