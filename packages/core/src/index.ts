@@ -132,7 +132,14 @@ export {
 } from './writers/mcp.js'
 
 // Migration
-export { migrateConfig, rollbackMigration, migrateV2ToV3, validateMigration } from './migrate.js'
+export {
+  migrateConfig,
+  rollbackMigration,
+  migrateV2ToV3,
+  validateMigration,
+  migrateV32ToV33,
+  runAllMigrations,
+} from './migrate.js'
 
 // Paths (导出用于测试和 CLI 输出)
 export {

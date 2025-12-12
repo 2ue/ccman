@@ -1,36 +1,32 @@
 /**
- * 工具管理器（Tool Manager）
+ * 工具管理器（Tool Manager）- 兼容层
  *
- * 统一管理 Codex、Claude Code 和 MCP 的服务商配置
- * 采用工厂模式 + 数据驱动设计，零 if-else，易扩展
+ * 这是一个兼容层，将旧 API（createCodexManager/createClaudeManager 等）
+ * 委托给新的 ProviderService。
  *
- * 文件结构：
- * - 类型定义：已拆分至 tool-manager.types.ts（156 行）
- * - 配置映射：TOOL_CONFIGS（数据驱动，~40 行）
- * - 工厂函数：createToolManager（返回 13 个方法，~220 行）
- * - 导出函数：createCodexManager/createClaudeManager/createMCPManager（~20 行）
+ * 背景：
+ * - 旧系统使用 'claude' 作为工具标识，存储到 claude.json
+ * - 新系统使用 'claude-code' 作为工具标识，存储到 claude-code.json
+ * - 这导致 sync 命令无法看到 CLI 添加的服务商（数据隔离 Bug）
  *
- * 注：本文件虽然超过 300 行，但每个方法都简单清晰，工厂函数不应拆分
+ * 解决方案：
+ * - 旧 API 委托给 ProviderService
+ * - 工具标识自动映射：'claude' → 'claude-code'，'gemini' → 'gemini-cli'
+ * - 数据迁移：旧配置文件自动重命名
+ *
+ * @deprecated 请直接使用 ProviderService
  */
 /* eslint-disable max-lines */
 
 import * as path from 'path'
 import { getCcmanDir } from './paths.js'
 import { readJSON, writeJSON, fileExists, ensureDir } from './utils/file.js'
-import { writeCodexConfig } from './writers/codex.js'
-import { writeClaudeConfig } from './writers/claude.js'
-import {
-  writeMCPConfig,
-  loadMCPConfig,
-  saveMCPConfig,
-  providerToMCPServer,
-  mcpServerToProvider,
-} from './writers/mcp.js'
+import { ProviderService } from './services/provider-service.js'
 import { CODEX_PRESETS } from './presets/codex.js'
 import { CC_PRESETS } from './presets/claude.js'
 import { MCP_PRESETS } from './presets/mcp.js'
 import { GEMINI_PRESETS } from './presets/gemini.js'
-import { writeGeminiConfig } from './writers/gemini.js'
+import type { Tool, Provider as NewProvider } from './types.js'
 import type {
   ToolType,
   Provider,
@@ -62,324 +58,249 @@ export type {
 }
 export { ProviderNotFoundError, ProviderNameConflictError, PresetNameConflictError }
 
+// =============================================================================
+// 工具标识映射（旧 → 新）
+// =============================================================================
+
 /**
- * 工具配置映射（数据驱动，零 if-else）
+ * 旧工具标识 → 新工具标识 映射
  *
- * 扩展性：添加新工具只需在此添加配置项
+ * - 'codex' → 'codex'（无变化）
+ * - 'claude' → 'claude-code'
+ * - 'gemini' → 'gemini-cli'
+ * - 'mcp' → 'mcp'（MCP 由 McpService 单独处理，但保留映射以便将来使用）
  */
-interface ToolConfigMapping {
-  configPath: string
-  builtinPresets: InternalPresetTemplate[]
-  writer: (provider: Provider) => void
-  /** 是否在每个操作（add/edit/remove）后自动同步配置 */
-  autoSync?: boolean
-  /** 自定义配置加载器（可选，用于特殊配置格式如 MCP）*/
-  customLoader?: () => ToolConfig
-  /** 自定义配置保存器（可选，用于特殊配置格式如 MCP）*/
-  customSaver?: (config: ToolConfig) => void
-}
-
-const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
-  codex: {
-    configPath: path.join(getCcmanDir(), 'codex.json'),
-    builtinPresets: CODEX_PRESETS,
-    writer: writeCodexConfig,
-  },
-  claude: {
-    configPath: path.join(getCcmanDir(), 'claude.json'),
-    builtinPresets: CC_PRESETS,
-    writer: writeClaudeConfig,
-  },
-  mcp: {
-    configPath: path.join(getCcmanDir(), 'mcp.json'),
-    builtinPresets: MCP_PRESETS,
-    writer: writeMCPConfig,
-    autoSync: true, // MCP 需要在每个操作后自动同步到 ~/.claude.json
-    // MCP 使用特殊的配置格式（MCPConfig），需要自定义 loader/saver
-    customLoader: (): ToolConfig => {
-      const mcpConfig = loadMCPConfig()
-      // 将 MCPServer[] 转换为 Provider[]
-      return {
-        providers: mcpConfig.servers.map(mcpServerToProvider),
-        presets: [],
-      }
-    },
-    customSaver: (config: ToolConfig): void => {
-      const mcpConfig = loadMCPConfig()
-      // 将 Provider[] 转换为 MCPServer[]，保留 enabledApps 等字段
-      mcpConfig.servers = config.providers.map((provider) => {
-        // 查找原有的 server 以保留 enabledApps
-        const existingServer = mcpConfig.servers.find((s) => s.id === provider.id)
-        const mcpServer = providerToMCPServer(provider)
-        // 保留原有的 enabledApps，如果不存在则使用新的默认值
-        if (existingServer) {
-          mcpServer.enabledApps = existingServer.enabledApps
-        }
-        return mcpServer
-      })
-      // 更新 managedServerNames（仅支持 claude/codex/gemini）
-      for (const app of ['claude', 'codex', 'gemini'] as const) {
-        mcpConfig.managedServerNames[app] = mcpConfig.servers
-          .filter((s) => s.enabledApps.includes(app))
-          .map((s) => s.name)
-      }
-      saveMCPConfig(mcpConfig)
-    },
-  },
-  gemini: {
-    configPath: path.join(getCcmanDir(), 'gemini.json'),
-    builtinPresets: GEMINI_PRESETS,
-    writer: writeGeminiConfig,
-  },
+const TOOL_ID_MAP: Record<ToolType, Tool> = {
+  codex: 'codex',
+  claude: 'claude-code',
+  gemini: 'gemini-cli',
+  mcp: 'mcp',
 }
 
 /**
- * 统一工具管理器工厂函数（内部实现）
+ * 将旧工具标识映射到新工具标识
+ */
+function mapToolType(tool: ToolType): Tool {
+  return TOOL_ID_MAP[tool]
+}
+
+// 跟踪已发出警告的工具，避免重复警告
+const warnedTools = new Set<ToolType>()
+
+// =============================================================================
+// 预设配置（用于 listPresets 等方法）
+// =============================================================================
+
+/**
+ * 工具内置预设映射
+ */
+const TOOL_PRESETS: Record<ToolType, InternalPresetTemplate[]> = {
+  codex: CODEX_PRESETS,
+  claude: CC_PRESETS,
+  gemini: GEMINI_PRESETS,
+  mcp: MCP_PRESETS,
+}
+
+/**
+ * 获取预设配置文件路径
+ */
+function getPresetsConfigPath(tool: ToolType): string {
+  const mappedTool = mapToolType(tool)
+  return path.join(getCcmanDir(), `${mappedTool}.json`)
+}
+
+/**
+ * 加载预设配置（用于用户自定义预设的读写）
+ */
+function loadPresetsConfig(tool: ToolType): ToolConfig {
+  const configPath = getPresetsConfigPath(tool)
+  if (!fileExists(configPath)) {
+    return { providers: [], presets: [] }
+  }
+  return readJSON<ToolConfig>(configPath)
+}
+
+/**
+ * 保存预设配置
+ */
+function savePresetsConfig(tool: ToolType, config: ToolConfig): void {
+  const configPath = getPresetsConfigPath(tool)
+  ensureDir(getCcmanDir())
+  writeJSON(configPath, config)
+}
+
+// =============================================================================
+// 工具管理器工厂函数（委托给 ProviderService）
+// =============================================================================
+
+/**
+ * 统一工具管理器工厂函数
  *
- * 设计原则：
- * - 零 if-else（使用配置映射）
- * - 数据驱动（TOOL_CONFIGS）
- * - 易扩展（添加新工具只需修改 TOOL_CONFIGS）
+ * 这是一个兼容层，将旧 API 委托给新的 ProviderService。
  *
- * 注：此函数是工厂函数，返回包含 13 个方法的对象，每个方法都简单清晰
- * 函数"长度"来自返回多个方法，而非复杂逻辑，因此禁用 max-lines 检查
+ * @deprecated 请直接使用 ProviderService
  */
 // eslint-disable-next-line max-lines-per-function
 function createToolManager(tool: ToolType): ToolManager {
-  const toolConfig = TOOL_CONFIGS[tool]
-  const configPath = toolConfig.configPath
+  const mappedTool = mapToolType(tool)
+  const builtinPresets = TOOL_PRESETS[tool]
 
-  /**
-   * 生成唯一 ID
-   * 格式: {tool}-{timestamp}-{random}
-   */
-  function generateId(): string {
-    const timestamp = Date.now()
-    const random = Math.random().toString(36).substring(2, 8)
-    return `${tool}-${timestamp}-${random}`
+  // 发出废弃警告（每个工具仅一次）
+  if (!warnedTools.has(tool)) {
+    // 在生产环境中，静默警告以避免干扰用户
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+      console.warn(
+        `[Deprecated] createToolManager('${tool}') is deprecated. Use ProviderService directly.`
+      )
+    }
+    warnedTools.add(tool)
   }
 
   /**
-   * 加载配置文件
+   * 将 NewProvider 转换为旧的 Provider 类型
+   * 两者结构相同，只是来源不同
    */
-  function loadConfig(): ToolConfig {
-    // 使用自定义 loader（如果有）
-    if (toolConfig.customLoader) {
-      return toolConfig.customLoader()
+  function toProvider(p: NewProvider): Provider {
+    return {
+      id: p.id,
+      name: p.name,
+      baseUrl: p.baseUrl,
+      apiKey: p.apiKey,
+      model: p.model,
+      desc: p.desc,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      lastUsedAt: p.lastUsedAt,
     }
-
-    // 默认 loader
-    if (!fileExists(configPath)) {
-      ensureDir(getCcmanDir())
-      const initialConfig: ToolConfig = {
-        providers: [],
-        presets: [],
-      }
-      writeJSON(configPath, initialConfig)
-      return initialConfig
-    }
-
-    return readJSON<ToolConfig>(configPath)
   }
 
   /**
-   * 保存配置文件
+   * 根据 id 从列表中找到 provider
    */
-  function saveConfig(config: ToolConfig): void {
-    // 使用自定义 saver（如果有）
-    if (toolConfig.customSaver) {
-      toolConfig.customSaver(config)
-      return
-    }
-
-    // 默认 saver
-    writeJSON(configPath, config)
+  function findById(providers: NewProvider[], id: string): NewProvider | undefined {
+    return providers.find((p) => p.id === id)
   }
 
   return {
     add(input: AddProviderInput): Provider {
-      const config = loadConfig()
-
-      // 检查名称冲突
-      const nameExists = config.providers.some((p) => p.name === input.name)
-      if (nameExists) {
-        throw new ProviderNameConflictError(input.name)
+      try {
+        const newProvider = ProviderService.add(mappedTool, {
+          name: input.name,
+          baseUrl: input.baseUrl,
+          apiKey: input.apiKey,
+          model: input.model,
+          desc: input.desc,
+        })
+        return toProvider(newProvider)
+      } catch (error) {
+        // 转换错误类型以保持兼容性
+        if (error instanceof Error && error.message.includes('already exists')) {
+          throw new ProviderNameConflictError(input.name)
+        }
+        throw error
       }
-
-      const timestamp = Date.now()
-      const provider: Provider = {
-        id: generateId(),
-        name: input.name,
-        desc: input.desc,
-        baseUrl: input.baseUrl,
-        apiKey: input.apiKey,
-        model: input.model,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      }
-
-      config.providers.push(provider)
-      saveConfig(config)
-
-      // 如果配置了自动同步，则立即同步配置
-      if (toolConfig.autoSync) {
-        toolConfig.writer(provider)
-      }
-
-      return provider
     },
 
     list(): Provider[] {
-      const config = loadConfig()
-      return config.providers
+      const providers = ProviderService.list(mappedTool)
+      return providers.map(toProvider)
     },
 
     get(id: string): Provider {
-      const config = loadConfig()
-      const provider = config.providers.find((p) => p.id === id)
-
+      const providers = ProviderService.list(mappedTool)
+      const provider = findById(providers, id)
       if (!provider) {
         throw new ProviderNotFoundError(id)
       }
-
-      return provider
+      return toProvider(provider)
     },
 
     findByName(name: string): Provider | undefined {
-      const config = loadConfig()
-      const lowerName = name.toLowerCase()
-      return config.providers.find((p) => p.name.toLowerCase() === lowerName)
+      try {
+        const provider = ProviderService.get(mappedTool, name)
+        return toProvider(provider)
+      } catch {
+        return undefined
+      }
     },
 
     switch(id: string): void {
-      const config = loadConfig()
-      const provider = config.providers.find((p) => p.id === id)
-
+      const providers = ProviderService.list(mappedTool)
+      const provider = findById(providers, id)
       if (!provider) {
         throw new ProviderNotFoundError(id)
       }
-
-      config.currentProviderId = id
-      provider.lastUsedAt = Date.now()
-      saveConfig(config)
-
-      // 使用配置映射的 writer（零 if-else）
-      toolConfig.writer(provider)
+      ProviderService.apply(mappedTool, provider.name)
     },
 
     getCurrent(): Provider | null {
-      const config = loadConfig()
-
-      if (!config.currentProviderId) {
-        return null
-      }
-
-      const provider = config.providers.find((p) => p.id === config.currentProviderId)
-      return provider || null
+      const provider = ProviderService.current(mappedTool)
+      return provider ? toProvider(provider) : null
     },
 
-    // 注：edit 方法的"复杂度"来自必要的业务逻辑（检查存在性、名称冲突、更新 4 个可选字段、同步配置）
-    // 每个 if 都不可避免，没有特殊情况或嵌套逻辑，因此禁用 complexity 检查
-    // eslint-disable-next-line complexity
     edit(id: string, updates: EditProviderInput): Provider {
-      const config = loadConfig()
-      const provider = config.providers.find((p) => p.id === id)
-
+      const providers = ProviderService.list(mappedTool)
+      const provider = findById(providers, id)
       if (!provider) {
         throw new ProviderNotFoundError(id)
       }
 
-      // 检查名称冲突
-      if (updates.name !== undefined && updates.name !== provider.name) {
-        const nameConflict = config.providers.some((p) => p.id !== id && p.name === updates.name)
-        if (nameConflict) {
-          throw new ProviderNameConflictError(updates.name)
+      try {
+        const updated = ProviderService.update(mappedTool, provider.name, {
+          name: updates.name,
+          baseUrl: updates.baseUrl,
+          apiKey: updates.apiKey,
+          model: updates.model,
+          desc: updates.desc,
+        })
+        return toProvider(updated)
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('already exists')) {
+          throw new ProviderNameConflictError(updates.name!)
         }
+        throw error
       }
-
-      // 更新字段
-      if (updates.name !== undefined) provider.name = updates.name
-      if (updates.desc !== undefined) provider.desc = updates.desc
-      if (updates.baseUrl !== undefined) provider.baseUrl = updates.baseUrl
-      if (updates.apiKey !== undefined) provider.apiKey = updates.apiKey
-      if (updates.model !== undefined) provider.model = updates.model
-
-      provider.updatedAt = Date.now()
-      saveConfig(config)
-
-      // 如果是当前激活的 provider,重新写入配置
-      if (config.currentProviderId === id) {
-        toolConfig.writer(provider)
-      }
-
-      // 如果配置了自动同步，则立即同步配置（即使不是当前激活的）
-      if (toolConfig.autoSync) {
-        toolConfig.writer(provider)
-      }
-
-      return provider
     },
 
     remove(id: string): void {
-      const config = loadConfig()
-      const index = config.providers.findIndex((p) => p.id === id)
-
-      if (index === -1) {
+      const providers = ProviderService.list(mappedTool)
+      const provider = findById(providers, id)
+      if (!provider) {
         throw new ProviderNotFoundError(id)
       }
-
-      if (config.currentProviderId === id) {
-        config.currentProviderId = undefined
-      }
-
-      config.providers.splice(index, 1)
-      saveConfig(config)
-
-      // 如果配置了自动同步，则立即同步配置
-      if (toolConfig.autoSync) {
-        // 传递一个空 provider，writeMCPConfig 会读取所有 providers 并同步
-        toolConfig.writer({} as Provider)
-      }
+      ProviderService.delete(mappedTool, provider.name)
     },
 
     clone(sourceId: string, newName: string): Provider {
-      const source = this.get(sourceId)
-      const config = loadConfig()
-
-      const nameExists = config.providers.some((p) => p.name === newName)
-      if (nameExists) {
-        throw new ProviderNameConflictError(newName)
+      const providers = ProviderService.list(mappedTool)
+      const source = findById(providers, sourceId)
+      if (!source) {
+        throw new ProviderNotFoundError(sourceId)
       }
 
-      const timestamp = Date.now()
-
-      // 使用展开操作符复制所有字段，然后覆盖需要改变的字段
-      // 克隆时不继承 desc（显式设置为 undefined）
-      const newProvider: Provider = {
-        ...source,
-        id: generateId(),
-        name: newName,
-        desc: undefined,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        lastUsedAt: undefined,
+      try {
+        const cloned = ProviderService.clone(mappedTool, source.name, newName)
+        return toProvider(cloned)
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('already exists')) {
+          throw new ProviderNameConflictError(newName)
+        }
+        throw error
       }
-
-      config.providers.push(newProvider)
-      saveConfig(config)
-
-      return newProvider
     },
 
+    // =========================================================================
+    // 预设相关方法（保留原实现，因为 ProviderService 不处理预设）
+    // =========================================================================
+
     addPreset(input: AddPresetInput): PresetTemplate {
-      const config = loadConfig()
+      const config = loadPresetsConfig(tool)
 
       if (!config.presets) {
         config.presets = []
       }
 
-      // 使用配置映射的内置预设（零 if-else）
-      const allPresets = [...toolConfig.builtinPresets, ...config.presets]
+      const allPresets = [...builtinPresets, ...config.presets]
       const nameExists = allPresets.some((p) => p.name === input.name)
       if (nameExists) {
         throw new PresetNameConflictError(input.name)
@@ -392,9 +313,8 @@ function createToolManager(tool: ToolType): ToolManager {
       }
 
       config.presets.push(preset)
-      saveConfig(config)
+      savePresetsConfig(tool, config)
 
-      // 返回时添加 isBuiltIn 标记
       return {
         ...preset,
         isBuiltIn: false,
@@ -402,16 +322,14 @@ function createToolManager(tool: ToolType): ToolManager {
     },
 
     listPresets(): PresetTemplate[] {
-      const config = loadConfig()
+      const config = loadPresetsConfig(tool)
       const userPresets = config.presets || []
 
-      // 给内置预设添加 isBuiltIn 标记
-      const builtinWithFlag = toolConfig.builtinPresets.map((p) => ({
+      const builtinWithFlag = builtinPresets.map((p) => ({
         ...p,
         isBuiltIn: true,
       }))
 
-      // 给用户预设添加 isBuiltIn 标记
       const userWithFlag = userPresets.map((p) => ({
         ...p,
         isBuiltIn: false,
@@ -421,7 +339,7 @@ function createToolManager(tool: ToolType): ToolManager {
     },
 
     editPreset(name: string, updates: EditPresetInput): PresetTemplate {
-      const config = loadConfig()
+      const config = loadPresetsConfig(tool)
 
       if (!config.presets) {
         config.presets = []
@@ -433,9 +351,8 @@ function createToolManager(tool: ToolType): ToolManager {
         throw new Error(`预置不存在: ${name}`)
       }
 
-      // 检查名称冲突
       if (updates.name !== undefined && updates.name !== preset.name) {
-        const allPresets = [...toolConfig.builtinPresets, ...config.presets]
+        const allPresets = [...builtinPresets, ...config.presets]
         const nameConflict = allPresets.some((p) => p.name !== name && p.name === updates.name)
         if (nameConflict) {
           throw new PresetNameConflictError(updates.name)
@@ -446,9 +363,8 @@ function createToolManager(tool: ToolType): ToolManager {
       if (updates.baseUrl !== undefined) preset.baseUrl = updates.baseUrl
       if (updates.description !== undefined) preset.description = updates.description
 
-      saveConfig(config)
+      savePresetsConfig(tool, config)
 
-      // 返回时添加 isBuiltIn 标记
       return {
         ...preset,
         isBuiltIn: false,
@@ -456,7 +372,7 @@ function createToolManager(tool: ToolType): ToolManager {
     },
 
     removePreset(name: string): void {
-      const config = loadConfig()
+      const config = loadPresetsConfig(tool)
 
       if (!config.presets) {
         return
@@ -469,7 +385,7 @@ function createToolManager(tool: ToolType): ToolManager {
       }
 
       config.presets.splice(index, 1)
-      saveConfig(config)
+      savePresetsConfig(tool, config)
     },
   }
 }

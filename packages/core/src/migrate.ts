@@ -59,7 +59,7 @@ interface OldConfig {
   providers: Array<{
     id: string
     name: string
-    type: 'codex' | 'claude'  // 旧版使用 'claude'
+    type: 'codex' | 'claude' // 旧版使用 'claude'
     baseUrl: string
     apiKey: string
     createdAt: number
@@ -343,9 +343,7 @@ export function migrateV2ToV3(): {
       const providerId = generateProviderId(createdAt)
 
       // 转换 lastUsedAt
-      const lastUsedAt = providerMeta.lastUsed
-        ? parseTimestamp(providerMeta.lastUsed)
-        : undefined
+      const lastUsedAt = providerMeta.lastUsed ? parseTimestamp(providerMeta.lastUsed) : undefined
 
       // 创建新的 provider 对象
       const newProvider = {
@@ -507,5 +505,200 @@ export function validateMigration(): {
       success: false,
       message: `验证失败: ${(error as Error).message}`,
     }
+  }
+}
+
+// =============================================================================
+// v3.2 → v3.3 数据迁移（统一工具标识）
+// =============================================================================
+
+/**
+ * 配置文件映射（旧文件名 → 新文件名）
+ */
+const CONFIG_FILE_MIGRATION_MAP = {
+  'claude.json': 'claude-code.json',
+  'gemini.json': 'gemini-cli.json',
+}
+
+/**
+ * 迁移单个配置文件
+ *
+ * @param oldFileName 旧文件名
+ * @param newFileName 新文件名
+ * @returns 迁移结果
+ */
+function migrateConfigFile(
+  oldFileName: string,
+  newFileName: string
+): {
+  action: 'renamed' | 'merged' | 'skipped'
+  backupPath?: string
+} {
+  const ccmanDir = getCcmanDir()
+  const oldPath = path.join(ccmanDir, oldFileName)
+  const newPath = path.join(ccmanDir, newFileName)
+
+  // 旧文件不存在，跳过
+  if (!fs.existsSync(oldPath)) {
+    return { action: 'skipped' }
+  }
+
+  // 如果新文件不存在，直接重命名
+  if (!fs.existsSync(newPath)) {
+    // 创建备份
+    const backupPath = `${oldPath}.backup.${Date.now()}`
+    fs.copyFileSync(oldPath, backupPath)
+
+    // 重命名
+    fs.renameSync(oldPath, newPath)
+
+    return { action: 'renamed', backupPath }
+  }
+
+  // 新文件已存在，需要合并
+  try {
+    const oldContent = fs.readFileSync(oldPath, 'utf-8')
+    const newContent = fs.readFileSync(newPath, 'utf-8')
+
+    const oldConfig = JSON.parse(oldContent)
+    const newConfig = JSON.parse(newContent)
+
+    // 合并 providers（新文件优先，避免重复）
+    const existingNames = new Set(newConfig.providers?.map((p: { name: string }) => p.name) || [])
+    const oldProviders = (oldConfig.providers || []).filter(
+      (p: { name: string }) => !existingNames.has(p.name)
+    )
+
+    if (oldProviders.length > 0) {
+      newConfig.providers = [...(newConfig.providers || []), ...oldProviders]
+
+      // 合并 presets（同样逻辑）
+      const existingPresetNames = new Set(
+        newConfig.presets?.map((p: { name: string }) => p.name) || []
+      )
+      const oldPresets = (oldConfig.presets || []).filter(
+        (p: { name: string }) => !existingPresetNames.has(p.name)
+      )
+
+      if (oldPresets.length > 0) {
+        newConfig.presets = [...(newConfig.presets || []), ...oldPresets]
+      }
+
+      // 写入合并后的配置
+      fs.writeFileSync(newPath, JSON.stringify(newConfig, null, 2), { mode: 0o600 })
+    }
+
+    // 备份并删除旧文件
+    const backupPath = `${oldPath}.backup.${Date.now()}`
+    fs.renameSync(oldPath, backupPath)
+
+    return { action: 'merged', backupPath }
+  } catch {
+    // 如果合并失败，跳过（不丢失数据）
+    return { action: 'skipped' }
+  }
+}
+
+/**
+ * 迁移 v3.2 → v3.3（统一工具标识）
+ *
+ * 背景：
+ * - v3.2 及之前版本使用 'claude' 和 'gemini' 作为工具标识
+ * - v3.3 统一使用 'claude-code' 和 'gemini-cli'
+ *
+ * 迁移内容：
+ * - claude.json → claude-code.json
+ * - gemini.json → gemini-cli.json
+ *
+ * @returns 迁移结果
+ */
+export function migrateV32ToV33(): {
+  success: boolean
+  message: string
+  details?: {
+    migratedFiles: string[]
+    mergedFiles: string[]
+    skippedFiles: string[]
+    backups: string[]
+  }
+} {
+  const migratedFiles: string[] = []
+  const mergedFiles: string[] = []
+  const skippedFiles: string[] = []
+  const backups: string[] = []
+
+  try {
+    for (const [oldFile, newFile] of Object.entries(CONFIG_FILE_MIGRATION_MAP)) {
+      const result = migrateConfigFile(oldFile, newFile)
+
+      switch (result.action) {
+        case 'renamed':
+          migratedFiles.push(`${oldFile} → ${newFile}`)
+          if (result.backupPath) backups.push(result.backupPath)
+          break
+        case 'merged':
+          mergedFiles.push(`${oldFile} → ${newFile}`)
+          if (result.backupPath) backups.push(result.backupPath)
+          break
+        case 'skipped':
+          skippedFiles.push(oldFile)
+          break
+      }
+    }
+
+    const totalMigrated = migratedFiles.length + mergedFiles.length
+
+    if (totalMigrated === 0) {
+      return {
+        success: true,
+        message: '无需迁移：配置文件已是最新格式',
+        details: { migratedFiles, mergedFiles, skippedFiles, backups },
+      }
+    }
+
+    return {
+      success: true,
+      message: `成功迁移 ${totalMigrated} 个配置文件`,
+      details: { migratedFiles, mergedFiles, skippedFiles, backups },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: `迁移失败: ${(error as Error).message}`,
+      details: { migratedFiles, mergedFiles, skippedFiles, backups },
+    }
+  }
+}
+
+/**
+ * 运行所有迁移
+ *
+ * 按版本顺序执行所有迁移函数
+ */
+export function runAllMigrations(): {
+  success: boolean
+  messages: string[]
+} {
+  const messages: string[] = []
+  let allSuccess = true
+
+  // v1 → v2 迁移
+  const v1Result = migrateConfig()
+  messages.push(`[v1→v2] ${v1Result.message}`)
+  if (!v1Result.success) allSuccess = false
+
+  // v2 → v3 迁移
+  const v2Result = migrateV2ToV3()
+  messages.push(`[v2→v3] ${v2Result.message}`)
+  if (!v2Result.success) allSuccess = false
+
+  // v3.2 → v3.3 迁移
+  const v32Result = migrateV32ToV33()
+  messages.push(`[v3.2→v3.3] ${v32Result.message}`)
+  if (!v32Result.success) allSuccess = false
+
+  return {
+    success: allSuccess,
+    messages,
   }
 }
