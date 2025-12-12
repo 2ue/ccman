@@ -42,6 +42,14 @@ interface ToolSyncConfig {
  * - 但忘记在此处添加配置
  * - TypeScript 会在编译时报错
  */
+/**
+ * 配置文件名映射（与 ProviderService 保持一致）
+ *
+ * 背景：
+ * - 旧系统使用 'claude' 作为工具标识，存储到 claude.json
+ * - 新系统使用 'claude-code' 作为工具标识，存储到 claude-code.json
+ * - 这里需要与 ProviderService 使用相同的文件名
+ */
 const TOOL_SYNC_CONFIG: Record<MainToolType, ToolSyncConfig> = {
   [MAIN_TOOL_TYPES.CODEX]: {
     remotePath: '.ccman/codex.json',
@@ -49,13 +57,13 @@ const TOOL_SYNC_CONFIG: Record<MainToolType, ToolSyncConfig> = {
     writerFunc: writeCodexConfig,
   },
   [MAIN_TOOL_TYPES.CLAUDE]: {
-    remotePath: '.ccman/claude.json',
-    configFilename: 'claude.json',
+    remotePath: '.ccman/claude-code.json',
+    configFilename: 'claude-code.json',
     writerFunc: writeClaudeConfig,
   },
   [MAIN_TOOL_TYPES.GEMINI]: {
-    remotePath: '.ccman/gemini.json',
-    configFilename: 'gemini.json',
+    remotePath: '.ccman/gemini-cli.json',
+    configFilename: 'gemini-cli.json',
     writerFunc: writeGeminiConfig,
   },
 } as const
