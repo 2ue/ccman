@@ -4,6 +4,9 @@
  */
 import pkg from '../package.json' assert { type: 'json' }
 
+// 自动注册所有工具到 ToolRegistry（副作用导入）
+import './tools/index.js'
+
 /** Core version */
 export const VERSION = pkg.version as string
 

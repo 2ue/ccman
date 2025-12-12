@@ -76,12 +76,12 @@ if (!isDev) {
   const originalLog = console.log
   const originalError = console.error
   console.log = (...args) => {
-    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
+    const msg = args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
     logStream?.write(`[LOG] ${new Date().toISOString()} ${msg}\n`)
     originalLog(...args)
   }
   console.error = (...args) => {
-    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
+    const msg = args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
     logStream?.write(`[ERROR] ${new Date().toISOString()} ${msg}\n`)
     originalError(...args)
   }
@@ -155,9 +155,10 @@ function createWindow() {
     console.log('[Main] Loading production file:', htmlPath)
     console.log('[Main] File exists:', fs.existsSync(htmlPath))
 
-    mainWindow.loadFile(htmlPath)
+    mainWindow
+      .loadFile(htmlPath)
       .then(() => console.log('[Main] HTML loaded successfully'))
-      .catch(err => {
+      .catch((err) => {
         console.error('[Main] Failed to load HTML:', err)
         dialog.showErrorBox('加载失败', `无法加载应用界面：${err.message}`)
       })
@@ -560,8 +561,7 @@ ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'm
         result.push({
           name: 'settings.json',
           path: settingsPath,
-          content:
-            '# 配置文件不存在\n# 请先使用 ccman gm add 添加服务商，配置文件将自动创建',
+          content: '# 配置文件不存在\n# 请先使用 ccman gm add 添加服务商，配置文件将自动创建',
           language: 'json',
         })
       }
@@ -637,9 +637,10 @@ ipcMain.handle(
 // 读取 ccman 配置文件（用于 Settings 按钮）
 ipcMain.handle('read-ccman-config-files', async () => {
   try {
+    // 使用新的配置文件名（与 ProviderService 保持一致）
     const codexPath = path.join(getCcmanDir(), 'codex.json')
-    const claudePath = path.join(getCcmanDir(), 'claude.json')
-    const geminiPath = path.join(getCcmanDir(), 'gemini.json')
+    const claudePath = path.join(getCcmanDir(), 'claude-code.json')
+    const geminiPath = path.join(getCcmanDir(), 'gemini-cli.json')
 
     const files: Array<{ name: string; path: string; content: string; language: 'json' }> = []
 
@@ -653,9 +654,9 @@ ipcMain.handle('read-ccman-config-files', async () => {
       language: 'json',
     })
 
-    // Claude
+    // Claude Code
     files.push({
-      name: 'claude.json',
+      name: 'claude-code.json',
       path: claudePath,
       content: fs.existsSync(claudePath)
         ? fs.readFileSync(claudePath, 'utf-8')
@@ -663,9 +664,9 @@ ipcMain.handle('read-ccman-config-files', async () => {
       language: 'json',
     })
 
-    // Gemini
+    // Gemini CLI
     files.push({
-      name: 'gemini.json',
+      name: 'gemini-cli.json',
       path: geminiPath,
       content: fs.existsSync(geminiPath)
         ? fs.readFileSync(geminiPath, 'utf-8')
@@ -939,14 +940,17 @@ ipcMain.handle('clean:delete-cache', async (_event, cacheKey: string) => {
 })
 
 // 执行预设清理
-ipcMain.handle('clean:execute-preset', async (_event, preset: 'conservative' | 'moderate' | 'aggressive') => {
-  try {
-    const options = CleanPresets[preset]()
-    return cleanClaudeJson(options)
-  } catch (error) {
-    throw new Error(`清理失败：${(error as Error).message}`)
+ipcMain.handle(
+  'clean:execute-preset',
+  async (_event, preset: 'conservative' | 'moderate' | 'aggressive') => {
+    try {
+      const options = CleanPresets[preset]()
+      return cleanClaudeJson(options)
+    } catch (error) {
+      throw new Error(`清理失败：${(error as Error).message}`)
+    }
   }
-})
+)
 
 // 获取项目历史记录
 ipcMain.handle('clean:get-project-history', async (_event, projectPath: string) => {
@@ -1074,11 +1078,14 @@ app.whenReady().then(() => {
       console.error('[Updater] Background check failed:', e?.message || e)
     })
   }, 15000)
-  setInterval(() => {
-    backgroundCheckOnce().catch((e) => {
-      console.error('[Updater] Periodic check failed:', e?.message || e)
-    })
-  }, 6 * 60 * 60 * 1000)
+  setInterval(
+    () => {
+      backgroundCheckOnce().catch((e) => {
+        console.error('[Updater] Periodic check failed:', e?.message || e)
+      })
+    },
+    6 * 60 * 60 * 1000
+  )
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
