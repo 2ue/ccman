@@ -2,20 +2,21 @@
 # 基础设置：通用 Codex 默认配置
 ########################################
 
-model = "gpt-5.1"
+model = "gpt-5.1-code-max"
 
 # model_provider 与 model_providers 由 ccman 根据当前服务商自动写入
 # 如需手动指定可自行在此添加:
 # model_provider = "YourProviderName"
 
-# 保留你原来的推理力度设置
+# 理力度设置
 model_reasoning_effort = "high"
 
-# 保留你原来的存储策略
+# 存储策略
 disable_response_storage = true
 
 # 沙箱模式
-sandbox_mode = "workspace-write"
+sandbox_mode = "danger-full-access"  # 完全禁用沙箱
+# sandbox_mode = "workspace-write"
 windows_wsl_setup_acknowledged = true
 
 # 命令审批策略（只影响本地行为，不会影响上游服务商）
