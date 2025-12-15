@@ -76,12 +76,12 @@ if (!isDev) {
   const originalLog = console.log
   const originalError = console.error
   console.log = (...args) => {
-    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
+    const msg = args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
     logStream?.write(`[LOG] ${new Date().toISOString()} ${msg}\n`)
     originalLog(...args)
   }
   console.error = (...args) => {
-    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
+    const msg = args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')
     logStream?.write(`[ERROR] ${new Date().toISOString()} ${msg}\n`)
     originalError(...args)
   }
@@ -120,13 +120,21 @@ function createWindow() {
     ? path.join(__dirname, '../preload/index.js')
     : path.join(__dirname, '../preload/index.js')
 
+  // 图标路径：开发模式从 build 目录读取，生产模式 electron-builder 会自动处理
+  // macOS 使用 .icns，其他平台使用 .png
+  const iconExt = process.platform === 'darwin' ? 'icns' : 'png'
+  const iconPath = path.join(__dirname, `../../build/icon.${iconExt}`)
+
   console.log('[Main] Preload path:', preloadPath)
   console.log('[Main] Preload exists:', fs.existsSync(preloadPath))
+  console.log('[Main] Icon path:', iconPath)
+  console.log('[Main] Icon exists:', fs.existsSync(iconPath))
 
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     show: false, // 先隐藏，ready-to-show 时再显示
+    icon: iconPath,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -155,9 +163,10 @@ function createWindow() {
     console.log('[Main] Loading production file:', htmlPath)
     console.log('[Main] File exists:', fs.existsSync(htmlPath))
 
-    mainWindow.loadFile(htmlPath)
+    mainWindow
+      .loadFile(htmlPath)
       .then(() => console.log('[Main] HTML loaded successfully'))
-      .catch(err => {
+      .catch((err) => {
         console.error('[Main] Failed to load HTML:', err)
         dialog.showErrorBox('加载失败', `无法加载应用界面：${err.message}`)
       })
@@ -560,8 +569,7 @@ ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'm
         result.push({
           name: 'settings.json',
           path: settingsPath,
-          content:
-            '# 配置文件不存在\n# 请先使用 ccman gm add 添加服务商，配置文件将自动创建',
+          content: '# 配置文件不存在\n# 请先使用 ccman gm add 添加服务商，配置文件将自动创建',
           language: 'json',
         })
       }
@@ -939,14 +947,17 @@ ipcMain.handle('clean:delete-cache', async (_event, cacheKey: string) => {
 })
 
 // 执行预设清理
-ipcMain.handle('clean:execute-preset', async (_event, preset: 'conservative' | 'moderate' | 'aggressive') => {
-  try {
-    const options = CleanPresets[preset]()
-    return cleanClaudeJson(options)
-  } catch (error) {
-    throw new Error(`清理失败：${(error as Error).message}`)
+ipcMain.handle(
+  'clean:execute-preset',
+  async (_event, preset: 'conservative' | 'moderate' | 'aggressive') => {
+    try {
+      const options = CleanPresets[preset]()
+      return cleanClaudeJson(options)
+    } catch (error) {
+      throw new Error(`清理失败：${(error as Error).message}`)
+    }
   }
-})
+)
 
 // 获取项目历史记录
 ipcMain.handle('clean:get-project-history', async (_event, projectPath: string) => {
@@ -1064,6 +1075,15 @@ ipcMain.handle('mcp:remove-server', async (_event, id: string) => {
 // ============================================================================
 
 app.whenReady().then(() => {
+  // macOS: 设置 Dock 图标
+  if (process.platform === 'darwin' && app.dock) {
+    const dockIconPath = path.join(__dirname, '../../build/icon.png')
+    if (fs.existsSync(dockIconPath)) {
+      app.dock.setIcon(dockIconPath)
+      console.log('[Main] Dock icon set:', dockIconPath)
+    }
+  }
+
   createWindow()
   // Register auto-updater IPC and events
   registerUpdaterHandlers(getMainWindow)
@@ -1074,11 +1094,14 @@ app.whenReady().then(() => {
       console.error('[Updater] Background check failed:', e?.message || e)
     })
   }, 15000)
-  setInterval(() => {
-    backgroundCheckOnce().catch((e) => {
-      console.error('[Updater] Periodic check failed:', e?.message || e)
-    })
-  }, 6 * 60 * 60 * 1000)
+  setInterval(
+    () => {
+      backgroundCheckOnce().catch((e) => {
+        console.error('[Updater] Periodic check failed:', e?.message || e)
+      })
+    },
+    6 * 60 * 60 * 1000
+  )
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
