@@ -130,6 +130,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          # 使用镜像加速 Electron 下载，避免超时
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
       - name: Build Types module
         run: |
