@@ -182,7 +182,7 @@ export default function WebDAVSyncSection({
       const result = await window.electronAPI.sync.mergeSync(config, syncPassword)
 
       if (!result.hasChanges) {
-        onSuccess('ℹ️ 配置已同步，无需操作')
+        onSuccess('配置已同步，无需操作')
       } else {
         onSuccess(`配置已智能合并并同步\n备份: ${result.backupPaths.join(', ')}`)
         onDataChanged?.()

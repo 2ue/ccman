@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Plus, Package, ExternalLink } from 'lucide-react'
+import { X, Plus, Package, ExternalLink, ArrowLeft } from 'lucide-react'
 import type { Provider, AddProviderInput, EditProviderInput, PresetTemplate } from '@ccman/types'
 import ProviderForm from './ProviderForm'
 import { AlertDialog } from './dialogs'
@@ -143,7 +143,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                 onClick={handleBackToList}
                 className="mb-4 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
               >
-                ← 返回服务商列表
+                <ArrowLeft className="w-4 h-4" /> 返回服务商列表
               </button>
               <ProviderForm
                 preset={selectedPreset}

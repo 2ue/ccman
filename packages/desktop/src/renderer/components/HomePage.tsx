@@ -8,6 +8,7 @@ import {
   FolderCog,
   BarChart3,
   FolderOpen,
+  ArrowRight,
 } from 'lucide-react'
 import { BUTTON_STYLES } from '../styles/button'
 
@@ -96,9 +97,9 @@ export default function HomePage({
             <div className="flex gap-2 mt-auto">
               <button
                 onClick={() => onNavigate('claude')}
-                className={`flex-1 ${BUTTON_STYLES.primary}`}
+                className={`flex-1 ${BUTTON_STYLES.primary} flex items-center justify-center gap-1`}
               >
-                管理 →
+                管理 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -135,9 +136,9 @@ export default function HomePage({
             <div className="flex gap-2 mt-auto">
               <button
                 onClick={() => onNavigate('codex')}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-1"
               >
-                管理 →
+                管理 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>

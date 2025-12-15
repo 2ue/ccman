@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Plus, Server, ExternalLink, AlertCircle } from 'lucide-react'
+import { X, Plus, Server, ExternalLink, AlertCircle, ArrowLeft } from 'lucide-react'
 import type { MCPServer } from '@ccman/types'
 import { MCP_PRESETS_DETAIL, type MCPPresetDetail } from '../constants/mcpPresets'
 import MCPForm from './MCPForm'
@@ -137,7 +137,7 @@ export default function AddMCPModal({
                 onClick={handleBackToList}
                 className="mb-4 text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
               >
-                ← 返回预设列表
+                <ArrowLeft className="w-4 h-4" /> 返回预设列表
               </button>
               <MCPForm
                 preset={selectedPreset}
