@@ -8,11 +8,6 @@ dist/
 # Desktop build outputs
 packages/desktop/release/
 
-# Desktop icons (user-provided)
-packages/desktop/build/*.icns
-packages/desktop/build/*.ico
-packages/desktop/build/*.png
-
 # Logs
 *.log
 npm-debug.log*
