@@ -179,17 +179,17 @@ chore: bump version to 3.2.0
 1. **Codex** - Codex AI assistant
    - Config: `~/.codex/config.toml` (TOML format)
    - Fields: `model_provider`, `model_providers[name]`
-   - Presets: 1 (88Code)
+   - Presets: 2 (OpenAI Official, GMN)
 
 2. **Claude Code** - Claude Code AI assistant
    - Config: `~/.claude/settings.json` (JSON)
    - Fields: `env.ANTHROPIC_AUTH_TOKEN`, `env.ANTHROPIC_BASE_URL`
-   - Presets: 7 (Anthropic, AnyRouter, PackyCode, 88Code, KKYYXX, BigModel, ModelScope)
+   - Presets: 1 (Anthropic Official)
 
 3. **Gemini CLI** - Gemini CLI AI assistant
    - Config: `~/.gemini/settings.json` (JSON) + `~/.gemini/.env`
    - Fields: JSON metadata in `provider.model` (merged into env)
-   - Presets: 3 (Google Gemini, PackyAPI, LiteLLM Proxy)
+   - Presets: 2 (Google Gemini, GMN)
 
 **Special Tool** (MCP server management)
 4. **MCP** - Model Context Protocol servers

@@ -72,7 +72,7 @@ web_search_request = true
 unified_exec = false
 streamable_shell = false
 rmcp_client = true
-# 如以后确认 88Code 完全兼容，可以考虑再打开 ghost_commit 等
+# 如以后确认其他服务完全兼容，可以考虑再打开 ghost_commit 等
 
 
 ########################################
@@ -80,7 +80,7 @@ rmcp_client = true
 ########################################
 
 [profiles.auto-max]
-# 使用顶层的 model / model_provider（即 gpt-5.1-codex + 88Code）
+# 使用顶层的 model / model_provider（即 gpt-5.1-codex + OpenAI/GMN）
 # 这里只覆盖“本地行为”，例如审批和沙箱
 approval_policy = "never"
 sandbox_mode = "workspace-write"
@@ -102,9 +102,8 @@ hide_gpt5_1_migration_prompt = true
 # 模型提供方示例（仅注释示例，不会生效）
 ########################################
 
-# [model_providers.88Code]
-# name = "88Code"
-# base_url = "https://www.88code.org/openai/v1"
+# [model_providers.gmn]
+# name = "GMN"
+# base_url = "https://gmn.chuangzuoli.cn/openai"
 # wire_api = "responses"
 # requires_openai_auth = true
-

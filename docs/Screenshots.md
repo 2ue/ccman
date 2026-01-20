@@ -56,14 +56,11 @@ Claude Code 配置页面提供 Claude Code 专用的配置管理，支持：
   <p><em>内置的服务商预设模板</em></p>
 </div>
 
-ccman 内置了 7 个常用服务商预设，包括：
+ccman 内置了官方与 GMN 的服务商预设，包括：
 - Anthropic Official
-- AnyRouter
-- PackyCode
-- CoordCode
-- 88Code
-- BigModel
-- ModelScope
+- OpenAI Official
+- Google Gemini (API Key)
+- GMN
 
 使用预设模板，只需填写 API Key 即可快速添加服务商。
 

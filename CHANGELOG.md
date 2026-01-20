@@ -114,7 +114,7 @@
 
 ### Features
 
-* **core:** 添加 KKYYXX API 服务预设 ([e07b140](https://github.com/2ue/ccman/commit/e07b140308fb5e4f6c1f4b3a2805ef2cab3c4dfc))
+* **core:** 添加 GMN API 服务预设 ([e07b140](https://github.com/2ue/ccman/commit/e07b140308fb5e4f6c1f4b3a2805ef2cab3c4dfc))
 ## [3.0.6](https://github.com/2ue/ccman/compare/v3.0.10...v3.0.6) (2025-10-11)
 
 ### Bug Fixes

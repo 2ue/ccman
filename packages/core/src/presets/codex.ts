@@ -16,8 +16,13 @@ export interface PresetTemplate {
  */
 export const CODEX_PRESETS: PresetTemplate[] = [
   {
-    name: '88Code',
-    baseUrl: 'https://www.88code.org/openai/v1',
-    description: '88Code API 服务',
+    name: 'OpenAI Official',
+    baseUrl: 'https://api.openai.com/v1',
+    description: 'OpenAI 官方 API',
+  },
+  {
+    name: 'GMN',
+    baseUrl: 'https://gmn.chuangzuoli.cn/openai',
+    description: 'GMN 服务 (Codex/Gemini 兼容)',
   }
 ]

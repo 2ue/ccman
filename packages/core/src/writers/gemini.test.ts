@@ -30,11 +30,11 @@ describe('Gemini Writer', () => {
     }
   })
 
-  it('should create new settings.json and .env for proxy provider', () => {
+  it('should create new settings.json and .env for GMN provider', () => {
     const provider: Provider = {
       id: 'gemini-1',
-      name: 'LiteLLM Proxy',
-      baseUrl: 'http://localhost:4000',
+      name: 'GMN',
+      baseUrl: 'https://gmn.chuangzuoli.cn/openai',
       apiKey: 'sk-test-123',
       createdAt: Date.now(),
       lastModified: Date.now(),
@@ -57,7 +57,7 @@ describe('Gemini Writer', () => {
     const envPath = getGeminiEnvPath()
     expect(fs.existsSync(envPath)).toBe(true)
     const envContent = fs.readFileSync(envPath, 'utf-8')
-    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=http://localhost:4000')
+    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.cn/openai')
     expect(envContent).toContain('GEMINI_API_KEY=sk-test-123')
   })
 

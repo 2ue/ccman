@@ -117,12 +117,12 @@
 
 事实:
 
-- `packages/core/src/presets/codex.ts` 仅定义了一个预设: `88Code`。
-- CLI 交互式添加 Codex 服务商时(`commands/codex/add.ts`), `CODEX_PRESETS` 仅会展示这一项。
+- `packages/core/src/presets/codex.ts` 目前定义了两个预设: `OpenAI Official` 与 `GMN`。
+- CLI 交互式添加 Codex 服务商时(`commands/codex/add.ts`), `CODEX_PRESETS` 会展示这两项。
 
 风险:
 
-- README 中展示的多家预设实际上尚未在代码中实现,容易造成用户预期与实际行为不一致。
+- README 与代码中的预设清单需要保持同步,避免用户预期与实际行为不一致。
 
 ### 4.2 命名规范文档 vs 实际类型
 
@@ -180,4 +180,3 @@
 
 以上问题并不意味着项目质量差,恰恰相反:大部分问题来自“功能已经做得足够多,但工程治理还没完全跟上”。  
 在下一篇 `E-优化与演进建议.md` 中,会基于这些发现给出比较可执行的改进路径。 
-

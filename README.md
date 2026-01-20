@@ -33,7 +33,7 @@
 ## ✨ 核心特性
 
 - 🔄 **一键切换**：一条命令切换服务商，自动修改配置文件
-- 📦 **内置预设**：提供多个预设模板（Claude: 7 个，Gemini: 3 个，Codex: 1 个，MCP: 多个），只需填写 API Key
+- 📦 **内置预设**：提供官方与 GMN 预设（Claude: 1 个，Gemini: 2 个，Codex: 2 个，MCP: 多个），只需填写 API Key
 - 🛠️ **自定义配置**：支持添加任意第三方服务商
 - 🔐 **零破坏性**：只修改管理的字段，写入前备份，失败回滚
 - 🎯 **多工具支持**：同时管理 Codex、Claude Code、Gemini CLI 和 MCP 服务器
@@ -116,11 +116,11 @@ $ ccman cx list
 
 📋 Codex 服务商 (2 个)
 
-  ●  Anthropic Official [当前]
-     https://api.anthropic.com
+  ●  OpenAI Official [当前]
+     https://api.openai.com/v1
 
-  ○  88Code
-     https://www.88code.org/api
+  ○  GMN
+     https://gmn.chuangzuoli.cn/openai
 ```
 
 ```bash
@@ -128,9 +128,9 @@ $ ccman cx current
 
 📍 当前 Codex 服务商
 
-  Anthropic Official
+  OpenAI Official
   ID: codex-1760178741529-hbgbad
-  URL: https://api.anthropic.com
+  URL: https://api.openai.com/v1
   最后使用: 2025/10/11 18:32:25
 ```
 
@@ -148,13 +148,10 @@ ccman cc list      # 查看所有服务商
 ```bash
 $ ccman cc list
 
-📋 Claude Code 服务商 (2 个)
+📋 Claude Code 服务商 (1 个)
 
-  ○  AnyRouter
-     https://anyrouter.top
-
-  ●  PackyCode [当前]
-     https://api.packycode.com
+  ●  Anthropic Official [当前]
+     https://api.anthropic.com
 ```
 
 ```bash
@@ -162,9 +159,9 @@ $ ccman cc current
 
 📍 当前 Claude Code 服务商
 
-  PackyCode
+  Anthropic Official
   ID: claude-1760182672751-unh2bp
-  URL: https://api.packycode.com
+  URL: https://api.anthropic.com
   最后使用: 2025/10/11 20:14:08
 ```
 
@@ -238,31 +235,25 @@ ccman mcp remove   # 删除 MCP 服务器
 
 添加服务商时可以选择"使用预设模板"，只需填写 API Key：
 
-### Claude Code 预设（7 个）
+### Claude Code 预设（1 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
 | Anthropic Official | `https://api.anthropic.com` |
-| AnyRouter | `https://anyrouter.top` |
-| PackyCode | `https://api.packycode.com` |
-| 88Code | `https://www.88code.org/api` |
-| KKYYXX | `https://api.kkyyxx.cc` |
-| BigModel | `https://open.bigmodel.cn/api/anthropic` |
-| ModelScope | `https://api-inference.modelscope.cn/v1/chat/completions` |
 
-### Gemini CLI 预设（3 个）
+### Gemini CLI 预设（2 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
-| Google Gemini | `https://generativelanguage.googleapis.com` |
-| PackyAPI | `https://api.packyapi.com` |
-| LiteLLM Proxy | `http://localhost:4000` |
+| Google Gemini (API Key) | 官方默认 |
+| GMN | `https://gmn.chuangzuoli.cn/openai` |
 
-### Codex 预设（1 个）
+### Codex 预设（2 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
-| 88Code | `https://www.88code.org/api` |
+| OpenAI Official | `https://api.openai.com/v1` |
+| GMN | `https://gmn.chuangzuoli.cn/openai` |
 
 ### MCP 预设（多个）
 
@@ -282,30 +273,30 @@ $ ccman cx list
 
 📋 Codex 服务商 (1 个)
 
-  ●  Anthropic Official [当前]
-     https://api.anthropic.com
+  ●  OpenAI Official [当前]
+     https://api.openai.com/v1
 
-# 2. 添加 PackyCode（交互式）
+# 2. 添加 GMN（交互式）
 $ ccman cx add
 ? 选择配置方式 › 使用预设模板
-? 选择预设 › PackyCode
-? 服务商名称 › PackyCode
+? 选择预设 › GMN
+? 服务商名称 › GMN
 ? API Key › ••••••••••••••••••••
 ✅ 添加成功！
-💡 切换到此服务商: ccman cx use PackyCode
+💡 切换到此服务商: ccman cx use GMN
 
-# 3. 切换到 PackyCode
-$ ccman cx use PackyCode
-✅ 已切换到: PackyCode
+# 3. 切换到 GMN
+$ ccman cx use GMN
+✅ 已切换到: GMN
 
 # 4. 确认当前服务商
 $ ccman cx current
 
 📍 当前 Codex 服务商
 
-  PackyCode
+  GMN
   ID: codex-1760178741529-abc123
-  URL: https://api.packycode.com
+  URL: https://gmn.chuangzuoli.cn/openai
   最后使用: 2025/10/11 18:32:25
 ```
 

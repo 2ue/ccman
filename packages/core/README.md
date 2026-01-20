@@ -9,7 +9,7 @@
 - ✅ Codex 配置写入（`~/.codex/config.toml` + `auth.json`）
 - ✅ Claude Code 配置写入（`~/.claude/settings.json`）
 - ✅ 环境隔离（test/development/production）
-- ✅ 预设模板（Anthropic Official, PackyCode）
+- ✅ 预设模板（官方 + GMN）
 
 ## 使用
 

@@ -98,11 +98,11 @@
 
 相关代码：`packages/core/src/presets/*.ts`、`README.md`。
 
-- README / CLI README 中仍使用统一描述：“内置 7 个常用服务商模板，只需填写 API Key”。
+- README / CLI README 中仍使用统一描述：“内置预设模板，只需填写 API Key”。
 - 实际预设情况：
-  - Claude：`presets/claude.ts` 确实有 7 个预设（Anthropic / AnyRouter / PackyCode / 88Code / KKYYXX / BigModel / ModelScope）。
-  - Codex：`presets/codex.ts` 只有一个预设（88Code）。
-  - Gemini：`presets/gemini.ts` 有 3 个预设（Google Gemini / PackyAPI / LiteLLM Proxy）。
+  - Claude：`presets/claude.ts` 仅保留官方 Anthropic 预设。
+  - Codex：`presets/codex.ts` 包含 OpenAI Official 与 GMN。
+  - Gemini：`presets/gemini.ts` 包含 Google Gemini (API Key) 与 GMN。
   - MCP：`presets/mcp.ts` 单独维护多个 MCP 预设（filesystem/github/postgres 等），但用户文档几乎未提及。
 
 **问题：**
@@ -167,4 +167,3 @@
    - 清理工具中明确哪些操作会备份，必要时提供“最近备份列表 + 一键恢复”。
 
 以上问题和建议都是基于当前源码状态总结，后续改动可以在本文件上继续追加小节或更新条目，以保持「问题与演进状态」的一致视图。
-

@@ -8,7 +8,7 @@
   - FROM: `npm install -g @ccman/cli`
   - TO: `npm install -g ccman`
 - [ ] 1.3 Update "核心特性" section (around line 36)
-  - Remove: "内置 7 个常用服务商模板"
+  - Remove: "内置服务商模板"
   - Add: Tool-specific preset counts (Codex: 1, Claude: 7, Gemini: 3, MCP: multiple)
 - [ ] 1.4 Update "Commands" section (around line 92-96)
   - Add `gm` subcommand: "管理 Gemini CLI 服务商"

@@ -589,8 +589,8 @@ ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'm
           content:
             '# .env 文件不存在\n# 将在切换到带有 baseUrl/apiKey 的服务商时自动创建\n' +
             '# 也可以手动创建，例如：\n' +
-            '# GOOGLE_GEMINI_BASE_URL=https://www.packyapi.com\n' +
-            '# GEMINI_API_KEY=YOUR_PACKYAPI_TOKEN_HERE\n' +
+            '# GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.cn/openai\n' +
+            '# GEMINI_API_KEY=YOUR_GMN_TOKEN_HERE\n' +
             '# GEMINI_MODEL=gemini-2.5-pro\n',
           language: 'env',
         })
