@@ -1,116 +1,124 @@
 # ccman
 
-> Codex、Claude Code、Gemini CLI 和 MCP 的配置管理工具，一键切换 API 服务商配置和管理 MCP 服务器。
+一个用于 **Codex / Claude Code / Gemini CLI** 的 API 服务商配置管理工具，支持 CLI + Desktop，并提供 MCP 服务器管理与 WebDAV 同步。
 
----
+## ✨ 功能概览
 
-## 🎉 Desktop 版本现已支持
+- **一键切换服务商**：Codex / Claude Code / Gemini CLI
+- **内置预设模板**：提供常用模板并支持自定义
+- **零破坏性写入**：合并用户现有配置，仅更新必要字段
+- **MCP 管理**：集中管理 MCP 服务器并同步到 Claude/Gemini
+- **WebDAV 同步**：配置备份、下载、合并
+- **导入/导出**：迁移配置更方便
+- **Claude 历史清理**：分析并清理 `~/.claude.json`
 
-- ☁️ **WebDAV 云同步**：将配置同步到你的 WebDAV 服务器（iCloud/Dropbox/坚果云等）
-  - 智能合并：自动合并本地和云端配置，避免冲突
-  - 加密传输：API Key 使用密码加密后上传
-  - 自动备份：下载前自动备份本地配置
-- 💾 **配置导入导出**：本地备份和迁移配置
-  - 导出配置到本地文件夹
-  - 从本地文件夹导入配置
-  - 自动备份防止误操作
+## ✅ 支持的工具与配置路径
 
-👉 从 [GitHub Releases](https://github.com/2ue/ccman/releases) 下载 Desktop 版本体验完整功能
+| 工具 | 主要配置文件 | 说明 |
+| --- | --- | --- |
+| **Codex** | `~/.codex/config.toml` + `~/.codex/auth.json` | `auth.json` 使用 `OPENAI_API_KEY` |
+| **Claude Code** | `~/.claude/settings.json` | 另有历史文件 `~/.claude.json` |
+| **Gemini CLI** | `~/.gemini/settings.json` + `~/.gemini/.env` | `.env` 使用 `GOOGLE_GEMINI_BASE_URL` / `GEMINI_API_KEY` |
+| **ccman** | `~/.ccman/{codex,claude,gemini,mcp}.json` | 保存服务商与 MCP 配置 |
 
----
+## 📦 内置预设
 
-## 📸 界面预览
+### Claude Code
+- **Anthropic Official**：`https://api.anthropic.com`
 
-<div align="center">
-  <img src="./docs/screenshoot/ccman.png" alt="ccman 主界面" width="800">
-  <p><em>ccman Desktop 主界面</em></p>
-</div>
+### Codex
+- **OpenAI Official**：`https://api.openai.com/v1`
+- **GMN**：`https://gmn.chuangzuoli.cn/openai`
 
-👉 [查看更多截图](./docs/Screenshots.md) - 包含所有功能界面展示
+### Gemini CLI
+- **Google Gemini (API Key)**：官方默认（无需设置 baseUrl）
+- **GMN**：`https://gmn.chuangzuoli.cn/openai`
 
----
+## 🧭 CLI 使用速览
 
-## ✨ 核心特性
-
-- 🔄 **一键切换**：一条命令切换服务商，自动修改配置文件
-- 📦 **内置预设**：提供官方与 GMN 预设（Claude: 1 个，Gemini: 2 个，Codex: 2 个，MCP: 多个），只需填写 API Key
-- 🛠️ **自定义配置**：支持添加任意第三方服务商
-- 🔐 **零破坏性**：只修改管理的字段，写入前备份，失败回滚
-- 🎯 **多工具支持**：同时管理 Codex、Claude Code、Gemini CLI 和 MCP 服务器
-- 📱 **双界面**：提供 CLI（命令行）和 Desktop（图形界面）
-- 🔁 **克隆功能**：快速复制配置，管理多个 API Key
-- 🔒 **无第三方上传**：不会上传到我们的服务器，配置权限 `0600`
-- 🎨 **交互式菜单**：无需记忆命令，跟随提示操作
-
----
-
-## 也许你不需要 ccman
-
-ccman 的核心功能是自动化配置文件的切换。如果你更喜欢手动编辑配置文件，或者只使用一个服务商从不切换，可能不需要这个工具。
-
-📖 详细了解：[也许你不需要 ccman](./docs/也许你不需要ccman.md) - 包含手动配置方式、对比分析和适用场景
-
----
-
-## 安装
-
-### CLI
+### 交互式入口
 
 ```bash
-npm install -g ccman
+ccman
 ```
 
-**要求**：Node.js >= 18.0.0
-
-### Desktop
-
-从 [GitHub Releases](https://github.com/2ue/ccman/releases) 下载：
-
-- **macOS**:
-  - Intel: `ccman-VERSION-macos-x64.dmg`
-  - Apple Silicon: `ccman-VERSION-macos-arm64.dmg`
-  - Universal: `ccman-VERSION-macos-universal.dmg`
-- **Windows**: `ccman-VERSION-windows-x64.exe`
-
----
-
-## 快速开始
-
-### 查看帮助
+执行效果（主菜单）：
 
 ```bash
-$ ccman --help
+$ ccman
 
-Usage: ccman [options] [command]
-
-Codex/Claude Code API 服务商配置管理工具
-
-Options:
-  -V, --version   output the version number
-  -h, --help      display help for command
-
-Commands:
-  cx              管理 Codex 服务商
-  cc              管理 Claude 服务商
-  gm              管理 Gemini CLI 服务商
-  mcp             管理 MCP 服务器
-  sync            WebDAV 同步配置
-  export [dir]    导出配置
-  import [dir]    导入配置
-  help [command]  display help for command
+? 请选择操作:
+  ❯ 🔷 Claude 管理
+    🔶 Codex 管理
+    💎 Gemini 管理
+    🔄 WebDAV 同步
+    📦 预置服务商管理
+    ❌ 退出
 ```
 
-### 管理 Codex 服务商
+### Codex / Claude / Gemini 服务商管理
 
 ```bash
-ccman cx           # 进入交互式菜单
-ccman cx add       # 添加服务商
-ccman cx use       # 切换服务商
-ccman cx list      # 查看所有服务商
+ccman cx add|list|use|current|edit|remove|clone
+ccman cc add|list|use|current|edit|remove|clone
+ccman gm add|list|use|current|edit|remove|clone
 ```
 
-**示例输出**：
+交互式工具菜单（以 Codex 为例）：
 
+```bash
+$ ccman cx
+
+? 🔶 Codex 操作:
+  ❯ ➕ 添加服务商
+    🔄 切换服务商
+    📋 列出所有服务商
+    👁️  查看当前服务商
+    ✏️  编辑服务商
+    🔁 克隆服务商
+    🗑️  删除服务商
+    ⬅️  返回上级
+```
+
+下面补充每个命令的执行效果示例（交互式流程与输出与源码一致）。
+
+#### Codex 命令执行效果
+
+**add**
+```bash
+$ ccman cx add
+
+📝 添加 Codex 服务商
+
+? 选择配置来源:
+  ❯ 📦 使用预置服务商
+    ✏️  自定义配置
+
+? 选择预置服务商:
+  OpenAI Official - OpenAI 官方 API
+  GMN - GMN 服务 (Codex/Gemini 兼容)
+
+使用预设: GMN - GMN 服务 (Codex/Gemini 兼容)
+
+? 服务商名称: GMN
+? 描述(可选):
+? API 地址: https://gmn.chuangzuoli.cn/openai
+? API 密钥: ********
+
+✅ 添加成功
+
+  GMN [Codex]
+  https://gmn.chuangzuoli.cn/openai
+
+? 是否立即切换到此服务商? (Y/n)
+✅ 已切换到新服务商
+
+配置已更新:
+  - ~/.codex/config.toml
+  - ~/.codex/auth.json
+```
+
+**list**
 ```bash
 $ ccman cx list
 
@@ -118,33 +126,136 @@ $ ccman cx list
 
   ●  OpenAI Official [当前]
      https://api.openai.com/v1
+     OpenAI 官方 API
 
   ○  GMN
      https://gmn.chuangzuoli.cn/openai
+     GMN 服务 (Codex/Gemini 兼容)
 ```
 
+**use**
+```bash
+$ ccman cx use
+
+? 选择要切换的服务商:
+  OpenAI Official - https://api.openai.com/v1
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+✅ 切换成功
+
+  GMN [Codex]
+  URL: https://gmn.chuangzuoli.cn/openai
+
+配置已更新:
+  - ~/.codex/config.toml
+  - ~/.codex/auth.json
+```
+
+**current**
 ```bash
 $ ccman cx current
 
 📍 当前 Codex 服务商
 
   OpenAI Official
-  ID: codex-1760178741529-hbgbad
+  ID: codex-1768916063885-openai1
   URL: https://api.openai.com/v1
-  最后使用: 2025/10/11 18:32:25
+  最后使用: 2026/1/20 21:34:24
 ```
 
-### 管理 Claude Code 服务商
-
+**edit**
 ```bash
-ccman cc           # 进入交互式菜单
-ccman cc add       # 添加服务商
-ccman cc use       # 切换服务商
-ccman cc list      # 查看所有服务商
+$ ccman cx edit
+
+? 选择要编辑的服务商:
+  OpenAI Official - https://api.openai.com/v1
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+✏️  编辑服务商
+
+提示: 留空则保持原值
+
+? 服务商名称: GMN
+? API 地址: https://gmn.chuangzuoli.cn/openai
+? API 密钥 (留空保持不变): ********
+
+✅ 编辑成功
+
+  GMN [Codex]
+  ID: codex-1768916065885-gmn001
+  URL: https://gmn.chuangzuoli.cn/openai
 ```
 
-**示例输出**：
+**clone**
+```bash
+$ ccman cx clone
 
+? 选择要克隆的服务商:
+  OpenAI Official - https://api.openai.com/v1
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+克隆自: OpenAI Official
+
+? 服务商名称: OpenAI Official（副本）
+? 描述(可选):
+? API 地址: https://api.openai.com/v1
+? API 密钥: ********
+
+✅ 克隆成功
+
+  OpenAI Official（副本） [Codex]
+  ID: codex-1768916069999-copy01
+  URL: https://api.openai.com/v1
+```
+
+**remove**
+```bash
+$ ccman cx remove
+
+? 选择要删除的服务商:
+  OpenAI Official - https://api.openai.com/v1
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+? 确定删除 "GMN"? (y/N)
+
+✅ 已删除: GMN
+```
+
+#### Claude Code 命令执行效果
+
+**add**
+```bash
+$ ccman cc add
+
+📝 添加 Claude Code 服务商
+
+? 选择配置来源:
+  ❯ 📦 使用预置服务商
+    ✏️  自定义配置
+
+? 选择预置服务商:
+  Anthropic Official - Anthropic 官方 API
+
+使用预设: Anthropic Official - Anthropic 官方 API
+
+? 服务商名称: Anthropic Official
+? 描述(可选):
+? API 地址: https://api.anthropic.com
+? API 密钥: ********
+
+✅ 添加成功
+
+  Anthropic Official [Claude Code]
+  https://api.anthropic.com
+
+? 是否立即切换到此服务商? (Y/n)
+✅ 已切换到新服务商
+
+配置已更新:
+  - ~/.claude/settings.json
+```
+
+**list**
 ```bash
 $ ccman cc list
 
@@ -152,236 +263,687 @@ $ ccman cc list
 
   ●  Anthropic Official [当前]
      https://api.anthropic.com
+     Anthropic 官方 API
 ```
 
+**use**
+```bash
+$ ccman cc use
+
+? 选择要切换的服务商:
+  Anthropic Official - https://api.anthropic.com
+
+✅ 切换成功
+
+  Anthropic Official [Claude Code]
+  URL: https://api.anthropic.com
+
+配置已更新:
+  - ~/.claude/settings.json
+```
+
+**current**
 ```bash
 $ ccman cc current
 
 📍 当前 Claude Code 服务商
 
   Anthropic Official
-  ID: claude-1760182672751-unh2bp
+  ID: claude-1768916065885-anth01
   URL: https://api.anthropic.com
-  最后使用: 2025/10/11 20:14:08
+  最后使用: 2026/1/20 21:34:26
 ```
 
-### 管理 Gemini CLI 服务商
-
+**edit**
 ```bash
-ccman gm           # 进入交互式菜单
-ccman gm add       # 添加服务商
-ccman gm use       # 切换服务商
-ccman gm list      # 查看所有服务商
+$ ccman cc edit
+
+? 选择要编辑的服务商:
+  Anthropic Official - https://api.anthropic.com
+
+✏️  编辑服务商
+
+提示: 留空则保持原值
+
+? 服务商名称: Anthropic Official
+? API 地址: https://api.anthropic.com
+? API 密钥 (留空保持不变): ********
+
+✅ 编辑成功
+
+  Anthropic Official [Claude Code]
+  ID: claude-1768916065885-anth01
+  URL: https://api.anthropic.com
 ```
 
-### 管理 MCP 服务器
-
+**clone**
 ```bash
-ccman mcp add      # 添加 MCP 服务器
-ccman mcp list     # 查看所有 MCP 服务器
-ccman mcp edit     # 编辑 MCP 服务器
-ccman mcp remove   # 删除 MCP 服务器
-```
-
-**注意**：MCP 服务器可以在 Claude Code 和 Gemini CLI 中启用。使用 Desktop 版本可以方便地管理 MCP 在不同工具中的启用状态。
-
----
-
-## 完整命令
-
-| 命令 | 说明 |
-|------|------|
-| `ccman` | 主菜单（选择 Codex、Claude Code 或 Gemini CLI） |
-| **Codex 管理** | |
-| `ccman cx` | Codex 交互式菜单 |
-| `ccman cx add` | 添加 Codex 服务商（支持预设模板和自定义） |
-| `ccman cx list` | 列出所有 Codex 服务商 |
-| `ccman cx use [name]` | 切换 Codex 服务商 |
-| `ccman cx current` | 查看当前 Codex 服务商 |
-| `ccman cx edit [name]` | 编辑 Codex 服务商 |
-| `ccman cx remove [name]` | 删除 Codex 服务商 |
-| `ccman cx clone [source]` | 克隆 Codex 服务商（复制配置，改名称和 Key） |
-| **Claude Code 管理** | |
-| `ccman cc` | Claude Code 交互式菜单 |
-| `ccman cc add` | 添加 Claude Code 服务商 |
-| `ccman cc list` | 列出所有 Claude Code 服务商 |
-| `ccman cc use [name]` | 切换 Claude Code 服务商 |
-| `ccman cc current` | 查看当前 Claude Code 服务商 |
-| `ccman cc edit [name]` | 编辑 Claude Code 服务商 |
-| `ccman cc remove [name]` | 删除 Claude Code 服务商 |
-| `ccman cc clone [source]` | 克隆 Claude Code 服务商 |
-| **Gemini CLI 管理** | |
-| `ccman gm` | Gemini CLI 交互式菜单 |
-| `ccman gm add` | 添加 Gemini CLI 服务商 |
-| `ccman gm list` | 列出所有 Gemini CLI 服务商 |
-| `ccman gm use [name]` | 切换 Gemini CLI 服务商 |
-| `ccman gm current` | 查看当前 Gemini CLI 服务商 |
-| `ccman gm edit [name]` | 编辑 Gemini CLI 服务商 |
-| `ccman gm remove [name]` | 删除 Gemini CLI 服务商 |
-| `ccman gm clone [source]` | 克隆 Gemini CLI 服务商 |
-| **MCP 服务器管理** | |
-| `ccman mcp add` | 添加 MCP 服务器 |
-| `ccman mcp list` | 列出所有 MCP 服务器 |
-| `ccman mcp edit [name]` | 编辑 MCP 服务器 |
-| `ccman mcp remove [name]` | 删除 MCP 服务器 |
-| **配置同步和导入导出** | |
-| `ccman sync` | WebDAV 同步配置（备份/恢复/合并） |
-| `ccman export [dir]` | 导出配置到本地目录 |
-| `ccman import [dir]` | 从本地目录导入配置 |
-
----
-
-## 内置预设
-
-添加服务商时可以选择"使用预设模板"，只需填写 API Key：
-
-### Claude Code 预设（1 个）
-
-| 预设名称 | Base URL |
-|---------|----------|
-| Anthropic Official | `https://api.anthropic.com` |
-
-### Gemini CLI 预设（2 个）
-
-| 预设名称 | Base URL |
-|---------|----------|
-| Google Gemini (API Key) | 官方默认 |
-| GMN | `https://gmn.chuangzuoli.cn/openai` |
-
-### Codex 预设（2 个）
-
-| 预设名称 | Base URL |
-|---------|----------|
-| OpenAI Official | `https://api.openai.com/v1` |
-| GMN | `https://gmn.chuangzuoli.cn/openai` |
-
-### MCP 预设（多个）
-
-MCP 服务器预设包括：filesystem、github、postgres、brave-search、fetch、memory 等多个常用 MCP 服务器模板。
-
-也可以选择"自定义配置"，手动填写 Base URL。
-
----
-
-## 完整使用示例
-
-### 场景 1：添加并切换服务商
-
-```bash
-# 1. 查看当前列表
-$ ccman cx list
-
-📋 Codex 服务商 (1 个)
-
-  ●  OpenAI Official [当前]
-     https://api.openai.com/v1
-
-# 2. 添加 GMN（交互式）
-$ ccman cx add
-? 选择配置方式 › 使用预设模板
-? 选择预设 › GMN
-? 服务商名称 › GMN
-? API Key › ••••••••••••••••••••
-✅ 添加成功！
-💡 切换到此服务商: ccman cx use GMN
-
-# 3. 切换到 GMN
-$ ccman cx use GMN
-✅ 已切换到: GMN
-
-# 4. 确认当前服务商
-$ ccman cx current
-
-📍 当前 Codex 服务商
-
-  GMN
-  ID: codex-1760178741529-abc123
-  URL: https://gmn.chuangzuoli.cn/openai
-  最后使用: 2025/10/11 18:32:25
-```
-
-### 场景 2：克隆服务商（管理多个 Key）
-
-```bash
-# 1. 添加生产配置
-$ ccman cc add
-? 选择配置方式 › 自定义配置
-? 服务商名称 › Claude Production
-? Base URL › https://api.anthropic.com
-? API Key › ••••••••••••••••••••
-✅ 添加成功！
-
-# 2. 克隆创建测试配置
 $ ccman cc clone
-? 选择要克隆的服务商 › Claude Production
-? 新服务商名称 › Claude Test
-? API Key › ••••••••••••••••••••
-✅ 克隆成功！
-💡 切换到此服务商: ccman cc use "Claude Test"
 
-# 3. 查看列表
-$ ccman cc list
+? 选择要克隆的服务商:
+  Anthropic Official - https://api.anthropic.com
 
-📋 Claude Code 服务商 (2 个)
+克隆自: Anthropic Official
 
-  ●  Claude Production [当前]
-     https://api.anthropic.com
+? 服务商名称: Anthropic Official（副本）
+? 描述(可选):
+? API 地址: https://api.anthropic.com
+? API 密钥: ********
 
-  ○  Claude Test
-     https://api.anthropic.com
+✅ 克隆成功
 
-# 4. 快速切换
-$ ccman cc use "Claude Test"
-✅ 已切换到: Claude Test
+  Anthropic Official（副本） [Claude Code]
+  ID: claude-1768916072222-copy01
+  URL: https://api.anthropic.com
 ```
 
----
+**remove**
+```bash
+$ ccman cc remove
 
-## 配置文件
+? 选择要删除的服务商:
+  Anthropic Official - https://api.anthropic.com
 
-**ccman 配置**：
-- `~/.ccman/codex.json` - Codex 服务商配置
-- `~/.ccman/claude.json` - Claude Code 服务商配置
-- `~/.ccman/gemini.json` - Gemini CLI 服务商配置
-- `~/.ccman/mcp.json` - MCP 服务器配置
+? 确定删除 "Anthropic Official"? (y/N)
 
-**工具配置**（ccman 会自动修改）：
-- **Codex**: `~/.codex/config.toml`
-- **Claude Code**: `~/.claude/settings.json`
-- **Gemini CLI**: `~/.gemini/settings.json` 和 `~/.gemini/.env`
+✅ 已删除: Anthropic Official
+```
 
-**零破坏性承诺**：
-- 只修改管理的字段，保留其他所有配置
-- 写入前备份，失败时自动回滚
-- API Key 存储在本地，权限 `0600`
+#### Gemini CLI 命令执行效果
 
----
+**add**
+```bash
+$ ccman gm add
 
-## 常见问题
+📝 添加 Gemini CLI 服务商
 
-**Q: 支持配置导入/导出吗？**
-A: **Desktop 版本支持**完整的导入/导出功能：
-- 导出配置到本地文件夹（包含 API Key）
-- 从本地文件夹导入配置（自动备份当前配置）
-- CLI 版本暂不支持，可手动复制 `~/.ccman/` 目录
+? 选择配置来源:
+  ❯ 📦 使用预置服务商
+    ✏️  自定义配置
 
-**Q: WebDAV 同步是什么？**
-A: **Desktop 版本支持** WebDAV 云同步功能：
-- 同步配置到你的 WebDAV 服务器（iCloud/Dropbox/坚果云等）
-- 智能合并：自动合并本地和云端配置，避免冲突
-- 加密传输：API Key 使用密码加密后上传
-- CLI 版本提供基础同步命令：`ccman sync --help`
+? 选择预置服务商:
+  Google Gemini (API Key) - 使用官方 Gemini API（通过 GEMINI_API_KEY 或 GOOGLE_API_KEY 认证）
+  GMN - GMN 服务 (Codex/Gemini 兼容)
 
----
+使用预设: GMN - GMN 服务 (Codex/Gemini 兼容)
 
-## 许可证
+? 服务商名称: GMN
+? 描述(可选):
+? API 地址: https://gmn.chuangzuoli.cn/openai
+? API 密钥: ********
+
+✅ 添加成功
+
+  GMN [Gemini CLI]
+  https://gmn.chuangzuoli.cn/openai
+
+? 是否立即切换到此服务商? (Y/n)
+✅ 已切换到新服务商
+
+配置已更新:
+  - ~/.gemini/settings.json
+  - ~/.gemini/.env
+```
+
+**list**
+```bash
+$ ccman gm list
+
+📋 Gemini CLI 服务商 (2 个)
+
+  ●  Google Gemini (API Key) [当前]
+     
+     官方 Gemini API
+
+  ○  GMN
+     https://gmn.chuangzuoli.cn/openai
+     GMN 服务 (Codex/Gemini 兼容)
+```
+
+**use**
+```bash
+$ ccman gm use
+
+? 选择要切换的服务商:
+  Google Gemini (API Key) - (默认端点)
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+✅ 切换成功
+
+  GMN [Gemini CLI]
+  URL: https://gmn.chuangzuoli.cn/openai
+
+配置已更新:
+  - ~/.gemini/settings.json
+  - ~/.gemini/.env
+```
+
+**current**
+```bash
+$ ccman gm current
+
+🎯 当前 Gemini CLI 服务商
+
+  名称: Google Gemini (API Key)
+  地址: (默认端点)
+```
+
+**edit**
+```bash
+$ ccman gm edit
+
+? 选择要编辑的服务商:
+  Google Gemini (API Key) - (默认端点)
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+? 服务商名称: GMN
+? 描述(可选):
+? API 地址: https://gmn.chuangzuoli.cn/openai
+? API 密钥: ********
+
+✅ 编辑成功
+```
+
+**clone**
+```bash
+$ ccman gm clone
+
+? 选择要克隆的服务商:
+  Google Gemini (API Key) - (默认端点)
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+? 输入新服务商名称: GMN（副本）
+
+✅ 克隆成功
+
+  GMN（副本） [Gemini CLI]
+  https://gmn.chuangzuoli.cn/openai
+```
+
+**remove**
+```bash
+$ ccman gm remove
+
+? 选择要删除的服务商:
+  Google Gemini (API Key) - (默认端点)
+  GMN - https://gmn.chuangzuoli.cn/openai
+
+? 确定要删除服务商 "GMN" 吗？ (y/N)
+
+✅ 已删除服务商
+```
+
+### MCP 管理
+
+```bash
+ccman mcp add|list|edit|remove
+```
+
+> MCP 会同步到 Claude / Gemini（Codex 暂不支持）。
+
+执行效果示例：
+
+**add**
+```bash
+$ ccman mcp add
+
+📝 添加 MCP 服务器
+
+? 选择配置来源:
+  ❯ 📦 使用预置 MCP 服务器
+    ✏️  自定义配置
+
+? 选择预置 MCP 服务器:
+  filesystem - 文件系统访问
+  github - GitHub 集成
+  postgres - PostgreSQL 数据库
+  brave-search - Brave 搜索
+  google-maps - Google Maps
+  puppeteer - 浏览器自动化
+  sqlite - SQLite 数据库
+  sequential-thinking - 序列思考增强
+
+使用预设: filesystem - 文件系统访问
+
+⚠️  需要修改第3个参数为允许访问的目录路径
+
+? MCP 服务器名称: filesystem
+? 启动命令: npx
+? 命令参数 (空格分隔): -y @modelcontextprotocol/server-filesystem /path/to/allowed/files
+? 环境变量 (JSON 格式, 如 {"API_KEY": "xxx"}, 可留空):
+
+✅ MCP 服务器添加成功
+
+  filesystem [MCP]
+  npx -y @modelcontextprotocol/server-filesystem /path/to/allowed/files
+
+✅ 配置已自动同步到 ~/.claude.json
+
+配置文件:
+  - ~/.claude/settings.json
+```
+
+**list**
+```bash
+$ ccman mcp list
+
+📋 MCP 服务器 (2 个)
+
+  ○ filesystem
+    npx -y @modelcontextprotocol/server-filesystem /path/to/allowed/files
+
+  ○ github
+    npx -y @modelcontextprotocol/server-github
+    环境变量: GITHUB_PERSONAL_ACCESS_TOKEN
+
+提示: 所有配置的 MCP 服务器会自动同步到 ~/.claude.json
+```
+
+**edit**
+```bash
+$ ccman mcp edit
+
+? 选择要编辑的 MCP 服务器:
+  filesystem - npx -y @modelcontextprotocol/server-filesystem /path/to/allowed/files
+  github - npx -y @modelcontextprotocol/server-github
+
+✏️  编辑 MCP 服务器
+
+提示: 留空则保持原值
+
+? MCP 服务器名称: github
+? 启动命令: npx
+? 命令参数 (空格分隔, 留空保持不变): -y @modelcontextprotocol/server-github
+? 环境变量 (JSON 格式, 留空保持不变): {"GITHUB_PERSONAL_ACCESS_TOKEN":"******"}
+
+✅ 编辑成功
+
+  github [MCP]
+  命令: npx -y @modelcontextprotocol/server-github
+  环境变量: GITHUB_PERSONAL_ACCESS_TOKEN
+
+✅ 配置已自动同步到 ~/.claude.json
+
+配置文件:
+  - ~/.claude/settings.json
+```
+
+**remove**
+```bash
+$ ccman mcp remove
+
+? 选择要删除的 MCP 服务器:
+  filesystem - npx -y @modelcontextprotocol/server-filesystem /path/to/allowed/files
+  github - npx -y @modelcontextprotocol/server-github
+
+? 确定删除 "github"? (y/N)
+
+✅ 已删除: github
+
+✅ 配置已自动同步到 ~/.claude.json
+
+配置文件:
+  - ~/.claude/settings.json
+```
+
+### WebDAV 同步
+
+```bash
+ccman sync
+ccman sync config
+ccman sync test
+ccman sync upload
+ccman sync download
+ccman sync merge
+ccman sync status
+```
+
+执行效果示例（WebDAV）：
+
+**同步菜单**
+```bash
+$ ccman sync
+
+? 🔄 同步操作:
+  ❯ ⚙️  配置 WebDAV 连接
+    🔍 测试连接
+    📤 上传到云端
+    📥 从云端下载
+    🔄 智能合并
+    📊 查看同步状态
+    ⬅️  返回上一级
+```
+
+**config**
+```bash
+$ ccman sync config
+
+⚙️  配置 WebDAV 同步
+
+? WebDAV 服务器地址: https://dav.example.com
+? 用户名: alice
+? WebDAV 密码: ********
+? 认证类型: Basic Auth（基础认证）
+? 远程同步目录: /ccman
+? 同步密码（用于加密 API Key）: ********
+? 记住同步密码? (Y/n)
+
+✅ 配置保存成功
+
+配置文件: ~/.ccman/config.json
+
+? 是否立即测试连接? (Y/n)
+
+🔍 测试 WebDAV 连接...
+
+✅ 连接成功
+
+  URL: https://dav.example.com
+  用户: alice
+  远程目录: /ccman
+  认证类型: Basic Auth
+```
+
+**test**
+```bash
+$ ccman sync test
+
+🔍 测试 WebDAV 连接...
+
+✅ 连接成功
+
+  URL: https://dav.example.com
+  用户: alice
+  远程目录: /ccman
+  认证类型: Basic Auth
+```
+
+**upload**
+```bash
+$ ccman sync upload
+
+📤 上传配置到云端
+
+配置信息:
+  Codex 服务商: 2 个
+  Claude 服务商: 1 个
+
+⚠️  云端现有配置将被覆盖
+
+? 确认上传? (y/N)
+
+🔐 加密 API Key...
+📤 上传到 WebDAV...
+
+✅ 上传成功
+
+远程文件:
+  https://dav.example.com/ccman/.ccman/codex.json
+  https://dav.example.com/ccman/.ccman/claude.json
+
+💡 其他设备可通过 'ccman sync download' 获取配置
+```
+
+**download**
+```bash
+$ ccman sync download
+
+📥 从云端下载配置
+
+⚠️  将覆盖本地配置（自动备份）
+
+? 确认下载? (y/N)
+
+💾 备份本地配置...
+📥 下载远程配置...
+🔓 解密 API Key...
+
+✅ 下载成功
+
+本地备份:
+  ~/.ccman/codex.json.backup.1768929300000
+  ~/.ccman/claude.json.backup.1768929300000
+
+💡 配置已更新，重新加载生效
+```
+
+**merge**
+```bash
+$ ccman sync merge
+
+🔄 智能合并配置
+
+分析本地和云端配置...
+
+✅ 配置已智能合并并同步
+
+备份:
+  ~/.ccman/codex.json.backup.1768929480000
+  ~/.ccman/claude.json.backup.1768929480000
+
+合并规则:
+  • 相同 ID：保留最新修改
+  • 相同配置（URL+Key）：保留最新修改
+  • 不同配置：全部保留，自动处理 name 冲突
+```
+
+**status**
+```bash
+$ ccman sync status
+
+📊 同步状态
+
+WebDAV 配置:
+  URL: https://dav.example.com
+  用户: alice
+  远程目录: /ccman
+  认证: Basic Auth
+  同步密码: ✓ 已保存
+
+本地配置:
+  Codex: 2 个服务商
+  Claude: 1 个服务商
+  最后同步: 2026/1/20 21:38:12
+
+同步建议:
+  💡 上传到云端: ccman sync upload
+  💡 从云端下载: ccman sync download
+  💡 智能合并: ccman sync merge
+```
+
+### 导入 / 导出
+
+```bash
+ccman export [dir]
+ccman import [dir]
+```
+
+执行效果示例（导入 / 导出）：
+
+**export**
+```bash
+$ ccman export ~/backup/ccman
+
+📦 导出配置
+
+导出文件:
+  codex.json  - Codex 配置
+  claude.json - Claude 配置
+
+目标目录: /Users/you/backup/ccman
+
+⚠️  导出文件包含 API Key，请妥善保管
+
+✅ 导出成功
+
+已导出文件:
+  ✓ codex.json
+  ✓ claude.json
+
+💡 导入命令: ccman import /Users/you/backup/ccman
+```
+
+**import**
+```bash
+$ ccman import ~/backup/ccman
+
+📥 导入配置
+
+⚠️  警告：导入将覆盖当前配置
+
+源目录: /Users/you/backup/ccman
+
+找到配置文件:
+  ✓ codex.json
+  ✓ claude.json
+
+当前配置将被覆盖（自动备份）
+
+? 确认导入？ (y/N)
+
+⚠️  最后确认：此操作将覆盖所有当前配置！
+
+? 真的要继续吗？ (y/N)
+
+💾 备份当前配置...
+📥 导入新配置...
+
+✅ 导入成功
+
+备份文件:
+  /Users/you/.ccman/codex.json.backup.1768929720000
+  /Users/you/.ccman/claude.json.backup.1768929720000
+
+已导入文件:
+  ✓ codex.json
+  ✓ claude.json
+
+💡 请使用 'ccman cx use' 或 'ccman cc use' 切换服务商
+```
+
+### Claude 历史清理
+
+```bash
+ccman cc clean:analyze
+ccman cc clean
+```
+
+执行效果示例（历史清理）：
+
+**clean:analyze**
+```bash
+$ ccman cc clean:analyze
+
+📊 分析 ~/.claude.json
+
+文件大小: 18.6 MB
+
+项目统计:
+  项目总数: 24
+  历史记录总数: 862 条
+
+历史记录最多的项目:
+   96 条  .../work/projects/alpha
+   88 条  .../work/projects/bravo
+   77 条  .../work/projects/charlie
+   65 条  .../work/projects/delta
+   59 条  .../work/projects/echo
+
+预计可节省空间:
+  保守清理 (保留10条): 6.2 MB
+  中等清理 (保留5条):  9.7 MB
+  激进清理 (清空历史):  14.8 MB
+
+💡 执行清理: ccman cc clean
+```
+
+**clean**
+```bash
+$ ccman cc clean
+
+🧹 清理 ~/.claude.json
+
+当前文件大小: 18.6 MB
+项目数: 24, 历史记录: 862 条
+
+? 选择清理方案:
+  ❯ 保守清理 - 保留最近10条记录，清理缓存 (节省约 6.2 MB)
+    中等清理 - 保留最近5条记录，清理缓存和统计 (节省约 9.7 MB)
+    激进清理 - 清空历史记录，清理缓存和统计 (节省约 14.8 MB)
+    自定义 - 自定义清理选项
+
+? 确认执行清理？（会自动备份原文件） (Y/n)
+
+正在清理...
+
+✅ 清理完成
+
+清理前: 18.6 MB
+清理后: 9.9 MB
+节省空间: 8.7 MB (46.8%)
+
+清理历史记录: 840 条
+清理缓存: ✓
+
+备份文件: /Users/you/.claude.json.backup-2026-01-20T21-45-00
+```
+
+## 📸 界面截图
+
+**主界面**
+![ccman](docs/screenshoot/ccman.png)
+
+**预置服务商**
+![预置服务商](docs/screenshoot/yuzhifuwushang.png)
+
+**Codex 配置**
+![Codex](docs/screenshoot/codex.png)
+
+**Claude Code 配置**
+![Claude Code](docs/screenshoot/claude-code.png)
+
+**导入导出**
+![导入导出](docs/screenshoot/export.png)
+
+**WebDAV 同步**
+![WebDAV](docs/screenshoot/webdav.png)
+
+## 🧱 目录结构
+
+```
+packages/
+  core/      # 核心逻辑（读写配置、预设、同步）
+  cli/       # CLI 工具
+  desktop/   # Desktop GUI (Electron)
+  types/     # 共享类型定义
+```
+
+## 🛡️ 写入策略说明
+
+- **Claude/Codex/Gemini 配置写入**采用深度合并策略：
+  - 保留用户已有字段与自定义设置
+  - 仅覆盖与认证相关的必要字段
+- **Codex** 会写入 `config.toml` 与 `auth.json`（只更新 `OPENAI_API_KEY`）
+- **Gemini** 会写入 `settings.json` 与 `.env`
+
+## 🛠️ 开发与构建
+
+```bash
+pnpm install
+
+# 启动 CLI（开发模式）
+pnpm --filter ccman dev
+
+# 启动 Desktop（可选）
+pnpm --filter @ccman/desktop dev
+```
+
+构建全部包：
+
+```bash
+pnpm build
+```
+
+## 📄 License
 
 MIT
-
----
-
-## 相关链接
-
-- [GitHub 仓库](https://github.com/2ue/ccman)
-- [问题反馈](https://github.com/2ue/ccman/issues)
-- [更新日志](https://github.com/2ue/ccman/blob/main/CHANGELOG.md)
