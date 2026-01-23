@@ -173,7 +173,7 @@ export default function AddMCPModal({
                   {MCP_PRESETS_DETAIL.map((preset, index) => (
                     <div
                       key={`mcp-preset-${index}-${preset.name}`}
-                      className="bg-white rounded-lg border border-gray-200 p-4 hover:border-purple-300 hover:shadow-md transition-all"
+                      className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-md transition-all"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">

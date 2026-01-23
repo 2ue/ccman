@@ -44,10 +44,10 @@ export default function ProviderGrid({
                   ? tool === 'codex'
                     ? 'border border-blue-500'
                     : tool === 'claude'
-                      ? 'border border-purple-500'
+                      ? 'border border-blue-500'
                       : tool === 'gemini'
-                        ? 'border border-teal-500'
-                        : 'border border-amber-500'
+                        ? 'border border-blue-500'
+                        : 'border border-blue-500'
                   : 'border border-gray-200 hover:border-gray-300'
               }`}
             >

@@ -17,7 +17,7 @@ export default function CurrentProviderSection({ provider }: Props) {
   }
 
   return (
-    <div className="px-8 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+    <div className="px-8 py-4 bg-gradient-to-r from-blue-50 to-blue-50 border-b border-blue-100">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm shadow-green-500/50 animate-pulse"></div>
         <span className="text-sm font-semibold text-blue-700 uppercase tracking-wide">
@@ -25,7 +25,7 @@ export default function CurrentProviderSection({ provider }: Props) {
         </span>
       </div>
 
-      <div className="bg-white rounded-lg border border-green-200 p-4 shadow-sm">
+      <div className="bg-white rounded-lg border border-blue-200 p-4 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{provider.name}</h3>
         <p className="text-sm text-gray-600 font-mono">{provider.baseUrl}</p>
         {provider.lastUsedAt && (

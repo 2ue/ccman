@@ -161,9 +161,7 @@ export default function MCPForm({
           value={name}
           onChange={handleNameChange}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-            nameError
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:ring-purple-500'
+            nameError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
           }`}
           placeholder="例如：filesystem"
           required
@@ -179,7 +177,7 @@ export default function MCPForm({
           type="text"
           value={command}
           onChange={(e) => setCommand(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="npx"
           required
         />
@@ -193,7 +191,7 @@ export default function MCPForm({
         <textarea
           value={args}
           onChange={(e) => setArgs(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
           placeholder="-y&#10;@modelcontextprotocol/server-filesystem&#10;/path/to/allowed/files"
           rows={4}
           required
@@ -209,7 +207,7 @@ export default function MCPForm({
           value={env}
           onChange={handleEnvChange}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 font-mono text-sm ${
-            envError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+            envError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
           }`}
           placeholder='{\n  "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_...",\n  "API_KEY": "your-key"\n}'
           rows={4}
@@ -226,7 +224,7 @@ export default function MCPForm({
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="简短描述此 MCP 服务器的用途"
         />
       </div>

@@ -70,7 +70,7 @@ export default function HomePage({
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Claude Code</h2>
               {claudeProvider ? (
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded flex items-center gap-1">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
                   已激活
                 </span>
@@ -109,7 +109,7 @@ export default function HomePage({
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Codex</h2>
               {codexProvider ? (
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded flex items-center gap-1">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
                   已激活
                 </span>

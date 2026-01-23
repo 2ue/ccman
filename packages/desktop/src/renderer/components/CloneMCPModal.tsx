@@ -117,7 +117,7 @@ export default function CloneMCPModal({
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
                 nameError
                   ? 'border-red-500 focus:ring-red-500'
-                  : 'border-gray-300 focus:ring-green-500'
+                  : 'border-gray-300 focus:ring-blue-500'
               }`}
               placeholder="例如：filesystem - 副本"
               autoFocus

@@ -20,7 +20,7 @@ export default function DashboardCard({
   isBrandIcon = false,
 }: DashboardCardProps) {
   const statusColors = {
-    success: 'bg-green-50 border-green-200 hover:border-green-300',
+    success: 'bg-blue-50 border-blue-200 hover:border-blue-300',
     warning: 'bg-yellow-50 border-yellow-200 hover:border-yellow-300',
     error: 'bg-red-50 border-red-200 hover:border-red-300',
     info: 'bg-blue-50 border-blue-200 hover:border-blue-300',
@@ -52,11 +52,7 @@ export default function DashboardCard({
 
       {/* 图标 + 标题 */}
       <div className="flex items-center gap-2.5 mb-3">
-        {isBrandIcon ? (
-          <Icon size={36} />
-        ) : (
-          <Icon className="w-9 h-9 text-gray-700" />
-        )}
+        {isBrandIcon ? <Icon size={36} /> : <Icon className="w-9 h-9 text-gray-700" />}
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       </div>
 

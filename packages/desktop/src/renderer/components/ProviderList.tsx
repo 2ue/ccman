@@ -38,7 +38,7 @@ export default function ProviderList({
             <div
               key={provider.id}
               className={`bg-white rounded-lg border p-4 transition-all ${
-                isCurrent ? 'border-green-400 ring-2 ring-green-100' : 'border-gray-200'
+                isCurrent ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -46,7 +46,7 @@ export default function ProviderList({
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-base font-medium text-gray-900">{provider.name}</h3>
                     {isCurrent && (
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                         激活中
                       </span>
                     )}
