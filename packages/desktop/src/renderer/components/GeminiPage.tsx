@@ -5,6 +5,7 @@ import ConfigEditorModal from './ConfigEditorModal'
 import { AlertDialog } from './dialogs'
 import { Plus, Inbox, FileCode2, Search } from 'lucide-react'
 import { BUTTON_WITH_ICON, BUTTON_STYLES } from '../styles/button'
+import { BRAND_COLORS, getBrandButtonWithIcon, getBrandInputFocus } from '../styles/brand-colors'
 
 interface GeminiPageProps {
   providers: Provider[]
@@ -87,7 +88,7 @@ export default function GeminiPage({
             <button onClick={handleEditConfig} className={BUTTON_STYLES.icon} title="编辑配置文件">
               <FileCode2 className="w-5 h-5" />
             </button>
-            <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
+            <button onClick={onAdd} className={getBrandButtonWithIcon('gemini')}>
               <Plus className="w-4 h-4" />
               添加
             </button>
@@ -103,7 +104,7 @@ export default function GeminiPage({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索服务商..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg ${getBrandInputFocus('gemini')}`}
             />
           </div>
         </div>
@@ -118,7 +119,7 @@ export default function GeminiPage({
             <p className="text-sm text-gray-400 mb-4">
               点击右上角&quot;添加服务商&quot;按钮开始配置
             </p>
-            <button onClick={onAdd} className={BUTTON_WITH_ICON.primary}>
+            <button onClick={onAdd} className={getBrandButtonWithIcon('gemini')}>
               <Plus className="w-4 h-4" />
               添加
             </button>
