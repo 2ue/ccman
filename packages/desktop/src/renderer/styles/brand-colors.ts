@@ -1,67 +1,38 @@
 /**
  * 品牌色配置
  *
- * 基于各个 AI 工具的官方品牌色：
- * - Claude (Anthropic): 橙棕色 #CC785C
- * - Codex (OpenAI): 青绿色 #10A37F
- * - Gemini (Google): 蓝色 #4285F4
- * - OpenCode: 蓝色 #007ACC (VS Code)
+ * 统一使用主题色：蓝色 #4285F4
  */
 
 type ToolType = 'claude' | 'codex' | 'gemini' | 'opencode'
 
 /**
- * 品牌色样式类名映射
+ * 统一的主题色样式类名
+ */
+const THEME_COLORS = {
+  // 按钮
+  button: 'bg-blue-600 hover:bg-blue-700',
+  buttonText: 'text-white',
+  // 文字
+  text: 'text-blue-600',
+  textDark: 'text-blue-700',
+  // 背景
+  bgLight: 'bg-blue-50',
+  bgMedium: 'bg-blue-100',
+  // 边框/焦点
+  border: 'border-blue-600',
+  ring: 'ring-blue-500',
+  focus: 'focus:ring-blue-500',
+} as const
+
+/**
+ * 品牌色样式类名映射（所有工具统一使用主题色）
  */
 export const BRAND_COLORS = {
-  claude: {
-    // 按钮
-    button: 'bg-orange-600 hover:bg-orange-700',
-    buttonText: 'text-white',
-    // 文字
-    text: 'text-orange-600',
-    textDark: 'text-orange-700',
-    // 背景
-    bgLight: 'bg-orange-50',
-    bgMedium: 'bg-orange-100',
-    // 边框/焦点
-    border: 'border-orange-600',
-    ring: 'ring-orange-500',
-    focus: 'focus:ring-orange-500',
-  },
-  codex: {
-    button: 'bg-emerald-600 hover:bg-emerald-700',
-    buttonText: 'text-white',
-    text: 'text-emerald-600',
-    textDark: 'text-emerald-700',
-    bgLight: 'bg-emerald-50',
-    bgMedium: 'bg-emerald-100',
-    border: 'border-emerald-600',
-    ring: 'ring-emerald-500',
-    focus: 'focus:ring-emerald-500',
-  },
-  gemini: {
-    button: 'bg-blue-600 hover:bg-blue-700',
-    buttonText: 'text-white',
-    text: 'text-blue-600',
-    textDark: 'text-blue-700',
-    bgLight: 'bg-blue-50',
-    bgMedium: 'bg-blue-100',
-    border: 'border-blue-600',
-    ring: 'ring-blue-500',
-    focus: 'focus:ring-blue-500',
-  },
-  opencode: {
-    button: 'bg-blue-600 hover:bg-blue-700',
-    buttonText: 'text-white',
-    text: 'text-blue-600',
-    textDark: 'text-blue-700',
-    bgLight: 'bg-blue-50',
-    bgMedium: 'bg-blue-100',
-    border: 'border-blue-600',
-    ring: 'ring-blue-500',
-    focus: 'focus:ring-blue-500',
-  },
+  claude: THEME_COLORS,
+  codex: THEME_COLORS,
+  gemini: THEME_COLORS,
+  opencode: THEME_COLORS,
 } as const
 
 /**
