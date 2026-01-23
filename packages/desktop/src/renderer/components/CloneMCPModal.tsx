@@ -84,7 +84,7 @@ export default function CloneMCPModal({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Copy className="w-5 h-5 text-green-600" />
+            <Copy className="w-5 h-5 text-blue-600" />
             克隆 MCP 服务器
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">

@@ -171,30 +171,12 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Package
-                    className={`w-5 h-5 ${
-                      type === 'codex'
-                        ? 'text-blue-600'
-                        : type === 'claude'
-                          ? 'text-purple-600'
-                          : type === 'gemini'
-                            ? 'text-green-600'
-                            : 'text-amber-600'
-                    }`}
-                  />
+                  <Package className="w-5 h-5 text-blue-600" />
                   <h3 className="text-base font-semibold text-gray-900">选择预置服务商</h3>
                 </div>
                 <button
                   onClick={handleAddCustom}
-                  className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
-                    type === 'codex'
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : type === 'claude'
-                        ? 'bg-purple-600 hover:bg-purple-700'
-                        : type === 'gemini'
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-amber-600 hover:bg-amber-700'
-                  }`}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
                 >
                   <Plus className="w-4 h-4" />
                   自定义添加
@@ -243,15 +225,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                       <div className="flex gap-2 pt-2 border-t border-gray-100">
                         <button
                           onClick={() => handleSelectPreset(preset)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
-                            type === 'codex'
-                              ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-                              : type === 'claude'
-                                ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
-                                : type === 'gemini'
-                                  ? 'text-green-700 bg-green-50 hover:bg-green-100'
-                                  : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
-                          }`}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                           title="使用此预置"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />

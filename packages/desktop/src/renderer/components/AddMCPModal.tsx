@@ -119,7 +119,7 @@ export default function AddMCPModal({
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Server className="w-5 h-5 text-purple-600" />
+            <Server className="w-5 h-5 text-blue-600" />
             添加 MCP 服务器
           </h2>
           <button
@@ -135,7 +135,7 @@ export default function AddMCPModal({
             <div>
               <button
                 onClick={handleBackToList}
-                className="mb-4 text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                className="mb-4 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4" /> 返回预设列表
               </button>
@@ -150,12 +150,12 @@ export default function AddMCPModal({
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Server className="w-5 h-5 text-purple-600" />
+                  <Server className="w-5 h-5 text-blue-600" />
                   <h3 className="text-base font-semibold text-gray-900">选择预设 MCP</h3>
                 </div>
                 <button
                   onClick={handleAddCustom}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
                 >
                   <Plus className="w-4 h-4" />
                   自定义添加
@@ -180,7 +180,7 @@ export default function AddMCPModal({
                           <h3 className="text-base font-medium text-gray-900 mb-1">
                             {preset.name}
                           </h3>
-                          <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
                             官方预设
                           </span>
                         </div>
@@ -209,7 +209,7 @@ export default function AddMCPModal({
                       <div className="flex gap-2 pt-2 border-t border-gray-100">
                         <button
                           onClick={() => handleSelectPreset(preset)}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                           title="使用此预设"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />

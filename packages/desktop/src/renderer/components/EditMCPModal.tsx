@@ -91,7 +91,7 @@ export default function EditMCPModal({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Server className="w-5 h-5 text-purple-600" />
+            <Server className="w-5 h-5 text-blue-600" />
             编辑 MCP 服务器
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
