@@ -523,13 +523,13 @@ export default function ServiceProviderConfigPage({
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-blue-600" />
               <h2 className="text-lg font-semibold text-gray-900">Gemini CLI 预置</h2>
-              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredGeminiPresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.GEMINI)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 Gemini CLI 预置
@@ -576,7 +576,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
