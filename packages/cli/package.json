@@ -1,6 +1,6 @@
 {
   "name": "ccman",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "type": "module",
   "description": "Manage Codex, Claude Code, Gemini CLI, OpenCode, and MCP API service provider configurations",
   "main": "./dist/index.js",
