@@ -63,9 +63,9 @@ export default function ProviderGrid({
                           tool === 'codex'
                             ? 'text-blue-500'
                             : tool === 'claude'
-                              ? 'text-purple-500'
+                              ? 'text-blue-500'
                               : tool === 'gemini'
-                                ? 'text-teal-500'
+                                ? 'text-blue-500'
                                 : 'text-amber-500'
                         }`}
                       />
@@ -78,10 +78,10 @@ export default function ProviderGrid({
                           tool === 'codex'
                             ? 'bg-blue-100 text-blue-700 border-blue-200'
                             : tool === 'claude'
-                              ? 'bg-purple-100 text-purple-700 border-purple-200'
+                              ? 'bg-blue-100 text-blue-700 border-blue-200'
                               : tool === 'gemini'
-                                ? 'bg-teal-100 text-teal-700 border-teal-200'
-                                : 'bg-amber-100 text-amber-700 border-amber-200'
+                                ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                : 'bg-blue-100 text-blue-700 border-blue-200'
                         }`}
                       >
                         激活中
@@ -108,10 +108,10 @@ export default function ProviderGrid({
                       tool === 'codex'
                         ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
                         : tool === 'claude'
-                          ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                          ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
                           : tool === 'gemini'
-                            ? 'text-teal-700 bg-teal-50 hover:bg-teal-100'
-                            : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
+                            ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                            : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
                     }`}
                     title="切换到此服务商"
                   >
@@ -121,7 +121,7 @@ export default function ProviderGrid({
                 )}
                 <button
                   onClick={() => onClone(provider)}
-                  className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors"
+                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                   title="克隆服务商"
                 >
                   <Copy className="w-4 h-4" />

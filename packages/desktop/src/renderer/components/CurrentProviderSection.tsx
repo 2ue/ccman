@@ -20,7 +20,7 @@ export default function CurrentProviderSection({ provider }: Props) {
     <div className="px-8 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm shadow-green-500/50 animate-pulse"></div>
-        <span className="text-sm font-semibold text-green-700 uppercase tracking-wide">
+        <span className="text-sm font-semibold text-blue-700 uppercase tracking-wide">
           当前激活
         </span>
       </div>

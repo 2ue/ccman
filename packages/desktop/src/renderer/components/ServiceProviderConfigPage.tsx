@@ -431,15 +431,15 @@ export default function ServiceProviderConfigPage({
         <div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-purple-600" />
+              <Package className="w-5 h-5 text-blue-600" />
               <h2 className="text-lg font-semibold text-gray-900">Claude Code 预置</h2>
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredClaudeCodePresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.CLAUDE)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 Claude Code 预置
@@ -486,7 +486,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -521,7 +521,7 @@ export default function ServiceProviderConfigPage({
         <div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-green-600" />
+              <Package className="w-5 h-5 text-blue-600" />
               <h2 className="text-lg font-semibold text-gray-900">Gemini CLI 预置</h2>
               <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                 {filteredGeminiPresets.length}
@@ -611,15 +611,15 @@ export default function ServiceProviderConfigPage({
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-amber-600" />
+              <Package className="w-5 h-5 text-blue-600" />
               <h2 className="text-lg font-semibold text-gray-900">OpenCode 预置</h2>
-              <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredOpenCodePresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.OPENCODE)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 OpenCode 预置
@@ -666,7 +666,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />

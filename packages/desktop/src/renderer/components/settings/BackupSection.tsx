@@ -123,7 +123,7 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className={`${BUTTON_WITH_ICON.primary} bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${BUTTON_WITH_ICON.primary} bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <FileUp className="w-4 h-4" />
             {isExporting ? '导出中...' : '导出配置'}
@@ -132,7 +132,7 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
           <button
             onClick={handleImportClick}
             disabled={isImporting}
-            className={`${BUTTON_WITH_ICON.primary} bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${BUTTON_WITH_ICON.primary} bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <FileDown className="w-4 h-4" />
             {isImporting ? '导入中...' : '导入配置'}

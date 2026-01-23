@@ -375,7 +375,7 @@ export default function WebDAVSyncSection({
             <button
               onClick={handleUploadToCloud}
               disabled={isUploading}
-              className={`${BUTTON_WITH_ICON.primary} bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`${BUTTON_WITH_ICON.primary} bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Upload className="w-4 h-4" />
               {isUploading ? '上传中...' : '上传到云端'}
@@ -384,7 +384,7 @@ export default function WebDAVSyncSection({
             <button
               onClick={handleDownloadFromCloud}
               disabled={isDownloading}
-              className={`${BUTTON_WITH_ICON.primary} bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`${BUTTON_WITH_ICON.primary} bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Download className="w-4 h-4" />
               {isDownloading ? '下载中...' : '从云端下载'}

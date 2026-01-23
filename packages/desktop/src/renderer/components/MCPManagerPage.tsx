@@ -226,7 +226,7 @@ export default function MCPManagerPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Server className="w-7 h-7 text-purple-600" />
+              <Server className="w-7 h-7 text-blue-600" />
               MCP 服务器管理
             </h1>
             <p className="text-sm text-gray-500 mt-1">

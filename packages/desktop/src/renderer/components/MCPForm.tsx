@@ -144,11 +144,11 @@ export default function MCPForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {preset && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-          <p className="text-sm text-purple-800">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-blue-800">
             <span className="font-semibold">使用预设：</span> {preset.name}
           </p>
-          <p className="text-xs text-purple-600 mt-1">{preset.description}</p>
+          <p className="text-xs text-blue-600 mt-1">{preset.description}</p>
         </div>
       )}
 

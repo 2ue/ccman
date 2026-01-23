@@ -100,7 +100,7 @@ export default function CacheInfoTable({ caches, onDelete, loading }: CacheInfoT
 
                 {/* 大小 - 桌面端显示 */}
                 <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {cache.sizeFormatted}
                   </span>
                 </td>

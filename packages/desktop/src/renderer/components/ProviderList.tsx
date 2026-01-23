@@ -59,7 +59,7 @@ export default function ProviderList({
                   {!isCurrent && (
                     <button
                       onClick={() => onSwitch(provider.id)}
-                      className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       title="切换到此服务商"
                     >
                       <Play className="w-4 h-4" />
@@ -67,7 +67,7 @@ export default function ProviderList({
                   )}
                   <button
                     onClick={() => onClone(provider)}
-                    className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     title="克隆服务商"
                   >
                     <Copy className="w-4 h-4" />

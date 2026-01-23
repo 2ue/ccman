@@ -60,8 +60,8 @@ export default function MCPCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Server className="w-5 h-5 text-purple-600" />
-          <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+          <Server className="w-5 h-5 text-blue-600" />
+          <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
             {server.name}
           </h3>
         </div>
@@ -77,7 +77,7 @@ export default function MCPCard({
           </button>
           <button
             onClick={onClone}
-            className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
             title="克隆"
           >
             <Copy className="w-4 h-4" />
@@ -139,7 +139,7 @@ export default function MCPCard({
                     !isSupported
                       ? 'bg-gray-50 border-gray-200 opacity-50 cursor-not-allowed'
                       : isEnabled
-                        ? 'bg-purple-50 border-purple-300 hover:border-purple-400'
+                        ? 'bg-blue-50 border-blue-300 hover:border-blue-400'
                         : 'bg-white border-gray-200 hover:border-gray-300'
                   }
                 `}
@@ -149,7 +149,7 @@ export default function MCPCard({
                   checked={isEnabled}
                   disabled={!isSupported}
                   onChange={(e) => onToggleApp(app, e.target.checked)}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span className="text-lg">{appInfo.icon}</span>
                 <div className="flex-1 min-w-0">
@@ -163,7 +163,7 @@ export default function MCPCard({
 
         {/* Status */}
         {hasAnyEnabled && (
-          <div className="mt-3 text-xs text-green-600 flex items-center gap-1">
+          <div className="mt-3 text-xs text-blue-600 flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
             已同步到 {enabledCount} 个应用
           </div>

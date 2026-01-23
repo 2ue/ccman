@@ -5,7 +5,13 @@ type UpdateEvent =
   | { type: 'available'; version: string; notes?: string | null }
   | { type: 'not-available'; version: string }
   | { type: 'error'; message: string }
-  | { type: 'progress'; percent: number; bytesPerSecond: number; transferred: number; total: number }
+  | {
+      type: 'progress'
+      percent: number
+      bytesPerSecond: number
+      transferred: number
+      total: number
+    }
   | { type: 'downloaded'; version: string }
   | { type: 'manual-downloaded'; filePath: string }
 
@@ -112,7 +118,7 @@ export default function UpdateSection() {
         {canDownload ? (
           <button
             onClick={onDownload}
-            className="px-3 py-1.5 text-sm rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
+            className="px-3 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
           >
             下载更新
           </button>
@@ -120,7 +126,7 @@ export default function UpdateSection() {
         {ready ? (
           <button
             onClick={onInstall}
-            className="px-3 py-1.5 text-sm rounded-md bg-orange-600 text-white hover:bg-orange-700"
+            className="px-3 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
           >
             立即安装并重启
           </button>
@@ -151,4 +157,3 @@ export default function UpdateSection() {
     </div>
   )
 }
-
