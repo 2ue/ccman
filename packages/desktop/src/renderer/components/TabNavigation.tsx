@@ -3,6 +3,7 @@ export type TabType =
   | 'claude'
   | 'codex'
   | 'gemini'
+  | 'opencode'
   | 'mcp'
   | 'service-providers'
   | 'clean'
@@ -20,6 +21,7 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
     { key: 'claude', label: 'Claude Code' },
     { key: 'codex', label: 'Codex' },
     { key: 'gemini', label: 'Gemini CLI' },
+    { key: 'opencode', label: 'OpenCode' },
     { key: 'mcp', label: 'MCP 服务器' },
     { key: 'service-providers', label: '预置服务商' },
     { key: 'clean', label: '清理工具' },

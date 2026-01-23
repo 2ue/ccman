@@ -55,7 +55,8 @@ const codexAPI: CodexAPI = {
   switchProvider: (id) => ipcRenderer.invoke('codex:switch-provider', id),
   editProvider: (id, updates) => ipcRenderer.invoke('codex:edit-provider', id, updates),
   removeProvider: (id) => ipcRenderer.invoke('codex:remove-provider', id),
-  cloneProvider: (sourceId, newName) => ipcRenderer.invoke('codex:clone-provider', sourceId, newName),
+  cloneProvider: (sourceId, newName) =>
+    ipcRenderer.invoke('codex:clone-provider', sourceId, newName),
   getCurrent: () => ipcRenderer.invoke('codex:get-current'),
   findByName: (name) => ipcRenderer.invoke('codex:find-by-name', name),
 
@@ -144,12 +145,51 @@ const geminiAPI: GeminiAPI = {
 }
 
 // ============================================================================
+// OpenCode API
+// ============================================================================
+
+export interface OpenCodeAPI {
+  addProvider: (input: AddProviderInput) => Promise<Provider>
+  listProviders: () => Promise<Provider[]>
+  getProvider: (id: string) => Promise<Provider | undefined>
+  switchProvider: (id: string) => Promise<void>
+  editProvider: (id: string, updates: EditProviderInput) => Promise<Provider>
+  removeProvider: (id: string) => Promise<void>
+  cloneProvider: (sourceId: string, newName: string) => Promise<Provider>
+  getCurrent: () => Promise<Provider | undefined>
+  findByName: (name: string) => Promise<Provider | undefined>
+
+  addPreset: (input: AddPresetInput) => Promise<PresetTemplate>
+  listPresets: () => Promise<PresetTemplate[]>
+  editPreset: (name: string, updates: EditPresetInput) => Promise<PresetTemplate>
+  removePreset: (name: string) => Promise<void>
+}
+
+const opencodeAPI: OpenCodeAPI = {
+  addProvider: (input) => ipcRenderer.invoke('opencode:add-provider', input),
+  listProviders: () => ipcRenderer.invoke('opencode:list-providers'),
+  getProvider: (id) => ipcRenderer.invoke('opencode:get-provider', id),
+  switchProvider: (id) => ipcRenderer.invoke('opencode:switch-provider', id),
+  editProvider: (id, updates) => ipcRenderer.invoke('opencode:edit-provider', id, updates),
+  removeProvider: (id) => ipcRenderer.invoke('opencode:remove-provider', id),
+  cloneProvider: (sourceId, newName) =>
+    ipcRenderer.invoke('opencode:clone-provider', sourceId, newName),
+  getCurrent: () => ipcRenderer.invoke('opencode:get-current'),
+  findByName: (name) => ipcRenderer.invoke('opencode:find-by-name', name),
+
+  addPreset: (input) => ipcRenderer.invoke('opencode:add-preset', input),
+  listPresets: () => ipcRenderer.invoke('opencode:list-presets'),
+  editPreset: (name, updates) => ipcRenderer.invoke('opencode:edit-preset', name, updates),
+  removePreset: (name) => ipcRenderer.invoke('opencode:remove-preset', name),
+}
+
+// ============================================================================
 // 配置文件 API
 // ============================================================================
 
 export interface ConfigAPI {
   readConfigFiles: (
-    tool: 'codex' | 'claude' | 'mcp' | 'gemini'
+    tool: 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode'
   ) => Promise<
     Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   >
@@ -180,7 +220,13 @@ export type UpdateEvent =
   | { type: 'available'; version: string; notes?: string | null }
   | { type: 'not-available'; version: string }
   | { type: 'error'; message: string }
-  | { type: 'progress'; percent: number; bytesPerSecond: number; transferred: number; total: number }
+  | {
+      type: 'progress'
+      percent: number
+      bytesPerSecond: number
+      transferred: number
+      total: number
+    }
   | { type: 'downloaded'; version: string }
   | { type: 'manual-downloaded'; filePath: string }
 
@@ -242,8 +288,12 @@ export interface SyncAPI {
 export interface ImportExportAPI {
   selectFolder: (title: string) => Promise<string | null>
   exportConfig: (targetDir: string) => Promise<{ success: boolean; exportedFiles: string[] }>
-  importConfig: (sourceDir: string) => Promise<{ success: boolean; backupPaths: string[]; importedFiles: string[] }>
-  validateImportDir: (sourceDir: string) => Promise<{ valid: boolean; message?: string; foundFiles: string[] }>
+  importConfig: (
+    sourceDir: string
+  ) => Promise<{ success: boolean; backupPaths: string[]; importedFiles: string[] }>
+  validateImportDir: (
+    sourceDir: string
+  ) => Promise<{ valid: boolean; message?: string; foundFiles: string[] }>
 }
 
 const syncAPI: SyncAPI = {
@@ -251,8 +301,7 @@ const syncAPI: SyncAPI = {
   getSyncConfig: () => ipcRenderer.invoke('sync:get-config'),
   testConnection: (config) => ipcRenderer.invoke('sync:test-connection', config),
   // 智能同步（加密 API Key）
-  uploadToCloud: (config, password) =>
-    ipcRenderer.invoke('sync:upload-to-cloud', config, password),
+  uploadToCloud: (config, password) => ipcRenderer.invoke('sync:upload-to-cloud', config, password),
   downloadFromCloud: (config, password) =>
     ipcRenderer.invoke('sync:download-from-cloud', config, password),
   mergeSync: (config, password) => ipcRenderer.invoke('sync:merge-sync', config, password),
@@ -289,8 +338,10 @@ const cleanAPI: CleanAPI = {
   deleteCache: (cacheKey) => ipcRenderer.invoke('clean:delete-cache', cacheKey),
   executePreset: (preset) => ipcRenderer.invoke('clean:execute-preset', preset),
   getProjectHistory: (projectPath) => ipcRenderer.invoke('clean:get-project-history', projectPath),
-  deleteHistoryEntry: (projectPath, index) => ipcRenderer.invoke('clean:delete-history-entry', projectPath, index),
-  clearProjectHistory: (projectPath) => ipcRenderer.invoke('clean:clear-project-history', projectPath),
+  deleteHistoryEntry: (projectPath, index) =>
+    ipcRenderer.invoke('clean:delete-history-entry', projectPath, index),
+  clearProjectHistory: (projectPath) =>
+    ipcRenderer.invoke('clean:clear-project-history', projectPath),
 }
 
 // ============================================================================
@@ -327,6 +378,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   codex: codexAPI,
   claude: claudeAPI,
   gemini: geminiAPI,
+  opencode: opencodeAPI,
   config: configAPI,
   system: systemAPI,
   update: updateAPI,
@@ -344,6 +396,7 @@ export interface ElectronAPI {
   codex: CodexAPI
   claude: ClaudeAPI
   gemini: GeminiAPI
+  opencode: OpenCodeAPI
   config: ConfigAPI
   system: SystemAPI
   update: UpdateAPI

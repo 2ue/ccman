@@ -1,14 +1,14 @@
 /**
  * 工具管理器（Tool Manager）
  *
- * 统一管理 Codex、Claude Code 和 MCP 的服务商配置
+ * 统一管理 Codex、Claude Code、Gemini CLI、OpenCode 和 MCP 的服务商配置
  * 采用工厂模式 + 数据驱动设计，零 if-else，易扩展
  *
  * 文件结构：
  * - 类型定义：已拆分至 tool-manager.types.ts（156 行）
  * - 配置映射：TOOL_CONFIGS（数据驱动，~40 行）
  * - 工厂函数：createToolManager（返回 13 个方法，~220 行）
- * - 导出函数：createCodexManager/createClaudeManager/createMCPManager（~20 行）
+ * - 导出函数：createCodexManager/createClaudeManager/createGeminiManager/createOpenCodeManager/createMCPManager（~20 行）
  *
  * 注：本文件虽然超过 300 行，但每个方法都简单清晰，工厂函数不应拆分
  */
@@ -30,7 +30,9 @@ import { CODEX_PRESETS } from './presets/codex.js'
 import { CC_PRESETS } from './presets/claude.js'
 import { MCP_PRESETS } from './presets/mcp.js'
 import { GEMINI_PRESETS } from './presets/gemini.js'
+import { OPENCODE_PRESETS } from './presets/opencode.js'
 import { writeGeminiConfig } from './writers/gemini.js'
+import { writeOpenCodeConfig } from './writers/opencode.js'
 import type {
   ToolType,
   Provider,
@@ -130,6 +132,11 @@ const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
     configPath: path.join(getCcmanDir(), 'gemini.json'),
     builtinPresets: GEMINI_PRESETS,
     writer: writeGeminiConfig,
+  },
+  opencode: {
+    configPath: path.join(getCcmanDir(), 'opencode.json'),
+    builtinPresets: OPENCODE_PRESETS,
+    writer: writeOpenCodeConfig,
   },
 }
 
@@ -397,7 +404,7 @@ function createToolManager(tool: ToolType): ToolManager {
       // 返回时添加 isBuiltIn 标记
       return {
         ...preset,
-        isBuiltIn: false
+        isBuiltIn: false,
       }
     },
 
@@ -406,15 +413,15 @@ function createToolManager(tool: ToolType): ToolManager {
       const userPresets = config.presets || []
 
       // 给内置预设添加 isBuiltIn 标记
-      const builtinWithFlag = toolConfig.builtinPresets.map(p => ({
+      const builtinWithFlag = toolConfig.builtinPresets.map((p) => ({
         ...p,
-        isBuiltIn: true
+        isBuiltIn: true,
       }))
 
       // 给用户预设添加 isBuiltIn 标记
-      const userWithFlag = userPresets.map(p => ({
+      const userWithFlag = userPresets.map((p) => ({
         ...p,
-        isBuiltIn: false
+        isBuiltIn: false,
       }))
 
       return [...builtinWithFlag, ...userWithFlag]
@@ -451,7 +458,7 @@ function createToolManager(tool: ToolType): ToolManager {
       // 返回时添加 isBuiltIn 标记
       return {
         ...preset,
-        isBuiltIn: false
+        isBuiltIn: false,
       }
     },
 
@@ -500,4 +507,11 @@ export function createMCPManager(): ToolManager {
  */
 export function createGeminiManager(): ToolManager {
   return createToolManager('gemini')
+}
+
+/**
+ * 创建 OpenCode 管理器（对外 API）
+ */
+export function createOpenCodeManager(): ToolManager {
+  return createToolManager('opencode')
 }

@@ -366,7 +366,7 @@ const config = loadConfig()
 **使用测试环境（自动）**：
 - ✅ 单元测试（Vitest）自动使用独立的测试目录
 - ✅ 每个测试进程有独立的配置目录（基于 PID）
-- ✅ 测试路径：`/tmp/ccman-test-{PID}/.ccman`
+- ✅ 测试路径：`/tmp/ccman-test/.ccman`
 - ✅ 测试结束后自动清理（可选）
 
 **测试前检查清单**：

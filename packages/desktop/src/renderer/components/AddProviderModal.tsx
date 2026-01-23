@@ -6,7 +6,7 @@ import { AlertDialog } from './dialogs'
 
 interface Props {
   show: boolean
-  type: 'codex' | 'claude' | 'gemini'
+  type: 'codex' | 'claude' | 'gemini' | 'opencode'
   onClose: () => void
   onSubmit: () => void
   onSuccess?: (message: string) => void
@@ -37,7 +37,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
           ? window.electronAPI.codex
           : type === 'claude'
             ? window.electronAPI.claude
-            : window.electronAPI.gemini
+            : type === 'gemini'
+              ? window.electronAPI.gemini
+              : window.electronAPI.opencode
       console.log(`[AddProviderModal] Loading ${type} presets...`)
       const presetsData = await api.listPresets()
       console.log(`[AddProviderModal] Loaded ${type} presets:`, presetsData)
@@ -54,7 +56,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
           ? window.electronAPI.codex
           : type === 'claude'
             ? window.electronAPI.claude
-            : window.electronAPI.gemini
+            : type === 'gemini'
+              ? window.electronAPI.gemini
+              : window.electronAPI.opencode
       const providersData = await api.listProviders()
       setProviders(providersData)
     } catch (error) {
@@ -87,7 +91,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
           ? window.electronAPI.codex
           : type === 'claude'
             ? window.electronAPI.claude
-            : window.electronAPI.gemini
+            : type === 'gemini'
+              ? window.electronAPI.gemini
+              : window.electronAPI.opencode
       await api.addProvider(input as AddProviderInput)
       onSubmit()
       onClose()
@@ -126,7 +132,15 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            添加 {type === 'claude' ? 'Claude' : type === 'codex' ? 'Codex' : 'Gemini CLI'} 服务商
+            添加{' '}
+            {type === 'claude'
+              ? 'Claude'
+              : type === 'codex'
+                ? 'Codex'
+                : type === 'gemini'
+                  ? 'Gemini CLI'
+                  : 'OpenCode'}{' '}
+            服务商
           </h2>
           <button
             onClick={handleClose}
@@ -148,6 +162,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
               <ProviderForm
                 preset={selectedPreset}
                 existingProviders={providers}
+                tool={type}
                 onSubmit={handleProviderSubmit}
                 onCancel={handleBackToList}
               />
@@ -162,7 +177,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                         ? 'text-blue-600'
                         : type === 'claude'
                           ? 'text-purple-600'
-                          : 'text-green-600'
+                          : type === 'gemini'
+                            ? 'text-green-600'
+                            : 'text-amber-600'
                     }`}
                   />
                   <h3 className="text-base font-semibold text-gray-900">选择预置服务商</h3>
@@ -174,7 +191,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                       ? 'bg-blue-600 hover:bg-blue-700'
                       : type === 'claude'
                         ? 'bg-purple-600 hover:bg-purple-700'
-                        : 'bg-green-600 hover:bg-green-700'
+                        : type === 'gemini'
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-amber-600 hover:bg-amber-700'
                   }`}
                 >
                   <Plus className="w-4 h-4" />
@@ -229,7 +248,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                               ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
                               : type === 'claude'
                                 ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
-                                : 'text-green-700 bg-green-50 hover:bg-green-100'
+                                : type === 'gemini'
+                                  ? 'text-green-700 bg-green-50 hover:bg-green-100'
+                                  : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
                           }`}
                           title="使用此预置"
                         >

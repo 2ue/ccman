@@ -14,7 +14,7 @@
 
 2. **路径与环境隔离集中管理**
    - `packages/core/src/paths.ts` 统一管理所有路径,通过 `NODE_ENV` 控制:
-     - test 环境使用 `os.tmpdir() + ccman-test-<pid>`。
+     - test 环境使用 `os.tmpdir() + ccman-test`。
      - dev 环境使用 `os.tmpdir()/ccman-dev`。
      - 生产环境使用 `homedir()`。
    - 这使得测试/开发不会污染真实的 `~/.ccman`、`~/.codex`、`~/.claude`。

@@ -1,10 +1,12 @@
 /**
  * 交互式菜单模块
  *
- * 提供三种入口：
+ * 提供交互入口：
  * - startMainMenu(): 主菜单（ccman）
  * - startClaudeMenu(): Claude 菜单（ccman cc）
  * - startCodexMenu(): Codex 菜单（ccman cx）
+ * - startGeminiMenu(): Gemini 菜单（ccman gm）
+ * - startOpenCodeMenu(): OpenCode 菜单（ccman oc）
  */
 
 import inquirer from 'inquirer'
@@ -13,23 +15,28 @@ import {
   createCodexManager,
   createClaudeManager,
   createGeminiManager,
+  createOpenCodeManager,
   TOOL_TYPES,
-  type MainToolType,
+  type ToolType,
   type ToolManager,
 } from '@ccman/core'
 import { formatProviderTable } from './utils/format.js'
+import { buildOpenCodeModel, DEFAULT_OPENCODE_NPM, parseOpenCodeMeta } from './utils/opencode.js'
 
 // CLI 专用配置（emoji 和命令缩写）
 const CLI_TOOL_CONFIG = {
   [TOOL_TYPES.CODEX]: { name: 'Codex', emoji: '🔶', cmd: 'cx' },
   [TOOL_TYPES.CLAUDE]: { name: 'Claude', emoji: '🔷', cmd: 'cc' },
   [TOOL_TYPES.GEMINI]: { name: 'Gemini', emoji: '💎', cmd: 'gm' },
+  [TOOL_TYPES.OPENCODE]: { name: 'OpenCode', emoji: '🧩', cmd: 'oc' },
 } as const
+
+type CliToolType = Exclude<ToolType, 'mcp'>
 
 /**
  * 根据工具类型创建对应的 manager
  */
-function getManager(tool: MainToolType): ToolManager {
+function getManager(tool: CliToolType): ToolManager {
   switch (tool) {
     case TOOL_TYPES.CODEX:
       return createCodexManager()
@@ -37,6 +44,8 @@ function getManager(tool: MainToolType): ToolManager {
       return createClaudeManager()
     case TOOL_TYPES.GEMINI:
       return createGeminiManager()
+    case TOOL_TYPES.OPENCODE:
+      return createOpenCodeManager()
   }
 }
 
@@ -133,6 +142,7 @@ export async function startMainMenu(): Promise<void> {
           { name: '🔷 Claude 管理', value: 'claude' },
           { name: '🔶 Codex 管理', value: 'codex' },
           { name: '💎 Gemini 管理', value: 'gemini' },
+          { name: '🧩 OpenCode 管理', value: 'opencode' },
           { name: '🔄 WebDAV 同步', value: 'sync' },
           { name: '📦 预置服务商管理', value: 'presets' },
           { name: '❌ 退出', value: 'exit' },
@@ -151,6 +161,8 @@ export async function startMainMenu(): Promise<void> {
       await startCodexMenu()
     } else if (choice === 'gemini') {
       await startGeminiMenu()
+    } else if (choice === 'opencode') {
+      await startOpenCodeMenu()
     } else if (choice === 'sync') {
       const { startSyncMenu } = await import('./commands/sync/index.js')
       await startSyncMenu()
@@ -194,10 +206,21 @@ export async function startGeminiMenu(): Promise<void> {
 }
 
 // ============================================================================
+// OpenCode 菜单
+// ============================================================================
+
+/**
+ * OpenCode 菜单 - ccman oc 入口
+ */
+export async function startOpenCodeMenu(): Promise<void> {
+  await showToolMenu(TOOL_TYPES.OPENCODE)
+}
+
+// ============================================================================
 // 工具菜单（通用）
 // ============================================================================
 
-async function showToolMenu(tool: MainToolType): Promise<void> {
+async function showToolMenu(tool: CliToolType): Promise<void> {
   const { name: toolName, emoji: toolEmoji } = CLI_TOOL_CONFIG[tool]
 
   // 交互式菜单需要一个无限循环,直到用户选择返回
@@ -277,7 +300,7 @@ async function showPresetsMenu(): Promise<void> {
 // 操作处理函数
 // ============================================================================
 
-async function handleAdd(tool: MainToolType): Promise<void> {
+async function handleAdd(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const { name: toolName, cmd } = CLI_TOOL_CONFIG[tool]
   const presets = manager.listPresets()
@@ -369,7 +392,21 @@ async function handleAdd(tool: MainToolType): Promise<void> {
     apiKey = answers.apiKey
   }
 
-  const provider = manager.add({ name, desc, baseUrl, apiKey })
+  let model: string | undefined
+  if (tool === TOOL_TYPES.OPENCODE) {
+    const { npmPackage } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'npmPackage',
+        message: '兼容包 (npm):',
+        default: DEFAULT_OPENCODE_NPM,
+        validate: (value) => (value ? true : 'npm 包不能为空'),
+      },
+    ])
+    model = buildOpenCodeModel({ npm: npmPackage })
+  }
+
+  const provider = manager.add({ name, desc, baseUrl, apiKey, model })
 
   console.log()
   console.log(chalk.green('✅ 添加成功'))
@@ -396,7 +433,7 @@ async function handleAdd(tool: MainToolType): Promise<void> {
   }
 }
 
-async function handleSwitch(tool: MainToolType): Promise<void> {
+async function handleSwitch(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const providers = manager.list()
   const current = manager.getCurrent()
@@ -423,7 +460,7 @@ async function handleSwitch(tool: MainToolType): Promise<void> {
   console.log(chalk.green(`\n✅ 已切换到: ${provider.name}\n`))
 }
 
-async function handleList(tool: MainToolType): Promise<void> {
+async function handleList(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const providers = manager.list()
   const current = manager.getCurrent()
@@ -438,7 +475,7 @@ async function handleList(tool: MainToolType): Promise<void> {
   console.log(formatProviderTable(providers, current?.id))
 }
 
-async function handleCurrent(tool: MainToolType): Promise<void> {
+async function handleCurrent(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const current = manager.getCurrent()
   const { name: toolName } = CLI_TOOL_CONFIG[tool]
@@ -460,7 +497,7 @@ async function handleCurrent(tool: MainToolType): Promise<void> {
   console.log()
 }
 
-async function handleEdit(tool: MainToolType): Promise<void> {
+async function handleEdit(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const providers = manager.list()
 
@@ -482,6 +519,8 @@ async function handleEdit(tool: MainToolType): Promise<void> {
   ])
 
   const provider = providers.find((p) => p.id === providerId)!
+  const meta = tool === TOOL_TYPES.OPENCODE ? parseOpenCodeMeta(provider.model) : null
+  const currentNpm = meta?.npm || DEFAULT_OPENCODE_NPM
 
   const answers = await inquirer.prompt([
     {
@@ -518,17 +557,32 @@ async function handleEdit(tool: MainToolType): Promise<void> {
     },
   ])
 
+  let model: string | undefined
+  if (tool === TOOL_TYPES.OPENCODE) {
+    const { npmPackage } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'npmPackage',
+        message: '兼容包 (npm):',
+        default: currentNpm,
+        validate: (value) => (value ? true : 'npm 包不能为空'),
+      },
+    ])
+    model = buildOpenCodeModel({ npm: npmPackage, models: meta?.models })
+  }
+
   manager.edit(providerId, {
     name: answers.name,
     desc: answers.desc || undefined,
     baseUrl: answers.baseUrl,
     apiKey: answers.apiKey || undefined,
+    model,
   })
 
   console.log(chalk.green('\n✅ 编辑成功\n'))
 }
 
-async function handleClone(tool: MainToolType): Promise<void> {
+async function handleClone(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const providers = manager.list()
 
@@ -550,6 +604,8 @@ async function handleClone(tool: MainToolType): Promise<void> {
   ])
 
   const provider = providers.find((p) => p.id === providerId)!
+  const meta = tool === TOOL_TYPES.OPENCODE ? parseOpenCodeMeta(provider.model) : null
+  const currentNpm = meta?.npm || DEFAULT_OPENCODE_NPM
 
   const answers = await inquirer.prompt([
     {
@@ -568,12 +624,27 @@ async function handleClone(tool: MainToolType): Promise<void> {
     },
   ])
 
+  let model: string | undefined
+  if (tool === TOOL_TYPES.OPENCODE) {
+    const { npmPackage } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'npmPackage',
+        message: '兼容包 (npm):',
+        default: currentNpm,
+        validate: (value) => (value ? true : 'npm 包不能为空'),
+      },
+    ])
+    model = buildOpenCodeModel({ npm: npmPackage, models: meta?.models })
+  }
+
   const newProvider = manager.add({
     name: answers.name,
     // 克隆时不继承描述,留空让用户后续编辑
     desc: undefined,
     baseUrl: provider.baseUrl,
     apiKey: answers.apiKey,
+    model,
   })
 
   console.log(chalk.green('\n✅ 克隆成功\n'))
@@ -582,7 +653,7 @@ async function handleClone(tool: MainToolType): Promise<void> {
   console.log()
 }
 
-async function handleRemove(tool: MainToolType): Promise<void> {
+async function handleRemove(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const providers = manager.list()
 

@@ -5,41 +5,37 @@
 ## ✨ 功能概览
 
 - **一键切换服务商**：Codex / Claude Code / Gemini CLI / OpenCode
-- **内置预设模板**：提供常用模板（Desktop 支持自定义预设）
+- **内置预设模板**：提供常用模板并支持自定义
 - **零破坏性写入**：合并用户现有配置，仅更新必要字段
-- **MCP 管理**：集中管理 MCP 服务器（可在 Desktop 选择同步到 Claude/Gemini，Codex 暂不支持）
-- **WebDAV 同步**：Codex / Claude / Gemini 配置备份、下载、合并
-- **导入/导出**：仅支持 Codex / Claude 配置
+- **MCP 管理**：集中管理 MCP 服务器并同步到 Claude/Gemini
+- **WebDAV 同步**：配置备份、下载、合并
+- **导入/导出**：迁移配置更方便
 - **Claude 历史清理**：分析并清理 `~/.claude.json`
 
 ## ✅ 支持的工具与配置路径
 
-| 工具            | 主要配置文件                                                                | 说明                                                                                        |
-| --------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Codex**       | `~/.codex/config.toml` + `~/.codex/auth.json`                               | `auth.json` 使用 `OPENAI_API_KEY`                                                           |
-| **Claude Code** | `~/.claude/settings.json`                                                   | 另有历史文件 `~/.claude.json`                                                               |
-| **Gemini CLI**  | `~/.gemini/settings.json` + `~/.gemini/.env`                                | `.env` 使用 `GOOGLE_GEMINI_BASE_URL` / `GEMINI_API_KEY` / `GOOGLE_API_KEY` / `GEMINI_MODEL` |
-| **OpenCode**    | `~/.config/opencode/opencode.json`                                          | 写入 `provider` 配置与模型变体                                                              |
-| **ccman**       | `~/.ccman/{codex,claude,gemini,opencode,mcp}.json` + `~/.ccman/config.json` | 保存服务商与 MCP 配置，WebDAV 同步配置存放在 `config.json`                                  |
+| 工具 | 主要配置文件 | 说明 |
+| --- | --- | --- |
+| **Codex** | `~/.codex/config.toml` + `~/.codex/auth.json` | `auth.json` 使用 `OPENAI_API_KEY` |
+| **Claude Code** | `~/.claude/settings.json` | 另有历史文件 `~/.claude.json` |
+| **Gemini CLI** | `~/.gemini/settings.json` + `~/.gemini/.env` | `.env` 使用 `GOOGLE_GEMINI_BASE_URL` / `GEMINI_API_KEY` |
+| **OpenCode** | `~/.config/opencode/opencode.json` | 写入 `provider` 配置与模型变体 |
+| **ccman** | `~/.ccman/{codex,claude,gemini,opencode,mcp}.json` | 保存服务商与 MCP 配置 |
 
 ## 📦 内置预设
 
 ### Claude Code
-
 - **Anthropic Official**：`https://api.anthropic.com`
 
 ### Codex
-
 - **OpenAI Official**：`https://api.openai.com/v1`
 - **GMN**：`https://gmn.chuangzuoli.cn/openai`
 
 ### Gemini CLI
-
 - **Google Gemini (API Key)**：官方默认（无需设置 baseUrl）
 - **GMN**：`https://gmn.chuangzuoli.cn/openai`
 
 ### OpenCode
-
 - **GMN**：`https://gmn.chuangzuoli.cn/openai`（npm: `@ai-sdk/openai`）
 
 ## 🧭 CLI 使用速览
@@ -69,7 +65,7 @@ $ ccman
 
 ```bash
 ccman cx add|list|use|current|edit|remove|clone
-ccman cc add|list|use|current|edit|remove|clone|clean:analyze|clean
+ccman cc add|list|use|current|edit|remove|clone
 ccman gm add|list|use|current|edit|remove|clone
 ccman oc add|list|use|current|edit|remove|clone
 ```
@@ -95,7 +91,6 @@ $ ccman cx
 #### Codex 命令执行效果
 
 **add**
-
 ```bash
 $ ccman cx add
 
@@ -130,7 +125,6 @@ $ ccman cx add
 ```
 
 **list**
-
 ```bash
 $ ccman cx list
 
@@ -146,7 +140,6 @@ $ ccman cx list
 ```
 
 **use**
-
 ```bash
 $ ccman cx use
 
@@ -165,7 +158,6 @@ $ ccman cx use
 ```
 
 **current**
-
 ```bash
 $ ccman cx current
 
@@ -178,7 +170,6 @@ $ ccman cx current
 ```
 
 **edit**
-
 ```bash
 $ ccman cx edit
 
@@ -202,7 +193,6 @@ $ ccman cx edit
 ```
 
 **clone**
-
 ```bash
 $ ccman cx clone
 
@@ -225,7 +215,6 @@ $ ccman cx clone
 ```
 
 **remove**
-
 ```bash
 $ ccman cx remove
 
@@ -241,7 +230,6 @@ $ ccman cx remove
 #### Claude Code 命令执行效果
 
 **add**
-
 ```bash
 $ ccman cc add
 
@@ -274,7 +262,6 @@ $ ccman cc add
 ```
 
 **list**
-
 ```bash
 $ ccman cc list
 
@@ -286,7 +273,6 @@ $ ccman cc list
 ```
 
 **use**
-
 ```bash
 $ ccman cc use
 
@@ -303,7 +289,6 @@ $ ccman cc use
 ```
 
 **current**
-
 ```bash
 $ ccman cc current
 
@@ -316,7 +301,6 @@ $ ccman cc current
 ```
 
 **edit**
-
 ```bash
 $ ccman cc edit
 
@@ -339,7 +323,6 @@ $ ccman cc edit
 ```
 
 **clone**
-
 ```bash
 $ ccman cc clone
 
@@ -361,7 +344,6 @@ $ ccman cc clone
 ```
 
 **remove**
-
 ```bash
 $ ccman cc remove
 
@@ -376,7 +358,6 @@ $ ccman cc remove
 #### Gemini CLI 命令执行效果
 
 **add**
-
 ```bash
 $ ccman gm add
 
@@ -411,14 +392,13 @@ $ ccman gm add
 ```
 
 **list**
-
 ```bash
 $ ccman gm list
 
 📋 Gemini CLI 服务商 (2 个)
 
   ●  Google Gemini (API Key) [当前]
-
+     
      官方 Gemini API
 
   ○  GMN
@@ -427,7 +407,6 @@ $ ccman gm list
 ```
 
 **use**
-
 ```bash
 $ ccman gm use
 
@@ -446,7 +425,6 @@ $ ccman gm use
 ```
 
 **current**
-
 ```bash
 $ ccman gm current
 
@@ -457,7 +435,6 @@ $ ccman gm current
 ```
 
 **edit**
-
 ```bash
 $ ccman gm edit
 
@@ -474,7 +451,6 @@ $ ccman gm edit
 ```
 
 **clone**
-
 ```bash
 $ ccman gm clone
 
@@ -482,7 +458,7 @@ $ ccman gm clone
   Google Gemini (API Key) - (默认端点)
   GMN - https://gmn.chuangzuoli.cn/openai
 
-? 输入新服务商名称:
+? 输入新服务商名称: GMN（副本）
 
 ✅ 克隆成功
 
@@ -491,7 +467,6 @@ $ ccman gm clone
 ```
 
 **remove**
-
 ```bash
 $ ccman gm remove
 
@@ -507,7 +482,6 @@ $ ccman gm remove
 #### OpenCode 命令执行效果
 
 **add**
-
 ```bash
 $ ccman oc add
 
@@ -541,7 +515,6 @@ $ ccman oc add
 ```
 
 **list**
-
 ```bash
 $ ccman oc list
 
@@ -553,7 +526,6 @@ $ ccman oc list
 ```
 
 **use**
-
 ```bash
 $ ccman oc use
 
@@ -570,7 +542,6 @@ $ ccman oc use
 ```
 
 **current**
-
 ```bash
 $ ccman oc current
 
@@ -581,7 +552,6 @@ $ ccman oc current
 ```
 
 **edit**
-
 ```bash
 $ ccman oc edit
 
@@ -598,7 +568,6 @@ $ ccman oc edit
 ```
 
 **clone**
-
 ```bash
 $ ccman oc clone
 
@@ -621,7 +590,6 @@ $ ccman oc clone
 ```
 
 **remove**
-
 ```bash
 $ ccman oc remove
 
@@ -644,7 +612,6 @@ ccman mcp add|list|edit|remove
 执行效果示例：
 
 **add**
-
 ```bash
 $ ccman mcp add
 
@@ -678,14 +645,13 @@ $ ccman mcp add
   filesystem [MCP]
   npx -y @modelcontextprotocol/server-filesystem /path/to/allowed/files
 
-✅ 配置已自动同步到 ~/.claude/settings.json
+✅ 配置已自动同步到 ~/.claude.json
 
 配置文件:
   - ~/.claude/settings.json
 ```
 
 **list**
-
 ```bash
 $ ccman mcp list
 
@@ -698,11 +664,10 @@ $ ccman mcp list
     npx -y @modelcontextprotocol/server-github
     环境变量: GITHUB_PERSONAL_ACCESS_TOKEN
 
-提示: 所有配置的 MCP 服务器会自动同步到 ~/.claude/settings.json（可在 Desktop 选择同步到 Gemini CLI）
+提示: 所有配置的 MCP 服务器会自动同步到 ~/.claude.json
 ```
 
 **edit**
-
 ```bash
 $ ccman mcp edit
 
@@ -725,14 +690,13 @@ $ ccman mcp edit
   命令: npx -y @modelcontextprotocol/server-github
   环境变量: GITHUB_PERSONAL_ACCESS_TOKEN
 
-✅ 配置已自动同步到 ~/.claude/settings.json
+✅ 配置已自动同步到 ~/.claude.json
 
 配置文件:
   - ~/.claude/settings.json
 ```
 
 **remove**
-
 ```bash
 $ ccman mcp remove
 
@@ -744,7 +708,7 @@ $ ccman mcp remove
 
 ✅ 已删除: github
 
-✅ 配置已自动同步到 ~/.claude/settings.json
+✅ 配置已自动同步到 ~/.claude.json
 
 配置文件:
   - ~/.claude/settings.json
@@ -762,12 +726,9 @@ ccman sync merge
 ccman sync status
 ```
 
-> WebDAV 同步目前覆盖 Codex / Claude / Gemini 配置，OpenCode 与 MCP 暂不参与同步。
-
 执行效果示例（WebDAV）：
 
 **同步菜单**
-
 ```bash
 $ ccman sync
 
@@ -782,7 +743,6 @@ $ ccman sync
 ```
 
 **config**
-
 ```bash
 $ ccman sync config
 
@@ -813,7 +773,6 @@ $ ccman sync config
 ```
 
 **test**
-
 ```bash
 $ ccman sync test
 
@@ -828,7 +787,6 @@ $ ccman sync test
 ```
 
 **upload**
-
 ```bash
 $ ccman sync upload
 
@@ -855,7 +813,6 @@ $ ccman sync upload
 ```
 
 **download**
-
 ```bash
 $ ccman sync download
 
@@ -879,7 +836,6 @@ $ ccman sync download
 ```
 
 **merge**
-
 ```bash
 $ ccman sync merge
 
@@ -900,7 +856,6 @@ $ ccman sync merge
 ```
 
 **status**
-
 ```bash
 $ ccman sync status
 
@@ -934,7 +889,6 @@ ccman import [dir]
 执行效果示例（导入 / 导出）：
 
 **export**
-
 ```bash
 $ ccman export ~/backup/ccman
 
@@ -958,7 +912,6 @@ $ ccman export ~/backup/ccman
 ```
 
 **import**
-
 ```bash
 $ ccman import ~/backup/ccman
 
@@ -1006,7 +959,6 @@ ccman cc clean
 执行效果示例（历史清理）：
 
 **clean:analyze**
-
 ```bash
 $ ccman cc clean:analyze
 
@@ -1034,7 +986,6 @@ $ ccman cc clean:analyze
 ```
 
 **clean**
-
 ```bash
 $ ccman cc clean
 

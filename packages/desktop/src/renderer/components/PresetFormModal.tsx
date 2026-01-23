@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { TOOL_TYPES, TOOL_CONFIG, type MainToolType } from '@ccman/types'
+import { TOOL_TYPES, TOOL_CONFIG, type ToolType } from '@ccman/types'
 import { AlertDialog } from './dialogs'
 
 interface PresetData {
@@ -12,7 +12,7 @@ interface PresetData {
 interface Props {
   show: boolean
   preset?: PresetData
-  type: MainToolType
+  type: Exclude<ToolType, 'mcp'>
   onClose: () => void
   onSubmit: () => void
   onSuccess?: (message: string) => void
@@ -66,6 +66,8 @@ export default function PresetFormModal({
             return window.electronAPI.claude
           case TOOL_TYPES.GEMINI:
             return window.electronAPI.gemini
+          case TOOL_TYPES.OPENCODE:
+            return window.electronAPI.opencode
         }
       })()
 

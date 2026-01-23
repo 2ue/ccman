@@ -9,7 +9,7 @@
 // 工具类型
 // ---------------------------------------------------------------------------
 
-export type ToolType = 'codex' | 'claude' | 'mcp' | 'gemini'
+export type ToolType = 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode'
 
 export type MainToolType = 'codex' | 'claude' | 'gemini'
 
@@ -18,13 +18,14 @@ export const TOOL_TYPES = {
   CODEX: 'codex',
   CLAUDE: 'claude',
   MCP: 'mcp',
-  GEMINI: 'gemini'
+  GEMINI: 'gemini',
+  OPENCODE: 'opencode',
 } as const
 
 export const MAIN_TOOL_TYPES = {
   CODEX: TOOL_TYPES.CODEX,
   CLAUDE: TOOL_TYPES.CLAUDE,
-  GEMINI: TOOL_TYPES.GEMINI
+  GEMINI: TOOL_TYPES.GEMINI,
 } as const
 
 export const TOOL_CONFIG = {
@@ -59,6 +60,14 @@ export const TOOL_CONFIG = {
     bgColorClass: 'bg-green-50',
     hoverBgColorClass: 'hover:bg-green-100',
     description: 'Gemini CLI AI 助手'
+  },
+  [TOOL_TYPES.OPENCODE]: {
+    displayName: 'OpenCode',
+    color: 'amber',
+    textColorClass: 'text-amber-600',
+    bgColorClass: 'bg-amber-50',
+    hoverBgColorClass: 'hover:bg-amber-100',
+    description: 'OpenCode 配置'
   }
 } as const
 
@@ -228,4 +237,3 @@ export interface HistoryEntry {
   display: string
   pastedContents: Record<string, any>
 }
-

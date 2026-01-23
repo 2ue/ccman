@@ -1,5 +1,5 @@
 import type { Provider } from '@ccman/types'
-import { Server, Package, Trash2, Settings, Target } from 'lucide-react'
+import { Server, Package, Trash2, Settings, Target, Code } from 'lucide-react'
 import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
 import DashboardCard from './DashboardCard'
 
@@ -8,6 +8,7 @@ export type NavKey =
   | 'claude'
   | 'codex'
   | 'gemini'
+  | 'opencode'
   | 'mcp'
   | 'service-providers'
   | 'clean'
@@ -24,6 +25,7 @@ interface DashboardPageProps {
   claudeData: ToolData
   codexData: ToolData
   geminiData: ToolData
+  opencodeData: ToolData
   onEnterPage: (key: NavKey) => void
 }
 
@@ -31,6 +33,7 @@ export default function DashboardPage({
   claudeData,
   codexData,
   geminiData,
+  opencodeData,
   onEnterPage,
 }: DashboardPageProps) {
   return (
@@ -97,6 +100,18 @@ export default function DashboardPage({
               onClick={() => onEnterPage('gemini')}
               isBrandIcon
             />
+
+            {/* OpenCode */}
+            <DashboardCard
+              icon={Code}
+              title="OpenCode"
+              statusLines={[
+                opencodeData.current ? `已配置：${opencodeData.current.name}` : '未配置',
+                `${opencodeData.providers.length} 个服务商`,
+              ]}
+              statusType={opencodeData.current ? 'success' : 'warning'}
+              onClick={() => onEnterPage('opencode')}
+            />
           </div>
         </div>
 
@@ -125,7 +140,12 @@ export default function DashboardPage({
               icon={Package}
               title="预置服务商"
               statusLines={[
-                `${claudeData.presetsCount + codexData.presetsCount} 个模板`,
+                `${
+                  claudeData.presetsCount +
+                  codexData.presetsCount +
+                  geminiData.presetsCount +
+                  opencodeData.presetsCount
+                } 个模板`,
                 '快速添加服务商',
               ]}
               statusType="info"

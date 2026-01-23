@@ -7,12 +7,14 @@
 import { useState, useEffect } from 'react'
 import type { Provider, AddProviderInput, EditProviderInput, PresetTemplate } from '@ccman/types'
 import { BUTTON_STYLES } from '../styles/button'
+import { buildOpenCodeModel, DEFAULT_OPENCODE_NPM, parseOpenCodeMeta } from '../utils/opencode'
 
 interface Props {
   provider?: Provider
   preset?: PresetTemplate
   isClone?: boolean
   existingProviders?: Provider[]
+  tool?: 'codex' | 'claude' | 'gemini' | 'opencode'
   onSubmit: (input: AddProviderInput | EditProviderInput) => void | Promise<void>
   onCancel: () => void
 }
@@ -22,6 +24,7 @@ export default function ProviderForm({
   preset,
   isClone = false,
   existingProviders = [],
+  tool = 'codex',
   onSubmit,
   onCancel,
 }: Props) {
@@ -30,6 +33,8 @@ export default function ProviderForm({
   const [baseUrl, setBaseUrl] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [nameError, setNameError] = useState('')
+  const [openCodeNpm, setOpenCodeNpm] = useState(DEFAULT_OPENCODE_NPM)
+  const [openCodeModels, setOpenCodeModels] = useState<unknown>(undefined)
 
   useEffect(() => {
     console.log('[ProviderForm] useEffect triggered', { provider, preset })
@@ -56,7 +61,16 @@ export default function ProviderForm({
       setBaseUrl('')
       setApiKey('')
     }
-  }, [provider, preset])
+
+    if (tool === 'opencode') {
+      const meta = parseOpenCodeMeta(provider?.model)
+      setOpenCodeNpm(meta?.npm || DEFAULT_OPENCODE_NPM)
+      setOpenCodeModels(meta?.models)
+    } else {
+      setOpenCodeNpm(DEFAULT_OPENCODE_NPM)
+      setOpenCodeModels(undefined)
+    }
+  }, [provider, preset, tool])
 
   // 检查名称是否重复
   const checkNameConflict = (inputName: string): boolean => {
@@ -110,10 +124,21 @@ export default function ProviderForm({
     const trimmedName = name.trim()
     const trimmedDesc = desc.trim()
 
-    const input: AddProviderInput | EditProviderInput =
+    const baseInput =
       finalApiKey !== undefined
         ? { name: trimmedName, desc: trimmedDesc || undefined, baseUrl, apiKey: finalApiKey }
         : { name: trimmedName, desc: trimmedDesc || undefined, baseUrl }
+
+    const input: AddProviderInput | EditProviderInput =
+      tool === 'opencode'
+        ? {
+            ...baseInput,
+            model: buildOpenCodeModel({
+              npm: openCodeNpm.trim() || DEFAULT_OPENCODE_NPM,
+              models: openCodeModels,
+            }),
+          }
+        : baseInput
 
     onSubmit(input)
   }
@@ -170,6 +195,23 @@ export default function ProviderForm({
           required
         />
       </div>
+
+      {tool === 'opencode' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            NPM 适配包 <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={openCodeNpm}
+            onChange={(e) => setOpenCodeNpm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="@ai-sdk/openai"
+            required
+          />
+          <p className="text-xs text-gray-500 mt-1">用于 OpenCode provider 的 npm 适配包</p>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">

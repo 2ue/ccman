@@ -14,7 +14,7 @@ import type {
   PresetTemplate,
   AddProviderInput,
   EditProviderInput,
-  MainToolType,
+  ToolType,
 } from '@ccman/types'
 import { TOOL_TYPES } from '@ccman/types'
 import { Search, Package, ExternalLink, Edit2, Trash2, Plus, FileCode2 } from 'lucide-react'
@@ -28,19 +28,21 @@ interface ServiceProviderConfigPageProps {
   onSuccess?: (message: string) => void
 }
 
+type PresetToolType = Exclude<ToolType, 'mcp'>
+
 // 扩展预置类型，添加 isBuiltIn 标记
 interface ExtendedPreset {
   name: string
   baseUrl: string
   description: string
-  type: MainToolType
+  type: PresetToolType
   isBuiltIn: boolean
 }
 
 /**
  * 获取对应工具类型的 API
  */
-function getToolAPI(type: MainToolType) {
+function getToolAPI(type: PresetToolType) {
   switch (type) {
     case TOOL_TYPES.CODEX:
       return window.electronAPI.codex
@@ -48,6 +50,8 @@ function getToolAPI(type: MainToolType) {
       return window.electronAPI.claude
     case TOOL_TYPES.GEMINI:
       return window.electronAPI.gemini
+    case TOOL_TYPES.OPENCODE:
+      return window.electronAPI.opencode
   }
 }
 
@@ -58,14 +62,16 @@ export default function ServiceProviderConfigPage({
   const [codexPresets, setCodexPresets] = useState<PresetTemplate[]>([])
   const [claudeCodePresets, setClaudeCodePresets] = useState<PresetTemplate[]>([])
   const [geminiPresets, setGeminiPresets] = useState<PresetTemplate[]>([])
+  const [opencodePresets, setOpencodePresets] = useState<PresetTemplate[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [codexProviders, setCodexProviders] = useState<Provider[]>([])
   const [claudeProviders, setClaudeProviders] = useState<Provider[]>([])
   const [geminiProviders, setGeminiProviders] = useState<Provider[]>([])
+  const [opencodeProviders, setOpencodeProviders] = useState<Provider[]>([])
 
   // 预置表单 Modal
   const [showPresetModal, setShowPresetModal] = useState(false)
-  const [presetModalType, setPresetModalType] = useState<MainToolType>(TOOL_TYPES.CODEX)
+  const [presetModalType, setPresetModalType] = useState<PresetToolType>(TOOL_TYPES.CODEX)
   const [editingPreset, setEditingPreset] = useState<
     { name: string; baseUrl: string; description: string } | undefined
   >()
@@ -110,9 +116,11 @@ export default function ServiceProviderConfigPage({
       const codex = await window.electronAPI.codex.listPresets()
       const claude = await window.electronAPI.claude.listPresets()
       const gemini = await window.electronAPI.gemini.listPresets()
+      const opencode = await window.electronAPI.opencode.listPresets()
       setCodexPresets(codex)
       setClaudeCodePresets(claude)
       setGeminiPresets(gemini)
+      setOpencodePresets(opencode)
     } catch (error) {
       console.error('加载预置失败:', error)
     }
@@ -140,6 +148,9 @@ export default function ServiceProviderConfigPage({
           break
         case TOOL_TYPES.GEMINI:
           setGeminiProviders(providersData)
+          break
+        case TOOL_TYPES.OPENCODE:
+          setOpencodeProviders(providersData)
           break
       }
     } catch (error) {
@@ -169,7 +180,7 @@ export default function ServiceProviderConfigPage({
     }
   }
 
-  const handleAddPreset = (type: MainToolType) => {
+  const handleAddPreset = (type: PresetToolType) => {
     setPresetModalType(type)
     setEditingPreset(undefined)
     setShowPresetModal(true)
@@ -248,6 +259,11 @@ export default function ServiceProviderConfigPage({
     type: TOOL_TYPES.GEMINI,
   }))
 
+  const extendedOpenCodePresets: ExtendedPreset[] = opencodePresets.map((p) => ({
+    ...p,
+    type: TOOL_TYPES.OPENCODE,
+  }))
+
   // 前端搜索过滤
   const filteredCodexPresets = extendedCodexPresets.filter(
     (p) =>
@@ -270,6 +286,13 @@ export default function ServiceProviderConfigPage({
       p.baseUrl.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const filteredOpenCodePresets = extendedOpenCodePresets.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.baseUrl.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-white">
       {/* Header */}
@@ -279,7 +302,11 @@ export default function ServiceProviderConfigPage({
             <h1 className="text-2xl font-bold text-gray-900">预置服务商</h1>
             <p className="text-sm text-gray-500 mt-1">
               从预置模板快速添加服务商（共{' '}
-              {codexPresets.length + claudeCodePresets.length + geminiPresets.length} 个预置）
+              {codexPresets.length +
+                claudeCodePresets.length +
+                geminiPresets.length +
+                opencodePresets.length}{' '}
+              个预置）
             </p>
           </div>
           <div className="flex gap-2">
@@ -579,6 +606,96 @@ export default function ServiceProviderConfigPage({
             </div>
           )}
         </div>
+
+        {/* OpenCode 预置组 */}
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-amber-600" />
+              <h2 className="text-lg font-semibold text-gray-900">OpenCode 预置</h2>
+              <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                {filteredOpenCodePresets.length}
+              </span>
+            </div>
+            <button
+              onClick={() => handleAddPreset(TOOL_TYPES.OPENCODE)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              添加 OpenCode 预置
+            </button>
+          </div>
+
+          {filteredOpenCodePresets.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              {searchQuery ? '没有匹配的 OpenCode 预置' : '暂无 OpenCode 预置'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredOpenCodePresets.map((preset) => (
+                <div
+                  key={`opencode-${preset.name}`}
+                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-medium text-gray-900 truncate mb-1">
+                        {preset.name}
+                      </h3>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${
+                          preset.isBuiltIn
+                            ? 'bg-gray-100 text-gray-600 border-gray-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}
+                      >
+                        {preset.isBuiltIn ? '内置' : '自定义'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
+
+                  <p
+                    className="text-xs text-gray-600 font-mono mb-3 truncate"
+                    title={preset.baseUrl}
+                  >
+                    {preset.baseUrl}
+                  </p>
+
+                  <div className="flex gap-2 pt-2 border-t border-gray-100">
+                    <button
+                      onClick={() => handleUsePreset(preset)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors"
+                      title="使用此预置"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      使用
+                    </button>
+                    {!preset.isBuiltIn && (
+                      <>
+                        <button
+                          onClick={() => handleEditPreset(preset)}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          title="编辑预置"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePreset(preset)}
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="删除预置"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Preset Form Modal */}
@@ -631,6 +748,7 @@ export default function ServiceProviderConfigPage({
             <h2 className="text-lg font-semibold text-gray-900 mb-4">使用预置服务商</h2>
             <ProviderForm
               preset={usingPreset}
+              tool={usingPreset.type}
               existingProviders={(() => {
                 switch (usingPreset.type) {
                   case TOOL_TYPES.CODEX:
@@ -639,6 +757,8 @@ export default function ServiceProviderConfigPage({
                     return claudeProviders
                   case TOOL_TYPES.GEMINI:
                     return geminiProviders
+                  case TOOL_TYPES.OPENCODE:
+                    return opencodeProviders
                 }
               })()}
               onSubmit={handleUsePresetSubmit}

@@ -4,7 +4,7 @@ import type { Provider } from '@ccman/types'
 interface Props {
   providers: Provider[]
   currentProviderId: string | undefined
-  tool: 'codex' | 'claude' | 'gemini'
+  tool: 'codex' | 'claude' | 'gemini' | 'opencode'
   onSwitch: (id: string) => void
   onEdit: (provider: Provider) => void
   onDelete: (id: string, name: string) => void
@@ -45,7 +45,9 @@ export default function ProviderGrid({
                     ? 'border border-blue-500'
                     : tool === 'claude'
                       ? 'border border-purple-500'
-                      : 'border border-teal-500'
+                      : tool === 'gemini'
+                        ? 'border border-teal-500'
+                        : 'border border-amber-500'
                   : 'border border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -62,7 +64,9 @@ export default function ProviderGrid({
                             ? 'text-blue-500'
                             : tool === 'claude'
                               ? 'text-purple-500'
-                              : 'text-teal-500'
+                              : tool === 'gemini'
+                                ? 'text-teal-500'
+                                : 'text-amber-500'
                         }`}
                       />
                     )}
@@ -75,7 +79,9 @@ export default function ProviderGrid({
                             ? 'bg-blue-100 text-blue-700 border-blue-200'
                             : tool === 'claude'
                               ? 'bg-purple-100 text-purple-700 border-purple-200'
-                              : 'bg-teal-100 text-teal-700 border-teal-200'
+                              : tool === 'gemini'
+                                ? 'bg-teal-100 text-teal-700 border-teal-200'
+                                : 'bg-amber-100 text-amber-700 border-amber-200'
                         }`}
                       >
                         激活中
@@ -103,7 +109,9 @@ export default function ProviderGrid({
                         ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
                         : tool === 'claude'
                           ? 'text-purple-700 bg-purple-50 hover:bg-purple-100'
-                          : 'text-teal-700 bg-teal-50 hover:bg-teal-100'
+                          : tool === 'gemini'
+                            ? 'text-teal-700 bg-teal-50 hover:bg-teal-100'
+                            : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
                     }`}
                     title="切换到此服务商"
                   >

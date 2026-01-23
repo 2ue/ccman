@@ -7,11 +7,18 @@ import { createCodexCommands } from './commands/codex/index.js'
 import { createClaudeCommands } from './commands/claude/index.js'
 import { createMCPCommands } from './commands/mcp/index.js'
 import { createGeminiCommands } from './commands/gemini/index.js'
+import { createOpenCodeCommands } from './commands/opencode/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
-import { startMainMenu, startClaudeMenu, startCodexMenu, startGeminiMenu } from './interactive.js'
-import { getCcmanDir, getCodexDir, getClaudeDir, VERSION } from '@ccman/core'
+import {
+  startMainMenu,
+  startClaudeMenu,
+  startCodexMenu,
+  startGeminiMenu,
+  startOpenCodeMenu,
+} from './interactive.js'
+import { getCcmanDir, getCodexDir, getClaudeDir, getOpenCodeDir, VERSION } from '@ccman/core'
 
 // 开发模式：输出配置目录
 if (process.env.NODE_ENV === 'development') {
@@ -19,6 +26,7 @@ if (process.env.NODE_ENV === 'development') {
   console.log(chalk.gray(`  ccman: ${getCcmanDir()}`))
   console.log(chalk.gray(`  codex:  ${getCodexDir()}`))
   console.log(chalk.gray(`  claude: ${getClaudeDir()}`))
+  console.log(chalk.gray(`  opencode: ${getOpenCodeDir()}`))
   console.log()
 }
 
@@ -26,7 +34,7 @@ const program = new Command()
 
 program
   .name('ccman')
-  .description('Codex/Claude Code API 服务商配置管理工具')
+  .description('Codex/Claude Code/Gemini/OpenCode API 服务商配置管理工具')
   .version(VERSION)
   .showHelpAfterError(false)
   .exitOverride((err) => {
@@ -43,14 +51,14 @@ program.on('command:*', (operands) => {
   console.error(chalk.red(`\n❌ 未知命令: ${unknownCommand}\n`))
 
   // 提供相似命令建议
-  const availableCommands = ['cx', 'cc', 'gm', 'mcp', 'sync', 'export', 'import']
-  const suggestions = availableCommands.filter(cmd =>
-    cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
+  const availableCommands = ['cx', 'cc', 'gm', 'oc', 'mcp', 'sync', 'export', 'import']
+  const suggestions = availableCommands.filter(
+    (cmd) => cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
   )
 
   if (suggestions.length > 0) {
     console.log(chalk.yellow('💡 你是不是想输入:'))
-    suggestions.forEach(cmd => {
+    suggestions.forEach((cmd) => {
       console.log(chalk.cyan(`   ccman ${cmd}`))
     })
     console.log()
@@ -89,6 +97,16 @@ createGeminiCommands(gm)
 gm.action(async () => {
   printLogo()
   await startGeminiMenu()
+})
+
+// 创建 oc (OpenCode) 子命令
+const oc = program.command('oc').description('管理 OpenCode 服务商')
+createOpenCodeCommands(oc)
+
+// oc 不带参数时进入交互模式
+oc.action(async () => {
+  printLogo()
+  await startOpenCodeMenu()
 })
 
 // 创建 mcp 子命令

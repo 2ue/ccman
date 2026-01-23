@@ -117,7 +117,7 @@ writeMCPConfig(provider: Provider): void  // Special: syncs to multiple apps
 **Test Environments**
 - **Production**: `~/.ccman` (NEVER modified by tests)
 - **Development**: `/var/folders/.../ccman-dev/.ccman` (via `NODE_ENV=development`)
-- **Test**: `/tmp/ccman-test-{PID}/.ccman` (Vitest auto-isolation, per-process)
+- **Test**: `/tmp/ccman-test/.ccman` (shared path for test runs)
 
 **What to Test**
 - ✅ Core module public APIs

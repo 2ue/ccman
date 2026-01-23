@@ -18,15 +18,18 @@ import {
   createClaudeManager,
   createMCPManager,
   createGeminiManager,
+  createOpenCodeManager,
   migrateConfig,
   getClaudeConfigPath,
   getCodexConfigPath,
   getCodexAuthPath,
   getGeminiSettingsPath,
+  getOpenCodeConfigPath,
   getCcmanDir,
   getCodexDir,
   getClaudeDir,
   getGeminiDir,
+  getOpenCodeDir,
   getGeminiEnvPath,
   testWebDAVConnection,
   uploadToCloud,
@@ -96,6 +99,7 @@ if (isDev) {
   console.log(`  codex:  ${getCodexDir()}`)
   console.log(`  claude: ${getClaudeDir()}`)
   console.log(`  gemini: ${getGeminiDir()}`)
+  console.log(`  opencode: ${getOpenCodeDir()}`)
   console.log()
 } else {
   console.log('\n[生产模式] 启动信息:')
@@ -103,6 +107,7 @@ if (isDev) {
   console.log(`  codex:  ${getCodexDir()}`)
   console.log(`  claude: ${getClaudeDir()}`)
   console.log(`  gemini: ${getGeminiDir()}`)
+  console.log(`  opencode: ${getOpenCodeDir()}`)
   console.log(`  app.isPackaged: ${app.isPackaged}`)
   console.log()
 }
@@ -309,6 +314,92 @@ ipcMain.handle('gemini:find-by-name', async (_event, name: string) => {
 })
 
 // ============================================================================
+// IPC 处理器 - OpenCode
+// ============================================================================
+
+// 添加 OpenCode provider
+ipcMain.handle('opencode:add-provider', async (_event, input: AddProviderInput) => {
+  const manager = createOpenCodeManager()
+  return manager.add(input)
+})
+
+// 列出所有 OpenCode providers
+ipcMain.handle('opencode:list-providers', async () => {
+  const manager = createOpenCodeManager()
+  return manager.list()
+})
+
+// 获取 OpenCode provider
+ipcMain.handle('opencode:get-provider', async (_event, id: string) => {
+  const manager = createOpenCodeManager()
+  return manager.get(id)
+})
+
+// 切换 OpenCode provider
+ipcMain.handle('opencode:switch-provider', async (_event, id: string) => {
+  const manager = createOpenCodeManager()
+  return manager.switch(id)
+})
+
+// 编辑 OpenCode provider
+ipcMain.handle('opencode:edit-provider', async (_event, id: string, updates: EditProviderInput) => {
+  const manager = createOpenCodeManager()
+  return manager.edit(id, updates)
+})
+
+// 删除 OpenCode provider
+ipcMain.handle('opencode:remove-provider', async (_event, id: string) => {
+  const manager = createOpenCodeManager()
+  return manager.remove(id)
+})
+
+// 克隆 OpenCode provider
+ipcMain.handle('opencode:clone-provider', async (_event, sourceId: string, newName: string) => {
+  const manager = createOpenCodeManager()
+  return manager.clone(sourceId, newName)
+})
+
+// 获取当前 OpenCode provider
+ipcMain.handle('opencode:get-current', async () => {
+  const manager = createOpenCodeManager()
+  return manager.getCurrent()
+})
+
+// 根据名称查找 OpenCode provider
+ipcMain.handle('opencode:find-by-name', async (_event, name: string) => {
+  const manager = createOpenCodeManager()
+  return manager.findByName(name)
+})
+
+// ============================================================================
+// IPC 处理器 - OpenCode Presets
+// ============================================================================
+
+// 获取 OpenCode presets
+ipcMain.handle('opencode:list-presets', async () => {
+  const manager = createOpenCodeManager()
+  return manager.listPresets()
+})
+
+// 添加 OpenCode preset
+ipcMain.handle('opencode:add-preset', async (_event, input: AddPresetInput) => {
+  const manager = createOpenCodeManager()
+  return manager.addPreset(input)
+})
+
+// 编辑 OpenCode preset
+ipcMain.handle('opencode:edit-preset', async (_event, name: string, updates: EditPresetInput) => {
+  const manager = createOpenCodeManager()
+  return manager.editPreset(name, updates)
+})
+
+// 删除 OpenCode preset
+ipcMain.handle('opencode:remove-preset', async (_event, name: string) => {
+  const manager = createOpenCodeManager()
+  return manager.removePreset(name)
+})
+
+// ============================================================================
 // IPC 处理器 - Gemini Presets
 // ============================================================================
 
@@ -455,154 +546,180 @@ ipcMain.handle('claude:remove-preset', async (_event, name: string) => {
 // ============================================================================
 
 // 读取配置文件
-ipcMain.handle('read-config-files', async (_event, tool: 'codex' | 'claude' | 'mcp' | 'gemini') => {
-  try {
-    if (tool === 'claude') {
-      const path = getClaudeConfigPath()
+ipcMain.handle(
+  'read-config-files',
+  async (_event, tool: 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode') => {
+    try {
+      if (tool === 'claude') {
+        const path = getClaudeConfigPath()
 
-      // 检查文件是否存在
-      if (!fs.existsSync(path)) {
+        // 检查文件是否存在
+        if (!fs.existsSync(path)) {
+          return [
+            {
+              name: 'settings.json',
+              path,
+              content: '# 配置文件不存在\n# 请先使用 ccman 添加服务商，配置文件将自动创建',
+              language: 'json' as const,
+            },
+          ]
+        }
+
+        const content = fs.readFileSync(path, 'utf-8')
         return [
           {
             name: 'settings.json',
             path,
-            content: '# 配置文件不存在\n# 请先使用 ccman 添加服务商，配置文件将自动创建',
+            content,
             language: 'json' as const,
           },
         ]
-      }
+      } else if (tool === 'mcp') {
+        const path = getMCPConfigPath()
 
-      const content = fs.readFileSync(path, 'utf-8')
-      return [
-        {
-          name: 'settings.json',
-          path,
-          content,
-          language: 'json' as const,
-        },
-      ]
-    } else if (tool === 'mcp') {
-      const path = getMCPConfigPath()
+        // 检查文件是否存在
+        if (!fs.existsSync(path)) {
+          return [
+            {
+              name: 'mcp.json',
+              path,
+              content: '# MCP 配置文件不存在\n# 请先使用 CLI 添加 MCP 服务器：ccman mcp add',
+              language: 'json' as const,
+            },
+          ]
+        }
 
-      // 检查文件是否存在
-      if (!fs.existsSync(path)) {
+        const content = fs.readFileSync(path, 'utf-8')
         return [
           {
             name: 'mcp.json',
             path,
-            content: '# MCP 配置文件不存在\n# 请先使用 CLI 添加 MCP 服务器：ccman mcp add',
+            content,
+            language: 'json' as const,
+          },
+        ]
+      } else if (tool === 'codex') {
+        const configPath = getCodexConfigPath()
+        const authPath = getCodexAuthPath()
+
+        const result = []
+
+        // 检查 config.toml 是否存在
+        if (fs.existsSync(configPath)) {
+          result.push({
+            name: 'config.toml',
+            path: configPath,
+            content: fs.readFileSync(configPath, 'utf-8'),
+            language: 'toml' as const,
+          })
+        } else {
+          result.push({
+            name: 'config.toml',
+            path: configPath,
+            content: '# 配置文件不存在\n# 请先使用 ccman 添加服务商，配置文件将自动创建',
+            language: 'toml' as const,
+          })
+        }
+
+        // 检查 auth.json 是否存在
+        if (fs.existsSync(authPath)) {
+          result.push({
+            name: 'auth.json',
+            path: authPath,
+            content: fs.readFileSync(authPath, 'utf-8'),
+            language: 'json' as const,
+          })
+        } else {
+          result.push({
+            name: 'auth.json',
+            path: authPath,
+            content: '{\n  "注意": "配置文件不存在，请先使用 ccman 添加服务商"\n}',
+            language: 'json' as const,
+          })
+        }
+
+        return result
+      } else if (tool === 'gemini') {
+        const settingsPath = getGeminiSettingsPath()
+        const envPath = getGeminiEnvPath()
+
+        const result: Array<{
+          name: string
+          path: string
+          content: string
+          language: 'json' | 'toml' | 'env'
+        }> = []
+
+        // settings.json
+        if (fs.existsSync(settingsPath)) {
+          result.push({
+            name: 'settings.json',
+            path: settingsPath,
+            content: fs.readFileSync(settingsPath, 'utf-8'),
+            language: 'json',
+          })
+        } else {
+          result.push({
+            name: 'settings.json',
+            path: settingsPath,
+            content: '# 配置文件不存在\n# 请先使用 ccman gm add 添加服务商，配置文件将自动创建',
+            language: 'json',
+          })
+        }
+
+        // .env
+        if (fs.existsSync(envPath)) {
+          result.push({
+            name: '.env',
+            path: envPath,
+            content: fs.readFileSync(envPath, 'utf-8'),
+            language: 'env',
+          })
+        } else {
+          result.push({
+            name: '.env',
+            path: envPath,
+            content:
+              '# .env 文件不存在\n# 将在切换到带有 baseUrl/apiKey 的服务商时自动创建\n' +
+              '# 也可以手动创建，例如：\n' +
+              '# GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.cn/openai\n' +
+              '# GEMINI_API_KEY=YOUR_GMN_TOKEN_HERE\n' +
+              '# GEMINI_MODEL=gemini-2.5-pro\n',
+            language: 'env',
+          })
+        }
+
+        return result
+      } else if (tool === 'opencode') {
+        const opencodePath = getOpenCodeConfigPath()
+
+        if (!fs.existsSync(opencodePath)) {
+          return [
+            {
+              name: 'opencode.json',
+              path: opencodePath,
+              content: '# 配置文件不存在\n# 请先使用 ccman oc add 添加服务商，配置文件将自动创建\n',
+              language: 'json' as const,
+            },
+          ]
+        }
+
+        const content = fs.readFileSync(opencodePath, 'utf-8')
+        return [
+          {
+            name: 'opencode.json',
+            path: opencodePath,
+            content,
             language: 'json' as const,
           },
         ]
       }
-
-      const content = fs.readFileSync(path, 'utf-8')
-      return [
-        {
-          name: 'mcp.json',
-          path,
-          content,
-          language: 'json' as const,
-        },
-      ]
-    } else if (tool === 'codex') {
-      const configPath = getCodexConfigPath()
-      const authPath = getCodexAuthPath()
-
-      const result = []
-
-      // 检查 config.toml 是否存在
-      if (fs.existsSync(configPath)) {
-        result.push({
-          name: 'config.toml',
-          path: configPath,
-          content: fs.readFileSync(configPath, 'utf-8'),
-          language: 'toml' as const,
-        })
-      } else {
-        result.push({
-          name: 'config.toml',
-          path: configPath,
-          content: '# 配置文件不存在\n# 请先使用 ccman 添加服务商，配置文件将自动创建',
-          language: 'toml' as const,
-        })
-      }
-
-      // 检查 auth.json 是否存在
-      if (fs.existsSync(authPath)) {
-        result.push({
-          name: 'auth.json',
-          path: authPath,
-          content: fs.readFileSync(authPath, 'utf-8'),
-          language: 'json' as const,
-        })
-      } else {
-        result.push({
-          name: 'auth.json',
-          path: authPath,
-          content: '{\n  "注意": "配置文件不存在，请先使用 ccman 添加服务商"\n}',
-          language: 'json' as const,
-        })
-      }
-
-      return result
-    } else if (tool === 'gemini') {
-      const settingsPath = getGeminiSettingsPath()
-      const envPath = getGeminiEnvPath()
-
-      const result: Array<{
-        name: string
-        path: string
-        content: string
-        language: 'json' | 'toml' | 'env'
-      }> = []
-
-      // settings.json
-      if (fs.existsSync(settingsPath)) {
-        result.push({
-          name: 'settings.json',
-          path: settingsPath,
-          content: fs.readFileSync(settingsPath, 'utf-8'),
-          language: 'json',
-        })
-      } else {
-        result.push({
-          name: 'settings.json',
-          path: settingsPath,
-          content: '# 配置文件不存在\n# 请先使用 ccman gm add 添加服务商，配置文件将自动创建',
-          language: 'json',
-        })
-      }
-
-      // .env
-      if (fs.existsSync(envPath)) {
-        result.push({
-          name: '.env',
-          path: envPath,
-          content: fs.readFileSync(envPath, 'utf-8'),
-          language: 'env',
-        })
-      } else {
-        result.push({
-          name: '.env',
-          path: envPath,
-          content:
-            '# .env 文件不存在\n# 将在切换到带有 baseUrl/apiKey 的服务商时自动创建\n' +
-            '# 也可以手动创建，例如：\n' +
-            '# GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.cn/openai\n' +
-            '# GEMINI_API_KEY=YOUR_GMN_TOKEN_HERE\n' +
-            '# GEMINI_MODEL=gemini-2.5-pro\n',
-          language: 'env',
-        })
-      }
-
-      return result
+      return []
+    } catch (error) {
+      throw new Error(`读取配置文件失败：${(error as Error).message}`)
     }
-    return []
-  } catch (error) {
-    throw new Error(`读取配置文件失败：${(error as Error).message}`)
   }
-})
+)
 
 // 写入配置文件
 ipcMain.handle(
@@ -648,6 +765,7 @@ ipcMain.handle('read-ccman-config-files', async () => {
     const codexPath = path.join(getCcmanDir(), 'codex.json')
     const claudePath = path.join(getCcmanDir(), 'claude.json')
     const geminiPath = path.join(getCcmanDir(), 'gemini.json')
+    const opencodePath = path.join(getCcmanDir(), 'opencode.json')
 
     const files: Array<{ name: string; path: string; content: string; language: 'json' }> = []
 
@@ -677,6 +795,16 @@ ipcMain.handle('read-ccman-config-files', async () => {
       path: geminiPath,
       content: fs.existsSync(geminiPath)
         ? fs.readFileSync(geminiPath, 'utf-8')
+        : '{\n  "providers": [],\n  "presets": []\n}\n',
+      language: 'json',
+    })
+
+    // OpenCode
+    files.push({
+      name: 'opencode.json',
+      path: opencodePath,
+      content: fs.existsSync(opencodePath)
+        ? fs.readFileSync(opencodePath, 'utf-8')
         : '{\n  "providers": [],\n  "presets": []\n}\n',
       language: 'json',
     })

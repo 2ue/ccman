@@ -1,5 +1,5 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { Home, Server, Package, Trash2, Settings, Info } from 'lucide-react'
+import { Home, Server, Package, Trash2, Settings, Info, Code } from 'lucide-react'
 import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
 import type { NavKey } from './DashboardPage'
 
@@ -32,6 +32,7 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
     { key: 'claude', icon: ClaudeIcon, label: 'Claude Code', isBrandIcon: true },
     { key: 'codex', icon: OpenAIIcon, label: 'Codex', isBrandIcon: true },
     { key: 'gemini', icon: GeminiIcon, label: 'Gemini CLI', isBrandIcon: true },
+    { key: 'opencode', icon: Code, label: 'OpenCode' },
     { key: 'mcp', icon: Server, label: 'MCP 服务器' },
     { key: 'service-providers', icon: Package, label: '预置服务商' },
     { key: 'clean', icon: Trash2, label: '清理工具' },
@@ -74,11 +75,7 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
                     }
                   `}
                 >
-                  {navItem.isBrandIcon ? (
-                    <Icon size={24} />
-                  ) : (
-                    <Icon className="w-6 h-6" />
-                  )}
+                  {navItem.isBrandIcon ? <Icon size={24} /> : <Icon className="w-6 h-6" />}
                 </button>
               </Tooltip.Trigger>
               <Tooltip.Portal>

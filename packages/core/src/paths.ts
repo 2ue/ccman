@@ -7,8 +7,8 @@ const isTest = process.env.NODE_ENV === 'test'
 // 根据环境确定根目录（避免重复判断）
 let rootDir: string
 if (isTest) {
-  // 测试环境：使用临时目录 + 进程 ID（每个测试进程独立）
-  rootDir = path.join(os.tmpdir(), `ccman-test-${process.pid}`)
+  // 测试环境：使用固定临时目录，保留历史测试数据
+  rootDir = path.join('/tmp', 'ccman-test')
 } else if (isDev) {
   // 开发环境：使用临时目录（共享）
   rootDir = path.join(os.tmpdir(), 'ccman-dev')
@@ -21,7 +21,8 @@ if (isTest) {
 let ccmanDir: string = path.join(rootDir, '.ccman')
 let codexDir: string = path.join(rootDir, '.codex')
 let claudeDir: string = path.join(rootDir, '.claude')
-let geminiDir: string = path.join(rootDir, '.gemini')
+const geminiDir: string = path.join(rootDir, '.gemini')
+let opencodeDir: string = path.join(rootDir, '.config', 'opencode')
 
 /**
  * 获取 ccman 配置目录
@@ -49,6 +50,13 @@ export function getClaudeDir(): string {
  */
 export function getGeminiDir(): string {
   return geminiDir
+}
+
+/**
+ * 获取 OpenCode 配置目录
+ */
+export function getOpenCodeDir(): string {
+  return opencodeDir
 }
 
 /**
@@ -116,6 +124,13 @@ export function getGeminiEnvPath(): string {
 }
 
 /**
+ * 获取 OpenCode 配置文件路径 (~/.config/opencode/opencode.json)
+ */
+export function getOpenCodeConfigPath(): string {
+  return path.join(opencodeDir, 'opencode.json')
+}
+
+/**
  * 测试专用 API：设置自定义路径
  * 仅在测试环境可用，用于精确控制测试路径
  */
@@ -123,6 +138,7 @@ export function __setTestPaths(paths: {
   ccman?: string
   codex?: string
   claude?: string
+  opencode?: string
 }): void {
   if (process.env.NODE_ENV !== 'test') {
     throw new Error('__setTestPaths can only be used in test environment')
@@ -130,4 +146,5 @@ export function __setTestPaths(paths: {
   if (paths.ccman) ccmanDir = paths.ccman
   if (paths.codex) codexDir = paths.codex
   if (paths.claude) claudeDir = paths.claude
+  if (paths.opencode) opencodeDir = paths.opencode
 }
