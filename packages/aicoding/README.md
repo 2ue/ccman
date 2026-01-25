@@ -55,14 +55,24 @@ curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh 
 curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --openai-base-url https://gmn.chuangzuoli.com
 ```
 
-加速地址（任选其一）：
+加速地址（任选其一，部分镜像可能随时不可用）：
 
 ```bash
 # jsDelivr
 curl -fsSL https://cdn.jsdelivr.net/gh/2ue/ccman@main/scripts/aicoding.sh | bash
 
-# cnpmjs raw mirror
-curl -fsSL https://raw.githubusercontent.com.cnpmjs.org/2ue/ccman/main/scripts/aicoding.sh | bash
+# jsDelivr 备用域名（遇到 DNS 污染可尝试）
+curl -fsSL https://fastly.jsdelivr.net/gh/2ue/ccman@main/scripts/aicoding.sh | bash
+curl -fsSL https://gcore.jsdelivr.net/gh/2ue/ccman@main/scripts/aicoding.sh | bash
+curl -fsSL https://testingcf.jsdelivr.net/gh/2ue/ccman@main/scripts/aicoding.sh | bash
+curl -fsSL https://test1.jsdelivr.net/gh/2ue/ccman@main/scripts/aicoding.sh | bash
+
+# ghproxy（raw 代理）
+curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash
+curl -fsSL https://mirror.ghproxy.com/https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash
+
+# raw 镜像
+curl -fsSL https://raw.staticdn.net/2ue/ccman/main/scripts/aicoding.sh | bash
 ```
 
 ## 使用方式
