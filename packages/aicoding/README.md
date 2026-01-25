@@ -1,4 +1,4 @@
-# aicoding
+# @2ue/aicoding
 
 一键配置 GMN 到所有 AI 编程工具（Claude Code、Codex、Gemini CLI、OpenCode）
 
@@ -15,13 +15,13 @@
 ### 方式 1：npx（推荐，无需安装）
 
 ```bash
-npx aicoding
+npx @2ue/aicoding
 ```
 
 ### 方式 2：全局安装
 
 ```bash
-npm install -g aicoding
+npm install -g @2ue/aicoding
 aicoding
 ```
 
@@ -33,10 +33,10 @@ aicoding
 
 ```bash
 # 交互式输入
-npx aicoding
+npx @2ue/aicoding
 
 # 直接传入 API Key
-npx aicoding sk-ant-xxx
+npx @2ue/aicoding sk-ant-xxx
 ```
 
 交互式流程会提示选择平台，以及 Codex/OpenCode 的 OpenAI Base URL（CN/COM）。
@@ -44,10 +44,10 @@ npx aicoding sk-ant-xxx
 **可选：指定 Codex/OpenCode 的 OpenAI Base URL**
 ```bash
 # 使用指定 Base URL（仅影响 Codex/OpenCode）
-npx aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
+npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
 
 # 快捷选项：GMN .com
-npx aicoding sk-ant-xxx --gmn-com
+npx @2ue/aicoding sk-ant-xxx --gmn-com
 ```
 
 **保护的配置**：
@@ -62,10 +62,10 @@ npx aicoding sk-ant-xxx --gmn-com
 
 ```bash
 # 交互式输入
-npx aicoding --overwrite
+npx @2ue/aicoding --overwrite
 
 # 直接传入 API Key
-npx aicoding sk-ant-xxx --overwrite
+npx @2ue/aicoding sk-ant-xxx --overwrite
 ```
 
 **警告**：全覆盖模式会丢失你的自定义配置，只在以下情况使用：
@@ -87,7 +87,7 @@ npx aicoding sk-ant-xxx --overwrite
 ### 首次配置
 
 ```bash
-$ npx aicoding
+$ npx @2ue/aicoding
 请输入 GMN API Key: sk-ant-xxx
 
 🚀 开始配置...
@@ -105,7 +105,7 @@ $ npx aicoding
 ### 更新 API Key
 
 ```bash
-$ npx aicoding sk-ant-new-key
+$ npx @2ue/aicoding sk-ant-new-key
 
 🚀 开始配置...
 
@@ -122,7 +122,7 @@ $ npx aicoding sk-ant-new-key
 ### 重置配置（全覆盖模式）
 
 ```bash
-$ npx aicoding --overwrite
+$ npx @2ue/aicoding --overwrite
 请输入 GMN API Key: sk-ant-xxx
 
 ⚠️  全覆盖模式：将使用默认配置覆盖所有字段（认证字段除外）
@@ -146,10 +146,10 @@ $ npx aicoding --overwrite
 | **依赖** | 零依赖 | 需要安装 ccman |
 | **功能** | 只配置 GMN | 管理多个服务商、CRUD 操作 |
 | **使用场景** | 快速配置、临时使用 | 日常管理、频繁切换 |
-| **命令** | `npx aicoding` | `ccman gmn <apiKey>` |
+| **命令** | `npx @2ue/aicoding` | `ccman gmn <apiKey>` |
 
 **推荐**：
-- ✅ 使用 `aicoding`：如果你只想快速配置 GMN
+- ✅ 使用 `@2ue/aicoding`：如果你只想快速配置 GMN
 - ✅ 使用 `ccman`：如果你需要管理多个服务商
 
 ## 配置原理
@@ -194,7 +194,7 @@ chmod 700 ~/.claude ~/.codex ~/.gemini ~/.config/opencode
 如果配置文件损坏，使用全覆盖模式重置：
 
 ```bash
-npx aicoding --overwrite
+npx @2ue/aicoding --overwrite
 ```
 
 ## 许可证

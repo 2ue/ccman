@@ -1,5 +1,5 @@
 {
-  "name": "aicoding",
+  "name": "@2ue/aicoding",
   "version": "3.3.2",
   "description": "一键配置 GMN 到 Claude Code、Codex、Gemini CLI、OpenCode",
   "type": "module",
@@ -27,8 +27,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/ccman.git",
+    "url": "https://github.com/2ue/ccman.git",
     "directory": "packages/aicoding"
   },
-  "homepage": "https://github.com/your-username/ccman/tree/main/packages/aicoding"
+  "homepage": "https://github.com/2ue/ccman/tree/main/packages/aicoding"
 }

@@ -234,14 +234,22 @@ jobs:
       - name: Publish ccman CLI
         run: |
           cd packages/cli
-          pnpm publish --access public --no-git-checks
+          if npm view ccman@${{ steps.version.outputs.VERSION }} version >/dev/null 2>&1; then
+            echo "ccman@${{ steps.version.outputs.VERSION }} already published, skip"
+          else
+            pnpm publish --access public --no-git-checks
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish aicoding
         run: |
           cd packages/aicoding
-          pnpm publish --access public --no-git-checks
+          if npm view @2ue/aicoding@${{ steps.version.outputs.VERSION }} version >/dev/null 2>&1; then
+            echo "@2ue/aicoding@${{ steps.version.outputs.VERSION }} already published, skip"
+          else
+            pnpm publish --access public --no-git-checks
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -310,7 +318,7 @@ jobs:
             ## 📦 npm 包已发布
 
             - [ccman@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/ccman)
-            - [aicoding@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/aicoding)
+            - [@2ue/aicoding@${{ steps.version.outputs.VERSION }}](https://www.npmjs.com/package/@2ue/aicoding)
 
             ## 📥 CLI 安装
 
