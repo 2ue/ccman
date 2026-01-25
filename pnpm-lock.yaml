@@ -48,6 +48,12 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
+  packages/aicoding:
+    dependencies:
+      inquirer:
+        specifier: ^8.2.6
+        version: 8.2.7(@types/node@20.19.26)
+
   packages/cli:
     dependencies:
       '@ccman/core':

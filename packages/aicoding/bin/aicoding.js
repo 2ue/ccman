@@ -14,14 +14,13 @@
  *   - 保护模式（默认）：深度合并现有配置，只更新认证字段，保留用户的其他配置
  *   - 全覆盖模式：使用默认配置覆盖所有字段（认证字段除外）
  *
- * 依赖：零依赖，只使用 Node.js 内置 API
+ * 依赖：Node.js 内置 API + inquirer（交互式选择）
  */
 
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import { createInterface } from 'node:readline/promises'
-import { stdin, stdout } from 'node:process'
+import inquirer from 'inquirer'
 
 const GMN_BASE_URLS = {
   claude: 'https://gmn.chuangzuoli.cn/api',
@@ -30,7 +29,8 @@ const GMN_BASE_URLS = {
 }
 const GMN_OPENAI_COM_BASE_URL = 'https://gmn.chuangzuoli.com'
 let OPENAI_BASE_URL = GMN_BASE_URLS.openai
-const DEFAULT_PLATFORMS = 'codex,opencode'
+const VALID_PLATFORMS = ['claude', 'codex', 'gemini', 'opencode']
+const DEFAULT_PLATFORMS = ['codex', 'opencode']
 
 // 开发环境支持
 const HOME_DIR = process.env.NODE_ENV === 'development'
@@ -77,6 +77,105 @@ function atomicWrite(filePath, content, mode = 0o600) {
   const tempPath = `${filePath}.tmp`
   fs.writeFileSync(tempPath, content, { mode })
   fs.renameSync(tempPath, filePath)
+}
+
+// ============================================================================
+// 交互式输入
+// ============================================================================
+
+function parsePlatforms(platformArg) {
+  if (platformArg === 'all') {
+    return [...VALID_PLATFORMS]
+  }
+
+  const platforms = platformArg.split(',').map((p) => p.trim().toLowerCase())
+
+  for (const platform of platforms) {
+    if (!VALID_PLATFORMS.includes(platform)) {
+      throw new Error(`无效的平台 "${platform}"。有效值: ${VALID_PLATFORMS.join(', ')}, all`)
+    }
+  }
+
+  return platforms
+}
+
+async function promptMode() {
+  const answers = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'mode',
+      message: '选择模式:',
+      choices: [
+        { name: '保护模式（默认）', value: 'protect' },
+        { name: '全覆盖模式', value: 'overwrite' },
+      ],
+      default: 'protect',
+    },
+  ])
+
+  return answers.mode
+}
+
+async function promptPlatforms() {
+  const answers = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'platforms',
+      message: '选择平台:',
+      choices: [
+        { name: 'Claude Code', value: 'claude' },
+        { name: 'Codex', value: 'codex' },
+        { name: 'Gemini CLI', value: 'gemini' },
+        { name: 'OpenCode', value: 'opencode' },
+        { name: '全部 (all)', value: 'all' },
+      ],
+      default: DEFAULT_PLATFORMS,
+      validate: (value) => {
+        if (!value || value.length === 0) return '至少选择一个平台'
+        return true
+      },
+    },
+  ])
+
+  const selected = answers.platforms
+  if (selected.includes('all')) {
+    return [...VALID_PLATFORMS]
+  }
+  return selected
+}
+
+async function promptOpenAIDomain() {
+  const answers = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'domain',
+      message: '选择 Codex/OpenCode 的 OpenAI Base URL:',
+      choices: [
+        { name: `CN  ${GMN_BASE_URLS.openai}`, value: 'cn' },
+        { name: `COM ${GMN_OPENAI_COM_BASE_URL}`, value: 'com' },
+      ],
+      default: 'cn',
+    },
+  ])
+
+  return answers.domain
+}
+
+async function promptApiKey() {
+  const answers = await inquirer.prompt([
+    {
+      type: 'password',
+      name: 'apiKey',
+      message: '请输入 GMN API Key:',
+      mask: '*',
+      validate: (value) => {
+        if (!value) return 'API Key 不能为空'
+        return true
+      },
+    },
+  ])
+
+  return answers.apiKey
 }
 
 // ============================================================================
@@ -406,72 +505,28 @@ async function main() {
     }
   }
 
-  // 2. 交互式补全参数
-  let rl = null
-  const ensureRl = () => {
-    if (!rl) {
-      rl = createInterface({ input: stdin, output: stdout })
-    }
-    return rl
-  }
-
+  // 2. 交互式补全参数（与 ccman gmn 一致）
   if (!overwriteArgProvided) {
-    const input = await ensureRl().question('选择模式: 1) 保护模式 2) 全覆盖模式 (默认 1): ')
-    const normalized = input.trim().toLowerCase()
-    OVERWRITE_MODE = normalized === '2' || normalized === 'overwrite'
+    const mode = await promptMode()
+    OVERWRITE_MODE = mode === 'overwrite'
   }
 
-  if (!platformArg) {
-    console.log(`可选平台: claude, codex, gemini, opencode, all`)
-    const input = await ensureRl().question(`选择平台 (默认 ${DEFAULT_PLATFORMS}): `)
-    platformArg = input.trim() || DEFAULT_PLATFORMS
+  let platforms
+  if (platformArg && platformArg.trim().length > 0) {
+    platforms = parsePlatforms(platformArg)
+  } else {
+    platforms = await promptPlatforms()
   }
 
-  const needsOpenAIBaseUrl =
-    platformArg === 'all' ||
-    platformArg
-      .split(',')
-      .map((p) => p.trim().toLowerCase())
-      .some((p) => p === 'codex' || p === 'opencode')
+  const needsOpenAIBaseUrl = platforms.includes('codex') || platforms.includes('opencode')
 
   if (!openaiBaseUrl && needsOpenAIBaseUrl) {
-    console.log('选择 Codex/OpenCode 的 OpenAI Base URL:')
-    console.log(`  1) CN  ${GMN_BASE_URLS.openai}`)
-    console.log(`  2) COM ${GMN_OPENAI_COM_BASE_URL}`)
-    const input = await ensureRl().question('请选择 [1/2] (默认 1): ')
-    const normalized = input.trim().toLowerCase()
-    if (normalized === '2' || normalized === 'com') {
-      openaiBaseUrl = GMN_OPENAI_COM_BASE_URL
-    } else {
-      openaiBaseUrl = GMN_BASE_URLS.openai
-    }
+    const domain = await promptOpenAIDomain()
+    openaiBaseUrl = domain === 'com' ? GMN_OPENAI_COM_BASE_URL : GMN_BASE_URLS.openai
   }
 
   if (!apiKey) {
-    apiKey = await ensureRl().question('请输入 GMN API Key: ')
-  }
-
-  if (rl) {
-    rl.close()
-  }
-
-  // 3. 解析平台
-  const VALID_PLATFORMS = ['claude', 'codex', 'gemini', 'opencode']
-  let platforms
-
-  if (platformArg === 'all') {
-    platforms = VALID_PLATFORMS
-  } else {
-    platforms = platformArg.split(',').map(p => p.trim().toLowerCase())
-
-    // 验证平台名称
-    for (const platform of platforms) {
-      if (!VALID_PLATFORMS.includes(platform)) {
-        console.error(`❌ 错误: 无效的平台 "${platform}"`)
-        console.log(`有效值: ${VALID_PLATFORMS.join(', ')}, all`)
-        process.exit(1)
-      }
-    }
+    apiKey = await promptApiKey()
   }
 
   // 4. 处理 OpenAI Base URL（Codex/OpenCode）
@@ -489,10 +544,15 @@ async function main() {
   // 5. 显示模式信息
   if (OVERWRITE_MODE) {
     console.log('⚠️  全覆盖模式：将使用默认配置覆盖所有字段（认证字段除外）')
-    const rl = createInterface({ input: stdin, output: stdout })
-    const confirm = await rl.question('确认继续？(y/N): ')
-    rl.close()
-    if (confirm.toLowerCase() !== 'y') {
+    const { confirm } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: '确认继续？',
+        default: false,
+      },
+    ])
+    if (!confirm) {
       console.log('已取消')
       return
     }

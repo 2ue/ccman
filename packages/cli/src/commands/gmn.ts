@@ -127,11 +127,6 @@ async function resolveOpenAIDomain(
 }
 
 export async function gmnCommand(apiKey?: string, platformArg?: string, domainArg?: string) {
-  let resolvedApiKey = apiKey?.trim()
-  if (!resolvedApiKey) {
-    resolvedApiKey = await promptApiKey()
-  }
-
   let platforms: Platform[]
   try {
     platforms = await resolvePlatforms(platformArg)
@@ -146,6 +141,11 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, domainAr
   } catch (error) {
     console.error(chalk.red(`❌ ${(error as Error).message}`))
     process.exit(1)
+  }
+
+  let resolvedApiKey = apiKey?.trim()
+  if (!resolvedApiKey) {
+    resolvedApiKey = await promptApiKey()
   }
 
   if (!resolvedApiKey?.trim()) {

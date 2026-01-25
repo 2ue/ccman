@@ -34,6 +34,7 @@ const files = [
   'packages/core/package.json',
   'packages/cli/package.json',
   'packages/desktop/package.json',
+  'packages/aicoding/package.json',
 ]
 
 console.log(`\n🔄 将所有包版本号修改为: ${newVersion}\n`)

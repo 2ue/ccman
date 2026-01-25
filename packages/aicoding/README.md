@@ -4,7 +4,7 @@
 
 ## 特性
 
-- ✅ **零依赖**：只使用 Node.js 内置 API
+- ✅ **轻量依赖**：使用 inquirer 提供清晰的交互式选择
 - ✅ **一键配置**：同时配置 4 个工具
 - ✅ **两种模式**：保护模式（默认）+ 全覆盖模式
 - ✅ **配置保护**：保留用户现有配置，只更新认证字段
@@ -23,6 +23,18 @@ npx @2ue/aicoding
 ```bash
 npm install -g @2ue/aicoding
 aicoding
+```
+
+### 方式 3：curl 一键运行（无需安装）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash
+```
+
+传参示例（将参数传给 aicoding）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --gmn-com
 ```
 
 ## 使用方式
@@ -143,7 +155,7 @@ $ npx @2ue/aicoding --overwrite
 | 特性 | aicoding | ccman |
 |------|----------|-------|
 | **用途** | 一键配置 GMN | 完整的服务商管理工具 |
-| **依赖** | 零依赖 | 需要安装 ccman |
+| **依赖** | 轻量依赖（inquirer） | 需要安装 ccman |
 | **功能** | 只配置 GMN | 管理多个服务商、CRUD 操作 |
 | **使用场景** | 快速配置、临时使用 | 日常管理、频繁切换 |
 | **命令** | `npx @2ue/aicoding` | `ccman gmn <apiKey>` |
