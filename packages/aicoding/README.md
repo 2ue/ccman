@@ -31,10 +31,38 @@ aicoding
 curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash
 ```
 
+说明：脚本会自动调用 `npx --yes @2ue/aicoding` 并保持交互式输入。
+
 传参示例（将参数传给 aicoding）：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --gmn-com
+```
+
+更多用法示例：
+
+```bash
+# 直接传入 API Key
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- sk-ant-xxx
+
+# 仅配置 Codex + OpenCode
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- -p codex,opencode
+
+# 全覆盖模式
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --overwrite
+
+# 指定 Codex/OpenCode 的 OpenAI Base URL
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --openai-base-url https://gmn.chuangzuoli.com
+```
+
+加速地址（任选其一）：
+
+```bash
+# jsDelivr
+curl -fsSL https://cdn.jsdelivr.net/gh/2ue/ccman@main/scripts/aicoding.sh | bash
+
+# cnpmjs raw mirror
+curl -fsSL https://raw.githubusercontent.com.cnpmjs.org/2ue/ccman/main/scripts/aicoding.sh | bash
 ```
 
 ## 使用方式
