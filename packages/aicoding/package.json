@@ -1,6 +1,6 @@
 {
   "name": "aicoding",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "一键配置 GMN 到 Claude Code、Codex、Gemini CLI、OpenCode",
   "type": "module",
   "bin": {
