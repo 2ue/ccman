@@ -27,20 +27,23 @@
 ### Claude Code
 
 - **Anthropic Official**：`https://api.anthropic.com`
+- **GMN**：`https://gmn.chuangzuoli.cn/api`
 
 ### Codex
 
 - **OpenAI Official**：`https://api.openai.com/v1`
 - **GMN**：`https://gmn.chuangzuoli.cn/openai`
+- **GMN (COM)**：`https://gmn.chuangzuoli.com`
 
 ### Gemini CLI
 
 - **Google Gemini (API Key)**：官方默认（无需设置 baseUrl）
-- **GMN**：`https://gmn.chuangzuoli.cn/openai`
+- **GMN**：`https://gmn.chuangzuoli.cn/gemini`
 
 ### OpenCode
 
 - **GMN**：`https://gmn.chuangzuoli.cn/openai`（npm: `@ai-sdk/openai`）
+- **GMN (COM)**：`https://gmn.chuangzuoli.com`（npm: `@ai-sdk/openai`）
 
 ## 🧭 CLI 使用速览
 
@@ -107,19 +110,19 @@ $ ccman cx add
 
 ? 选择预置服务商:
   OpenAI Official - OpenAI 官方 API
-  GMN - GMN 服务 (Codex/Gemini 兼容)
+  GMN - GMN 服务 (Gemini 兼容)
 
-使用预设: GMN - GMN 服务 (Codex/Gemini 兼容)
+使用预设: GMN - GMN 服务 (Gemini 兼容)
 
 ? 服务商名称: GMN
 ? 描述(可选):
-? API 地址: https://gmn.chuangzuoli.cn/openai
+? API 地址: https://gmn.chuangzuoli.cn/gemini
 ? API 密钥: ********
 
 ✅ 添加成功
 
   GMN [Codex]
-  https://gmn.chuangzuoli.cn/openai
+  https://gmn.chuangzuoli.cn/gemini
 
 ? 是否立即切换到此服务商? (Y/n)
 ✅ 已切换到新服务商
@@ -141,8 +144,8 @@ $ ccman cx list
      OpenAI 官方 API
 
   ○  GMN
-     https://gmn.chuangzuoli.cn/openai
-     GMN 服务 (Codex/Gemini 兼容)
+     https://gmn.chuangzuoli.cn/gemini
+     GMN 服务 (Gemini 兼容)
 ```
 
 **use**
@@ -152,12 +155,12 @@ $ ccman cx use
 
 ? 选择要切换的服务商:
   OpenAI Official - https://api.openai.com/v1
-  GMN - https://gmn.chuangzuoli.cn/openai
+  GMN - https://gmn.chuangzuoli.cn/gemini
 
 ✅ 切换成功
 
   GMN [Codex]
-  URL: https://gmn.chuangzuoli.cn/openai
+  URL: https://gmn.chuangzuoli.cn/gemini
 
 配置已更新:
   - ~/.codex/config.toml
@@ -184,14 +187,14 @@ $ ccman cx edit
 
 ? 选择要编辑的服务商:
   OpenAI Official - https://api.openai.com/v1
-  GMN - https://gmn.chuangzuoli.cn/openai
+  GMN - https://gmn.chuangzuoli.cn/gemini
 
 ✏️  编辑服务商
 
 提示: 留空则保持原值
 
 ? 服务商名称: GMN
-? API 地址: https://gmn.chuangzuoli.cn/openai
+? API 地址: https://gmn.chuangzuoli.cn/gemini
 ? API 密钥 (留空保持不变): ********
 
 ✅ 编辑成功
@@ -208,7 +211,7 @@ $ ccman cx clone
 
 ? 选择要克隆的服务商:
   OpenAI Official - https://api.openai.com/v1
-  GMN - https://gmn.chuangzuoli.cn/openai
+  GMN - https://gmn.chuangzuoli.cn/gemini
 
 克隆自: OpenAI Official
 
@@ -487,7 +490,7 @@ $ ccman gm clone
 ✅ 克隆成功
 
   GMN（副本） [Gemini CLI]
-  https://gmn.chuangzuoli.cn/openai
+  https://gmn.chuangzuoli.cn/gemini
 ```
 
 **remove**
@@ -497,7 +500,7 @@ $ ccman gm remove
 
 ? 选择要删除的服务商:
   Google Gemini (API Key) - (默认端点)
-  GMN - https://gmn.chuangzuoli.cn/openai
+  GMN - https://gmn.chuangzuoli.cn/gemini
 
 ? 确定要删除服务商 "GMN" 吗？ (y/N)
 

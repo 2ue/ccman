@@ -11,6 +11,7 @@ import { createOpenCodeCommands } from './commands/opencode/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
+import { gmnCommand } from './commands/gmn.js'
 import {
   startMainMenu,
   startClaudeMenu,
@@ -51,7 +52,7 @@ program.on('command:*', (operands) => {
   console.error(chalk.red(`\n❌ 未知命令: ${unknownCommand}\n`))
 
   // 提供相似命令建议
-  const availableCommands = ['cx', 'cc', 'gm', 'oc', 'mcp', 'sync', 'export', 'import']
+  const availableCommands = ['cx', 'cc', 'gm', 'oc', 'mcp', 'sync', 'export', 'import', 'gmn']
   const suggestions = availableCommands.filter(
     (cmd) => cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
   )
@@ -131,6 +132,16 @@ sync.action(async () => {
 // 导入导出命令（顶层命令）
 exportCommand(program)
 importCommand(program)
+
+// GMN 配置命令（顶层命令）
+program
+  .command('gmn [apiKey]')
+  .description('配置 GMN 到所有工具')
+  .option('-p, --platform <platforms>', '指定平台 (claude,codex,gemini,opencode,all)')
+  .option('-d, --domain <domain>', '选择 OpenAI 端点 (cn|com)')
+  .action(async (apiKey, options) => {
+    await gmnCommand(apiKey, options.platform, options.domain)
+  })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式
 ;(async () => {

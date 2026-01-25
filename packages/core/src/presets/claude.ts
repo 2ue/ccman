@@ -20,4 +20,9 @@ export const CC_PRESETS: PresetTemplate[] = [
     baseUrl: 'https://api.anthropic.com',
     description: 'Anthropic 官方 API',
   },
+  {
+    name: 'GMN',
+    baseUrl: 'https://gmn.chuangzuoli.cn/api',
+    description: 'GMN 服务 (Claude 兼容)',
+  },
 ]

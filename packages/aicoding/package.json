@@ -1,0 +1,34 @@
+{
+  "name": "aicoding",
+  "version": "3.3.1",
+  "description": "一键配置 GMN 到 Claude Code、Codex、Gemini CLI、OpenCode",
+  "type": "module",
+  "bin": {
+    "aicoding": "./bin/aicoding.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "keywords": [
+    "gmn",
+    "claude",
+    "codex",
+    "gemini",
+    "opencode",
+    "ai",
+    "config",
+    "aicoding"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "ccman",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/ccman.git",
+    "directory": "packages/aicoding"
+  },
+  "homepage": "https://github.com/your-username/ccman/tree/main/packages/aicoding"
+}

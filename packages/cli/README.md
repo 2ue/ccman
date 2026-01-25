@@ -226,31 +226,34 @@ ccman mcp remove   # 删除 MCP 服务器
 
 添加服务商时可以选择"使用预设模板"，只需填写 API Key：
 
-### Claude Code 预设（1 个）
+### Claude Code 预设（2 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
 | Anthropic Official | `https://api.anthropic.com` |
+| GMN | `https://gmn.chuangzuoli.cn/api` |
 
 ### Gemini CLI 预设（2 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
 | Google Gemini (API Key) | 官方默认 |
-| GMN | `https://gmn.chuangzuoli.cn/openai` |
+| GMN | `https://gmn.chuangzuoli.cn/gemini` |
 
-### Codex 预设（2 个）
+### Codex 预设（3 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
 | OpenAI Official | `https://api.openai.com/v1` |
 | GMN | `https://gmn.chuangzuoli.cn/openai` |
+| GMN (COM) | `https://gmn.chuangzuoli.com` |
 
-### OpenCode 预设（1 个）
+### OpenCode 预设（2 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
 | GMN | `https://gmn.chuangzuoli.cn/openai` |
+| GMN (COM) | `https://gmn.chuangzuoli.com` |
 
 ### MCP 预设（多个）
 
