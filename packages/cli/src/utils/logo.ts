@@ -14,6 +14,6 @@ export function printLogo(): void {
 `
     )
   )
-  console.log(chalk.gray('  Codex/Claude Code API 服务商配置管理工具'))
+  console.log(chalk.gray('  多工具 AI 服务商配置管理工具'))
   console.log(chalk.gray(`  版本 ${VERSION}\n`))
 }

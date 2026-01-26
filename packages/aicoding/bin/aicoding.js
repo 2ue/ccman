@@ -31,6 +31,7 @@ const GMN_OPENAI_COM_BASE_URL = 'https://gmn.chuangzuoli.com'
 let OPENAI_BASE_URL = GMN_BASE_URLS.openai
 const VALID_PLATFORMS = ['claude', 'codex', 'gemini', 'opencode']
 const DEFAULT_PLATFORMS = ['codex', 'opencode']
+const TOTAL_STEPS = 5
 
 // 开发环境支持
 const HOME_DIR = process.env.NODE_ENV === 'development'
@@ -83,6 +84,38 @@ function atomicWrite(filePath, content, mode = 0o600) {
 // 交互式输入
 // ============================================================================
 
+function renderStep(current, total, title) {
+  const barLength = total
+  const filledLength = Math.min(current, total)
+  const bar = `${'■'.repeat(filledLength)}${'□'.repeat(barLength - filledLength)}`
+  return `步骤 ${current}/${total} [${bar}] ${title}`
+}
+
+function printBanner() {
+  console.log(
+    [
+      '  ██████╗  ███╗   ███╗███╗   ██╗',
+      ' ██╔════╝  ████╗ ████║████╗  ██║',
+      ' ██║  ███╗ ██╔████╔██║██╔██╗ ██║',
+      ' ██║   ██║ ██║╚██╔╝██║██║╚██╗██║',
+      ' ╚██████╔╝ ██║ ╚═╝ ██║██║ ╚████║',
+      '  ╚═════╝  ╚═╝     ╚═╝╚═╝  ╚═══╝',
+      '  GMN 一键配置向导 · 独立脚本',
+      '  自动写入选中工具配置，支持多选与端点选择。\n',
+    ].join('\n')
+  )
+}
+
+function printKeyNotice() {
+  console.log(
+    [
+      '提示：Codex 与 OpenCode 共享 OpenAI 套餐/端点；Gemini 与 Claude 需单独订阅。',
+      '例如：Gemini 套餐不能用于 Codex/OpenCode，Claude 套餐也不能通用。',
+      'VS Code 的 Codex 插件若使用本机默认配置，也会跟随本次写入生效。',
+    ].join('\n')
+  )
+}
+
 function parsePlatforms(platformArg) {
   if (platformArg === 'all') {
     return [...VALID_PLATFORMS]
@@ -104,10 +137,10 @@ async function promptMode() {
     {
       type: 'list',
       name: 'mode',
-      message: '选择模式:',
+      message: '选择写入模式:',
       choices: [
-        { name: '保护模式（默认）', value: 'protect' },
-        { name: '全覆盖模式', value: 'overwrite' },
+        { name: '保护模式（默认，保留现有配置）', value: 'protect' },
+        { name: '全覆盖模式（覆盖配置，谨慎使用）', value: 'overwrite' },
       ],
       default: 'protect',
     },
@@ -121,13 +154,14 @@ async function promptPlatforms() {
     {
       type: 'checkbox',
       name: 'platforms',
-      message: '选择平台:',
+      message: '选择要配置的工具（可多选，空格选择 / a全选 / i反选 / 回车确认）:',
+      dontShowHints: true,
       choices: [
-        { name: 'Claude Code', value: 'claude' },
-        { name: 'Codex', value: 'codex' },
-        { name: 'Gemini CLI', value: 'gemini' },
-        { name: 'OpenCode', value: 'opencode' },
-        { name: '全部 (all)', value: 'all' },
+        { name: 'Claude Code（需单独订阅 Claude 套餐）', value: 'claude' },
+        { name: 'Codex（需单独订阅 OpenAI 套餐）', value: 'codex' },
+        { name: 'Gemini CLI（需单独订阅 Gemini 套餐）', value: 'gemini' },
+        { name: 'OpenCode（与 Codex 共享 OpenAI 套餐）', value: 'opencode' },
+        { name: '全部（将依次配置所有工具）', value: 'all' },
       ],
       default: DEFAULT_PLATFORMS,
       validate: (value) => {
@@ -149,10 +183,10 @@ async function promptOpenAIDomain() {
     {
       type: 'list',
       name: 'domain',
-      message: '选择 Codex/OpenCode 的 OpenAI Base URL:',
+      message: '选择 Codex/OpenCode 的 OpenAI Base URL（只影响这两个工具）:',
       choices: [
-        { name: `CN  ${GMN_BASE_URLS.openai}`, value: 'cn' },
-        { name: `COM ${GMN_OPENAI_COM_BASE_URL}`, value: 'com' },
+        { name: `CN（国内）  ${GMN_BASE_URLS.openai}`, value: 'cn' },
+        { name: `COM（国际） ${GMN_OPENAI_COM_BASE_URL}`, value: 'com' },
       ],
       default: 'cn',
     },
@@ -470,7 +504,7 @@ function configureOpenCode(apiKey) {
 // ============================================================================
 
 async function main() {
-  console.log('🚀 GMN 快速配置工具（独立版本）\n')
+  printBanner()
 
   // 1. 解析命令行参数
   const args = process.argv.slice(2)
@@ -506,27 +540,62 @@ async function main() {
   }
 
   // 2. 交互式补全参数（与 ccman gmn 一致）
+  console.log(`\n${renderStep(1, TOTAL_STEPS, '选择写入模式')}`)
   if (!overwriteArgProvided) {
     const mode = await promptMode()
     OVERWRITE_MODE = mode === 'overwrite'
+  } else {
+    console.log(`已通过参数指定模式：${OVERWRITE_MODE ? '全覆盖模式' : '保护模式'}`)
   }
 
-  let platforms
-  if (platformArg && platformArg.trim().length > 0) {
-    platforms = parsePlatforms(platformArg)
-  } else {
-    platforms = await promptPlatforms()
+  if (OVERWRITE_MODE) {
+    const { confirm } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: '全覆盖模式会覆盖配置，确认继续？',
+        default: false,
+      },
+    ])
+    if (!confirm) {
+      console.log('已取消')
+      return
+    }
   }
+
+  console.log(`\n${renderStep(2, TOTAL_STEPS, '选择要配置的工具')}`)
+  let platforms
+  try {
+    if (platformArg && platformArg.trim().length > 0) {
+      platforms = parsePlatforms(platformArg)
+    } else {
+      platforms = await promptPlatforms()
+    }
+  } catch (error) {
+    console.error(`❌ ${(error as Error).message}`)
+    process.exit(1)
+  }
+
+  console.log(`已选择: ${platforms.join(', ')}`)
+  printKeyNotice()
 
   const needsOpenAIBaseUrl = platforms.includes('codex') || platforms.includes('opencode')
 
-  if (!openaiBaseUrl && needsOpenAIBaseUrl) {
+  console.log(`\n${renderStep(3, TOTAL_STEPS, '选择 OpenAI 端点 (仅 Codex/OpenCode)')}`)
+  if (!needsOpenAIBaseUrl) {
+    console.log('未选择 Codex/OpenCode，将跳过此步骤。')
+  } else if (!openaiBaseUrl) {
     const domain = await promptOpenAIDomain()
     openaiBaseUrl = domain === 'com' ? GMN_OPENAI_COM_BASE_URL : GMN_BASE_URLS.openai
+  } else {
+    console.log(`已通过参数指定 OpenAI Base URL：${openaiBaseUrl}`)
   }
 
+  console.log(`\n${renderStep(4, TOTAL_STEPS, '输入 API Key')}`)
   if (!apiKey) {
     apiKey = await promptApiKey()
+  } else {
+    console.log('已通过参数提供 API Key（已隐藏）')
   }
 
   // 4. 处理 OpenAI Base URL（Codex/OpenCode）
@@ -541,26 +610,12 @@ async function main() {
     throw new Error('API Key 不能为空')
   }
 
-  // 5. 显示模式信息
-  if (OVERWRITE_MODE) {
-    console.log('⚠️  全覆盖模式：将使用默认配置覆盖所有字段（认证字段除外）')
-    const { confirm } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: '确认继续？',
-        default: false,
-      },
-    ])
-    if (!confirm) {
-      console.log('已取消')
-      return
-    }
-  } else {
-    console.log('✅ 保护模式：将保留现有配置，只更新认证字段')
-  }
-
+  console.log(`\n${renderStep(5, TOTAL_STEPS, '开始写入配置')}`)
+  console.log(`模式: ${OVERWRITE_MODE ? '全覆盖模式' : '保护模式'}`)
   console.log(`平台: ${platforms.join(', ')}`)
+  if (platforms.includes('codex') || platforms.includes('opencode')) {
+    console.log(`OpenAI 端点: ${openaiBaseUrl}`)
+  }
   console.log('\n开始配置...\n')
 
   // 6. 配置选中的工具
@@ -573,16 +628,19 @@ async function main() {
 
   const tools = platforms.map(p => ALL_TOOLS[p])
 
+  let completed = 0
   for (const { name, configure } of tools) {
     try {
+      console.log(`→ 配置 ${name}...`)
       configure(apiKey)
+      completed += 1
       console.log(`✅ ${name}`)
     } catch (error) {
       console.error(`❌ ${name}: ${error.message}`)
     }
   }
 
-  console.log('\n🎉 GMN 配置完成！')
+  console.log(`\n🎉 GMN 配置完成！(${completed}/${tools.length})`)
 
   // 只显示配置的工具的文件位置
   console.log('\n配置文件位置：')
