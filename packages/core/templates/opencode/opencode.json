@@ -1,0 +1,39 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "{{providerKey}}": {
+      "npm": "{{npmPackage}}",
+      "name": "{{providerName}}",
+      "options": {
+        "baseURL": "{{baseUrl}}",
+        "apiKey": "{{apiKey}}"
+      },
+      "models": {
+        "gpt-5.2-codex": {
+          "variants": {
+            "xhigh": {
+              "reasoningEffort": "xhigh",
+              "textVerbosity": "low",
+              "reasoningSummary": "auto"
+            },
+            "high": {
+              "reasoningEffort": "high",
+              "textVerbosity": "low",
+              "reasoningSummary": "auto"
+            },
+            "medium": {
+              "reasoningEffort": "medium",
+              "textVerbosity": "low",
+              "reasoningSummary": "auto"
+            },
+            "low": {
+              "reasoningEffort": "low",
+              "textVerbosity": "low",
+              "reasoningSummary": "auto"
+            }
+          }
+        }
+      }
+    }
+  }
+}

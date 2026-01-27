@@ -3,6 +3,13 @@ import {
   createCodexManager,
   createGeminiManager,
   createOpenCodeManager,
+  getCcmanDir,
+  getClaudeConfigPath,
+  getCodexAuthPath,
+  getCodexConfigPath,
+  getGeminiEnvPath,
+  getGeminiSettingsPath,
+  getOpenCodeConfigPath,
 } from '@ccman/core'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
@@ -61,6 +68,33 @@ function printKeyNotice(): void {
       ].join('\n')
     )
   )
+}
+
+function printWriteTargets(platforms: Platform[]): void {
+  console.log(chalk.gray(`写入目录: ${getCcmanDir()}`))
+  if (platforms.includes('codex')) {
+    console.log(chalk.gray(`  - Codex: ${getCodexConfigPath()}`))
+    console.log(chalk.gray(`  - Codex: ${getCodexAuthPath()}`))
+  }
+  if (platforms.includes('claude')) {
+    console.log(chalk.gray(`  - Claude Code: ${getClaudeConfigPath()}`))
+  }
+  if (platforms.includes('gemini')) {
+    console.log(chalk.gray(`  - Gemini CLI: ${getGeminiSettingsPath()}`))
+    console.log(chalk.gray(`  - Gemini CLI: ${getGeminiEnvPath()}`))
+  }
+  if (platforms.includes('opencode')) {
+    console.log(chalk.gray(`  - OpenCode: ${getOpenCodeConfigPath()}`))
+  }
+
+  const env = process.env.NODE_ENV
+  if (env === 'development' || env === 'test') {
+    console.log(
+      chalk.yellow(
+        `⚠️ 当前 NODE_ENV=${env}，将写入开发/测试目录；如需写入真实 HOME，请在生产环境运行（unset NODE_ENV）。`
+      )
+    )
+  }
 }
 
 /**
@@ -223,6 +257,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, domainAr
   if (platforms.includes('codex') || platforms.includes('opencode')) {
     console.log(chalk.gray(`OpenAI 端点: ${openaiBaseUrl}`))
   }
+  printWriteTargets(platforms)
   console.log()
 
   const ALL_TOOLS = {

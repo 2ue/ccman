@@ -30,6 +30,23 @@ interface ClaudeEnv {
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+function resolveTemplatePath(relativePath: string): string | null {
+  const candidates = [
+    // @ccman/core runtime (dist/writers -> templates)
+    path.resolve(__dirname, '../../templates', relativePath),
+    // Bundled CLI runtime (dist -> dist/templates)
+    path.resolve(__dirname, 'templates', relativePath),
+    // Fallback (some bundlers/layouts)
+    path.resolve(__dirname, '../templates', relativePath),
+  ]
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+
+  return null
+}
+
 /**
  * Claude Code 默认配置模板
  *
@@ -50,6 +67,7 @@ const CLAUDE_CONFIG_TEMPLATE: ClaudeSettings = {
     allow: [],
     deny: [],
   },
+  alwaysThinkingEnabled: true,
 }
 
 /**
@@ -60,8 +78,8 @@ const CLAUDE_CONFIG_TEMPLATE: ClaudeSettings = {
  */
 function loadClaudeTemplateConfig(): ClaudeSettings {
   try {
-    const templatePath = path.resolve(__dirname, '../../templates/claude/settings.json')
-    if (fs.existsSync(templatePath)) {
+    const templatePath = resolveTemplatePath('claude/settings.json')
+    if (templatePath) {
       const content = fs.readFileSync(templatePath, 'utf-8')
       return JSON.parse(content) as ClaudeSettings
     }
@@ -70,7 +88,6 @@ function loadClaudeTemplateConfig(): ClaudeSettings {
   }
   return CLAUDE_CONFIG_TEMPLATE
 }
-
 
 /**
  * 写入 Claude 配置（零破坏性）

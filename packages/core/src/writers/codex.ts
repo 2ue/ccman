@@ -93,6 +93,23 @@ interface CodexAuth {
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+function resolveTemplatePath(relativePath: string): string | null {
+  const candidates = [
+    // @ccman/core runtime (dist/writers -> templates)
+    path.resolve(__dirname, '../../templates', relativePath),
+    // Bundled CLI runtime (dist -> dist/templates)
+    path.resolve(__dirname, 'templates', relativePath),
+    // Fallback (some bundlers/layouts)
+    path.resolve(__dirname, '../templates', relativePath),
+  ]
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+
+  return null
+}
+
 /**
  * Codex 默认配置模板
  *
@@ -104,10 +121,10 @@ const __dirname = path.dirname(__filename)
  * - 这里定义的是其他默认字段
  */
 const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
-  model: 'gpt-5.1',
+  model: 'gpt-5.1-code-max',
   model_reasoning_effort: 'high',
   disable_response_storage: true,
-  sandbox_mode: 'workspace-write',
+  sandbox_mode: 'danger-full-access',
   windows_wsl_setup_acknowledged: true,
   approval_policy: 'never',
   profile: 'auto-max',
@@ -139,7 +156,7 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
       approval_policy: 'never',
       sandbox_mode: 'workspace-write',
     },
-    'review': {
+    review: {
       approval_policy: 'on-request',
       sandbox_mode: 'workspace-write',
     },
@@ -157,8 +174,8 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
  */
 function loadCodexTemplateConfig(): Partial<CodexConfig> {
   try {
-    const templatePath = path.resolve(__dirname, '../../templates/codex/config.toml')
-    if (fs.existsSync(templatePath)) {
+    const templatePath = resolveTemplatePath('codex/config.toml')
+    if (templatePath) {
       const content = fs.readFileSync(templatePath, 'utf-8')
       return parseToml(content) as CodexConfig
     }
@@ -167,7 +184,6 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
   }
   return CODEX_DEFAULT_CONFIG
 }
-
 
 /**
  * 写入 Codex 配置（零破坏性）

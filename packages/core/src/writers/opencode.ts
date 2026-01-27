@@ -1,6 +1,10 @@
+import * as fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 import type { Provider } from '../tool-manager.js'
 import { getOpenCodeConfigPath, getOpenCodeDir } from '../paths.js'
 import { ensureDir, fileExists, readJSON, writeJSON } from '../utils/file.js'
+import { replaceVariables, deepMerge } from '../utils/template.js'
 
 const OPENCODE_SCHEMA = 'https://opencode.ai/config.json'
 const DEFAULT_NPM_PACKAGE = '@ai-sdk/openai'
@@ -46,6 +50,27 @@ interface OpenCodeProviderMeta {
   models?: OpenCodeModels
 }
 
+// ESM 环境下获取当前文件所在目录
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+function resolveTemplatePath(relativePath: string): string | null {
+  const candidates = [
+    // @ccman/core runtime (dist/writers -> templates)
+    path.resolve(__dirname, '../../templates', relativePath),
+    // Bundled CLI runtime (dist -> dist/templates)
+    path.resolve(__dirname, 'templates', relativePath),
+    // Fallback (some bundlers/layouts)
+    path.resolve(__dirname, '../templates', relativePath),
+  ]
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+
+  return null
+}
+
 const DEFAULT_MODELS: OpenCodeModels = {
   'gpt-5.2-codex': {
     variants: {
@@ -71,6 +96,37 @@ const DEFAULT_MODELS: OpenCodeModels = {
       },
     },
   },
+}
+
+const OPENCODE_CONFIG_TEMPLATE: OpenCodeConfig = {
+  $schema: OPENCODE_SCHEMA,
+  provider: {
+    '{{providerKey}}': {
+      npm: '{{npmPackage}}',
+      name: '{{providerName}}',
+      options: {
+        baseURL: '{{baseUrl}}',
+        apiKey: '{{apiKey}}',
+      },
+      models: DEFAULT_MODELS,
+    },
+  },
+}
+
+function loadOpenCodeTemplateConfig(): OpenCodeConfig {
+  try {
+    const templatePath = resolveTemplatePath('opencode/opencode.json')
+    if (templatePath) {
+      const content = fs.readFileSync(templatePath, 'utf-8')
+      const parsed = JSON.parse(content)
+      if (parsed && typeof parsed === 'object') {
+        return parsed as OpenCodeConfig
+      }
+    }
+  } catch {
+    // 忽略错误，使用内置默认模板
+  }
+  return OPENCODE_CONFIG_TEMPLATE
 }
 
 function parseProviderMeta(raw?: string): OpenCodeProviderMeta | null {
@@ -114,11 +170,29 @@ export function writeOpenCodeConfig(provider: Provider): void {
   const npmPackage = meta?.npm || DEFAULT_NPM_PACKAGE
 
   const providerKey = toProviderKey(provider.name)
-  const existingProvider = existingConfig.provider?.[providerKey]
-  const models = meta?.models || existingProvider?.models || DEFAULT_MODELS
 
-  const providerConfig: OpenCodeProvider = {
-    ...existingProvider,
+  // 1) 生成默认配置（来自模板文件）
+  const template = loadOpenCodeTemplateConfig()
+  const defaultConfig = replaceVariables(template, {
+    providerKey,
+    providerName: provider.name,
+    npmPackage,
+    baseUrl: provider.baseUrl,
+    apiKey: provider.apiKey,
+  }) as OpenCodeConfig
+
+  // 2) 合并用户现有配置（用户优先，保留未管理字段）
+  const mergedConfig = deepMerge<OpenCodeConfig>(defaultConfig, existingConfig)
+
+  // 3) 构建/更新当前 provider（强制更新认证与端点）
+  const templateProvider = defaultConfig.provider?.[providerKey]
+  const existingProvider = mergedConfig.provider?.[providerKey]
+
+  const models =
+    meta?.models || existingProvider?.models || templateProvider?.models || DEFAULT_MODELS
+
+  const providerConfig: OpenCodeProvider = deepMerge<OpenCodeProvider>(templateProvider || {}, {
+    ...(existingProvider || {}),
     npm: npmPackage,
     name: provider.name,
     options: {
@@ -127,15 +201,15 @@ export function writeOpenCodeConfig(provider: Provider): void {
       apiKey: provider.apiKey,
     },
     models,
-  }
+  })
 
   const existingProviders =
-    existingConfig.provider && typeof existingConfig.provider === 'object'
-      ? { ...existingConfig.provider }
+    mergedConfig.provider && typeof mergedConfig.provider === 'object'
+      ? { ...mergedConfig.provider }
       : {}
 
   const nextConfig: OpenCodeConfig = {
-    ...existingConfig,
+    ...mergedConfig,
     $schema: OPENCODE_SCHEMA,
     provider: {
       ...existingProviders,
