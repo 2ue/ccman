@@ -1,6 +1,6 @@
 {
   "name": "ccmam",
-  "version": "3.3.4",
+  "version": "3.3.5",
   "private": true,
   "description": "Manage Codex, Claude Code, Gemini CLI, and MCP API service provider configurations",
   "scripts": {
