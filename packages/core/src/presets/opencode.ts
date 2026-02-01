@@ -11,7 +11,8 @@ export const OPENCODE_PRESETS: InternalPresetTemplate[] = [
   },
   {
     name: 'GMN (COM)',
-    baseUrl: 'https://gmn.chuangzuoli.com',
+    baseUrl: 'https://gmn.chuangzuoli.com/v1',
     description: 'GMN 服务 (OpenCode 兼容)',
   },
 ]
+

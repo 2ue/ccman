@@ -7,47 +7,33 @@ import { ensureDir, fileExists, readJSON, writeJSON } from '../utils/file.js'
 import { replaceVariables, deepMerge } from '../utils/template.js'
 
 const OPENCODE_SCHEMA = 'https://opencode.ai/config.json'
-const DEFAULT_NPM_PACKAGE = '@ai-sdk/openai'
-
-type ReasoningEffort = 'xhigh' | 'high' | 'medium' | 'low'
-
-interface OpenCodeModelVariant {
-  reasoningEffort: ReasoningEffort
-  textVerbosity: 'low'
-  reasoningSummary: 'auto'
-}
-
-interface OpenCodeModelConfig {
-  variants: Record<ReasoningEffort, OpenCodeModelVariant>
-}
-
-interface OpenCodeModels {
-  [modelName: string]: OpenCodeModelConfig
-}
+const OPENCODE_PROVIDER_KEY = 'openai'
+const OPENCODE_MODEL = 'openai/gpt-5.2-codex'
+const OPENCODE_MODEL_KEY = 'gpt-5.2-codex'
 
 interface OpenCodeProviderOptions {
-  baseURL: string
-  apiKey: string
+  baseURL?: string
+  apiKey?: string
   [key: string]: unknown
 }
 
 interface OpenCodeProvider {
-  npm: string
-  name: string
-  options: OpenCodeProviderOptions
-  models?: OpenCodeModels
+  options?: OpenCodeProviderOptions
+  models?: Record<string, unknown>
   [key: string]: unknown
 }
 
 interface OpenCodeConfig {
   $schema?: string
+  model?: string
+  agent?: Record<string, unknown>
   provider?: Record<string, OpenCodeProvider>
   [key: string]: unknown
 }
 
 interface OpenCodeProviderMeta {
-  npm?: string
-  models?: OpenCodeModels
+  npm?: string // legacy: previous versions stored npm package in Provider.model
+  models?: Record<string, unknown>
 }
 
 // ESM 环境下获取当前文件所在目录
@@ -71,39 +57,24 @@ function resolveTemplatePath(relativePath: string): string | null {
   return null
 }
 
-const DEFAULT_MODELS: OpenCodeModels = {
-  'gpt-5.2-codex': {
+const DEFAULT_MODELS: Record<string, unknown> = {
+  [OPENCODE_MODEL_KEY]: {
+    name: 'GPT-5.2 Codex',
+    options: {
+      store: false,
+    },
     variants: {
-      xhigh: {
-        reasoningEffort: 'xhigh',
-        textVerbosity: 'low',
-        reasoningSummary: 'auto',
-      },
-      high: {
-        reasoningEffort: 'high',
-        textVerbosity: 'low',
-        reasoningSummary: 'auto',
-      },
-      medium: {
-        reasoningEffort: 'medium',
-        textVerbosity: 'low',
-        reasoningSummary: 'auto',
-      },
-      low: {
-        reasoningEffort: 'low',
-        textVerbosity: 'low',
-        reasoningSummary: 'auto',
-      },
+      low: {},
+      medium: {},
+      high: {},
+      xhigh: {},
     },
   },
 }
 
 const OPENCODE_CONFIG_TEMPLATE: OpenCodeConfig = {
-  $schema: OPENCODE_SCHEMA,
   provider: {
-    '{{providerKey}}': {
-      npm: '{{npmPackage}}',
-      name: '{{providerName}}',
+    [OPENCODE_PROVIDER_KEY]: {
       options: {
         baseURL: '{{baseUrl}}',
         apiKey: '{{apiKey}}',
@@ -111,6 +82,20 @@ const OPENCODE_CONFIG_TEMPLATE: OpenCodeConfig = {
       models: DEFAULT_MODELS,
     },
   },
+  agent: {
+    build: {
+      options: {
+        store: false,
+      },
+    },
+    plan: {
+      options: {
+        store: false,
+      },
+    },
+  },
+  $schema: OPENCODE_SCHEMA,
+  model: OPENCODE_MODEL,
 }
 
 function loadOpenCodeTemplateConfig(): OpenCodeConfig {
@@ -143,11 +128,39 @@ function parseProviderMeta(raw?: string): OpenCodeProviderMeta | null {
   return null
 }
 
-function toProviderKey(name: string): string {
-  const normalized = name.trim().toLowerCase()
-  const collapsed = normalized.replace(/\s+/g, '-')
-  const cleaned = collapsed.replace(/[^a-z0-9-_]/g, '')
-  return cleaned || 'provider'
+function enforceAgentStoreFalse(agent: unknown): Record<string, unknown> {
+  const base = agent && typeof agent === 'object' && !Array.isArray(agent) ? (agent as any) : {}
+
+  return deepMerge<Record<string, unknown>>(base, {
+    build: {
+      options: {
+        store: false,
+      },
+    },
+    plan: {
+      options: {
+        store: false,
+      },
+    },
+  })
+}
+
+function enforceModelStoreFalse(models: unknown): Record<string, unknown> {
+  const base = models && typeof models === 'object' && !Array.isArray(models) ? (models as any) : {}
+
+  return deepMerge<Record<string, unknown>>(base, {
+    [OPENCODE_MODEL_KEY]: {
+      options: {
+        store: false,
+      },
+      variants: {
+        low: {},
+        medium: {},
+        high: {},
+        xhigh: {},
+      },
+    },
+  })
 }
 
 /**
@@ -155,8 +168,9 @@ function toProviderKey(name: string): string {
  *
  * 策略：
  * 1. 读取现有配置并保留未管理字段
- * 2. 根据当前 provider 生成单一 provider 配置
- * 3. 写入 ~/.config/opencode/opencode.json
+ * 2. 使用模板生成默认配置（变量替换）
+ * 3. 强制更新 provider.openai.options.baseURL/apiKey 与隐私相关 store 配置
+ * 4. 写入 ~/.config/opencode/opencode.json
  */
 export function writeOpenCodeConfig(provider: Provider): void {
   ensureDir(getOpenCodeDir())
@@ -167,16 +181,10 @@ export function writeOpenCodeConfig(provider: Provider): void {
     : {}
 
   const meta = parseProviderMeta(provider.model)
-  const npmPackage = meta?.npm || DEFAULT_NPM_PACKAGE
-
-  const providerKey = toProviderKey(provider.name)
 
   // 1) 生成默认配置（来自模板文件）
   const template = loadOpenCodeTemplateConfig()
   const defaultConfig = replaceVariables(template, {
-    providerKey,
-    providerName: provider.name,
-    npmPackage,
     baseUrl: provider.baseUrl,
     apiKey: provider.apiKey,
   }) as OpenCodeConfig
@@ -184,17 +192,16 @@ export function writeOpenCodeConfig(provider: Provider): void {
   // 2) 合并用户现有配置（用户优先，保留未管理字段）
   const mergedConfig = deepMerge<OpenCodeConfig>(defaultConfig, existingConfig)
 
-  // 3) 构建/更新当前 provider（强制更新认证与端点）
-  const templateProvider = defaultConfig.provider?.[providerKey]
-  const existingProvider = mergedConfig.provider?.[providerKey]
+  // 3) 构建/更新 provider.openai（强制更新认证与端点）
+  const templateProvider = defaultConfig.provider?.[OPENCODE_PROVIDER_KEY]
+  const existingProvider = mergedConfig.provider?.[OPENCODE_PROVIDER_KEY]
 
-  const models =
+  const models = enforceModelStoreFalse(
     meta?.models || existingProvider?.models || templateProvider?.models || DEFAULT_MODELS
+  )
 
   const providerConfig: OpenCodeProvider = deepMerge<OpenCodeProvider>(templateProvider || {}, {
     ...(existingProvider || {}),
-    npm: npmPackage,
-    name: provider.name,
     options: {
       ...(existingProvider?.options || {}),
       baseURL: provider.baseUrl,
@@ -204,18 +211,21 @@ export function writeOpenCodeConfig(provider: Provider): void {
   })
 
   const existingProviders =
-    mergedConfig.provider && typeof mergedConfig.provider === 'object'
+    mergedConfig.provider && typeof mergedConfig.provider === 'object' && !Array.isArray(mergedConfig.provider)
       ? { ...mergedConfig.provider }
       : {}
 
   const nextConfig: OpenCodeConfig = {
     ...mergedConfig,
     $schema: OPENCODE_SCHEMA,
+    model: OPENCODE_MODEL,
+    agent: enforceAgentStoreFalse(mergedConfig.agent),
     provider: {
       ...existingProviders,
-      [providerKey]: providerConfig,
+      [OPENCODE_PROVIDER_KEY]: providerConfig,
     },
   }
 
   writeJSON(configPath, nextConfig)
 }
+

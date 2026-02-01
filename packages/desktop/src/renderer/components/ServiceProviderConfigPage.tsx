@@ -164,12 +164,33 @@ export default function ServiceProviderConfigPage({
     try {
       const api = getToolAPI(usingPreset.type)
 
-      await api.addProvider(input as AddProviderInput)
+      const addedProvider = await api.addProvider(input as AddProviderInput)
 
       setShowUsePresetModal(false)
       setUsingPreset(undefined)
       onSuccess?.('添加成功')
       onUseServiceProvider()
+
+      setConfirmDialog({
+        show: true,
+        title: '是否立即使用？',
+        message: `服务商 "${addedProvider.name}" 已添加，是否立即切换使用？`,
+        onConfirm: async () => {
+          setConfirmDialog((prev) => ({ ...prev, show: false }))
+          try {
+            await api.switchProvider(addedProvider.id)
+            onSuccess?.('切换成功')
+            onUseServiceProvider()
+          } catch (error) {
+            setAlertDialog({
+              show: true,
+              title: '切换失败',
+              message: (error as Error).message,
+              type: 'error',
+            })
+          }
+        },
+      })
     } catch (error) {
       setAlertDialog({
         show: true,

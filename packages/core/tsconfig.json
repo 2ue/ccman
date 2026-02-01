@@ -3,7 +3,11 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "module": "ESNext"
+    "module": "ESNext",
+    "baseUrl": ".",
+    "paths": {
+      "@ccman/types": ["../types/dist"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

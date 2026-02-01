@@ -21,7 +21,6 @@ import {
   type ToolManager,
 } from '@ccman/core'
 import { formatProviderTable } from './utils/format.js'
-import { buildOpenCodeModel, DEFAULT_OPENCODE_NPM, parseOpenCodeMeta } from './utils/opencode.js'
 
 // CLI 专用配置（emoji 和命令缩写）
 const CLI_TOOL_CONFIG = {
@@ -392,21 +391,7 @@ async function handleAdd(tool: CliToolType): Promise<void> {
     apiKey = answers.apiKey
   }
 
-  let model: string | undefined
-  if (tool === TOOL_TYPES.OPENCODE) {
-    const { npmPackage } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'npmPackage',
-        message: '兼容包 (npm):',
-        default: DEFAULT_OPENCODE_NPM,
-        validate: (value) => (value ? true : 'npm 包不能为空'),
-      },
-    ])
-    model = buildOpenCodeModel({ npm: npmPackage })
-  }
-
-  const provider = manager.add({ name, desc, baseUrl, apiKey, model })
+  const provider = manager.add({ name, desc, baseUrl, apiKey })
 
   console.log()
   console.log(chalk.green('✅ 添加成功'))
@@ -519,8 +504,6 @@ async function handleEdit(tool: CliToolType): Promise<void> {
   ])
 
   const provider = providers.find((p) => p.id === providerId)!
-  const meta = tool === TOOL_TYPES.OPENCODE ? parseOpenCodeMeta(provider.model) : null
-  const currentNpm = meta?.npm || DEFAULT_OPENCODE_NPM
 
   const answers = await inquirer.prompt([
     {
@@ -557,26 +540,11 @@ async function handleEdit(tool: CliToolType): Promise<void> {
     },
   ])
 
-  let model: string | undefined
-  if (tool === TOOL_TYPES.OPENCODE) {
-    const { npmPackage } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'npmPackage',
-        message: '兼容包 (npm):',
-        default: currentNpm,
-        validate: (value) => (value ? true : 'npm 包不能为空'),
-      },
-    ])
-    model = buildOpenCodeModel({ npm: npmPackage, models: meta?.models })
-  }
-
   manager.edit(providerId, {
     name: answers.name,
     desc: answers.desc || undefined,
     baseUrl: answers.baseUrl,
     apiKey: answers.apiKey || undefined,
-    model,
   })
 
   console.log(chalk.green('\n✅ 编辑成功\n'))
@@ -604,8 +572,6 @@ async function handleClone(tool: CliToolType): Promise<void> {
   ])
 
   const provider = providers.find((p) => p.id === providerId)!
-  const meta = tool === TOOL_TYPES.OPENCODE ? parseOpenCodeMeta(provider.model) : null
-  const currentNpm = meta?.npm || DEFAULT_OPENCODE_NPM
 
   const answers = await inquirer.prompt([
     {
@@ -624,27 +590,12 @@ async function handleClone(tool: CliToolType): Promise<void> {
     },
   ])
 
-  let model: string | undefined
-  if (tool === TOOL_TYPES.OPENCODE) {
-    const { npmPackage } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'npmPackage',
-        message: '兼容包 (npm):',
-        default: currentNpm,
-        validate: (value) => (value ? true : 'npm 包不能为空'),
-      },
-    ])
-    model = buildOpenCodeModel({ npm: npmPackage, models: meta?.models })
-  }
-
   const newProvider = manager.add({
     name: answers.name,
     // 克隆时不继承描述,留空让用户后续编辑
     desc: undefined,
     baseUrl: provider.baseUrl,
     apiKey: answers.apiKey,
-    model,
   })
 
   console.log(chalk.green('\n✅ 克隆成功\n'))

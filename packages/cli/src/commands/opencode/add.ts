@@ -3,7 +3,6 @@ import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { createOpenCodeManager, OPENCODE_PRESETS, getOpenCodeConfigPath } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
-import { buildOpenCodeModel, DEFAULT_OPENCODE_NPM } from '../../utils/opencode.js'
 
 export function addCommand(program: Command): void {
   program
@@ -96,22 +95,11 @@ export function addCommand(program: Command): void {
           apiKey = answers.apiKey
         }
 
-        const { npmPackage } = await inquirer.prompt([
-          {
-            type: 'input',
-            name: 'npmPackage',
-            message: '兼容包 (npm):',
-            default: DEFAULT_OPENCODE_NPM,
-            validate: (value) => (value ? true : 'npm 包不能为空'),
-          },
-        ])
-
         const provider = manager.add({
           name,
           desc,
           baseUrl,
           apiKey,
-          model: buildOpenCodeModel({ npm: npmPackage }),
         })
 
         console.log()

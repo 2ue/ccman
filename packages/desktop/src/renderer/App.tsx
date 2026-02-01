@@ -452,7 +452,42 @@ export default function App() {
 
       if (isCloneMode) {
         // 克隆模式：创建新服务商
-        await api.addProvider(input as AddProviderInput)
+        const createdProvider = await api.addProvider(input as AddProviderInput)
+
+        setShowEditModal(false)
+        setEditingProvider(undefined)
+        setIsCloneMode(false)
+        await loadData()
+        setToast({
+          show: true,
+          message: '克隆成功',
+        })
+
+        setConfirmDialog({
+          show: true,
+          title: '是否立即使用？',
+          message: `已创建 "${createdProvider.name}"，是否立即切换使用？`,
+          onConfirm: async () => {
+            setConfirmDialog((prev) => ({ ...prev, show: false }))
+            try {
+              await api.switchProvider(createdProvider.id)
+              await loadData()
+              setToast({
+                show: true,
+                message: '切换成功',
+              })
+            } catch (error) {
+              setAlertDialog({
+                show: true,
+                title: '切换失败',
+                message: (error as Error).message,
+                type: 'error',
+              })
+            }
+          },
+        })
+
+        return
       } else {
         // 编辑模式：更新现有服务商
         await api.editProvider(editingProvider.id, input as EditProviderInput)

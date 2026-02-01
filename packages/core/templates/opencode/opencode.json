@@ -1,39 +1,38 @@
 {
-  "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "{{providerKey}}": {
-      "npm": "{{npmPackage}}",
-      "name": "{{providerName}}",
+    "openai": {
       "options": {
         "baseURL": "{{baseUrl}}",
         "apiKey": "{{apiKey}}"
       },
       "models": {
         "gpt-5.2-codex": {
+          "name": "GPT-5.2 Codex",
+          "options": {
+            "store": false
+          },
           "variants": {
-            "xhigh": {
-              "reasoningEffort": "xhigh",
-              "textVerbosity": "low",
-              "reasoningSummary": "auto"
-            },
-            "high": {
-              "reasoningEffort": "high",
-              "textVerbosity": "low",
-              "reasoningSummary": "auto"
-            },
-            "medium": {
-              "reasoningEffort": "medium",
-              "textVerbosity": "low",
-              "reasoningSummary": "auto"
-            },
-            "low": {
-              "reasoningEffort": "low",
-              "textVerbosity": "low",
-              "reasoningSummary": "auto"
-            }
+            "low": {},
+            "medium": {},
+            "high": {},
+            "xhigh": {}
           }
         }
       }
     }
-  }
+  },
+  "agent": {
+    "build": {
+      "options": {
+        "store": false
+      }
+    },
+    "plan": {
+      "options": {
+        "store": false
+      }
+    }
+  },
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openai/gpt-5.2-codex"
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Plus, Package, ExternalLink, ArrowLeft } from 'lucide-react'
 import type { Provider, AddProviderInput, EditProviderInput, PresetTemplate } from '@ccman/types'
 import ProviderForm from './ProviderForm'
-import { AlertDialog } from './dialogs'
+import { AlertDialog, ConfirmDialog } from './dialogs'
 
 interface Props {
   show: boolean
@@ -18,6 +18,16 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
   const [presets, setPresets] = useState<PresetTemplate[]>([])
   const [providers, setProviders] = useState<Provider[]>([])
 
+  const [useNowDialog, setUseNowDialog] = useState<{
+    show: boolean
+    provider?: Provider
+  }>({
+    show: false,
+    provider: undefined,
+  })
+
+  const [closeAfterAlert, setCloseAfterAlert] = useState(false)
+
   const [alertDialog, setAlertDialog] = useState<{
     show: boolean
     title: string
@@ -30,16 +40,31 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
     type: 'info',
   })
 
+  const getApi = () =>
+    type === 'codex'
+      ? window.electronAPI.codex
+      : type === 'claude'
+        ? window.electronAPI.claude
+        : type === 'gemini'
+          ? window.electronAPI.gemini
+          : window.electronAPI.opencode
+
+  const resetState = () => {
+    setSelectedPreset(undefined)
+    setShowCustomForm(false)
+    setUseNowDialog({ show: false, provider: undefined })
+    setCloseAfterAlert(false)
+  }
+
+  const closeAndRefresh = () => {
+    onSubmit()
+    onClose()
+    resetState()
+  }
+
   const loadPresets = async () => {
     try {
-      const api =
-        type === 'codex'
-          ? window.electronAPI.codex
-          : type === 'claude'
-            ? window.electronAPI.claude
-            : type === 'gemini'
-              ? window.electronAPI.gemini
-              : window.electronAPI.opencode
+      const api = getApi()
       console.log(`[AddProviderModal] Loading ${type} presets...`)
       const presetsData = await api.listPresets()
       console.log(`[AddProviderModal] Loaded ${type} presets:`, presetsData)
@@ -51,14 +76,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const loadProviders = async () => {
     try {
-      const api =
-        type === 'codex'
-          ? window.electronAPI.codex
-          : type === 'claude'
-            ? window.electronAPI.claude
-            : type === 'gemini'
-              ? window.electronAPI.gemini
-              : window.electronAPI.opencode
+      const api = getApi()
       const providersData = await api.listProviders()
       setProviders(providersData)
     } catch (error) {
@@ -86,22 +104,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
   const handleProviderSubmit = async (input: AddProviderInput | EditProviderInput) => {
     try {
-      const api =
-        type === 'codex'
-          ? window.electronAPI.codex
-          : type === 'claude'
-            ? window.electronAPI.claude
-            : type === 'gemini'
-              ? window.electronAPI.gemini
-              : window.electronAPI.opencode
-      await api.addProvider(input as AddProviderInput)
-      onSubmit()
-      onClose()
-      // 重置状态
-      setSelectedPreset(undefined)
-      setShowCustomForm(false)
-      // 显示成功提示
-      onSuccess?.('添加成功')
+      const api = getApi()
+      const addedProvider = await api.addProvider(input as AddProviderInput)
+      setUseNowDialog({ show: true, provider: addedProvider })
     } catch (error) {
       setAlertDialog({
         show: true,
@@ -112,9 +117,35 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
     }
   }
 
+  const handleConfirmUseNow = async () => {
+    const providerToUse = useNowDialog.provider
+    if (!providerToUse) return
+
+    try {
+      const api = getApi()
+      await api.switchProvider(providerToUse.id)
+      onSuccess?.('添加成功并已切换')
+      closeAndRefresh()
+    } catch (error) {
+      setUseNowDialog({ show: false, provider: undefined })
+      setCloseAfterAlert(true)
+      onSuccess?.('添加成功')
+      setAlertDialog({
+        show: true,
+        title: '切换失败',
+        message: `${(error as Error).message}\n\n服务商已添加，可稍后在列表中切换使用。`,
+        type: 'error',
+      })
+    }
+  }
+
+  const handleCancelUseNow = () => {
+    onSuccess?.('添加成功')
+    closeAndRefresh()
+  }
+
   const handleClose = () => {
-    setSelectedPreset(undefined)
-    setShowCustomForm(false)
+    resetState()
     onClose()
   }
 
@@ -123,12 +154,22 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
     setShowCustomForm(false)
   }
 
+  const handleAlertClose = () => {
+    setAlertDialog((prev) => ({ ...prev, show: false }))
+    if (closeAfterAlert) {
+      setCloseAfterAlert(false)
+      closeAndRefresh()
+    }
+  }
+
   if (!show) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div
-        className={`bg-white rounded-lg shadow-xl w-full ${showCustomForm ? 'max-w-md' : 'max-w-4xl'} max-h-[90vh] overflow-hidden flex flex-col`}
+        className={`bg-white rounded-lg shadow-xl w-full ${
+          showCustomForm ? 'max-w-md' : 'max-w-4xl'
+        } max-h-[90vh] overflow-hidden flex flex-col`}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -142,10 +183,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                   : 'OpenCode'}{' '}
             服务商
           </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -187,7 +225,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                 <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                   <Package className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                   <p className="text-gray-500 mb-2">暂无可用的预置服务商</p>
-                  <p className="text-sm text-gray-400 mb-4">点击上方"自定义添加"创建配置</p>
+                  <p className="text-sm text-gray-400 mb-4">
+                    点击上方"自定义添加"创建配置
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -215,10 +255,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
                       <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
 
-                      <p
-                        className="text-xs text-gray-600 font-mono mb-3 truncate"
-                        title={preset.baseUrl}
-                      >
+                      <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
                         {preset.baseUrl}
                       </p>
 
@@ -241,14 +278,26 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
         </div>
       </div>
 
+      {/* Use Now Dialog */}
+      <ConfirmDialog
+        show={useNowDialog.show}
+        title="是否立即使用？"
+        message={`服务商 "${useNowDialog.provider?.name ?? ''}" 已添加，是否立即切换使用？`}
+        confirmText="立即使用"
+        cancelText="稍后"
+        onConfirm={handleConfirmUseNow}
+        onCancel={handleCancelUseNow}
+      />
+
       {/* Alert Dialog */}
       <AlertDialog
         show={alertDialog.show}
         title={alertDialog.title}
         message={alertDialog.message}
         type={alertDialog.type}
-        onClose={() => setAlertDialog({ ...alertDialog, show: false })}
+        onClose={handleAlertClose}
       />
     </div>
   )
 }
+

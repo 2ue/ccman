@@ -3,11 +3,6 @@ import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { createOpenCodeManager, ProviderNotFoundError } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
-import {
-  buildOpenCodeModel,
-  DEFAULT_OPENCODE_NPM,
-  parseOpenCodeMeta,
-} from '../../utils/opencode.js'
 
 export function cloneCommand(program: Command): void {
   program
@@ -47,8 +42,6 @@ export function cloneCommand(program: Command): void {
         }
 
         const source = manager.get(sourceId)
-        const meta = parseOpenCodeMeta(source.model)
-        const currentNpm = meta?.npm || DEFAULT_OPENCODE_NPM
 
         let cloned
 
@@ -64,25 +57,11 @@ export function cloneCommand(program: Command): void {
             apiKey: source.apiKey,
           })
 
-          const { npmPackage } = await inquirer.prompt([
-            {
-              type: 'input',
-              name: 'npmPackage',
-              message: '兼容包 (npm):',
-              default: currentNpm,
-              validate: (value) => (value ? true : 'npm 包不能为空'),
-            },
-          ])
-
           cloned = manager.add({
             name: input.name,
             desc: input.desc,
             baseUrl: input.baseUrl,
             apiKey: input.apiKey,
-            model: buildOpenCodeModel({
-              npm: npmPackage,
-              models: meta?.models,
-            }),
           })
         }
 

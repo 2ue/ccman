@@ -5,7 +5,11 @@
     "rootDir": "./src",
     "module": "ES2022",
     "moduleResolution": "node",
-    "target": "ES2022"
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@ccman/types": ["../types/dist"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
