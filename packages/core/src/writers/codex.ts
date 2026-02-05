@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
 import type { Provider } from '../tool-manager.js'
 import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
-import { ensureDir, fileExists } from '../utils/file.js'
+import { backupFile, ensureDir, fileExists, writeJSON } from '../utils/file.js'
 import { deepMerge } from '../utils/template.js'
 
 /**
@@ -84,7 +84,6 @@ interface CodexModelProvider {
  */
 interface CodexAuth {
   OPENAI_API_KEY: string
-  [key: string]: unknown // 保留其他字段
 }
 
 // ESM 环境下获取当前文件所在目录
@@ -163,7 +162,7 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
  * 1. 深度合并默认配置和用户现有配置（用户配置优先）
  * 2. 设置 Provider 相关字段（model_provider, model_providers）
  * 3. 写入 config.toml（注释会丢失，但保留所有用户数据）
- * 4. 写入 auth.json（只更新 OPENAI_API_KEY）
+ * 4. 写入 auth.json（先备份，再覆盖写入，仅保留 OPENAI_API_KEY）
  *
  * 版本迭代：
  * - 只需修改 CODEX_DEFAULT_CONFIG 对象
@@ -246,18 +245,14 @@ export function writeCodexConfig(provider: Provider): void {
 
   // 6. 处理 auth.json
   const authPath = getCodexAuthPath()
-  let auth: CodexAuth
-
   if (fileExists(authPath)) {
-    const content = fs.readFileSync(authPath, 'utf-8')
-    auth = JSON.parse(content) as CodexAuth
-  } else {
-    auth = { OPENAI_API_KEY: '' }
+    try {
+      backupFile(authPath)
+    } catch {
+      // 备份失败不影响写入（避免出现 config.toml 已更新但 auth.json 未更新的情况）
+    }
   }
 
-  // 只修改 OPENAI_API_KEY
-  auth.OPENAI_API_KEY = provider.apiKey
-
-  // 写入 auth.json
-  fs.writeFileSync(authPath, JSON.stringify(auth, null, 2), { mode: 0o600 })
+  const auth: CodexAuth = { OPENAI_API_KEY: provider.apiKey }
+  writeJSON(authPath, auth)
 }

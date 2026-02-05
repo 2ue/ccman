@@ -57,6 +57,8 @@ export function backupFile(filePath: string): string {
 
   const backupPath = `${filePath}.bak`
   fs.copyFileSync(filePath, backupPath)
+  // 备份文件可能包含敏感信息（例如 API Key），强制设置权限
+  fs.chmodSync(backupPath, 0o600)
   return backupPath
 }
 

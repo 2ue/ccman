@@ -149,11 +149,13 @@ let tomlContent = fs.readFileSync('~/.codex/config.toml')
 // 只更新 model_provider 和 [model_providers.gmn]
 // 保留：model_reasoning_effort, features, profiles 等
 
-// 读取现有 auth.json
-let auth = JSON.parse(fs.readFileSync('~/.codex/auth.json'))
+// 备份现有 auth.json（如果存在）
+if (fs.existsSync('~/.codex/auth.json')) {
+  fs.copyFileSync('~/.codex/auth.json', '~/.codex/auth.json.bak')
+}
 
-// 只更新 OPENAI_API_KEY
-// 保留：其他认证字段
+// 覆盖写入 auth.json，仅保留 OPENAI_API_KEY
+fs.writeFileSync('~/.codex/auth.json', JSON.stringify({ OPENAI_API_KEY: apiKey }, null, 2))
 ```
 
 **Gemini CLI**：

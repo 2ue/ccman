@@ -357,20 +357,14 @@ function configureCodex(apiKey) {
     atomicWrite(configPath, finalLines.join('\n'))
   }
 
-  // 2. 处理 auth.json
-  let auth = {}
-
-  if (!OVERWRITE_MODE && fs.existsSync(authPath)) {
-    // 保护模式：读取现有配置
-    try {
-      auth = JSON.parse(fs.readFileSync(authPath, 'utf-8'))
-    } catch (error) {
-      console.warn(`  ⚠️  无法解析 auth.json，将创建新文件`)
-    }
+  // 2. 处理 auth.json（先备份，再覆盖写入，仅保留 OPENAI_API_KEY）
+  if (fs.existsSync(authPath)) {
+    const backupPath = `${authPath}.bak`
+    fs.copyFileSync(authPath, backupPath)
+    fs.chmodSync(backupPath, 0o600)
   }
 
-  // 无论哪种模式，都更新 OPENAI_API_KEY
-  auth.OPENAI_API_KEY = apiKey
+  const auth = { OPENAI_API_KEY: apiKey }
   atomicWrite(authPath, JSON.stringify(auth, null, 2))
 }
 

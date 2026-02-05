@@ -182,7 +182,14 @@ describe('Codex Writer', () => {
       const authContent = fs.readFileSync(authPath, 'utf-8')
       const auth = JSON.parse(authContent)
       expect(auth.OPENAI_API_KEY).toBe('new-key')
-      expect(auth.CUSTOM_FIELD).toBe('should-be-preserved')
+      expect(auth.CUSTOM_FIELD).toBeUndefined()
+
+      // 覆盖前应生成备份，并保留原始内容
+      const backupPath = `${authPath}.bak`
+      expect(fs.existsSync(backupPath)).toBe(true)
+      const backup = JSON.parse(fs.readFileSync(backupPath, 'utf-8'))
+      expect(backup.OPENAI_API_KEY).toBe('old-key')
+      expect(backup.CUSTOM_FIELD).toBe('should-be-preserved')
     })
 
     it('should handle baseUrl without trailing slash', () => {
