@@ -270,14 +270,10 @@ function configureCodex(apiKey) {
     `model_provider = "${providerKey}"`,
     'model = "gpt-5.2-codex"',
     'model_reasoning_effort = "high"',
-    'model_verbosity = "high"',
+    'network_access = "enabled"',
     'disable_response_storage = true',
     'windows_wsl_setup_acknowledged = true',
-    'web_search = "live"',
-    'sandbox_mode = "workspace-write"',
-    '',
-    '[sandbox_workspace_write]',
-    'network_access = true',
+    'model_verbosity = "high"',
     '',
     `[model_providers.${providerKey}]`,
     `name = "${providerKey}"`,
@@ -291,8 +287,6 @@ function configureCodex(apiKey) {
   if (OVERWRITE_MODE || !tomlContent.trim()) {
     atomicWrite(configPath, minimalConfig)
   } else {
-    const hasWebSearch = /^\s*web_search\s*=/.test(tomlContent)
-
     // 简单的 TOML 更新策略：
     // - 如果存在 model_provider，替换它
     // - 如果不存在，添加到文件开头
@@ -300,18 +294,26 @@ function configureCodex(apiKey) {
 
     const lines = tomlContent.split('\n')
     let hasModelProvider = false
+    let hasNetworkAccess = false
     const newLines = []
+    let inRoot = true
 
     // 第一遍：更新 model_provider + 清理废弃字段（不截断文件）
     for (const line of lines) {
       const trimmed = line.trim()
+      if (trimmed.startsWith('[')) {
+        inRoot = false
+      }
       if (trimmed.startsWith('web_search_request')) {
-        // 移除已废弃字段：新版本使用 web_search
+        // 移除已废弃字段
         continue
       }
       if (trimmed.startsWith('model_provider')) {
         newLines.push(`model_provider = "${providerKey}"`)
         hasModelProvider = true
+      } else if (inRoot && trimmed.startsWith('network_access')) {
+        newLines.push('network_access = "enabled"')
+        hasNetworkAccess = true
       } else {
         newLines.push(line)
       }
@@ -321,11 +323,18 @@ function configureCodex(apiKey) {
     if (!hasModelProvider) {
       newLines.unshift(`model_provider = "${providerKey}"`)
     }
-    // 如果没有 web_search，添加默认值（避免新版本提示）
-    if (!hasWebSearch) {
-      const modelProviderIndex = newLines.findIndex((l) => l.trim().startsWith('model_provider'))
-      const insertIndex = modelProviderIndex === -1 ? 0 : modelProviderIndex + 1
-      newLines.splice(insertIndex, 0, 'web_search = "live"')
+    // 如果没有 network_access（仅顶层），插入默认值
+    if (!hasNetworkAccess) {
+      const firstTableIndex = newLines.findIndex((l) => l.trim().startsWith('['))
+      const endIndex = firstTableIndex === -1 ? newLines.length : firstTableIndex
+      const rootLines = newLines.slice(0, endIndex)
+
+      const effortIndex = rootLines.findIndex((l) => l.trim().startsWith('model_reasoning_effort'))
+      const modelProviderIndex = rootLines.findIndex((l) => l.trim().startsWith('model_provider'))
+      const insertIndex =
+        effortIndex !== -1 ? effortIndex + 1 : modelProviderIndex !== -1 ? modelProviderIndex + 1 : 0
+
+      newLines.splice(insertIndex, 0, 'network_access = "enabled"')
     }
 
     // 第二遍：移除旧的 [model_providers.gmn]/[model_providers.GMN] 块（如果存在）

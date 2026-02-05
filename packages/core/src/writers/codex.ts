@@ -16,6 +16,7 @@ interface CodexConfig {
   model_reasoning_effort?: string
   model_verbosity?: string
   web_search?: string
+  network_access?: string
   disable_response_storage?: boolean
   sandbox_mode?: string
   windows_wsl_setup_acknowledged?: boolean
@@ -121,13 +122,9 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
   model: 'gpt-5.2-codex',
   model_reasoning_effort: 'high',
   model_verbosity: 'high',
-  web_search: 'live',
+  network_access: 'enabled',
   disable_response_storage: true,
   windows_wsl_setup_acknowledged: true,
-  sandbox_mode: 'workspace-write',
-  sandbox_workspace_write: {
-    network_access: true,
-  },
 }
 
 function resolveCodexProviderKey(provider: Provider): string {
@@ -200,6 +197,9 @@ export function writeCodexConfig(provider: Provider): void {
   ) {
     delete (mergedConfig.features as Record<string, unknown>).web_search_request
   }
+  if ('web_search_request' in mergedConfig) {
+    delete (mergedConfig as Record<string, unknown>).web_search_request
+  }
 
   // 清理旧版本 ccman 写入过但已不再使用的 feature key（避免 Codex 新版本报错/告警）
   if (
@@ -215,11 +215,6 @@ export function writeCodexConfig(provider: Provider): void {
     if (Object.keys(mergedConfig.features as Record<string, unknown>).length === 0) {
       delete mergedConfig.features
     }
-  }
-
-  // 2.6. 缺省值：确保存在 web_search（新版本替代 web_search_request）
-  if (!mergedConfig.web_search) {
-    mergedConfig.web_search = 'live'
   }
 
   // 3. 设置 Provider 相关字段

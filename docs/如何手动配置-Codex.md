@@ -58,14 +58,10 @@ code ~/.codex/config.toml
 model_provider = "serverA"
 model = "gpt-5.2-codex"
 model_reasoning_effort = "high"
-model_verbosity = "high"
-web_search = "live" # "live" | "cached" | "disabled"
+network_access = "enabled"
 disable_response_storage = true
 windows_wsl_setup_acknowledged = true
-sandbox_mode = "workspace-write"
-
-[sandbox_workspace_write]
-network_access = true
+model_verbosity = "high"
 
 [model_providers.serverA]
 name = "serverA"
@@ -81,13 +77,10 @@ requires_openai_auth = true
 | `model_provider` | 当前使用的服务商名称（必须与 `[model_providers.xxx]` 中的名称一致） | ✅ 必填 |
 | `model` | 使用的模型名称（如 `gpt-5.2-codex`） | ✅ 必填 |
 | `model_reasoning_effort` | 模型推理强度（可选，建议保留） | ❌ 可选 |
-| `model_verbosity` | 输出详细度（可选，建议保留） | ❌ 可选 |
-| `web_search` | 联网搜索策略（新版本替代旧的 `features.web_search_request`） | ❌ 可选（建议保留） |
+| `network_access` | 联网能力（按 Codex 新版配置） | ❌ 可选（建议保留） |
 | `disable_response_storage` | 禁用响应存储（可选，建议保留） | ❌ 可选 |
 | `windows_wsl_setup_acknowledged` | Windows/WSL 初始化提示确认（建议保留） | ❌ 可选（建议保留） |
-| `sandbox_mode` | 沙箱模式（建议使用 `workspace-write`） | ❌ 可选（建议保留） |
-| `[sandbox_workspace_write]` | workspace-write 沙箱配置块 | ❌ 可选（按需） |
-| `sandbox_workspace_write.network_access` | 是否允许联网 | ❌ 可选（按需） |
+| `model_verbosity` | 输出详细度（可选，建议保留） | ❌ 可选 |
 | `[model_providers.xxx]` | 服务商配置块，`xxx` 为服务商名称 | ✅ 必填 |
 | `name` | 服务商名称（必须与 `model_provider` 一致） | ✅ 必填 |
 | `base_url` | 服务商的 API 基础地址 | ✅ 必填 |
@@ -134,14 +127,10 @@ codex --version
 model_provider = "serverA"
 model = "gpt-5.2-codex"
 model_reasoning_effort = "high"
-model_verbosity = "high"
-web_search = "live"
+network_access = "enabled"
 disable_response_storage = true
 windows_wsl_setup_acknowledged = true
-sandbox_mode = "workspace-write"
-
-[sandbox_workspace_write]
-network_access = true
+model_verbosity = "high"
 
 [model_providers.serverA]
 name = "serverA"
@@ -164,14 +153,10 @@ requires_openai_auth = true
 model_provider = "openai"
 model = "gpt-5.2-codex"
 model_reasoning_effort = "high"
-model_verbosity = "high"
-web_search = "live"
+network_access = "enabled"
 disable_response_storage = true
 windows_wsl_setup_acknowledged = true
-sandbox_mode = "workspace-write"
-
-[sandbox_workspace_write]
-network_access = true
+model_verbosity = "high"
 
 [model_providers.openai]
 name = "openai"
@@ -201,11 +186,10 @@ Codex 使用 TOML 格式存储配置（比 JSON 更易读）：
 model_provider = "serverA"  # 当前使用的服务商名称
 model = "gpt-5.2-codex"        # 使用的模型
 model_reasoning_effort = "high" # 推理强度（可选）
-model_verbosity = "high"        # 输出详细度（可选）
-web_search = "live"             # 联网搜索策略（可选）
+network_access = "enabled"      # 联网能力（可选）
 disable_response_storage = true # 禁用响应存储（可选）
 windows_wsl_setup_acknowledged = true # WSL 提示确认（Windows 可选）
-sandbox_mode = "workspace-write"       # 沙箱模式（可选）
+model_verbosity = "high"        # 输出详细度（可选）
 ```
 
 #### 2. 服务商配置块
@@ -249,14 +233,10 @@ Codex 支持在同一个 `config.toml` 中配置多个服务商，切换服务�
 model_provider = "serverA"
 model = "gpt-5.2-codex"
 model_reasoning_effort = "high"
-model_verbosity = "high"
-web_search = "live"
+network_access = "enabled"
 disable_response_storage = true
 windows_wsl_setup_acknowledged = true
-sandbox_mode = "workspace-write"
-
-[sandbox_workspace_write]
-network_access = true
+model_verbosity = "high"
 
 # 服务商 A：serverA
 [model_providers.serverA]

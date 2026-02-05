@@ -8,14 +8,6 @@
 model = "gpt-5.2-codex"
 model_reasoning_effort = "high"
 model_verbosity = "high"
+network_access = "enabled"
 disable_response_storage = true
 windows_wsl_setup_acknowledged = true
-
-# Web 搜索策略（替代旧的 [features].web_search_request）
-web_search = "live" # "live" | "cached" | "disabled"
-
-# 沙箱与网络访问：workspace-write + 允许联网
-sandbox_mode = "workspace-write"
-
-[sandbox_workspace_write]
-network_access = true
