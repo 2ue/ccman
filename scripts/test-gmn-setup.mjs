@@ -211,6 +211,11 @@ createTestConfig('claude', {
   customField: 'custom-value',
 })
 
+createTestConfig('codex-auth', {
+  OPENAI_API_KEY: 'old-key',
+  CUSTOM_FIELD: 'should-be-removed',
+})
+
 createTestConfig('gemini-env', 'CUSTOM_VAR=custom-value\nGEMINI_API_KEY=old-key')
 
 createTestConfig('opencode', {
@@ -239,6 +244,21 @@ test('Gemini .env 应该保留其他变量', () => {
   const env = readTestConfig('gemini-env')
   assert(env.includes('CUSTOM_VAR=custom-value'), '自定义变量丢失')
   assert(env.includes(`GEMINI_API_KEY=${TEST_API_KEY}`), 'API Key 未更新')
+})
+
+test('Codex auth.json 应该备份并覆盖写入（仅保留 OPENAI_API_KEY）', () => {
+  const authPath = path.join(TEST_HOME, '.codex/auth.json')
+  const backupPath = `${authPath}.bak`
+
+  assert(fs.existsSync(backupPath), 'auth.json.bak 未创建')
+
+  const auth = JSON.parse(fs.readFileSync(authPath, 'utf-8'))
+  assert(auth.OPENAI_API_KEY === TEST_API_KEY, 'API Key 未更新')
+  assert(auth.CUSTOM_FIELD === undefined, '不应保留其他字段')
+
+  const backup = JSON.parse(fs.readFileSync(backupPath, 'utf-8'))
+  assert(backup.OPENAI_API_KEY === 'old-key', '备份内容不正确')
+  assert(backup.CUSTOM_FIELD === 'should-be-removed', '备份未保留原字段')
 })
 
 test('OpenCode 应该保留其他 provider', () => {

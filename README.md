@@ -1101,7 +1101,7 @@ packages/
 - **Claude/Codex/Gemini 配置写入**采用深度合并策略：
   - 保留用户已有字段与自定义设置
   - 仅覆盖与认证相关的必要字段
-- **Codex** 会写入 `config.toml` 与 `auth.json`（只更新 `OPENAI_API_KEY`）
+- **Codex** 会写入 `config.toml` 与 `auth.json`（`auth.json` 会先备份为 `auth.json.bak`，再覆盖写入，仅保留 `OPENAI_API_KEY`）
 - **Gemini** 会写入 `settings.json` 与 `.env`
 - **OpenCode** 会写入 `~/.config/opencode/opencode.json`
 

@@ -432,7 +432,7 @@ ccman cx use <服务商ID>
 
 ccman 会自动：
 - 更新 `config.toml` 中的 `model_provider` 和服务商配置块
-- 更新 `auth.json` 中的 `OPENAI_API_KEY`
+- 备份 `auth.json` 为 `auth.json.bak`，并覆盖写入仅包含 `OPENAI_API_KEY` 的 `auth.json`
 - 备份原有配置（如果出错会自动回滚）
 
 ### 3. 查看当前服务商

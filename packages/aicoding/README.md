@@ -125,7 +125,7 @@ npx @2ue/aicoding sk-ant-xxx --overwrite
 | 工具 | 配置文件 | 说明 |
 |------|---------|------|
 | **Claude Code** | `~/.claude/settings.json` | 更新 `ANTHROPIC_AUTH_TOKEN` 和 `ANTHROPIC_BASE_URL` |
-| **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | 更新 `model_provider` 和 `OPENAI_API_KEY` |
+| **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | 更新 `model_provider`；`auth.json` 会先备份为 `auth.json.bak`，再覆盖写入，仅保留 `OPENAI_API_KEY` |
 | **Gemini CLI** | `~/.gemini/settings.json`<br>`~/.gemini/.env` | 更新 `GEMINI_API_KEY` 和 `GOOGLE_GEMINI_BASE_URL` |
 | **OpenCode** | `~/.config/opencode/opencode.json` | 更新 `provider.gmn` 配置 |
 
