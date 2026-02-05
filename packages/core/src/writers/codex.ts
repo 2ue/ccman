@@ -14,6 +14,8 @@ interface CodexConfig {
   model_provider?: string
   model?: string
   model_reasoning_effort?: string
+  model_verbosity?: string
+  web_search?: string
   disable_response_storage?: boolean
   sandbox_mode?: string
   windows_wsl_setup_acknowledged?: boolean
@@ -48,13 +50,9 @@ interface CodexShellEnvironmentPolicy {
 }
 
 interface CodexFeatures {
-  plan_tool?: boolean
   apply_patch_freeform?: boolean
-  view_image_tool?: boolean
-  web_search_request?: boolean
   unified_exec?: boolean
-  streamable_shell?: boolean
-  rmcp_client?: boolean
+  suppress_unstable_features_warning?: boolean
   [key: string]: unknown
 }
 
@@ -121,49 +119,22 @@ function resolveTemplatePath(relativePath: string): string | null {
  * - 这里定义的是其他默认字段
  */
 const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
-  model: 'gpt-5.1-code-max',
+  model: 'gpt-5.2-codex',
   model_reasoning_effort: 'high',
+  model_verbosity: 'high',
+  web_search: 'live',
   disable_response_storage: true,
-  sandbox_mode: 'danger-full-access',
   windows_wsl_setup_acknowledged: true,
-  approval_policy: 'never',
-  profile: 'auto-max',
-  file_opener: 'vscode',
-  history: {
-    persistence: 'save-all',
-  },
-  tui: {
-    notifications: true,
-  },
-  shell_environment_policy: {
-    inherit: 'all',
-    ignore_default_excludes: false,
-  },
-  features: {
-    plan_tool: true,
-    apply_patch_freeform: true,
-    view_image_tool: true,
-    web_search_request: true,
-    unified_exec: false,
-    streamable_shell: false,
-    rmcp_client: true,
-  },
+  sandbox_mode: 'workspace-write',
   sandbox_workspace_write: {
     network_access: true,
   },
-  profiles: {
-    'auto-max': {
-      approval_policy: 'never',
-      sandbox_mode: 'workspace-write',
-    },
-    review: {
-      approval_policy: 'on-request',
-      sandbox_mode: 'workspace-write',
-    },
-  },
-  notice: {
-    hide_gpt5_1_migration_prompt: true,
-  },
+}
+
+function resolveCodexProviderKey(provider: Provider): string {
+  const baseUrl = (provider.baseUrl || '').toLowerCase()
+  if (baseUrl.includes('gmn.chuangzuoli.com')) return 'gmn'
+  return provider.name
 }
 
 /**
@@ -221,14 +192,49 @@ export function writeCodexConfig(provider: Provider): void {
   const templateConfig = loadCodexTemplateConfig()
   const mergedConfig = deepMerge<CodexConfig>(templateConfig, userConfig)
 
+  // 2.5. 迁移/清理已废弃字段
+  if (
+    mergedConfig.features &&
+    typeof mergedConfig.features === 'object' &&
+    !Array.isArray(mergedConfig.features) &&
+    'web_search_request' in mergedConfig.features
+  ) {
+    delete (mergedConfig.features as Record<string, unknown>).web_search_request
+  }
+
+  // 清理旧版本 ccman 写入过但已不再使用的 feature key（避免 Codex 新版本报错/告警）
+  if (
+    mergedConfig.features &&
+    typeof mergedConfig.features === 'object' &&
+    !Array.isArray(mergedConfig.features)
+  ) {
+    for (const key of ['plan_tool', 'view_image_tool', 'rmcp_client', 'streamable_shell']) {
+      if (key in mergedConfig.features) {
+        delete (mergedConfig.features as Record<string, unknown>)[key]
+      }
+    }
+    if (Object.keys(mergedConfig.features as Record<string, unknown>).length === 0) {
+      delete mergedConfig.features
+    }
+  }
+
+  // 2.6. 缺省值：确保存在 web_search（新版本替代 web_search_request）
+  if (!mergedConfig.web_search) {
+    mergedConfig.web_search = 'live'
+  }
+
   // 3. 设置 Provider 相关字段
-  mergedConfig.model_provider = provider.name
-  mergedConfig.model = provider.model || mergedConfig.model || 'gpt-5-codex'
+  const providerKey = resolveCodexProviderKey(provider)
+  mergedConfig.model_provider = providerKey
+  mergedConfig.model = provider.model || mergedConfig.model || 'gpt-5.2-codex'
 
   // 4. 设置 model_providers
   mergedConfig.model_providers = mergedConfig.model_providers || {}
-  mergedConfig.model_providers[provider.name] = {
-    name: provider.name,
+  if (providerKey !== provider.name) {
+    delete mergedConfig.model_providers[provider.name]
+  }
+  mergedConfig.model_providers[providerKey] = {
+    name: providerKey,
     base_url: provider.baseUrl,
     wire_api: 'responses',
     requires_openai_auth: true,

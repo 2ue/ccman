@@ -20,14 +20,19 @@ import {
   createOpenCodeManager,
 } from '../packages/core/dist/index.js'
 
-const GMN_BASE_URL = 'https://gmn.chuangzuoli.cn/openai'
 const PROVIDER_NAME = 'GMN'
+const GMN_BASE_URLS = {
+  claude: 'https://gmn.chuangzuoli.com/api',
+  codex: 'https://gmn.chuangzuoli.com',
+  gemini: 'https://gmn.chuangzuoli.com',
+  opencode: 'https://gmn.chuangzuoli.com',
+}
 
 const tools = [
-  { name: 'Claude Code', manager: createClaudeManager() },
-  { name: 'Codex', manager: createCodexManager() },
-  { name: 'Gemini CLI', manager: createGeminiManager() },
-  { name: 'OpenCode', manager: createOpenCodeManager() },
+  { name: 'Claude Code', manager: createClaudeManager(), baseUrl: GMN_BASE_URLS.claude },
+  { name: 'Codex', manager: createCodexManager(), baseUrl: GMN_BASE_URLS.codex },
+  { name: 'Gemini CLI', manager: createGeminiManager(), baseUrl: GMN_BASE_URLS.gemini },
+  { name: 'OpenCode', manager: createOpenCodeManager(), baseUrl: GMN_BASE_URLS.opencode },
 ]
 
 async function main() {
@@ -49,13 +54,13 @@ async function main() {
   console.log('\n开始配置...\n')
 
   // 2. 配置所有工具
-  for (const { name, manager } of tools) {
+  for (const { name, manager, baseUrl } of tools) {
     try {
       const existing = manager.findByName(PROVIDER_NAME)
 
       const provider = existing
-        ? manager.edit(existing.id, { baseUrl: GMN_BASE_URL, apiKey })
-        : manager.add({ name: PROVIDER_NAME, baseUrl: GMN_BASE_URL, apiKey })
+        ? manager.edit(existing.id, { baseUrl, apiKey })
+        : manager.add({ name: PROVIDER_NAME, baseUrl, apiKey })
 
       manager.switch(provider.id)
       console.log(`✅ ${name}`)

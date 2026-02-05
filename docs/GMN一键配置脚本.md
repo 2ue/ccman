@@ -40,9 +40,12 @@
 - **写入逻辑**：`packages/core/src/writers/codex.ts`
   - 读取并深度合并模板 + 用户配置
   - 设置：
-    - `model_provider = provider.name`
-    - `model = provider.model || existing || 'gpt-5-codex'`
-    - `model_providers[provider.name] = { base_url, wire_api, requires_openai_auth }`
+    - `model_provider = providerKey`（GMN 固定写入 `gmn`）
+    - `model = provider.model || existing || 'gpt-5.2-codex'`
+    - `model_providers[providerKey] = { base_url, wire_api, requires_openai_auth }`
+  - 迁移/清理：
+    - 删除已废弃的 `[features].web_search_request`
+    - 如果缺失则补齐 `web_search = "live"`
   - 更新 `auth.json`：`OPENAI_API_KEY = provider.apiKey`
 
 ### 4) Gemini CLI
@@ -75,9 +78,12 @@ GMN 的默认 baseUrl 已在内置预设中出现：
 - `packages/core/src/presets/gemini.ts`
 - `packages/core/src/presets/opencode.ts`
 
-统一地址：
+默认地址（按工具）：
 ```
-https://gmn.chuangzuoli.cn/openai
+Claude Code: https://gmn.chuangzuoli.com/api
+Codex:      https://gmn.chuangzuoli.com
+Gemini CLI: https://gmn.chuangzuoli.com
+OpenCode:   https://gmn.chuangzuoli.com
 ```
 
 ---

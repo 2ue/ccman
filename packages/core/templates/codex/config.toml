@@ -1,109 +1,21 @@
 ########################################
-# 基础设置：通用 Codex 默认配置
+# Codex 最小模板（ccman 默认）
+#
+# - model_provider 与 [model_providers.*] 由 ccman 根据当前服务商自动写入
+# - 配置越少越稳定；需要扩展再手动加
 ########################################
 
-model = "gpt-5.1-code-max"
-
-# model_provider 与 model_providers 由 ccman 根据当前服务商自动写入
-# 如需手动指定可自行在此添加:
-# model_provider = "YourProviderName"
-
-# 理力度设置
+model = "gpt-5.2-codex"
 model_reasoning_effort = "high"
-
-# 存储策略
+model_verbosity = "high"
 disable_response_storage = true
-
-# 沙箱模式
-sandbox_mode = "danger-full-access"  # 完全禁用沙箱
-# sandbox_mode = "workspace-write"
 windows_wsl_setup_acknowledged = true
 
-# 命令审批策略（只影响本地行为，不会影响上游服务商）
-#  - "never"：尽量自动执行命令（自动模式）
-approval_policy = "never"
+# Web 搜索策略（替代旧的 [features].web_search_request）
+web_search = "live" # "live" | "cached" | "disabled"
 
-# 默认使用的 profile（下面定义，只改行为，不改 model）
-profile = "auto-max"
-
-# 打开文件用哪个编辑器
-file_opener = "vscode"
-
-
-########################################
-# 历史记录 & 终端 UI（纯本地）
-########################################
-
-[history]
-persistence = "save-all"
-
-[tui]
-notifications = true
-
-
-########################################
-# Shell 环境（纯本地）
-########################################
-
-[shell_environment_policy]
-inherit = "all"
-ignore_default_excludes = false
-# 如有需要可以再加 exclude / include_only / set
-
-
-########################################
-# workspace-write 沙箱设置（纯本地）
-########################################
+# 沙箱与网络访问：workspace-write + 允许联网
+sandbox_mode = "workspace-write"
 
 [sandbox_workspace_write]
 network_access = true
-# 可按需再加 writable_roots / exclude_tmpdir_env_var / exclude_slash_tmp
-
-
-########################################
-# Features（完全沿用你原来的 + 本地能力）
-########################################
-
-[features]
-plan_tool = true
-apply_patch_freeform = true
-view_image_tool = true
-web_search_request = true
-unified_exec = false
-streamable_shell = false
-rmcp_client = true
-# 如以后确认其他服务完全兼容，可以考虑再打开 ghost_commit 等
-
-
-########################################
-# Profiles：只改“行为”，不改模型/提供方
-########################################
-
-[profiles.auto-max]
-# 使用顶层的 model / model_provider（即 gpt-5.1-codex + OpenAI/GMN）
-# 这里只覆盖“本地行为”，例如审批和沙箱
-approval_policy = "never"
-sandbox_mode = "workspace-write"
-
-[profiles.review]
-# 审核模式：命令前多问一句（适合公司仓库）
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
-
-
-########################################
-# 其它提示 / 杂项
-########################################
-
-[notice]
-hide_gpt5_1_migration_prompt = true
-
-########################################
-# 模型提供方示例（仅注释示例，不会生效）
-########################################
-
-# [model_providers.gmn]
-# name = "GMN"
-# base_url = "https://gmn.chuangzuoli.cn/openai"
-# wire_api = "responses"
-# requires_openai_auth = true

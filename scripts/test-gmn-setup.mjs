@@ -16,7 +16,12 @@ import { execSync } from 'child_process'
 
 // 测试配置
 const TEST_API_KEY = 'sk-ant-test-key-123456'
-const GMN_BASE_URL = 'https://gmn.chuangzuoli.cn/openai'
+const GMN_BASE_URLS = {
+  claude: 'https://gmn.chuangzuoli.com/api',
+  codex: 'https://gmn.chuangzuoli.com',
+  gemini: 'https://gmn.chuangzuoli.com',
+  opencode: 'https://gmn.chuangzuoli.com',
+}
 
 // 创建临时测试目录
 const TEST_ROOT = path.join(os.tmpdir(), `ccman-gmn-test-${Date.now()}`)
@@ -146,14 +151,22 @@ test('应该创建所有配置文件', () => {
 test('Claude 配置应该包含正确的认证信息', () => {
   const config = readTestConfig('claude')
   assert(config.env.ANTHROPIC_AUTH_TOKEN === TEST_API_KEY, 'API Key 不正确')
-  assert(config.env.ANTHROPIC_BASE_URL === GMN_BASE_URL, 'Base URL 不正确')
+  assert(config.env.ANTHROPIC_BASE_URL === GMN_BASE_URLS.claude, 'Base URL 不正确')
 })
 
 test('Codex 配置应该包含 GMN provider', () => {
   const config = readTestConfig('codex')
-  assert(config.includes('model_provider = "GMN"'), 'model_provider 不正确')
-  assert(config.includes('[model_providers.GMN]'), 'GMN provider 块不存在')
-  assert(config.includes(GMN_BASE_URL), 'Base URL 不存在')
+  assert(config.includes('model_provider = "gmn"'), 'model_provider 不正确')
+  assert(config.includes('model = "gpt-5.2-codex"'), 'model 不正确')
+  assert(config.includes('model_reasoning_effort = "high"'), 'model_reasoning_effort 不正确')
+  assert(config.includes('model_verbosity = "high"'), 'model_verbosity 不正确')
+  assert(config.includes('disable_response_storage = true'), 'disable_response_storage 不正确')
+  assert(config.includes('windows_wsl_setup_acknowledged = true'), 'windows_wsl_setup_acknowledged 不正确')
+  assert(config.includes('web_search = "live"'), 'web_search 不正确')
+  assert(config.includes('[sandbox_workspace_write]'), 'sandbox_workspace_write 块不存在')
+  assert(config.includes('network_access = true'), 'network_access 不正确')
+  assert(config.includes('[model_providers.gmn]'), 'gmn provider 块不存在')
+  assert(config.includes(GMN_BASE_URLS.codex), 'Base URL 不存在')
 })
 
 test('Codex auth.json 应该包含 API Key', () => {
@@ -169,14 +182,14 @@ test('Gemini 配置应该启用 IDE', () => {
 test('Gemini .env 应该包含认证信息', () => {
   const env = readTestConfig('gemini-env')
   assert(env.includes(`GEMINI_API_KEY=${TEST_API_KEY}`), 'API Key 不存在')
-  assert(env.includes(`GOOGLE_GEMINI_BASE_URL=${GMN_BASE_URL}`), 'Base URL 不存在')
+  assert(env.includes(`GOOGLE_GEMINI_BASE_URL=${GMN_BASE_URLS.gemini}`), 'Base URL 不存在')
 })
 
 test('OpenCode 配置应该包含 GMN provider', () => {
   const config = readTestConfig('opencode')
   assert(config.provider.gmn.name === 'GMN', 'Provider 名称不正确')
   assert(config.provider.gmn.options.apiKey === TEST_API_KEY, 'API Key 不正确')
-  assert(config.provider.gmn.options.baseURL === GMN_BASE_URL, 'Base URL 不正确')
+  assert(config.provider.gmn.options.baseURL === GMN_BASE_URLS.opencode, 'Base URL 不正确')
 })
 
 // ============================================================================
@@ -216,7 +229,7 @@ assert(result2.success, '脚本执行失败')
 test('Claude 应该保留自定义字段', () => {
   const config = readTestConfig('claude')
   assert(config.env.ANTHROPIC_AUTH_TOKEN === TEST_API_KEY, 'API Key 未更新')
-  assert(config.env.ANTHROPIC_BASE_URL === GMN_BASE_URL, 'Base URL 未更新')
+  assert(config.env.ANTHROPIC_BASE_URL === GMN_BASE_URLS.claude, 'Base URL 未更新')
   assert(config.env.CUSTOM_ENV === 'should-be-preserved', '自定义 env 丢失')
   assert(config.permissions.allow[0] === 'custom-permission', 'permissions 丢失')
   assert(config.customField === 'custom-value', '自定义字段丢失')

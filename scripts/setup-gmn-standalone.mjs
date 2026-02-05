@@ -23,7 +23,12 @@ import * as path from 'path'
 import { createInterface } from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
 
-const GMN_BASE_URL = 'https://gmn.chuangzuoli.cn/openai'
+const GMN_BASE_URLS = {
+  claude: 'https://gmn.chuangzuoli.com/api',
+  codex: 'https://gmn.chuangzuoli.com',
+  gemini: 'https://gmn.chuangzuoli.com',
+  opencode: 'https://gmn.chuangzuoli.com',
+}
 const HOME_DIR = os.homedir()
 
 // 全局配置：写入模式
@@ -82,7 +87,7 @@ function configureClaudeCode(apiKey) {
   const defaultConfig = {
     env: {
       ANTHROPIC_AUTH_TOKEN: apiKey,
-      ANTHROPIC_BASE_URL: GMN_BASE_URL,
+      ANTHROPIC_BASE_URL: GMN_BASE_URLS.claude,
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1,
       CLAUDE_CODE_MAX_OUTPUT_TOKENS: 32000,
     },
@@ -115,7 +120,7 @@ function configureClaudeCode(apiKey) {
   // 无论哪种模式，都强制更新认证字段
   finalConfig.env = finalConfig.env || {}
   finalConfig.env.ANTHROPIC_AUTH_TOKEN = apiKey
-  finalConfig.env.ANTHROPIC_BASE_URL = GMN_BASE_URL
+  finalConfig.env.ANTHROPIC_BASE_URL = GMN_BASE_URLS.claude
 
   // 写入配置
   atomicWrite(configPath, JSON.stringify(finalConfig, null, 2))
@@ -129,6 +134,7 @@ function configureCodex(apiKey) {
   const configDir = path.join(HOME_DIR, '.codex')
   const configPath = path.join(configDir, 'config.toml')
   const authPath = path.join(configDir, 'auth.json')
+  const providerKey = 'gmn'
 
   ensureDir(configDir)
 
@@ -139,60 +145,96 @@ function configureCodex(apiKey) {
     // 保护模式：读取现有配置
     tomlContent = fs.readFileSync(configPath, 'utf-8')
   }
+  const minimalConfig = [
+    `model_provider = "${providerKey}"`,
+    'model = "gpt-5.2-codex"',
+    'model_reasoning_effort = "high"',
+    'model_verbosity = "high"',
+    'disable_response_storage = true',
+    'windows_wsl_setup_acknowledged = true',
+    'web_search = "live"',
+    'sandbox_mode = "workspace-write"',
+    '',
+    '[sandbox_workspace_write]',
+    'network_access = true',
+    '',
+    `[model_providers.${providerKey}]`,
+    `name = "${providerKey}"`,
+    `base_url = "${GMN_BASE_URLS.codex}"`,
+    'wire_api = "responses"',
+    'requires_openai_auth = true',
+    '',
+  ].join('\n')
 
-  // 简单的 TOML 更新策略：
-  // - 如果存在 model_provider，替换它
-  // - 如果不存在，添加到文件开头
-  // - 添加/更新 [model_providers.GMN] 部分
+  // 全覆盖模式 / 空文件：直接写最小模板
+  if (OVERWRITE_MODE || !tomlContent.trim()) {
+    atomicWrite(configPath, minimalConfig)
+  } else {
+    const hasWebSearch = /^\s*web_search\s*=/.test(tomlContent)
 
-  const lines = tomlContent.split('\n')
-  let hasModelProvider = false
-  const newLines = []
+    // 简单的 TOML 更新策略：
+    // - 如果存在 model_provider，替换它
+    // - 如果不存在，添加到文件开头
+    // - 添加/更新 [model_providers.gmn] 部分（同时兼容清理旧的 [model_providers.GMN]）
 
-  // 第一遍：更新 model_provider
-  for (const line of lines) {
-    if (line.trim().startsWith('model_provider')) {
-      newLines.push('model_provider = "GMN"')
-      hasModelProvider = true
-    } else if (line.trim().startsWith('[model_providers.GMN]')) {
-      // 跳过，后面会重新添加
-      break
-    } else {
-      newLines.push(line)
+    const lines = tomlContent.split('\n')
+    let hasModelProvider = false
+    const newLines = []
+
+    // 第一遍：更新 model_provider + 清理废弃字段（不截断文件）
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (trimmed.startsWith('web_search_request')) {
+        // 移除已废弃字段：新版本使用 web_search
+        continue
+      }
+      if (trimmed.startsWith('model_provider')) {
+        newLines.push(`model_provider = "${providerKey}"`)
+        hasModelProvider = true
+      } else {
+        newLines.push(line)
+      }
     }
+
+    // 如果没有 model_provider，添加到开头
+    if (!hasModelProvider) {
+      newLines.unshift(`model_provider = "${providerKey}"`)
+    }
+    // 如果没有 web_search，添加默认值（避免新版本提示）
+    if (!hasWebSearch) {
+      const modelProviderIndex = newLines.findIndex((l) => l.trim().startsWith('model_provider'))
+      const insertIndex = modelProviderIndex === -1 ? 0 : modelProviderIndex + 1
+      newLines.splice(insertIndex, 0, 'web_search = "live"')
+    }
+
+    // 第二遍：移除旧的 [model_providers.gmn]/[model_providers.GMN] 块（如果存在）
+    const finalLines = []
+    let inGMNBlock = false
+
+    for (const line of newLines) {
+      const trimmed = line.trim()
+      if (trimmed === '[model_providers.GMN]' || trimmed === '[model_providers.gmn]') {
+        inGMNBlock = true
+        continue
+      }
+      if (inGMNBlock && trimmed.startsWith('[')) {
+        inGMNBlock = false
+      }
+      if (!inGMNBlock) {
+        finalLines.push(line)
+      }
+    }
+
+    // 添加新的 [model_providers.gmn] 块到文件末尾
+    finalLines.push('')
+    finalLines.push(`[model_providers.${providerKey}]`)
+    finalLines.push(`name = "${providerKey}"`)
+    finalLines.push(`base_url = "${GMN_BASE_URLS.codex}"`)
+    finalLines.push('wire_api = "responses"')
+    finalLines.push('requires_openai_auth = true')
+
+    atomicWrite(configPath, finalLines.join('\n'))
   }
-
-  // 如果没有 model_provider，添加到开头
-  if (!hasModelProvider) {
-    newLines.unshift('model_provider = "GMN"')
-  }
-
-  // 第二遍：移除旧的 [model_providers.GMN] 块（如果存在）
-  const finalLines = []
-  let inGMNBlock = false
-
-  for (const line of newLines) {
-    if (line.trim().startsWith('[model_providers.GMN]')) {
-      inGMNBlock = true
-      continue
-    }
-    if (inGMNBlock && line.trim().startsWith('[')) {
-      inGMNBlock = false
-    }
-    if (!inGMNBlock) {
-      finalLines.push(line)
-    }
-  }
-
-  // 添加新的 [model_providers.GMN] 块到文件末尾
-  finalLines.push('')
-  finalLines.push('[model_providers.GMN]')
-  finalLines.push('name = "GMN"')
-  finalLines.push(`base_url = "${GMN_BASE_URL}"`)
-  finalLines.push('wire_api = "responses"')
-  finalLines.push('requires_openai_auth = true')
-
-  atomicWrite(configPath, finalLines.join('\n'))
 
   // 2. 处理 auth.json
   let auth = {}
@@ -253,7 +295,7 @@ function configureGeminiCLI(apiKey) {
   const env = {
     GEMINI_API_KEY: apiKey,
     GEMINI_MODEL: 'gemini-2.5-pro',
-    GOOGLE_GEMINI_BASE_URL: GMN_BASE_URL,
+    GOOGLE_GEMINI_BASE_URL: GMN_BASE_URLS.gemini,
   }
 
   if (!OVERWRITE_MODE && fs.existsSync(envPath)) {
@@ -294,7 +336,7 @@ function configureOpenCode(apiKey) {
     npm: '@ai-sdk/openai',
     name: 'GMN',
     options: {
-      baseURL: GMN_BASE_URL,
+      baseURL: GMN_BASE_URLS.opencode,
       apiKey: apiKey,
     },
     models: {
@@ -433,4 +475,3 @@ main().catch((err) => {
   console.error(`\n❌ 错误: ${err.message}`)
   process.exit(1)
 })
-

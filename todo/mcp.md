@@ -31,7 +31,7 @@ command = "npx"
 type = "stdio"
 
 [model_providers.gmn]
-base_url = "https://gmn.chuangzuoli.cn/openai"
+base_url = "https://gmn.chuangzuoli.com"
 env_key = "OPENAI_API_KEY"
 name = "gmn"
 requires_openai_auth = true

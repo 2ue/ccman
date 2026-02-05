@@ -22,16 +22,12 @@ type Platform = (typeof VALID_PLATFORMS)[number]
 const DEFAULT_PLATFORMS: Platform[] = ['codex', 'opencode']
 
 const GMN_BASE_URLS: Pick<Record<Platform, string>, 'claude' | 'gemini'> = {
-  claude: 'https://gmn.chuangzuoli.cn/api',
-  gemini: 'https://gmn.chuangzuoli.cn/gemini',
+  claude: 'https://gmn.chuangzuoli.com/api',
+  gemini: 'https://gmn.chuangzuoli.com',
 }
-const GMN_OPENAI_BASE_URLS = {
-  cn: 'https://gmn.chuangzuoli.cn/openai',
-  com: 'https://gmn.chuangzuoli.com',
-} as const
-type OpenAIDomain = keyof typeof GMN_OPENAI_BASE_URLS
+const GMN_OPENAI_BASE_URL = 'https://gmn.chuangzuoli.com'
 
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 3
 
 function renderStep(current: number, total: number, title: string): string {
   const barLength = total
@@ -55,7 +51,7 @@ function printBanner(): void {
       ].join('\n')
     )
   )
-  console.log(chalk.gray('自动写入选中工具配置，支持多选与端点选择。\n'))
+  console.log(chalk.gray('自动写入选中工具配置，支持多选。\n'))
 }
 
 function printKeyNotice(): void {
@@ -169,39 +165,7 @@ async function resolvePlatforms(platformArg?: string): Promise<Platform[]> {
   return promptPlatforms()
 }
 
-async function resolveOpenAIDomain(
-  domainArg: string | undefined,
-  platforms: Platform[]
-): Promise<OpenAIDomain> {
-  const needsOpenAI = platforms.includes('codex') || platforms.includes('opencode')
-  if (!needsOpenAI) {
-    return 'cn'
-  }
-
-  if (domainArg && domainArg.trim().length > 0) {
-    const normalized = domainArg.trim().toLowerCase() as OpenAIDomain
-    if (normalized === 'cn' || normalized === 'com') {
-      return normalized
-    }
-    throw new Error(`无效的 domain: ${domainArg} (可选: cn, com)`)
-  }
-
-  const answers = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'domain',
-      message: '选择 Codex/OpenCode 的 OpenAI Base URL（只影响这两个工具）:',
-      choices: [
-        { name: `CN（国内）  ${GMN_OPENAI_BASE_URLS.cn}`, value: 'cn' },
-        { name: `COM（国际） ${GMN_OPENAI_BASE_URLS.com}`, value: 'com' },
-      ],
-      default: 'cn',
-    },
-  ])
-  return answers.domain as OpenAIDomain
-}
-
-export async function gmnCommand(apiKey?: string, platformArg?: string, domainArg?: string) {
+export async function gmnCommand(apiKey?: string, platformArg?: string) {
   printBanner()
 
   let platforms: Platform[]
@@ -215,24 +179,8 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, domainAr
   console.log(chalk.gray(`已选择: ${platforms.join(', ')}`))
   printKeyNotice()
 
-  let openaiDomain: OpenAIDomain
-  try {
-    if (platforms.includes('codex') || platforms.includes('opencode')) {
-      console.log(
-        chalk.cyan(`\n${renderStep(2, TOTAL_STEPS, '选择 OpenAI 端点 (仅 Codex/OpenCode)')}`)
-      )
-    } else {
-      console.log(chalk.cyan(`\n${renderStep(2, TOTAL_STEPS, '选择 OpenAI 端点 (已跳过)')}`))
-      console.log(chalk.gray('未选择 Codex/OpenCode，将跳过此步骤。'))
-    }
-    openaiDomain = await resolveOpenAIDomain(domainArg, platforms)
-  } catch (error) {
-    console.error(chalk.red(`❌ ${(error as Error).message}`))
-    process.exit(1)
-  }
-
   let resolvedApiKey = apiKey?.trim()
-  console.log(chalk.cyan(`\n${renderStep(3, TOTAL_STEPS, '输入 API Key')}`))
+  console.log(chalk.cyan(`\n${renderStep(2, TOTAL_STEPS, '输入 API Key')}`))
   if (!resolvedApiKey) {
     resolvedApiKey = await promptApiKey()
   } else {
@@ -244,7 +192,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, domainAr
     process.exit(1)
   }
 
-  const openaiBaseUrl = GMN_OPENAI_BASE_URLS[openaiDomain]
+  const openaiBaseUrl = GMN_OPENAI_BASE_URL
   const platformBaseUrls: Record<Platform, string> = {
     claude: GMN_BASE_URLS.claude,
     codex: openaiBaseUrl,
@@ -252,10 +200,10 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, domainAr
     opencode: openaiBaseUrl,
   }
 
-  console.log(chalk.cyan(`\n${renderStep(4, TOTAL_STEPS, '开始写入配置')}`))
+  console.log(chalk.cyan(`\n${renderStep(3, TOTAL_STEPS, '开始写入配置')}`))
   console.log(chalk.gray(`已选择平台: ${platforms.join(', ')}`))
   if (platforms.includes('codex') || platforms.includes('opencode')) {
-    console.log(chalk.gray(`OpenAI 端点: ${openaiBaseUrl}`))
+    console.log(chalk.gray(`OpenAI Base URL: ${openaiBaseUrl}`))
   }
   printWriteTargets(platforms)
   console.log()

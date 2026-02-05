@@ -22,11 +22,6 @@ export const CODEX_PRESETS: PresetTemplate[] = [
   },
   {
     name: 'GMN',
-    baseUrl: 'https://gmn.chuangzuoli.cn/openai',
-    description: 'GMN 服务 (OpenAI/Codex 兼容)',
-  },
-  {
-    name: 'GMN (COM)',
     baseUrl: 'https://gmn.chuangzuoli.com',
     description: 'GMN 服务 (OpenAI/Codex 兼容)',
   },

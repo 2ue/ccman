@@ -50,14 +50,19 @@ import {
   createOpenCodeManager,
 } from '../packages/core/src/index.js'
 
-const GMN_BASE_URL = 'https://gmn.chuangzuoli.cn/openai'
+const GMN_BASE_URLS = {
+  claude: 'https://gmn.chuangzuoli.com/api',
+  codex: 'https://gmn.chuangzuoli.com',
+  gemini: 'https://gmn.chuangzuoli.com',
+  opencode: 'https://gmn.chuangzuoli.com',
+}
 const PROVIDER_NAME = 'GMN'
 
 const tools = [
-  { name: 'Claude Code', manager: createClaudeManager() },
-  { name: 'Codex', manager: createCodexManager() },
-  { name: 'Gemini CLI', manager: createGeminiManager() },
-  { name: 'OpenCode', manager: createOpenCodeManager() },
+  { name: 'Claude Code', manager: createClaudeManager(), baseUrl: GMN_BASE_URLS.claude },
+  { name: 'Codex', manager: createCodexManager(), baseUrl: GMN_BASE_URLS.codex },
+  { name: 'Gemini CLI', manager: createGeminiManager(), baseUrl: GMN_BASE_URLS.gemini },
+  { name: 'OpenCode', manager: createOpenCodeManager(), baseUrl: GMN_BASE_URLS.opencode },
 ]
 
 async function main() {
@@ -75,12 +80,12 @@ async function main() {
   }
 
   // 2. 配置所有工具
-  for (const { name, manager } of tools) {
+  for (const { name, manager, baseUrl } of tools) {
     const existing = manager.findByName(PROVIDER_NAME)
 
     const provider = existing
-      ? manager.edit(existing.id, { baseUrl: GMN_BASE_URL, apiKey })
-      : manager.add({ name: PROVIDER_NAME, baseUrl: GMN_BASE_URL, apiKey })
+      ? manager.edit(existing.id, { baseUrl, apiKey })
+      : manager.add({ name: PROVIDER_NAME, baseUrl, apiKey })
 
     manager.switch(provider.id)
     console.log(`✅ ${name}`)
@@ -132,7 +137,7 @@ node scripts/setup-gmn.mjs sk-ant-xxx
 ```javascript
 manager.add({
   name: 'GMN',
-  baseUrl: 'https://gmn.chuangzuoli.cn/openai',
+  baseUrl: 'https://gmn.chuangzuoli.com', // Claude Code 用 https://gmn.chuangzuoli.com/api
   apiKey: 'sk-ant-xxx',
 })
 ```
@@ -140,7 +145,7 @@ manager.add({
 **如果 GMN Provider 已存在**：
 ```javascript
 manager.edit(existingId, {
-  baseUrl: 'https://gmn.chuangzuoli.cn/openai',
+  baseUrl: 'https://gmn.chuangzuoli.com', // Claude Code 用 https://gmn.chuangzuoli.com/api
   apiKey: 'sk-ant-xxx',
 })
 ```
@@ -260,7 +265,12 @@ import { Command } from 'commander'
 import { createClaudeManager, createCodexManager, createGeminiManager, createOpenCodeManager } from '@ccman/core'
 import { input } from '@inquirer/prompts'
 
-const GMN_BASE_URL = 'https://gmn.chuangzuoli.cn/openai'
+const GMN_BASE_URLS = {
+  claude: 'https://gmn.chuangzuoli.com/api',
+  codex: 'https://gmn.chuangzuoli.com',
+  gemini: 'https://gmn.chuangzuoli.com',
+  opencode: 'https://gmn.chuangzuoli.com',
+}
 
 export const setupCommand = new Command('setup')
   .description('快速配置服务商')
@@ -272,10 +282,10 @@ setupCommand
     const apiKey = await input({ message: 'GMN API Key:' })
 
     const tools = [
-      { name: 'Claude Code', manager: createClaudeManager() },
-      { name: 'Codex', manager: createCodexManager() },
-      { name: 'Gemini CLI', manager: createGeminiManager() },
-      { name: 'OpenCode', manager: createOpenCodeManager() },
+      { name: 'Claude Code', manager: createClaudeManager(), baseUrl: GMN_BASE_URLS.claude },
+      { name: 'Codex', manager: createCodexManager(), baseUrl: GMN_BASE_URLS.codex },
+      { name: 'Gemini CLI', manager: createGeminiManager(), baseUrl: GMN_BASE_URLS.gemini },
+      { name: 'OpenCode', manager: createOpenCodeManager(), baseUrl: GMN_BASE_URLS.opencode },
     ]
 
     for (const { name, manager } of tools) {
@@ -335,7 +345,7 @@ const tools = [
 
 或者直接用 ccman CLI：
 ```bash
-ccman codex add --name GMN --base-url https://gmn.chuangzuoli.cn/openai --api-key sk-ant-xxx
+ccman codex add --name GMN --base-url https://gmn.chuangzuoli.com --api-key sk-ant-xxx
 ccman codex use GMN
 ```
 

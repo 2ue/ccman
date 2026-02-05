@@ -22,7 +22,7 @@ export const CC_PRESETS: PresetTemplate[] = [
   },
   {
     name: 'GMN',
-    baseUrl: 'https://gmn.chuangzuoli.cn/api',
+    baseUrl: 'https://gmn.chuangzuoli.com/api',
     description: 'GMN 服务 (Claude 兼容)',
   },
 ]

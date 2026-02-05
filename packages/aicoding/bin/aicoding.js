@@ -23,15 +23,14 @@ import * as path from 'path'
 import inquirer from 'inquirer'
 
 const GMN_BASE_URLS = {
-  claude: 'https://gmn.chuangzuoli.cn/api',
-  openai: 'https://gmn.chuangzuoli.cn/openai',
-  gemini: 'https://gmn.chuangzuoli.cn/gemini',
+  claude: 'https://gmn.chuangzuoli.com/api',
+  openai: 'https://gmn.chuangzuoli.com',
+  gemini: 'https://gmn.chuangzuoli.com',
 }
-const GMN_OPENAI_COM_BASE_URL = 'https://gmn.chuangzuoli.com'
 let OPENAI_BASE_URL = GMN_BASE_URLS.openai
 const VALID_PLATFORMS = ['claude', 'codex', 'gemini', 'opencode']
 const DEFAULT_PLATFORMS = ['codex', 'opencode']
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 4
 
 // 开发环境支持
 const HOME_DIR = process.env.NODE_ENV === 'development'
@@ -101,7 +100,7 @@ function printBanner() {
       ' ╚██████╔╝ ██║ ╚═╝ ██║██║ ╚████║',
       '  ╚═════╝  ╚═╝     ╚═╝╚═╝  ╚═══╝',
       '  GMN 一键配置向导 · 独立脚本',
-      '  自动写入选中工具配置，支持多选与端点选择。\n',
+      '  自动写入选中工具配置，支持多选。\n',
     ].join('\n')
   )
 }
@@ -176,23 +175,6 @@ async function promptPlatforms() {
     return [...VALID_PLATFORMS]
   }
   return selected
-}
-
-async function promptOpenAIDomain() {
-  const answers = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'domain',
-      message: '选择 Codex/OpenCode 的 OpenAI Base URL（只影响这两个工具）:',
-      choices: [
-        { name: `CN（国内）  ${GMN_BASE_URLS.openai}`, value: 'cn' },
-        { name: `COM（国际） ${GMN_OPENAI_COM_BASE_URL}`, value: 'com' },
-      ],
-      default: 'cn',
-    },
-  ])
-
-  return answers.domain
 }
 
 async function promptApiKey() {
@@ -273,6 +255,7 @@ function configureCodex(apiKey) {
   const configDir = path.join(HOME_DIR, '.codex')
   const configPath = path.join(configDir, 'config.toml')
   const authPath = path.join(configDir, 'auth.json')
+  const providerKey = 'gmn'
 
   ensureDir(configDir)
 
@@ -283,60 +266,96 @@ function configureCodex(apiKey) {
     // 保护模式：读取现有配置
     tomlContent = fs.readFileSync(configPath, 'utf-8')
   }
+  const minimalConfig = [
+    `model_provider = "${providerKey}"`,
+    'model = "gpt-5.2-codex"',
+    'model_reasoning_effort = "high"',
+    'model_verbosity = "high"',
+    'disable_response_storage = true',
+    'windows_wsl_setup_acknowledged = true',
+    'web_search = "live"',
+    'sandbox_mode = "workspace-write"',
+    '',
+    '[sandbox_workspace_write]',
+    'network_access = true',
+    '',
+    `[model_providers.${providerKey}]`,
+    `name = "${providerKey}"`,
+    `base_url = "${OPENAI_BASE_URL}"`,
+    'wire_api = "responses"',
+    'requires_openai_auth = true',
+    '',
+  ].join('\n')
 
-  // 简单的 TOML 更新策略：
-  // - 如果存在 model_provider，替换它
-  // - 如果不存在，添加到文件开头
-  // - 添加/更新 [model_providers.GMN] 部分
+  // 全覆盖模式 / 空文件：直接写最小模板
+  if (OVERWRITE_MODE || !tomlContent.trim()) {
+    atomicWrite(configPath, minimalConfig)
+  } else {
+    const hasWebSearch = /^\s*web_search\s*=/.test(tomlContent)
 
-  const lines = tomlContent.split('\n')
-  let hasModelProvider = false
-  const newLines = []
+    // 简单的 TOML 更新策略：
+    // - 如果存在 model_provider，替换它
+    // - 如果不存在，添加到文件开头
+    // - 添加/更新 [model_providers.gmn] 部分（同时兼容清理旧的 [model_providers.GMN]）
 
-  // 第一遍：更新 model_provider
-  for (const line of lines) {
-    if (line.trim().startsWith('model_provider')) {
-      newLines.push('model_provider = "GMN"')
-      hasModelProvider = true
-    } else if (line.trim().startsWith('[model_providers.GMN]')) {
-      // 跳过，后面会重新添加
-      break
-    } else {
-      newLines.push(line)
+    const lines = tomlContent.split('\n')
+    let hasModelProvider = false
+    const newLines = []
+
+    // 第一遍：更新 model_provider + 清理废弃字段（不截断文件）
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (trimmed.startsWith('web_search_request')) {
+        // 移除已废弃字段：新版本使用 web_search
+        continue
+      }
+      if (trimmed.startsWith('model_provider')) {
+        newLines.push(`model_provider = "${providerKey}"`)
+        hasModelProvider = true
+      } else {
+        newLines.push(line)
+      }
     }
+
+    // 如果没有 model_provider，添加到开头
+    if (!hasModelProvider) {
+      newLines.unshift(`model_provider = "${providerKey}"`)
+    }
+    // 如果没有 web_search，添加默认值（避免新版本提示）
+    if (!hasWebSearch) {
+      const modelProviderIndex = newLines.findIndex((l) => l.trim().startsWith('model_provider'))
+      const insertIndex = modelProviderIndex === -1 ? 0 : modelProviderIndex + 1
+      newLines.splice(insertIndex, 0, 'web_search = "live"')
+    }
+
+    // 第二遍：移除旧的 [model_providers.gmn]/[model_providers.GMN] 块（如果存在）
+    const finalLines = []
+    let inGMNBlock = false
+
+    for (const line of newLines) {
+      const trimmed = line.trim()
+      if (trimmed === '[model_providers.GMN]' || trimmed === '[model_providers.gmn]') {
+        inGMNBlock = true
+        continue
+      }
+      if (inGMNBlock && trimmed.startsWith('[')) {
+        inGMNBlock = false
+      }
+      if (!inGMNBlock) {
+        finalLines.push(line)
+      }
+    }
+
+    // 添加新的 [model_providers.gmn] 块到文件末尾
+    finalLines.push('')
+    finalLines.push(`[model_providers.${providerKey}]`)
+    finalLines.push(`name = "${providerKey}"`)
+    finalLines.push(`base_url = "${OPENAI_BASE_URL}"`)
+    finalLines.push('wire_api = "responses"')
+    finalLines.push('requires_openai_auth = true')
+
+    atomicWrite(configPath, finalLines.join('\n'))
   }
-
-  // 如果没有 model_provider，添加到开头
-  if (!hasModelProvider) {
-    newLines.unshift('model_provider = "GMN"')
-  }
-
-  // 第二遍：移除旧的 [model_providers.GMN] 块（如果存在）
-  const finalLines = []
-  let inGMNBlock = false
-
-  for (const line of newLines) {
-    if (line.trim().startsWith('[model_providers.GMN]')) {
-      inGMNBlock = true
-      continue
-    }
-    if (inGMNBlock && line.trim().startsWith('[')) {
-      inGMNBlock = false
-    }
-    if (!inGMNBlock) {
-      finalLines.push(line)
-    }
-  }
-
-  // 添加新的 [model_providers.GMN] 块到文件末尾
-  finalLines.push('')
-  finalLines.push('[model_providers.GMN]')
-  finalLines.push('name = "GMN"')
-  finalLines.push(`base_url = "${OPENAI_BASE_URL}"`)
-  finalLines.push('wire_api = "responses"')
-  finalLines.push('requires_openai_auth = true')
-
-  atomicWrite(configPath, finalLines.join('\n'))
 
   // 2. 处理 auth.json
   let auth = {}
@@ -532,8 +551,6 @@ async function main() {
       openaiBaseUrl = arg.substring('--openai-base-url='.length)
     } else if (arg.startsWith('--base-url=')) {
       openaiBaseUrl = arg.substring('--base-url='.length)
-    } else if (arg === '--gmn-com') {
-      openaiBaseUrl = GMN_OPENAI_COM_BASE_URL
     } else if (!arg.startsWith('-')) {
       apiKey = arg
     }
@@ -581,40 +598,30 @@ async function main() {
 
   const needsOpenAIBaseUrl = platforms.includes('codex') || platforms.includes('opencode')
 
-  console.log(`\n${renderStep(3, TOTAL_STEPS, '选择 OpenAI 端点 (仅 Codex/OpenCode)')}`)
-  if (!needsOpenAIBaseUrl) {
-    console.log('未选择 Codex/OpenCode，将跳过此步骤。')
-  } else if (!openaiBaseUrl) {
-    const domain = await promptOpenAIDomain()
-    openaiBaseUrl = domain === 'com' ? GMN_OPENAI_COM_BASE_URL : GMN_BASE_URLS.openai
-  } else {
-    console.log(`已通过参数指定 OpenAI Base URL：${openaiBaseUrl}`)
+  // 3. 处理 OpenAI Base URL（Codex/OpenCode）
+  if (needsOpenAIBaseUrl) {
+    const resolvedOpenaiBaseUrl =
+      openaiBaseUrl && openaiBaseUrl.trim().length > 0 ? openaiBaseUrl.trim() : GMN_BASE_URLS.openai
+    openaiBaseUrl = resolvedOpenaiBaseUrl
+    OPENAI_BASE_URL = resolvedOpenaiBaseUrl
   }
 
-  console.log(`\n${renderStep(4, TOTAL_STEPS, '输入 API Key')}`)
+  console.log(`\n${renderStep(3, TOTAL_STEPS, '输入 API Key')}`)
   if (!apiKey) {
     apiKey = await promptApiKey()
   } else {
     console.log('已通过参数提供 API Key（已隐藏）')
   }
 
-  // 4. 处理 OpenAI Base URL（Codex/OpenCode）
-  if (platforms.includes('codex') || platforms.includes('opencode')) {
-    if (!openaiBaseUrl || !openaiBaseUrl.trim()) {
-      throw new Error('OpenAI Base URL 不能为空')
-    }
-    OPENAI_BASE_URL = openaiBaseUrl.trim()
-  }
-
   if (!apiKey?.trim()) {
     throw new Error('API Key 不能为空')
   }
 
-  console.log(`\n${renderStep(5, TOTAL_STEPS, '开始写入配置')}`)
+  console.log(`\n${renderStep(4, TOTAL_STEPS, '开始写入配置')}`)
   console.log(`模式: ${OVERWRITE_MODE ? '全覆盖模式' : '保护模式'}`)
   console.log(`平台: ${platforms.join(', ')}`)
-  if (platforms.includes('codex') || platforms.includes('opencode')) {
-    console.log(`OpenAI 端点: ${openaiBaseUrl}`)
+  if (needsOpenAIBaseUrl && openaiBaseUrl) {
+    console.log(`OpenAI Base URL: ${openaiBaseUrl}`)
   }
   console.log('\n开始配置...\n')
 

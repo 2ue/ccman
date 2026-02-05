@@ -57,22 +57,30 @@
 ```javascript
 // Claude
 config.env.ANTHROPIC_AUTH_TOKEN === 'sk-ant-test-key-123456'
-config.env.ANTHROPIC_BASE_URL === 'https://gmn.chuangzuoli.cn/openai'
+config.env.ANTHROPIC_BASE_URL === 'https://gmn.chuangzuoli.com/api'
 
 // Codex
-config.includes('model_provider = "GMN"')
-config.includes('[model_providers.GMN]')
+config.includes('model_provider = "gmn"')
+config.includes('model = "gpt-5.2-codex"')
+config.includes('model_reasoning_effort = "high"')
+config.includes('model_verbosity = "high"')
+config.includes('disable_response_storage = true')
+config.includes('windows_wsl_setup_acknowledged = true')
+config.includes('web_search = "live"')
+config.includes('[sandbox_workspace_write]')
+config.includes('network_access = true')
+config.includes('[model_providers.gmn]')
 auth.OPENAI_API_KEY === 'sk-ant-test-key-123456'
 
 // Gemini
 settings.ide.enabled === true
 env.includes('GEMINI_API_KEY=sk-ant-test-key-123456')
-env.includes('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.cn/openai')
+env.includes('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
 
 // OpenCode
 config.provider.gmn.name === 'GMN'
 config.provider.gmn.options.apiKey === 'sk-ant-test-key-123456'
-config.provider.gmn.options.baseURL === 'https://gmn.chuangzuoli.cn/openai'
+config.provider.gmn.options.baseURL === 'https://gmn.chuangzuoli.com'
 ```
 
 ---
@@ -120,7 +128,7 @@ GEMINI_API_KEY=old-key
 ```javascript
 // Claude - 认证字段已更新，其他字段保留
 config.env.ANTHROPIC_AUTH_TOKEN === 'sk-ant-test-key-123456'  // ✅ 更新
-config.env.ANTHROPIC_BASE_URL === 'https://gmn.chuangzuoli.cn/openai'  // ✅ 更新
+config.env.ANTHROPIC_BASE_URL === 'https://gmn.chuangzuoli.com/api'  // ✅ 更新
 config.env.CUSTOM_ENV === 'should-be-preserved'  // ✅ 保留
 config.permissions.allow[0] === 'custom-permission'  // ✅ 保留
 config.customField === 'custom-value'  // ✅ 保留

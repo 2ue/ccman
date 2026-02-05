@@ -138,9 +138,8 @@ program
   .command('gmn [apiKey]')
   .description('配置 GMN 到所有工具')
   .option('-p, --platform <platforms>', '指定平台 (claude,codex,gemini,opencode,all)')
-  .option('-d, --domain <domain>', '选择 OpenAI 端点 (cn|com)')
   .action(async (apiKey, options) => {
-    await gmnCommand(apiKey, options.platform, options.domain)
+    await gmnCommand(apiKey, options.platform)
   })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式

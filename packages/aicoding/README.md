@@ -36,7 +36,7 @@ curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh 
 传参示例（将参数传给 aicoding）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --gmn-com
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --openai-base-url https://gmn.chuangzuoli.com
 ```
 
 更多用法示例：
@@ -89,15 +89,12 @@ npx @2ue/aicoding
 npx @2ue/aicoding sk-ant-xxx
 ```
 
-交互式流程会提示选择平台，以及 Codex/OpenCode 的 OpenAI Base URL（CN/COM）。
+交互式流程会提示选择平台；如需自定义 Codex/OpenCode 的 OpenAI Base URL，可通过参数指定。
 
 **可选：指定 Codex/OpenCode 的 OpenAI Base URL**
 ```bash
 # 使用指定 Base URL（仅影响 Codex/OpenCode）
 npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
-
-# 快捷选项：GMN .com
-npx @2ue/aicoding sk-ant-xxx --gmn-com
 ```
 
 **保护的配置**：

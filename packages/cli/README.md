@@ -95,7 +95,7 @@ $ ccman cx list
      https://api.openai.com/v1
 
   ○  GMN
-     https://gmn.chuangzuoli.cn/openai
+     https://gmn.chuangzuoli.com
 ```
 
 ```bash
@@ -231,29 +231,27 @@ ccman mcp remove   # 删除 MCP 服务器
 | 预设名称 | Base URL |
 |---------|----------|
 | Anthropic Official | `https://api.anthropic.com` |
-| GMN | `https://gmn.chuangzuoli.cn/api` |
+| GMN | `https://gmn.chuangzuoli.com/api` |
 
 ### Gemini CLI 预设（2 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
 | Google Gemini (API Key) | 官方默认 |
-| GMN | `https://gmn.chuangzuoli.cn/gemini` |
+| GMN | `https://gmn.chuangzuoli.com` |
 
-### Codex 预设（3 个）
+### Codex 预设（2 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
 | OpenAI Official | `https://api.openai.com/v1` |
-| GMN | `https://gmn.chuangzuoli.cn/openai` |
-| GMN (COM) | `https://gmn.chuangzuoli.com` |
+| GMN | `https://gmn.chuangzuoli.com` |
 
-### OpenCode 预设（2 个）
+### OpenCode 预设（1 个）
 
 | 预设名称 | Base URL |
 |---------|----------|
-| GMN | `https://gmn.chuangzuoli.cn/openai` |
-| GMN (COM) | `https://gmn.chuangzuoli.com` |
+| GMN | `https://gmn.chuangzuoli.com` |
 
 ### MCP 预设（多个）
 
@@ -296,7 +294,7 @@ $ ccman cx current
 
   GMN
   ID: codex-1760178741529-abc123
-  URL: https://gmn.chuangzuoli.cn/openai
+  URL: https://gmn.chuangzuoli.com
   最后使用: 2025/10/11 18:32:25
 ```
 

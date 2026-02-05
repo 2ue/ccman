@@ -16,7 +16,7 @@ export const GEMINI_PRESETS: InternalPresetTemplate[] = [
   },
   {
     name: 'GMN',
-    baseUrl: 'https://gmn.chuangzuoli.cn/gemini',
+    baseUrl: 'https://gmn.chuangzuoli.com',
     description: 'GMN 服务 (Gemini 兼容)',
   },
 ]

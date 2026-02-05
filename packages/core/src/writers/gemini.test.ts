@@ -34,7 +34,7 @@ describe('Gemini Writer', () => {
     const provider: Provider = {
       id: 'gemini-1',
       name: 'GMN',
-      baseUrl: 'https://gmn.chuangzuoli.cn/gemini',
+      baseUrl: 'https://gmn.chuangzuoli.com',
       apiKey: 'sk-test-123',
       createdAt: Date.now(),
       lastModified: Date.now(),
@@ -57,7 +57,7 @@ describe('Gemini Writer', () => {
     const envPath = getGeminiEnvPath()
     expect(fs.existsSync(envPath)).toBe(true)
     const envContent = fs.readFileSync(envPath, 'utf-8')
-    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.cn/gemini')
+    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
     expect(envContent).toContain('GEMINI_API_KEY=sk-test-123')
   })
 

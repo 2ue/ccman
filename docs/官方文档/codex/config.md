@@ -137,9 +137,10 @@ Values resolve in this order: explicit CLI flags (like `--model`) override every
 Optional and experimental capabilities are toggled via the `[features]` table in `config.toml`. If Codex emits a deprecation warning mentioning a legacy key (such as `experimental_use_exec_command_tool`), move that setting into `[features]` or launch the CLI with `codex --enable <feature>`.
 
 ```
+web_search = "live"              # "live" | "cached" | "disabled"
+
 [features]
 streamable_shell = true          # enable the streamable exec tool
-web_search_request = true        # allow the model to request web searches
 # view_image_tool defaults to true; omit to keep defaults
 ```
 
@@ -152,7 +153,7 @@ web_search_request = true        # allow the model to request web searches
 | `rmcp_client` | false | Experimental | Enable OAuth support for streamable HTTP MCP servers |
 | `apply_patch_freeform` | false | Beta | Include the freeform `apply_patch` tool |
 | `view_image_tool` | true | Stable | Include the `view_image` tool |
-| `web_search_request` | false | Stable | Allow the model to issue web searches |
+| `web_search_request` | false | Deprecated | Deprecated; set `web_search = "live"` (or `"cached"` / `"disabled"`) instead |
 | `experimental_sandbox_command_assessment` | false | Experimental | Enable model-based sandbox risk assessment |
 | `ghost_commit` | false | Experimental | Create a ghost commit each turn |
 | `enable_experimental_windows_sandbox` | false | Experimental | Use the Windows restricted-token sandbox |
@@ -357,6 +358,7 @@ To define your own keyboard shortcuts to trigger Codex or add something to the C
 | `model_max_output_tokens` | `number` | Maximum number of tokens Codex may request from the model. |
 | `approval_policy` | `untrusted \| on-failure \| on-request \| never` | Controls when Codex pauses for approval before executing commands. |
 | `sandbox_mode` | `read-only \| workspace-write \| danger-full-access` | Sandbox policy for filesystem and network access during command execution. |
+| `web_search` | `"live" \| "cached" \| "disabled"` | Web search policy (replaces deprecated `[features].web_search_request`). |
 | `sandbox_workspace_write.writable_roots` | `array<string>` | Additional writable roots when `sandbox_mode = "workspace-write"`. |
 | `sandbox_workspace_write.network_access` | `boolean` | Allow outbound network access inside the workspace-write sandbox. |
 | `sandbox_workspace_write.exclude_tmpdir_env_var` | `boolean` | Exclude `$TMPDIR` from writable roots in workspace-write mode. |
@@ -382,7 +384,7 @@ To define your own keyboard shortcuts to trigger Codex or add something to the C
 | `features.rmcp_client` | `boolean` | Enable the Rust MCP client to unlock OAuth for HTTP servers (experimental). |
 | `features.apply_patch_freeform` | `boolean` | Expose the freeform `apply_patch` tool (beta). |
 | `features.view_image_tool` | `boolean` | Allow Codex to attach local images via the `view_image` tool (stable; on by default). |
-| `features.web_search_request` | `boolean` | Allow the model to issue web searches (stable). |
+| `features.web_search_request` | `boolean` | Deprecated; set top-level `web_search` instead. |
 | `features.experimental_sandbox_command_assessment` | `boolean` | Enable model-based sandbox risk assessment (experimental). |
 | `features.ghost_commit` | `boolean` | Create a ghost commit on each turn (experimental). |
 | `features.enable_experimental_windows_sandbox` | `boolean` | Run the Windows restricted-token sandbox (experimental). |
@@ -425,7 +427,7 @@ To define your own keyboard shortcuts to trigger Codex or add something to the C
 | `experimental_instructions_file` | `string (path)` | Experimental replacement for built-in instructions instead of `AGENTS.md`. |
 | `experimental_use_exec_command_tool` | `boolean` | Deprecated; use `[features].unified_exec` or `codex --enable unified_exec`. |
 | `projects.<path>.trust_level` | `string` | Mark a project or worktree as trusted (only `"trusted"` is recognized). |
-| `tools.web_search` | `boolean` | Deprecated; use `[features].web_search_request` or `codex --enable web_search_request`. |
+| `tools.web_search` | `boolean` | Deprecated; set top-level `web_search` instead. |
 | `tools.view_image` | `boolean` | Deprecated; use `[features].view_image_tool` or `codex --enable view_image_tool`. |
 | `forced_login_method` | `chatgpt \| api` | Restrict Codex to a specific authentication method. |
 | `forced_chatgpt_workspace_id` | `string (uuid)` | Limit ChatGPT logins to a specific workspace identifier. |

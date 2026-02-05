@@ -11,7 +11,10 @@ import * as TOML from '@iarna/toml'
 describe('Codex Writer', () => {
   beforeEach(() => {
     // 设置测试环境路径（使用随机数避免并发冲突）
-    const testDir = path.join(os.tmpdir(), `ccman-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    const testDir = path.join(
+      os.tmpdir(),
+      `ccman-test-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    )
     __setTestPaths({
       ccman: path.join(testDir, '.ccman'),
       codex: path.join(testDir, '.codex'),
@@ -58,6 +61,75 @@ describe('Codex Writer', () => {
       const authContent = fs.readFileSync(authPath, 'utf-8')
       const auth = JSON.parse(authContent)
       expect(auth.OPENAI_API_KEY).toBe(provider.apiKey)
+    })
+
+    it('should use gmn as provider key for GMN baseUrl', () => {
+      const provider: Provider = {
+        id: 'test-id',
+        name: 'GMN',
+        type: 'codex',
+        baseUrl: 'https://gmn.chuangzuoli.com',
+        apiKey: 'test-api-key-123',
+        createdAt: Date.now(),
+      }
+
+      writeCodexConfig(provider)
+
+      const configContent = fs.readFileSync(getCodexConfigPath(), 'utf-8')
+      const config: any = TOML.parse(configContent)
+
+      expect(config.model_provider).toBe('gmn')
+      expect(config.model).toBe('gpt-5.2-codex')
+      expect(config.model_providers.gmn).toBeDefined()
+      expect(config.model_providers.gmn.base_url).toBe(provider.baseUrl)
+      expect(config.model_providers.GMN).toBeUndefined()
+    })
+
+    it('should remove deprecated web_search_request and legacy ccman feature keys', () => {
+      const configPath = getCodexConfigPath()
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+
+      const existingConfig = {
+        model_provider: 'GMN',
+        model_providers: {
+          GMN: {
+            name: 'GMN',
+            base_url: 'https://old.example.com',
+            wire_api: 'responses',
+            requires_openai_auth: true,
+          },
+        },
+        features: {
+          web_search_request: true,
+          plan_tool: true,
+          view_image_tool: true,
+          rmcp_client: true,
+          streamable_shell: true,
+          apply_patch_freeform: true,
+        },
+      }
+
+      fs.writeFileSync(configPath, TOML.stringify(existingConfig as any), 'utf-8')
+
+      const provider: Provider = {
+        id: 'test-id',
+        name: 'GMN',
+        type: 'codex',
+        baseUrl: 'https://gmn.chuangzuoli.com',
+        apiKey: 'test-api-key-123',
+        createdAt: Date.now(),
+      }
+      writeCodexConfig(provider)
+
+      const configContent = fs.readFileSync(getCodexConfigPath(), 'utf-8')
+      const config: any = TOML.parse(configContent)
+
+      expect(config.features?.web_search_request).toBeUndefined()
+      expect(config.features?.plan_tool).toBeUndefined()
+      expect(config.features?.view_image_tool).toBeUndefined()
+      expect(config.features?.rmcp_client).toBeUndefined()
+      expect(config.features?.streamable_shell).toBeUndefined()
+      expect(config.features?.apply_patch_freeform).toBe(true)
     })
 
     it('should preserve other fields when updating', () => {

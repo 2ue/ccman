@@ -146,7 +146,7 @@ finalConfig.env.ANTHROPIC_BASE_URL = GMN_BASE_URL
 // 读取现有 config.toml
 let tomlContent = fs.readFileSync('~/.codex/config.toml')
 
-// 只更新 model_provider 和 [model_providers.GMN]
+// 只更新 model_provider 和 [model_providers.gmn]
 // 保留：model_reasoning_effort, features, profiles 等
 
 // 读取现有 auth.json
@@ -201,7 +201,7 @@ let finalConfig = {
 **Codex**：
 ```javascript
 // 不读取现有 config.toml，创建新配置
-// 只包含：model_provider 和 [model_providers.GMN]
+// 只包含：model_provider 和 [model_providers.gmn]
 
 // 不读取现有 auth.json，创建新配置
 // 只包含：OPENAI_API_KEY
