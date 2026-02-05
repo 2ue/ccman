@@ -1,13 +1,50 @@
-########################################
-# Codex 最小模板（ccman 默认）
-#
-# - model_provider 与 [model_providers.*] 由 ccman 根据当前服务商自动写入
-# - 配置越少越稳定；需要扩展再手动加
-########################################
-
 model = "gpt-5.2-codex"
-model_reasoning_effort = "high"
-model_verbosity = "high"
-network_access = "enabled"
+model_reasoning_effort = "xhigh"
 disable_response_storage = true
+sandbox_mode = "danger-full-access"
 windows_wsl_setup_acknowledged = true
+approval_policy = "never"
+profile = "auto-max"
+file_opener = "vscode"
+model_provider = "gmn"
+web_search = "cached"
+suppress_unstable_features_warning = true
+
+[history]
+persistence = "save-all"
+
+[tui]
+notifications = true
+
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = false
+
+[sandbox_workspace_write]
+network_access = true
+
+[features]
+plan_tool = true
+apply_patch_freeform = true
+view_image_tool = true
+unified_exec = false
+streamable_shell = false
+rmcp_client = true
+elevated_windows_sandbox = true
+
+[profiles.auto-max]
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+
+[profiles.review]
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[notice]
+hide_gpt5_1_migration_prompt = true
+
+[model_providers.gmn]
+name = "gmn"
+base_url = "https://gmn.chuangzuoli.com"
+wire_api = "responses"
+requires_openai_auth = true

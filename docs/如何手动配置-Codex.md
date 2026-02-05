@@ -385,7 +385,7 @@ chmod 600 ~/.codex/auth.json
 | ❌ 容易写错 TOML 格式 | ✅ 自动生成正确配置 |
 | ❌ 切换服务商需要改两个文件 | ✅ `ccman cx use <id>` 即可 |
 | ❌ 无法管理多个服务商 | ✅ 统一管理所有服务商 |
-| ❌ 容易破坏现有配置 | ✅ 零破坏性写入 |
+| ❌ 容易破坏现有配置 | ✅ 备份后覆盖写入（更稳定） |
 
 ---
 
@@ -411,9 +411,8 @@ ccman cx use <服务商ID>
 ```
 
 ccman 会自动：
-- 更新 `config.toml` 中的 `model_provider` 和服务商配置块
+- 备份 `config.toml` 为 `config.toml.bak`，并按模板覆盖写入（仅保留一个 `model_providers`）
 - 备份 `auth.json` 为 `auth.json.bak`，并覆盖写入仅包含 `OPENAI_API_KEY` 的 `auth.json`
-- 备份原有配置（如果出错会自动回滚）
 
 ### 3. 查看当前服务商
 

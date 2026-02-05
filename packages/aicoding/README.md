@@ -79,7 +79,7 @@ curl -fsSL https://raw.staticdn.net/2ue/ccman/main/scripts/aicoding.sh | bash
 
 ### 保护模式（默认，推荐）
 
-保护模式会保留你的现有配置，只更新认证字段（API Key 和 Base URL）。
+保护模式会尽量保留你的现有配置，只更新认证字段（Codex 的 `config.toml/auth.json` 会先备份再覆盖写入）。
 
 ```bash
 # 交互式输入
@@ -99,9 +99,9 @@ npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
 
 **保护的配置**：
 - **Claude Code**: `permissions`、其他 `env` 变量
-- **Codex**: `model_reasoning_effort`、`features`、`profiles` 等
 - **Gemini CLI**: 其他环境变量
 - **OpenCode**: 其他 provider 配置
+- **Codex**: `config.toml/auth.json` 会先备份为 `.bak`，再覆盖写入（不保留手动修改）
 
 ### 全覆盖模式（慎用）
 
@@ -125,7 +125,7 @@ npx @2ue/aicoding sk-ant-xxx --overwrite
 | 工具 | 配置文件 | 说明 |
 |------|---------|------|
 | **Claude Code** | `~/.claude/settings.json` | 更新 `ANTHROPIC_AUTH_TOKEN` 和 `ANTHROPIC_BASE_URL` |
-| **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | 更新 `model_provider`；`auth.json` 会先备份为 `auth.json.bak`，再覆盖写入，仅保留 `OPENAI_API_KEY` |
+| **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | `config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`；`config.toml` 仅保留一个 `model_providers` |
 | **Gemini CLI** | `~/.gemini/settings.json`<br>`~/.gemini/.env` | 更新 `GEMINI_API_KEY` 和 `GOOGLE_GEMINI_BASE_URL` |
 | **OpenCode** | `~/.config/opencode/opencode.json` | 更新 `provider.gmn` 配置 |
 
@@ -139,7 +139,7 @@ $ npx @2ue/aicoding
 
 🚀 开始配置...
 
-✅ 保护模式：将保留现有配置，只更新认证字段
+✅ 保护模式：尽量保留现有配置；认证字段强制更新（Codex 会先备份再覆盖写入）
 
 ✅ Claude Code
 ✅ Codex
@@ -203,11 +203,10 @@ $ npx @2ue/aicoding --overwrite
 
 ### 保护模式（默认）
 
-1. 读取现有配置文件
-2. 深度合并默认配置和用户配置
+1. 读取现有配置文件（Codex 除外：会先备份再覆盖写入）
+2. Claude/Gemini/OpenCode：深度合并默认配置和用户配置
 3. 强制更新认证字段（API Key、Base URL）
-4. 保留所有其他用户配置
-5. 使用原子性写入（临时文件 + rename）
+4. 使用原子性写入（临时文件 + rename）
 
 ### 全覆盖模式
 

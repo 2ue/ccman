@@ -11,7 +11,7 @@
 - ✅ 配置会被 ccman 管理（可通过 `ccman cx list` / `ccman cc list` / `ccman gm list` / `ccman oc list` 查看）
 - ✅ 支持后续通过 ccman 切换服务商
 - ✅ 代码简洁（74 行）
-- ✅ **默认保护模式**：保留用户现有配置
+- ✅ **默认保护模式**：尽量保留用户现有配置（Codex 的 `config.toml/auth.json` 会先备份再覆盖写入）
 
 ### 依赖
 需要先构建 core 包：
@@ -34,9 +34,9 @@ node scripts/setup-gmn.mjs sk-ant-xxx
 ### 配置策略
 
 **保护模式（默认）**：
-- ✅ 深度合并现有配置
-- ✅ 只更新认证字段（apiKey, baseUrl）
-- ✅ 保留用户的其他配置（permissions, features 等）
+- ✅ Claude/Gemini/OpenCode：深度合并现有配置，尽量保留用户其他字段
+- ✅ Codex：`config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入
+- ✅ 认证字段始终更新为最新值
 
 ---
 
@@ -72,6 +72,8 @@ node scripts/setup-gmn-standalone.mjs sk-ant-xxx
 🚀 GMN 快速配置工具（独立版本）
 
 ✅ 保护模式：将保留现有配置，只更新认证字段
+（Codex 的 `config.toml/auth.json` 会先备份再覆盖写入）
+（Codex 的 `config.toml/auth.json` 会先备份再覆盖写入）
 
 开始配置...
 
@@ -116,9 +118,9 @@ node scripts/setup-gmn-standalone.mjs sk-ant-xxx --overwrite
 
 | 特性 | 保护模式（默认） | 全覆盖模式 |
 |------|-----------------|-----------|
-| **现有配置** | ✅ 保留 | ❌ 覆盖 |
+| **现有配置** | ✅ 尽量保留（Codex 会覆盖） | ❌ 覆盖 |
 | **认证字段** | ✅ 更新 | ✅ 更新 |
-| **其他字段** | ✅ 保留 | ❌ 使用默认值 |
+| **其他字段** | ✅ Claude/Gemini/OpenCode 保留；Codex 覆盖 | ❌ 使用默认值 |
 | **适用场景** | 日常使用 | 配置损坏/重置 |
 | **安全性** | ✅ 高 | ⚠️ 低（需确认） |
 
@@ -143,11 +145,13 @@ finalConfig.env.ANTHROPIC_BASE_URL = GMN_BASE_URL
 
 **Codex**：
 ```javascript
-// 读取现有 config.toml
-let tomlContent = fs.readFileSync('~/.codex/config.toml')
+// 备份现有 config.toml（如果存在）
+if (fs.existsSync('~/.codex/config.toml')) {
+  fs.copyFileSync('~/.codex/config.toml', '~/.codex/config.toml.bak')
+}
 
-// 只更新 model_provider 和 [model_providers.gmn]
-// 保留：model_reasoning_effort, features, profiles 等
+// 覆盖写入 config.toml（只保留一个 model provider）
+fs.writeFileSync('~/.codex/config.toml', minimalConfig)
 
 // 备份现有 auth.json（如果存在）
 if (fs.existsSync('~/.codex/auth.json')) {
@@ -295,15 +299,16 @@ let finalConfig = {
 ### 1. 配置保护
 
 **两个脚本的保护模式都会**：
-- ✅ 保留用户的其他配置（深度合并）
+- ✅ Claude/Gemini/OpenCode：尽量保留用户的其他配置（深度合并/保留策略）
+- ✅ Codex：`config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入
 - ✅ 强制覆盖认证字段（apiKey, baseUrl）
 - ✅ 使用原子性写入（临时文件 + rename）
 
 **不会丢失**：
 - Claude Code 的 `permissions` 配置
-- Codex 的 `features` 配置
 - Gemini CLI 的其他环境变量
 - OpenCode 的其他 provider 配置
+- Codex 的历史配置（写入前会生成 `.bak` 备份，可恢复）
 
 **全覆盖模式会丢失**：
 - ❌ 所有用户自定义配置
@@ -437,6 +442,6 @@ node scripts/setup-gmn-standalone.mjs --overwrite
 
 **两个脚本都遵循**：
 - ✅ 简洁至上（没有别名、环境变量、复杂参数）
-- ✅ 零破坏性（保护模式保留用户配置）
+- ✅ 更安全（覆盖前备份；保护模式尽量保留，Codex 例外为备份后覆盖）
 - ✅ 直接清晰（一眼看懂在做什么）
 - ✅ 原子性写入（临时文件 + rename）

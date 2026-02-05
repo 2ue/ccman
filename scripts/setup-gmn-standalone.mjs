@@ -11,7 +11,7 @@
  *   node scripts/setup-gmn-standalone.mjs sk-ant-xxx --overwrite  # 全覆盖模式（直接传入）
  *
  * 模式说明：
- *   - 保护模式（默认）：深度合并现有配置，只更新认证字段，保留用户的其他配置
+ *   - 保护模式（默认）：尽量保留现有配置；认证字段强制更新（Codex 的 config.toml/auth.json 会先备份再覆盖写入）
  *   - 全覆盖模式：使用默认配置覆盖所有字段（认证字段除外）
  *
  * 依赖：零依赖，只使用 Node.js 内置 API
@@ -138,13 +138,7 @@ function configureCodex(apiKey) {
 
   ensureDir(configDir)
 
-  // 1. 处理 config.toml
-  let tomlContent = ''
-
-  if (!OVERWRITE_MODE && fs.existsSync(configPath)) {
-    // 保护模式：读取现有配置
-    tomlContent = fs.readFileSync(configPath, 'utf-8')
-  }
+  // 1. 处理 config.toml（先备份，再覆盖写入）
   const minimalConfig = [
     `model_provider = "${providerKey}"`,
     'model = "gpt-5.2-codex"',
@@ -162,88 +156,13 @@ function configureCodex(apiKey) {
     '',
   ].join('\n')
 
-  // 全覆盖模式 / 空文件：直接写最小模板
-  if (OVERWRITE_MODE || !tomlContent.trim()) {
-    atomicWrite(configPath, minimalConfig)
-  } else {
-    // 简单的 TOML 更新策略：
-    // - 如果存在 model_provider，替换它
-    // - 如果不存在，添加到文件开头
-    // - 添加/更新 [model_providers.gmn] 部分（同时兼容清理旧的 [model_providers.GMN]）
-
-    const lines = tomlContent.split('\n')
-    let hasModelProvider = false
-    let hasNetworkAccess = false
-    const newLines = []
-    let inRoot = true
-
-    // 第一遍：更新 model_provider + 清理废弃字段（不截断文件）
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (trimmed.startsWith('[')) {
-        inRoot = false
-      }
-      if (trimmed.startsWith('web_search_request')) {
-        // 移除已废弃字段
-        continue
-      }
-      if (trimmed.startsWith('model_provider')) {
-        newLines.push(`model_provider = "${providerKey}"`)
-        hasModelProvider = true
-      } else if (inRoot && trimmed.startsWith('network_access')) {
-        newLines.push('network_access = "enabled"')
-        hasNetworkAccess = true
-      } else {
-        newLines.push(line)
-      }
-    }
-
-    // 如果没有 model_provider，添加到开头
-    if (!hasModelProvider) {
-      newLines.unshift(`model_provider = "${providerKey}"`)
-    }
-    // 如果没有 network_access（仅顶层），插入默认值
-    if (!hasNetworkAccess) {
-      const firstTableIndex = newLines.findIndex((l) => l.trim().startsWith('['))
-      const endIndex = firstTableIndex === -1 ? newLines.length : firstTableIndex
-      const rootLines = newLines.slice(0, endIndex)
-
-      const effortIndex = rootLines.findIndex((l) => l.trim().startsWith('model_reasoning_effort'))
-      const modelProviderIndex = rootLines.findIndex((l) => l.trim().startsWith('model_provider'))
-      const insertIndex =
-        effortIndex !== -1 ? effortIndex + 1 : modelProviderIndex !== -1 ? modelProviderIndex + 1 : 0
-
-      newLines.splice(insertIndex, 0, 'network_access = "enabled"')
-    }
-
-    // 第二遍：移除旧的 [model_providers.gmn]/[model_providers.GMN] 块（如果存在）
-    const finalLines = []
-    let inGMNBlock = false
-
-    for (const line of newLines) {
-      const trimmed = line.trim()
-      if (trimmed === '[model_providers.GMN]' || trimmed === '[model_providers.gmn]') {
-        inGMNBlock = true
-        continue
-      }
-      if (inGMNBlock && trimmed.startsWith('[')) {
-        inGMNBlock = false
-      }
-      if (!inGMNBlock) {
-        finalLines.push(line)
-      }
-    }
-
-    // 添加新的 [model_providers.gmn] 块到文件末尾
-    finalLines.push('')
-    finalLines.push(`[model_providers.${providerKey}]`)
-    finalLines.push(`name = "${providerKey}"`)
-    finalLines.push(`base_url = "${GMN_BASE_URLS.codex}"`)
-    finalLines.push('wire_api = "responses"')
-    finalLines.push('requires_openai_auth = true')
-
-    atomicWrite(configPath, finalLines.join('\n'))
+  if (fs.existsSync(configPath)) {
+    const backupPath = `${configPath}.bak`
+    fs.copyFileSync(configPath, backupPath)
+    fs.chmodSync(backupPath, 0o600)
   }
+
+  atomicWrite(configPath, minimalConfig)
 
   // 2. 处理 auth.json（先备份，再覆盖写入，仅保留 OPENAI_API_KEY）
   if (fs.existsSync(authPath)) {
@@ -441,7 +360,7 @@ async function main() {
       return
     }
   } else {
-    console.log('✅ 保护模式：将保留现有配置，只更新认证字段')
+    console.log('✅ 保护模式：尽量保留现有配置；认证字段强制更新（Codex 会先备份再覆盖写入）')
   }
 
   console.log('\n开始配置...\n')

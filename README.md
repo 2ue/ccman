@@ -6,7 +6,7 @@
 
 - **一键切换服务商**：Codex / Claude Code / Gemini CLI / OpenCode
 - **内置预设模板**：提供常用模板（Desktop 支持自定义预设）
-- **零破坏性写入**：合并用户现有配置，仅更新必要字段
+- **安全写入**：关键配置覆盖前自动备份（`.bak`，权限 `600`）
 - **MCP 管理**：集中管理 MCP 服务器（可在 Desktop 选择同步到 Claude/Gemini，Codex 暂不支持）
 - **WebDAV 同步**：Codex / Claude / Gemini 配置备份、下载、合并
 - **导入/导出**：仅支持 Codex / Claude 配置
@@ -1098,10 +1098,8 @@ packages/
 
 ## 🛡️ 写入策略说明
 
-- **Claude/Codex/Gemini 配置写入**采用深度合并策略：
-  - 保留用户已有字段与自定义设置
-  - 仅覆盖与认证相关的必要字段
-- **Codex** 会写入 `config.toml` 与 `auth.json`（`auth.json` 会先备份为 `auth.json.bak`，再覆盖写入，仅保留 `OPENAI_API_KEY`）
+- **Claude/Gemini/OpenCode**：尽量保留用户已有字段，仅覆盖认证相关必要字段
+- **Codex**：写入 `config.toml` 与 `auth.json`（两者都会先备份为 `.bak`，再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`，`config.toml` 仅保留一个 `model_providers`）
 - **Gemini** 会写入 `settings.json` 与 `.env`
 - **OpenCode** 会写入 `~/.config/opencode/opencode.json`
 

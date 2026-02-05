@@ -57,7 +57,7 @@ export default function AboutPage() {
             </li>
             <li className="flex items-start">
               <span className="text-blue-500 mr-2">•</span>
-              <span>零破坏性设计，保留用户自定义配置</span>
+              <span>写入前自动备份，配置更稳定</span>
             </li>
           </ul>
         </div>

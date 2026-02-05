@@ -9,7 +9,7 @@
 - 🔄 **一键切换**：一条命令切换服务商，自动修改配置文件
 - 📦 **内置预设**：提供常用预设（Claude: 1 个，Gemini: 2 个，Codex: 2 个，OpenCode: 1 个，MCP: 多个），只需填写 API Key
 - 🛠️ **自定义配置**：支持添加任意第三方服务商
-- 🔐 **零破坏性**：只修改管理的字段，写入前备份，失败回滚
+- 🔐 **安全写入**：写入前备份；Codex 的 `config.toml/auth.json` 备份后覆盖写入，其他工具尽量保留用户字段
 - 🎯 **多工具支持**：同时管理 Codex、Claude Code、Gemini CLI、OpenCode 和 MCP 服务器
 - 📱 **双界面**：提供 CLI（命令行）和 Desktop（图形界面）
 - 🔁 **克隆功能**：快速复制配置，管理多个 API Key
@@ -350,9 +350,9 @@ $ ccman cc use "Claude Test"
 - **Gemini CLI**: `~/.gemini/settings.json` 和 `~/.gemini/.env`
 - **OpenCode**: `~/.config/opencode/opencode.json`
 
-**零破坏性承诺**：
-- 只修改管理的字段，保留其他所有配置
-- 写入前备份，失败时自动回滚
+**安全写入承诺**：
+- 写入前备份（`.bak`），失败时自动回滚
+- Codex 的 `config.toml/auth.json` 采用备份后覆盖写入（避免遗留字段导致报错/告警）
 - API Key 存储在本地，权限 `0600`
 
 ---

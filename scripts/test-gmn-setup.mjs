@@ -214,6 +214,19 @@ createTestConfig('codex-auth', {
   CUSTOM_FIELD: 'should-be-removed',
 })
 
+createTestConfig(
+  'codex',
+  [
+    'model_provider = "old-provider"',
+    'custom_field = "should-be-removed"',
+    '',
+    '[model_providers.old-provider]',
+    'name = "old-provider"',
+    'base_url = "https://old.example.com"',
+    '',
+  ].join('\n')
+)
+
 createTestConfig('gemini-env', 'CUSTOM_VAR=custom-value\nGEMINI_API_KEY=old-key')
 
 createTestConfig('opencode', {
@@ -257,6 +270,21 @@ test('Codex auth.json 应该备份并覆盖写入（仅保留 OPENAI_API_KEY）'
   const backup = JSON.parse(fs.readFileSync(backupPath, 'utf-8'))
   assert(backup.OPENAI_API_KEY === 'old-key', '备份内容不正确')
   assert(backup.CUSTOM_FIELD === 'should-be-removed', '备份未保留原字段')
+})
+
+test('Codex config.toml 应该备份并覆盖写入', () => {
+  const configPath = path.join(TEST_HOME, '.codex/config.toml')
+  const backupPath = `${configPath}.bak`
+
+  assert(fs.existsSync(backupPath), 'config.toml.bak 未创建')
+
+  const config = fs.readFileSync(configPath, 'utf-8')
+  assert(config.includes('model_provider = "gmn"'), 'model_provider 未更新')
+  assert(config.includes(`base_url = "${GMN_BASE_URLS.codex}"`), 'base_url 未更新')
+  assert(!config.includes('custom_field = "should-be-removed"'), '不应保留自定义字段')
+
+  const backup = fs.readFileSync(backupPath, 'utf-8')
+  assert(backup.includes('custom_field = "should-be-removed"'), '备份未保留原字段')
 })
 
 test('OpenCode 应该保留其他 provider', () => {

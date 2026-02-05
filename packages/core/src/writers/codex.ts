@@ -5,7 +5,6 @@ import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
 import type { Provider } from '../tool-manager.js'
 import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
 import { backupFile, ensureDir, fileExists, writeJSON } from '../utils/file.js'
-import { deepMerge } from '../utils/template.js'
 
 /**
  * Codex config.toml 结构
@@ -153,18 +152,15 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
 }
 
 /**
- * 写入 Codex 配置（零破坏性）
+ * 写入 Codex 配置（备份 + 覆盖）
  *
  * 策略：
- * 1. 深度合并默认配置和用户现有配置（用户配置优先）
- * 2. 设置 Provider 相关字段（model_provider, model_providers）
- * 3. 写入 config.toml（注释会丢失，但保留所有用户数据）
- * 4. 写入 auth.json（先备份，再覆盖写入，仅保留 OPENAI_API_KEY）
+ * 1. config.toml：若存在先备份为 config.toml.bak，再用模板覆盖写入（仅写入必要字段）
+ * 2. auth.json：若存在先备份为 auth.json.bak，再覆盖写入（仅保留 OPENAI_API_KEY）
  *
  * 版本迭代：
  * - 只需修改 CODEX_DEFAULT_CONFIG 对象
- * - 新增/删除字段会自动处理
- * - 用户的自定义配置始终保留
+ * - 新增/删除字段会自动处理（基于模板）
  *
  * 注意：
  * - TOML 解析器会丢失注释，这是已知限制
@@ -174,77 +170,57 @@ export function writeCodexConfig(provider: Provider): void {
   // 确保目录存在
   ensureDir(getCodexDir())
 
-  // 1. 处理 config.toml
+  // 1. 处理 config.toml（备份 + 覆盖写入）
   const configPath = getCodexConfigPath()
-  let userConfig: CodexConfig = {}
-
   if (fileExists(configPath)) {
-    // 读取现有配置
-    const content = fs.readFileSync(configPath, 'utf-8')
-    userConfig = parseToml(content) as CodexConfig
+    try {
+      backupFile(configPath)
+    } catch {
+      // 备份失败不影响写入（避免出现 config.toml 未更新的情况）
+    }
   }
 
-  // 2. 深度合并（用户配置优先）
   const templateConfig = loadCodexTemplateConfig()
-  const mergedConfig = deepMerge<CodexConfig>(templateConfig, userConfig)
+  const nextConfig: CodexConfig = { ...(templateConfig as CodexConfig) }
 
-  // 2.5. 迁移/清理已废弃字段
+  // 清理已废弃字段
   if (
-    mergedConfig.features &&
-    typeof mergedConfig.features === 'object' &&
-    !Array.isArray(mergedConfig.features) &&
-    'web_search_request' in mergedConfig.features
+    nextConfig.features &&
+    typeof nextConfig.features === 'object' &&
+    !Array.isArray(nextConfig.features) &&
+    'web_search_request' in nextConfig.features
   ) {
-    delete (mergedConfig.features as Record<string, unknown>).web_search_request
+    delete (nextConfig.features as Record<string, unknown>).web_search_request
   }
-  if ('web_search_request' in mergedConfig) {
-    delete (mergedConfig as Record<string, unknown>).web_search_request
+  if ('web_search_request' in nextConfig) {
+    delete (nextConfig as Record<string, unknown>).web_search_request
   }
 
-  // 清理旧版本 ccman 写入过但已不再使用的 feature key（避免 Codex 新版本报错/告警）
-  if (
-    mergedConfig.features &&
-    typeof mergedConfig.features === 'object' &&
-    !Array.isArray(mergedConfig.features)
-  ) {
-    for (const key of ['plan_tool', 'view_image_tool', 'rmcp_client', 'streamable_shell']) {
-      if (key in mergedConfig.features) {
-        delete (mergedConfig.features as Record<string, unknown>)[key]
-      }
-    }
-    if (Object.keys(mergedConfig.features as Record<string, unknown>).length === 0) {
-      delete mergedConfig.features
-    }
-  }
-
-  // 3. 设置 Provider 相关字段
+  // 设置 Provider 相关字段（覆盖模板中的同名字段）
   const providerKey = resolveCodexProviderKey(provider)
-  mergedConfig.model_provider = providerKey
-  mergedConfig.model = provider.model || mergedConfig.model || 'gpt-5.2-codex'
+  nextConfig.model_provider = providerKey
+  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.2-codex'
 
-  // 4. 设置 model_providers
-  mergedConfig.model_providers = mergedConfig.model_providers || {}
-  if (providerKey !== provider.name) {
-    delete mergedConfig.model_providers[provider.name]
-  }
-  mergedConfig.model_providers[providerKey] = {
-    name: providerKey,
-    base_url: provider.baseUrl,
-    wire_api: 'responses',
-    requires_openai_auth: true,
+  // 只保留一个 model provider（与 auth.json 覆盖策略保持一致）
+  nextConfig.model_providers = {
+    [providerKey]: {
+      name: providerKey,
+      base_url: provider.baseUrl,
+      wire_api: 'responses',
+      requires_openai_auth: true,
+    },
   }
 
-  // 5. 写入配置文件
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fs.writeFileSync(configPath, stringifyToml(mergedConfig as any), { mode: 0o600 })
+  fs.writeFileSync(configPath, stringifyToml(nextConfig as any), { mode: 0o600 })
 
-  // 6. 处理 auth.json
+  // 2. 处理 auth.json（备份 + 覆盖写入，仅保留 OPENAI_API_KEY）
   const authPath = getCodexAuthPath()
   if (fileExists(authPath)) {
     try {
       backupFile(authPath)
     } catch {
-      // 备份失败不影响写入（避免出现 config.toml 已更新但 auth.json 未更新的情况）
+      // 备份失败不影响写入（避免出现 auth.json 未更新的情况）
     }
   }
 
