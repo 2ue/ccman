@@ -8,7 +8,7 @@
 
 ### 特点
 - ✅ 使用 ccman 的 ToolManager API
-- ✅ 配置会被 ccman 管理（可通过 `ccman list` 查看）
+- ✅ 配置会被 ccman 管理（可通过 `ccman cx list` / `ccman cc list` / `ccman gm list` / `ccman oc list` 查看）
 - ✅ 支持后续通过 ccman 切换服务商
 - ✅ 代码简洁（74 行）
 - ✅ **默认保护模式**：保留用户现有配置

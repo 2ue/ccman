@@ -161,7 +161,7 @@ function migrate() {
     console.log('\n📁 新配置文件位置: ~/.ccman/claude.json')
     console.log('📁 旧配置文件保留: ~/.ccman/config.json 和 ~/.ccman/providers/')
     console.log('\n💡 下一步:')
-    console.log('   1. 使用新版 CLI 命令测试: ccman list')
+    console.log('   1. 使用新版 CLI 命令测试: ccman cc list')
     console.log('   2. 确认无误后，可以手动删除旧配置（可选）\n')
   } catch (error) {
     console.error(`\n❌ 迁移失败: ${error.message}`)

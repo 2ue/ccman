@@ -180,7 +180,7 @@ cat ~/.claude/settings.json
 **方法 2**：使用 ccman 工具（如果已安装）
 
 ```bash
-ccman current
+ccman cc current
 ```
 
 ---
@@ -204,7 +204,7 @@ chmod 600 ~/.claude/settings.json
 |---------|-----------|
 | ❌ 需要记住配置文件路径 | ✅ 一条命令搞定 |
 | ❌ 容易写错 JSON 格式 | ✅ 自动生成正确配置 |
-| ❌ 切换服务商麻烦 | ✅ `ccman use <id>` 即可 |
+| ❌ 切换服务商麻烦 | ✅ `ccman cc use <id>` 即可 |
 | ❌ 无法管理多个服务商 | ✅ 统一管理所有服务商 |
 | ❌ 容易破坏现有配置 | ✅ 零破坏性写入 |
 
@@ -217,7 +217,7 @@ chmod 600 ~/.claude/settings.json
 ### 1. 添加服务商
 
 ```bash
-ccman add
+ccman cc add
 ```
 
 按提示输入服务商信息（名称、baseUrl、apiKey）。
@@ -225,13 +225,13 @@ ccman add
 ### 2. 切换服务商
 
 ```bash
-ccman use <服务商ID>
+ccman cc use <服务商ID>
 ```
 
 ### 3. 查看当前服务商
 
 ```bash
-ccman current
+ccman cc current
 ```
 
 就是这么简单！ccman 会自动处理配置文件的读写、备份和回滚，确保零破坏性。

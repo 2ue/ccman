@@ -9,4 +9,4 @@ Users need a fast, repeatable way to configure GMN across Claude Code, Codex, Ge
 
 ## Impact
 - Affected specs: gmn-setup
-- Affected code: scripts/setup-gmn.mjs, docs/GMN一键配置脚本.md
+- Affected code: scripts/setup-gmn.mjs, scripts/README-GMN-SETUP.md

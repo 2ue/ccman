@@ -316,15 +316,15 @@ const config = loadConfig()
    try {
      switchProvider(id)
      console.log(chalk.green('✅ 切换成功'))
-   } catch (error) {
-     if (error instanceof ProviderNotFoundError) {
-       console.error(chalk.red(`❌ ${error.message}`))
-       console.log(chalk.blue('💡 查看所有服务商: ccman list'))
-     } else {
-       console.error(chalk.red(`❌ ${error.message}`))
-     }
-     process.exit(1)
-   }
+	   } catch (error) {
+	     if (error instanceof ProviderNotFoundError) {
+	       console.error(chalk.red(`❌ ${error.message}`))
+	       console.log(chalk.blue('💡 查看服务商列表: ccman cx list'))
+	     } else {
+	       console.error(chalk.red(`❌ ${error.message}`))
+	     }
+	     process.exit(1)
+	   }
    ```
 
 3. **文件操作**：备份 + 回滚
