@@ -9,6 +9,7 @@
 3. ccman 不可用时的手动配置：
    - `docs/如何手动配置-Codex.md`
    - `docs/如何手动配置-Claude-Code.md`
+   - `docs/如何手动配置-Gemini-CLI.md`
 4. 官方配置项参考（离线备份）：
    - `docs/官方文档/codex/config.md`
    - `docs/官方文档/claude/settings.md`
@@ -18,4 +19,3 @@
 ## 截图资源
 
 `docs/screenshoot/` 下的图片用于 `README.md` 展示。
-

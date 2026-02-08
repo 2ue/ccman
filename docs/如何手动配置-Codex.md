@@ -40,28 +40,41 @@ mkdir -p ~/.codex
 mkdir $env:USERPROFILE\.codex
 ```
 
+**Windows 路径说明**：
+- `$env:USERPROFILE` 是 PowerShell 中的环境变量，指向当前用户的主目录
+- 例如：如果你的用户名是 `Administrator`，则 `$env:USERPROFILE` 等价于 `C:\Users\Administrator`
+- 完整路径示例：`C:\Users\Administrator\.codex\config.toml`
+
+**快速打开配置目录**：
+```powershell
+# Windows (PowerShell) - 直接在文件资源管理器中打开配置目录
+explorer $env:USERPROFILE\.codex
+
+# 或者在 PowerShell 中查看当前用户目录路径
+echo $env:USERPROFILE
+```
+
 ### 第 2 步：配置服务商信息（config.toml）
 
 在 `.codex` 目录下创建或编辑 `config.toml` 文件：
 
 ```bash
 # macOS/Linux
-nano ~/.codex/config.toml
+vi ~/.codex/config.toml
 
 # 或使用你喜欢的编辑器
 code ~/.codex/config.toml
+
+# 或使用 VS Code
+code $env:USERPROFILE\.codex\config.toml
 ```
 
-填写以下内容（根据你的服务商信息修改）：
+填写关键字段即可（完整模板见 `packages/core/templates/codex/config.toml`）：
 
 ```toml
 model_provider = "serverA"
-model = "gpt-5.2-codex"
-model_reasoning_effort = "high"
-network_access = "enabled"
-disable_response_storage = true
-windows_wsl_setup_acknowledged = true
-model_verbosity = "high"
+model = "gpt-5.3-codex"
+model_reasoning_effort = "xhigh"
 
 [model_providers.serverA]
 name = "serverA"
@@ -75,12 +88,11 @@ requires_openai_auth = true
 | 字段 | 说明 | 必填 |
 |------|------|------|
 | `model_provider` | 当前使用的服务商名称（必须与 `[model_providers.xxx]` 中的名称一致） | ✅ 必填 |
-| `model` | 使用的模型名称（如 `gpt-5.2-codex`） | ✅ 必填 |
+| `model` | 使用的模型名称（如 `gpt-5.3-codex`） | ✅ 必填 |
 | `model_reasoning_effort` | 模型推理强度（可选，建议保留） | ❌ 可选 |
-| `network_access` | 联网能力（按 Codex 新版配置） | ❌ 可选（建议保留） |
+| `web_search` | Web 搜索策略（如 `cached`） | ❌ 可选（建议保留） |
 | `disable_response_storage` | 禁用响应存储（可选，建议保留） | ❌ 可选 |
 | `windows_wsl_setup_acknowledged` | Windows/WSL 初始化提示确认（建议保留） | ❌ 可选（建议保留） |
-| `model_verbosity` | 输出详细度（可选，建议保留） | ❌ 可选 |
 | `[model_providers.xxx]` | 服务商配置块，`xxx` 为服务商名称 | ✅ 必填 |
 | `name` | 服务商名称（必须与 `model_provider` 一致） | ✅ 必填 |
 | `base_url` | 服务商的 API 基础地址 | ✅ 必填 |
@@ -93,7 +105,10 @@ requires_openai_auth = true
 
 ```bash
 # macOS/Linux
-nano ~/.codex/auth.json
+vi ~/.codex/auth.json
+
+# Windows (PowerShell)
+notepad $env:USERPROFILE\.codex\auth.json
 ```
 
 填写以下内容（替换为你的真实 API 密钥）：
@@ -120,21 +135,16 @@ codex --version
 
 ## 配置示例
 
-### 示例 1：使用 serverA 服务商
+### 使用 gmn 服务商（关键字段）
 
-**config.toml**：
+**config.toml**（完整模板见 `packages/core/templates/codex/config.toml`）：
 ```toml
-model_provider = "serverA"
-model = "gpt-5.2-codex"
-model_reasoning_effort = "high"
-network_access = "enabled"
-disable_response_storage = true
-windows_wsl_setup_acknowledged = true
-model_verbosity = "high"
+model_provider = "gmn"
+model = "gpt-5.3-codex"
 
-[model_providers.serverA]
-name = "serverA"
-base_url = "https://codex-api.serverA.com/v1"
+[model_providers.gmn]
+name = "gmn"
+base_url = "https://gmn.chuangzuoli.com"
 wire_api = "responses"
 requires_openai_auth = true
 ```
@@ -145,51 +155,23 @@ requires_openai_auth = true
   "OPENAI_API_KEY": "sk-proj-abc123xyz456..."
 }
 ```
-
-### 示例 2：使用 OpenAI 官方 API
-
-**config.toml**：
-```toml
-model_provider = "openai"
-model = "gpt-5.2-codex"
-model_reasoning_effort = "high"
-network_access = "enabled"
-disable_response_storage = true
-windows_wsl_setup_acknowledged = true
-model_verbosity = "high"
-
-[model_providers.openai]
-name = "openai"
-base_url = "https://api.openai.com/v1"
-wire_api = "responses"
-requires_openai_auth = true
-```
-
-**auth.json**：
-```json
-{
-  "OPENAI_API_KEY": "sk-Ov7xJ9K3..."
-}
-```
-
 ---
+
+后面是配置字段讲解，不想听的同学可以忽略
 
 ## 配置文件结构详解
 
 ### config.toml 文件详解
 
-Codex 使用 TOML 格式存储配置（比 JSON 更易读）：
+Codex 使用 TOML 格式存储配置（比 JSON 更易读）。
+完整模板请参考 `packages/core/templates/codex/config.toml`。
 
 #### 1. 全局配置
 
 ```toml
 model_provider = "serverA"  # 当前使用的服务商名称
-model = "gpt-5.2-codex"        # 使用的模型
-model_reasoning_effort = "high" # 推理强度（可选）
-network_access = "enabled"      # 联网能力（可选）
-disable_response_storage = true # 禁用响应存储（可选）
-windows_wsl_setup_acknowledged = true # WSL 提示确认（Windows 可选）
-model_verbosity = "high"        # 输出详细度（可选）
+model = "gpt-5.3-codex"        # 使用的模型
+model_reasoning_effort = "xhigh" # 推理强度（可选）
 ```
 
 #### 2. 服务商配置块
@@ -227,16 +209,12 @@ Codex 支持在同一个 `config.toml` 中配置多个服务商，切换服务�
 
 ### 示例：配置三个服务商
 
-**config.toml**：
+**config.toml**（仅关键字段；完整模板见 `packages/core/templates/codex/config.toml`）：
 ```toml
 # 当前使用的服务商
 model_provider = "serverA"
-model = "gpt-5.2-codex"
-model_reasoning_effort = "high"
-network_access = "enabled"
-disable_response_storage = true
-windows_wsl_setup_acknowledged = true
-model_verbosity = "high"
+model = "gpt-5.3-codex"
+model_reasoning_effort = "xhigh"
 
 # 服务商 A：serverA
 [model_providers.serverA]
@@ -294,6 +272,11 @@ requires_openai_auth = true
 mkdir -p ~/.codex
 touch ~/.codex/config.toml
 touch ~/.codex/auth.json
+
+# Windows (PowerShell)
+New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.codex
+New-Item -ItemType File -Force -Path $env:USERPROFILE\.codex\config.toml
+New-Item -ItemType File -Force -Path $env:USERPROFILE\.codex\auth.json
 ```
 
 然后按照上述步骤填写配置内容。
@@ -339,6 +322,12 @@ requires_openai_auth = true   # ✅ 布尔值不需要引号
 ```bash
 # macOS/Linux
 cat ~/.codex/config.toml | grep model_provider
+
+# Windows (PowerShell)
+Get-Content $env:USERPROFILE\.codex\config.toml | Select-String "model_provider"
+
+# Windows (CMD)
+type %USERPROFILE%\.codex\config.toml | findstr model_provider
 ```
 
 **方法 2**：使用 ccman 工具（如果已安装）
@@ -358,6 +347,12 @@ ccman cx current
 chmod 600 ~/.codex/config.toml
 chmod 600 ~/.codex/auth.json
 ```
+
+**Windows 说明**：
+- Windows 系统的文件权限管理方式与 macOS/Linux 不同
+- 通常情况下，用户主目录下的文件默认只有当前用户可访问
+- 如果需要修改权限，可以右键点击文件 → 属性 → 安全选项卡进行设置
+- 一般情况下不需要额外配置权限
 
 ---
 

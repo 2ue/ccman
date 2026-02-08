@@ -1,7 +1,10 @@
 import * as fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 import { getGeminiDir, getGeminiSettingsPath, getGeminiEnvPath } from '../paths.js'
 import { ensureDir, fileExists } from '../utils/file.js'
 import type { Provider } from '../tool-manager.js'
+import { deepMerge } from '../utils/template.js'
 
 /**
  * Gemini CLI settings.json 顶层结构（宽松定义，保持向后兼容）
@@ -27,12 +30,90 @@ interface GeminiSettings {
   [key: string]: unknown
 }
 
+// ESM 环境下获取当前文件所在目录
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+function resolveTemplatePath(relativePath: string): string | null {
+  const candidates = [
+    // @ccman/core runtime (dist/writers -> templates)
+    path.resolve(__dirname, '../../templates', relativePath),
+    // Bundled CLI runtime (dist -> dist/templates)
+    path.resolve(__dirname, 'templates', relativePath),
+    // Fallback (some bundlers/layouts)
+    path.resolve(__dirname, '../templates', relativePath),
+  ]
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+
+  return null
+}
+
+const GEMINI_SETTINGS_TEMPLATE: GeminiSettings = {
+  ide: {
+    enabled: true,
+  },
+  security: {
+    auth: {
+      selectedType: 'gemini-api-key',
+    },
+  },
+}
+
+const GEMINI_ENV_TEMPLATE = [
+  '# Managed by ccman',
+  'GOOGLE_GEMINI_BASE_URL={{baseUrl}}',
+  'GEMINI_API_KEY={{apiKey}}',
+].join('\n')
+
+/**
+ * 读取 Gemini settings 模板
+ *
+ * 优先从 templates/gemini/settings.json 读取，
+ * 如果不存在或读取失败，则回退到 GEMINI_SETTINGS_TEMPLATE
+ */
+function loadGeminiSettingsTemplate(): GeminiSettings {
+  try {
+    const templatePath = resolveTemplatePath('gemini/settings.json')
+    if (templatePath) {
+      const content = fs.readFileSync(templatePath, 'utf-8')
+      return JSON.parse(content) as GeminiSettings
+    }
+  } catch {
+    // 忽略错误，使用内置默认模板
+  }
+
+  return GEMINI_SETTINGS_TEMPLATE
+}
+
+/**
+ * 读取 Gemini .env 模板（支持 {{baseUrl}}/{{apiKey}} 变量）
+ */
+function loadGeminiEnvTemplate(provider: Provider): Record<string, string> {
+  let templateContent = GEMINI_ENV_TEMPLATE
+
+  try {
+    const templatePath = resolveTemplatePath('gemini/.env')
+    if (templatePath) {
+      templateContent = fs.readFileSync(templatePath, 'utf-8')
+    }
+  } catch {
+    // 忽略错误，使用内置默认模板
+  }
+
+  const content = templateContent
+    .replaceAll('{{baseUrl}}', provider.baseUrl || '')
+    .replaceAll('{{apiKey}}', provider.apiKey || '')
+
+  return parseEnvContent(content)
+}
+
 /**
  * 读取 .env 文件为键值对（简单解析 KEY=VALUE，忽略注释和空行）
  */
-function loadEnvFile(envPath: string): Record<string, string> {
-  if (!fileExists(envPath)) return {}
-  const content = fs.readFileSync(envPath, 'utf-8')
+function parseEnvContent(content: string): Record<string, string> {
   const result: Record<string, string> = {}
 
   for (const line of content.split('\n')) {
@@ -47,6 +128,12 @@ function loadEnvFile(envPath: string): Record<string, string> {
   }
 
   return result
+}
+
+function loadEnvFile(envPath: string): Record<string, string> {
+  if (!fileExists(envPath)) return {}
+  const content = fs.readFileSync(envPath, 'utf-8')
+  return parseEnvContent(content)
 }
 
 /**
@@ -84,20 +171,23 @@ export function writeGeminiConfig(provider: Provider): void {
   // 确保目录存在
   ensureDir(dir)
 
-  // 1. 更新 settings.json
-  let settings: GeminiSettings = {}
+  // 1. 更新 settings.json（模板 + 深度合并）
+  let userSettings: GeminiSettings = {}
 
   if (fileExists(settingsPath)) {
     try {
       const content = fs.readFileSync(settingsPath, 'utf-8')
       const parsed = JSON.parse(content)
       if (parsed && typeof parsed === 'object') {
-        settings = parsed as GeminiSettings
+        userSettings = parsed as GeminiSettings
       }
     } catch (error) {
       throw new Error(`无法读取 Gemini settings.json: ${(error as Error).message}`)
     }
   }
+
+  const settingsTemplate = loadGeminiSettingsTemplate()
+  const settings = deepMerge<GeminiSettings>(settingsTemplate, userSettings)
 
   // 确保启用 IDE 集成
   if (!settings.ide || typeof settings.ide !== 'object') {
@@ -130,19 +220,18 @@ export function writeGeminiConfig(provider: Provider): void {
   }
 
   // 2. 更新 ~/.gemini/.env
-  const env = loadEnvFile(envPath)
-
-  // baseUrl → GOOGLE_GEMINI_BASE_URL
-  if (provider.baseUrl && provider.baseUrl.trim().length > 0) {
-    env.GOOGLE_GEMINI_BASE_URL = provider.baseUrl
-  } else {
-    delete env.GOOGLE_GEMINI_BASE_URL
+  const existingEnv = loadEnvFile(envPath)
+  const templateEnv = loadGeminiEnvTemplate(provider)
+  const env = {
+    ...existingEnv,
+    ...templateEnv,
   }
 
-  // apiKey → GEMINI_API_KEY
-  if (provider.apiKey && provider.apiKey.trim().length > 0) {
-    env.GEMINI_API_KEY = provider.apiKey
-  } else {
+  // 模板变量为空时，显式移除对应键
+  if (!templateEnv.GOOGLE_GEMINI_BASE_URL) {
+    delete env.GOOGLE_GEMINI_BASE_URL
+  }
+  if (!templateEnv.GEMINI_API_KEY) {
     delete env.GEMINI_API_KEY
   }
 

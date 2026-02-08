@@ -79,7 +79,7 @@ describe('Codex Writer', () => {
       const config: any = TOML.parse(configContent)
 
       expect(config.model_provider).toBe('gmn')
-      expect(config.model).toBe('gpt-5.2-codex')
+      expect(config.model).toBe('gpt-5.3-codex')
       expect(config.model_providers.gmn).toBeDefined()
       expect(config.model_providers.gmn.base_url).toBe(provider.baseUrl)
       expect(config.model_providers.GMN).toBeUndefined()

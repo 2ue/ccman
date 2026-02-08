@@ -108,22 +108,61 @@ function resolveTemplatePath(relativePath: string): string | null {
 }
 
 /**
- * Codex 默认配置模板
+ * Codex 默认配置模板（回退）
  *
  * 与 templates/codex/config.toml 保持一致
- * 版本迭代时直接在此对象中添加/修改字段即可
+ * 版本迭代时优先修改模板，并同步更新此回退对象
  *
  * 注意：
  * - model_provider 和 model_providers 会在运行时动态设置（根据 Provider）
  * - 这里定义的是其他默认字段
  */
 const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
-  model: 'gpt-5.2-codex',
-  model_reasoning_effort: 'high',
-  model_verbosity: 'high',
-  network_access: 'enabled',
+  model: 'gpt-5.3-codex',
+  model_reasoning_effort: 'xhigh',
   disable_response_storage: true,
+  sandbox_mode: 'danger-full-access',
   windows_wsl_setup_acknowledged: true,
+  approval_policy: 'never',
+  profile: 'auto-max',
+  file_opener: 'vscode',
+  web_search: 'cached',
+  suppress_unstable_features_warning: true,
+  history: {
+    persistence: 'save-all',
+  },
+  tui: {
+    notifications: true,
+  },
+  shell_environment_policy: {
+    inherit: 'all',
+    ignore_default_excludes: false,
+  },
+  sandbox_workspace_write: {
+    network_access: true,
+  },
+  features: {
+    plan_tool: true,
+    apply_patch_freeform: true,
+    view_image_tool: true,
+    unified_exec: false,
+    streamable_shell: false,
+    rmcp_client: true,
+    elevated_windows_sandbox: true,
+  },
+  profiles: {
+    'auto-max': {
+      approval_policy: 'never',
+      sandbox_mode: 'workspace-write',
+    },
+    review: {
+      approval_policy: 'on-request',
+      sandbox_mode: 'workspace-write',
+    },
+  },
+  notice: {
+    hide_gpt5_1_migration_prompt: true,
+  },
 }
 
 function resolveCodexProviderKey(provider: Provider): string {
@@ -199,7 +238,7 @@ export function writeCodexConfig(provider: Provider): void {
   // 设置 Provider 相关字段（覆盖模板中的同名字段）
   const providerKey = resolveCodexProviderKey(provider)
   nextConfig.model_provider = providerKey
-  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.2-codex'
+  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.3-codex'
 
   // 只保留一个 model provider（与 auth.json 覆盖策略保持一致）
   nextConfig.model_providers = {

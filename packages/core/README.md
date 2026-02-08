@@ -8,6 +8,7 @@
 - ✅ 服务商 CRUD 操作
 - ✅ Codex 配置写入（`~/.codex/config.toml` + `auth.json`）
 - ✅ Claude Code 配置写入（`~/.claude/settings.json`）
+- ✅ Gemini CLI 配置写入（`~/.gemini/settings.json` + `.env`）
 - ✅ 环境隔离（test/development/production）
 - ✅ 预设模板（官方 + GMN）
 
@@ -83,6 +84,7 @@ pnpm test
 ## 设计原则
 
 - **安全写入**：写入前备份；Codex 的 `config.toml/auth.json` 备份后覆盖写入，其他工具尽量保留用户字段
+- **模板优先**：Codex/Claude/Gemini/OpenCode 均支持从 `packages/core/templates/*` 读取模板
 - **原子操作**：使用 write temp + rename 保证原子性
 - **硬编码 Writers**：直接实现 `writeCodexConfig` 和 `writeClaudeConfig`，不做抽象层
 - **同步 I/O**：配置文件小，使用同步操作更简单

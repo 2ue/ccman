@@ -141,4 +141,31 @@ describe('Gemini Writer', () => {
     expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=http://localhost:5000')
     expect(envContent).toContain('GEMINI_API_KEY=sk-xyz')
   })
+
+  it('should preserve existing env variables while applying template vars', () => {
+    const envPath = getGeminiEnvPath()
+    fs.mkdirSync(path.dirname(envPath), { recursive: true })
+    fs.writeFileSync(
+      envPath,
+      ['CUSTOM_ENV=keep', 'GEMINI_MODEL=gemini-2.0-flash-exp'].join('\n') + '\n',
+      'utf-8'
+    )
+
+    const provider: Provider = {
+      id: 'gemini-4',
+      name: 'GMN',
+      baseUrl: 'https://gmn.chuangzuoli.com',
+      apiKey: 'sk-new',
+      createdAt: Date.now(),
+      lastModified: Date.now(),
+    }
+
+    writeGeminiConfig(provider)
+
+    const nextEnv = fs.readFileSync(envPath, 'utf-8')
+    expect(nextEnv).toContain('CUSTOM_ENV=keep')
+    expect(nextEnv).toContain('GEMINI_MODEL=gemini-2.0-flash-exp')
+    expect(nextEnv).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
+    expect(nextEnv).toContain('GEMINI_API_KEY=sk-new')
+  })
 })
