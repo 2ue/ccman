@@ -72,7 +72,9 @@ export function saveConfig(config: CcmanConfig): void {
 /**
  * 获取 WebDAV 同步配置
  */
-export function getSyncConfig(): (SyncConfig & { rememberSyncPassword?: boolean; lastSync?: number }) | null {
+export function getSyncConfig():
+  | (SyncConfig & { rememberSyncPassword?: boolean; lastSync?: number })
+  | null {
   const config = loadConfig()
   return config.sync || null
 }
@@ -84,10 +86,19 @@ export function saveSyncConfig(
   syncConfig: SyncConfig & {
     rememberSyncPassword?: boolean
     lastSync?: number
-  },
+  }
 ): void {
+  const normalizedSyncConfig = {
+    ...syncConfig,
+    webdavUrl: syncConfig.webdavUrl.trim(),
+    username: syncConfig.username.trim(),
+    password: syncConfig.password.trim(),
+    remoteDir: syncConfig.remoteDir?.trim(),
+    syncPassword: syncConfig.syncPassword?.trim(),
+  }
+
   const config = loadConfig()
-  config.sync = syncConfig
+  config.sync = normalizedSyncConfig
   saveConfig(config)
 }
 

@@ -121,12 +121,12 @@ async function promptApiKey(): Promise<string> {
       message: '请输入 GMN API Key:',
       mask: '*',
       validate: (value) => {
-        if (!value) return 'API Key 不能为空'
+        if (!value?.trim()) return 'API Key 不能为空'
         return true
       },
     },
   ])
-  return answers.apiKey as string
+  return (answers.apiKey as string).trim()
 }
 
 async function promptPlatforms(): Promise<Platform[]> {

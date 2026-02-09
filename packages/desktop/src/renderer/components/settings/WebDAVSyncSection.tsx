@@ -70,12 +70,23 @@ export default function WebDAVSyncSection({
   }
 
   const handleTestConnection = async () => {
-    if (!webdavUrl || !username || !password) {
+    const trimmedWebdavUrl = webdavUrl.trim()
+    const trimmedUsername = username.trim()
+    const trimmedPassword = password.trim()
+    const trimmedRemoteDir = remoteDir.trim()
+
+    if (!trimmedWebdavUrl || !trimmedUsername || !trimmedPassword) {
       onError('参数错误', '请填写完整的 WebDAV 配置信息')
       return
     }
 
-    const config: SyncConfig = { webdavUrl, username, password, authType, remoteDir }
+    const config: SyncConfig = {
+      webdavUrl: trimmedWebdavUrl,
+      username: trimmedUsername,
+      password: trimmedPassword,
+      authType,
+      remoteDir: trimmedRemoteDir,
+    }
 
     setIsTesting(true)
     try {
@@ -93,18 +104,24 @@ export default function WebDAVSyncSection({
   }
 
   const handleSaveConfig = async () => {
-    if (!webdavUrl || !username || !password) {
+    const trimmedWebdavUrl = webdavUrl.trim()
+    const trimmedUsername = username.trim()
+    const trimmedPassword = password.trim()
+    const trimmedRemoteDir = remoteDir.trim()
+    const trimmedSyncPassword = syncPassword.trim()
+
+    if (!trimmedWebdavUrl || !trimmedUsername || !trimmedPassword) {
       onError('参数错误', '请填写完整的 WebDAV 配置信息')
       return
     }
 
     const config: SyncConfig = {
-      webdavUrl,
-      username,
-      password,
+      webdavUrl: trimmedWebdavUrl,
+      username: trimmedUsername,
+      password: trimmedPassword,
       authType,
-      remoteDir,
-      syncPassword: rememberPassword ? syncPassword : undefined,
+      remoteDir: trimmedRemoteDir,
+      syncPassword: rememberPassword ? trimmedSyncPassword || undefined : undefined,
     }
 
     try {
@@ -116,21 +133,33 @@ export default function WebDAVSyncSection({
   }
 
   const handleUploadToCloud = async () => {
-    if (!webdavUrl || !username || !password) {
+    const trimmedWebdavUrl = webdavUrl.trim()
+    const trimmedUsername = username.trim()
+    const trimmedPassword = password.trim()
+    const trimmedRemoteDir = remoteDir.trim()
+    const trimmedSyncPassword = syncPassword.trim()
+
+    if (!trimmedWebdavUrl || !trimmedUsername || !trimmedPassword) {
       onError('参数错误', '请先保存 WebDAV 配置')
       return
     }
 
-    if (!syncPassword) {
+    if (!trimmedSyncPassword) {
       onError('参数错误', '请输入同步密码')
       return
     }
 
-    const config: SyncConfig = { webdavUrl, username, password, authType, remoteDir }
+    const config: SyncConfig = {
+      webdavUrl: trimmedWebdavUrl,
+      username: trimmedUsername,
+      password: trimmedPassword,
+      authType,
+      remoteDir: trimmedRemoteDir,
+    }
 
     setIsUploading(true)
     try {
-      await window.electronAPI.sync.uploadToCloud(config, syncPassword)
+      await window.electronAPI.sync.uploadToCloud(config, trimmedSyncPassword)
       onSuccess('配置已上传到云端')
     } catch (error) {
       onError('上传失败', (error as Error).message)
@@ -140,21 +169,36 @@ export default function WebDAVSyncSection({
   }
 
   const handleDownloadFromCloud = async () => {
-    if (!webdavUrl || !username || !password) {
+    const trimmedWebdavUrl = webdavUrl.trim()
+    const trimmedUsername = username.trim()
+    const trimmedPassword = password.trim()
+    const trimmedRemoteDir = remoteDir.trim()
+    const trimmedSyncPassword = syncPassword.trim()
+
+    if (!trimmedWebdavUrl || !trimmedUsername || !trimmedPassword) {
       onError('参数错误', '请先保存 WebDAV 配置')
       return
     }
 
-    if (!syncPassword) {
+    if (!trimmedSyncPassword) {
       onError('参数错误', '请输入同步密码')
       return
     }
 
-    const config: SyncConfig = { webdavUrl, username, password, authType, remoteDir }
+    const config: SyncConfig = {
+      webdavUrl: trimmedWebdavUrl,
+      username: trimmedUsername,
+      password: trimmedPassword,
+      authType,
+      remoteDir: trimmedRemoteDir,
+    }
 
     setIsDownloading(true)
     try {
-      const backupPaths = await window.electronAPI.sync.downloadFromCloud(config, syncPassword)
+      const backupPaths = await window.electronAPI.sync.downloadFromCloud(
+        config,
+        trimmedSyncPassword
+      )
       onSuccess(`配置已从云端下载并应用\n备份: ${backupPaths.join(', ')}`)
       onDataChanged?.()
     } catch (error) {
@@ -165,21 +209,33 @@ export default function WebDAVSyncSection({
   }
 
   const handleMergeSync = async () => {
-    if (!webdavUrl || !username || !password) {
+    const trimmedWebdavUrl = webdavUrl.trim()
+    const trimmedUsername = username.trim()
+    const trimmedPassword = password.trim()
+    const trimmedRemoteDir = remoteDir.trim()
+    const trimmedSyncPassword = syncPassword.trim()
+
+    if (!trimmedWebdavUrl || !trimmedUsername || !trimmedPassword) {
       onError('参数错误', '请先保存 WebDAV 配置')
       return
     }
 
-    if (!syncPassword) {
+    if (!trimmedSyncPassword) {
       onError('参数错误', '请输入同步密码')
       return
     }
 
-    const config: SyncConfig = { webdavUrl, username, password, authType, remoteDir }
+    const config: SyncConfig = {
+      webdavUrl: trimmedWebdavUrl,
+      username: trimmedUsername,
+      password: trimmedPassword,
+      authType,
+      remoteDir: trimmedRemoteDir,
+    }
 
     setIsMerging(true)
     try {
-      const result = await window.electronAPI.sync.mergeSync(config, syncPassword)
+      const result = await window.electronAPI.sync.mergeSync(config, trimmedSyncPassword)
 
       if (!result.hasChanges) {
         onSuccess('配置已同步，无需操作')

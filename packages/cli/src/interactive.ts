@@ -76,7 +76,7 @@ export async function promptProviderForm(defaults?: {
       message: '服务商名称:',
       default: defaults?.name || undefined,
       validate: (value) => {
-        if (!value) return '名称不能为空'
+        if (!value?.trim()) return '名称不能为空'
         return true
       },
     },
@@ -92,8 +92,9 @@ export async function promptProviderForm(defaults?: {
       message: 'API 地址:',
       default: defaults?.baseUrl || undefined,
       validate: (value) => {
-        if (!value) return 'API 地址不能为空'
-        if (!value.startsWith('http://') && !value.startsWith('https://')) {
+        const trimmed = value?.trim()
+        if (!trimmed) return 'API 地址不能为空'
+        if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
           return 'API 地址必须以 http:// 或 https:// 开头'
         }
         return true
@@ -106,17 +107,17 @@ export async function promptProviderForm(defaults?: {
       default: defaults?.apiKey || undefined,
       mask: '*',
       validate: (value) => {
-        if (!value) return 'API 密钥不能为空'
+        if (!value?.trim()) return 'API 密钥不能为空'
         return true
       },
     },
   ])
 
   return {
-    name: answers.name,
-    desc: answers.desc || undefined,
-    baseUrl: answers.baseUrl,
-    apiKey: answers.apiKey,
+    name: answers.name.trim(),
+    desc: answers.desc?.trim() || undefined,
+    baseUrl: answers.baseUrl.trim(),
+    apiKey: answers.apiKey.trim(),
   }
 }
 

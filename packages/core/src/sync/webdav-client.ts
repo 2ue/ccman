@@ -48,9 +48,9 @@ export function joinPath(baseDir: string, filename: string): string {
  * @returns WebDAV 客户端实例
  */
 export function createWebDAVClient(config: SyncConfig): WebDAVClient {
-  const client = createClient(config.webdavUrl, {
-    username: config.username,
-    password: config.password,
+  const client = createClient(config.webdavUrl.trim(), {
+    username: config.username.trim(),
+    password: config.password.trim(),
     authType: config.authType || 'password', // 默认使用 Basic Auth
     maxBodyLength: 100 * 1024 * 1024, // 100MB
     maxContentLength: 100 * 1024 * 1024, // 100MB
@@ -88,10 +88,7 @@ export async function testWebDAVConnection(config: SyncConfig): Promise<boolean>
  * @param dirPath - 目录路径
  * @returns 是否成功创建（false 表示创建失败，但不抛出错误）
  */
-export async function ensureDirectory(
-  config: SyncConfig,
-  dirPath: string
-): Promise<boolean> {
+export async function ensureDirectory(config: SyncConfig, dirPath: string): Promise<boolean> {
   const client = createWebDAVClient(config)
   const normalizedPath = normalizePath(dirPath)
 
@@ -130,7 +127,12 @@ function isPathNotFoundError(error: Error): boolean {
   const msg = error.message.toLowerCase()
   // WebDAV 标准：409 Conflict 表示父目录不存在
   // 也可能是 404 Not Found
-  return msg.includes('404') || msg.includes('409') || msg.includes('not found') || msg.includes('conflict')
+  return (
+    msg.includes('404') ||
+    msg.includes('409') ||
+    msg.includes('not found') ||
+    msg.includes('conflict')
+  )
 }
 
 /**
@@ -182,10 +184,10 @@ export async function uploadToWebDAV(
     if (errorMsg.includes('multistatus') || errorMsg.includes('Invalid response')) {
       throw new Error(
         'WebDAV 配置错误，请检查：\n' +
-        '1. URL 是否为 WebDAV 端点（不是网页地址）\n' +
-        '2. 用户名和密码是否正确\n' +
-        '3. 认证类型是否匹配\n\n' +
-        `详细：${errorMsg}`
+          '1. URL 是否为 WebDAV 端点（不是网页地址）\n' +
+          '2. 用户名和密码是否正确\n' +
+          '3. 认证类型是否匹配\n\n' +
+          `详细：${errorMsg}`
       )
     }
 
@@ -200,10 +202,7 @@ export async function uploadToWebDAV(
  * @param filename - 文件名（相对于 remoteDir 的路径）
  * @returns 文件内容
  */
-export async function downloadFromWebDAV(
-  config: SyncConfig,
-  filename: string
-): Promise<string> {
+export async function downloadFromWebDAV(config: SyncConfig, filename: string): Promise<string> {
   const client = createWebDAVClient(config)
   const remoteDir = normalizePath(config.remoteDir || '/')
   const fullPath = joinPath(remoteDir, filename)

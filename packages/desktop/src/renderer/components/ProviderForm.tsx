@@ -58,7 +58,6 @@ export default function ProviderForm({
       setBaseUrl('')
       setApiKey('')
     }
-
   }, [provider, preset, tool])
 
   // 检查名称是否重复
@@ -101,13 +100,13 @@ export default function ProviderForm({
 
     if (!provider) {
       // 新增模式(包括从预置添加): HTML5 required 已经保证有值
-      finalApiKey = apiKey
+      finalApiKey = apiKey.trim()
     } else if (isClone) {
       // 克隆模式: 允许留空表示复用原有 Key
-      finalApiKey = apiKey || provider.apiKey
+      finalApiKey = apiKey.trim() || provider.apiKey
     } else {
       // 编辑模式: 留空表示不修改
-      finalApiKey = apiKey || undefined
+      finalApiKey = apiKey.trim() || undefined
     }
 
     const trimmedName = name.trim()
@@ -115,8 +114,13 @@ export default function ProviderForm({
 
     const baseInput =
       finalApiKey !== undefined
-        ? { name: trimmedName, desc: trimmedDesc || undefined, baseUrl, apiKey: finalApiKey }
-        : { name: trimmedName, desc: trimmedDesc || undefined, baseUrl }
+        ? {
+            name: trimmedName,
+            desc: trimmedDesc || undefined,
+            baseUrl: baseUrl.trim(),
+            apiKey: finalApiKey,
+          }
+        : { name: trimmedName, desc: trimmedDesc || undefined, baseUrl: baseUrl.trim() }
 
     const input: AddProviderInput | EditProviderInput = baseInput
 

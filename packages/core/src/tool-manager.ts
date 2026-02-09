@@ -203,24 +203,56 @@ function createToolManager(tool: ToolType): ToolManager {
     writeJSON(configPath, config)
   }
 
+  function trimInput(value: string | undefined): string | undefined {
+    if (value === undefined) return undefined
+    return value.trim()
+  }
+
+  function trimProvider(input: AddProviderInput): AddProviderInput {
+    return {
+      ...input,
+      name: input.name.trim(),
+      desc: trimInput(input.desc),
+      baseUrl: input.baseUrl.trim(),
+      apiKey: input.apiKey.trim(),
+      model: trimInput(input.model),
+    }
+  }
+
+  function trimProviderUpdates(updates: EditProviderInput): EditProviderInput {
+    return {
+      ...updates,
+      name: trimInput(updates.name),
+      desc: trimInput(updates.desc),
+      baseUrl: trimInput(updates.baseUrl),
+      apiKey: trimInput(updates.apiKey),
+      model: trimInput(updates.model),
+    }
+  }
+
   return {
     add(input: AddProviderInput): Provider {
       const config = loadConfig()
+      const normalizedInput = trimProvider(input)
+
+      if (!normalizedInput.name) {
+        throw new Error('服务商名称不能为空')
+      }
 
       // 检查名称冲突
-      const nameExists = config.providers.some((p) => p.name === input.name)
+      const nameExists = config.providers.some((p) => p.name.trim() === normalizedInput.name)
       if (nameExists) {
-        throw new ProviderNameConflictError(input.name)
+        throw new ProviderNameConflictError(normalizedInput.name)
       }
 
       const timestamp = Date.now()
       const provider: Provider = {
         id: generateId(),
-        name: input.name,
-        desc: input.desc,
-        baseUrl: input.baseUrl,
-        apiKey: input.apiKey,
-        model: input.model,
+        name: normalizedInput.name,
+        desc: normalizedInput.desc,
+        baseUrl: normalizedInput.baseUrl,
+        apiKey: normalizedInput.apiKey,
+        model: normalizedInput.model,
         createdAt: timestamp,
         lastModified: timestamp,
       }
@@ -254,8 +286,9 @@ function createToolManager(tool: ToolType): ToolManager {
 
     findByName(name: string): Provider | undefined {
       const config = loadConfig()
-      const lowerName = name.toLowerCase()
-      return config.providers.find((p) => p.name.toLowerCase() === lowerName)
+      const lowerName = name.trim().toLowerCase()
+      if (!lowerName) return undefined
+      return config.providers.find((p) => p.name.trim().toLowerCase() === lowerName)
     },
 
     switch(id: string): void {
@@ -291,25 +324,32 @@ function createToolManager(tool: ToolType): ToolManager {
     edit(id: string, updates: EditProviderInput): Provider {
       const config = loadConfig()
       const provider = config.providers.find((p) => p.id === id)
+      const normalizedUpdates = trimProviderUpdates(updates)
 
       if (!provider) {
         throw new ProviderNotFoundError(id)
       }
 
+      if (normalizedUpdates.name !== undefined && !normalizedUpdates.name) {
+        throw new Error('服务商名称不能为空')
+      }
+
       // 检查名称冲突
-      if (updates.name !== undefined && updates.name !== provider.name) {
-        const nameConflict = config.providers.some((p) => p.id !== id && p.name === updates.name)
+      if (normalizedUpdates.name !== undefined && normalizedUpdates.name !== provider.name.trim()) {
+        const nameConflict = config.providers.some(
+          (p) => p.id !== id && p.name.trim() === normalizedUpdates.name
+        )
         if (nameConflict) {
-          throw new ProviderNameConflictError(updates.name)
+          throw new ProviderNameConflictError(normalizedUpdates.name)
         }
       }
 
       // 更新字段
-      if (updates.name !== undefined) provider.name = updates.name
-      if (updates.desc !== undefined) provider.desc = updates.desc
-      if (updates.baseUrl !== undefined) provider.baseUrl = updates.baseUrl
-      if (updates.apiKey !== undefined) provider.apiKey = updates.apiKey
-      if (updates.model !== undefined) provider.model = updates.model
+      if (normalizedUpdates.name !== undefined) provider.name = normalizedUpdates.name
+      if (normalizedUpdates.desc !== undefined) provider.desc = normalizedUpdates.desc
+      if (normalizedUpdates.baseUrl !== undefined) provider.baseUrl = normalizedUpdates.baseUrl
+      if (normalizedUpdates.apiKey !== undefined) provider.apiKey = normalizedUpdates.apiKey
+      if (normalizedUpdates.model !== undefined) provider.model = normalizedUpdates.model
 
       provider.lastModified = Date.now()
       saveConfig(config)
@@ -352,10 +392,15 @@ function createToolManager(tool: ToolType): ToolManager {
     clone(sourceId: string, newName: string): Provider {
       const source = this.get(sourceId)
       const config = loadConfig()
+      const normalizedName = newName.trim()
 
-      const nameExists = config.providers.some((p) => p.name === newName)
+      if (!normalizedName) {
+        throw new Error('服务商名称不能为空')
+      }
+
+      const nameExists = config.providers.some((p) => p.name.trim() === normalizedName)
       if (nameExists) {
-        throw new ProviderNameConflictError(newName)
+        throw new ProviderNameConflictError(normalizedName)
       }
 
       const timestamp = Date.now()
@@ -365,7 +410,7 @@ function createToolManager(tool: ToolType): ToolManager {
       const newProvider: Provider = {
         ...source,
         id: generateId(),
-        name: newName,
+        name: normalizedName,
         desc: undefined,
         createdAt: timestamp,
         lastModified: timestamp,
@@ -380,6 +425,16 @@ function createToolManager(tool: ToolType): ToolManager {
 
     addPreset(input: AddPresetInput): PresetTemplate {
       const config = loadConfig()
+      const normalizedInput: AddPresetInput = {
+        ...input,
+        name: input.name.trim(),
+        baseUrl: input.baseUrl.trim(),
+        description: input.description.trim(),
+      }
+
+      if (!normalizedInput.name) {
+        throw new Error('预置名称不能为空')
+      }
 
       if (!config.presets) {
         config.presets = []
@@ -387,15 +442,15 @@ function createToolManager(tool: ToolType): ToolManager {
 
       // 使用配置映射的内置预设（零 if-else）
       const allPresets = [...toolConfig.builtinPresets, ...config.presets]
-      const nameExists = allPresets.some((p) => p.name === input.name)
+      const nameExists = allPresets.some((p) => p.name.trim() === normalizedInput.name)
       if (nameExists) {
-        throw new PresetNameConflictError(input.name)
+        throw new PresetNameConflictError(normalizedInput.name)
       }
 
       const preset: InternalPresetTemplate = {
-        name: input.name,
-        baseUrl: input.baseUrl,
-        description: input.description,
+        name: normalizedInput.name,
+        baseUrl: normalizedInput.baseUrl,
+        description: normalizedInput.description,
       }
 
       config.presets.push(preset)
@@ -429,29 +484,43 @@ function createToolManager(tool: ToolType): ToolManager {
 
     editPreset(name: string, updates: EditPresetInput): PresetTemplate {
       const config = loadConfig()
+      const normalizedName = name.trim()
+      const normalizedUpdates: EditPresetInput = {
+        ...updates,
+        name: trimInput(updates.name),
+        baseUrl: trimInput(updates.baseUrl),
+        description: trimInput(updates.description),
+      }
 
       if (!config.presets) {
         config.presets = []
       }
 
-      const preset = config.presets.find((p) => p.name === name)
+      const preset = config.presets.find((p) => p.name.trim() === normalizedName)
 
       if (!preset) {
-        throw new Error(`预置不存在: ${name}`)
+        throw new Error(`预置不存在: ${normalizedName}`)
+      }
+
+      if (normalizedUpdates.name !== undefined && !normalizedUpdates.name) {
+        throw new Error('预置名称不能为空')
       }
 
       // 检查名称冲突
-      if (updates.name !== undefined && updates.name !== preset.name) {
+      if (normalizedUpdates.name !== undefined && normalizedUpdates.name !== preset.name.trim()) {
         const allPresets = [...toolConfig.builtinPresets, ...config.presets]
-        const nameConflict = allPresets.some((p) => p.name !== name && p.name === updates.name)
+        const nameConflict = allPresets.some(
+          (p) => p.name.trim() !== normalizedName && p.name.trim() === normalizedUpdates.name
+        )
         if (nameConflict) {
-          throw new PresetNameConflictError(updates.name)
+          throw new PresetNameConflictError(normalizedUpdates.name)
         }
       }
 
-      if (updates.name !== undefined) preset.name = updates.name
-      if (updates.baseUrl !== undefined) preset.baseUrl = updates.baseUrl
-      if (updates.description !== undefined) preset.description = updates.description
+      if (normalizedUpdates.name !== undefined) preset.name = normalizedUpdates.name
+      if (normalizedUpdates.baseUrl !== undefined) preset.baseUrl = normalizedUpdates.baseUrl
+      if (normalizedUpdates.description !== undefined)
+        preset.description = normalizedUpdates.description
 
       saveConfig(config)
 
@@ -464,15 +533,16 @@ function createToolManager(tool: ToolType): ToolManager {
 
     removePreset(name: string): void {
       const config = loadConfig()
+      const normalizedName = name.trim()
 
       if (!config.presets) {
         return
       }
 
-      const index = config.presets.findIndex((p) => p.name === name)
+      const index = config.presets.findIndex((p) => p.name.trim() === normalizedName)
 
       if (index === -1) {
-        throw new Error(`Preset not found: ${name}`)
+        throw new Error(`Preset not found: ${normalizedName}`)
       }
 
       config.presets.splice(index, 1)
