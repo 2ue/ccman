@@ -136,8 +136,8 @@ importCommand(program)
 // GMN 配置命令（顶层命令）
 program
   .command('gmn [apiKey]')
-  .description('配置 GMN 到所有工具')
-  .option('-p, --platform <platforms>', '指定平台 (claude,codex,gemini,opencode,all)')
+  .description('配置 GMN 到 Codex 和 OpenCode')
+  .option('-p, --platform <platforms>', '指定平台 (codex,opencode,all)')
   .action(async (apiKey, options) => {
     await gmnCommand(apiKey, options.platform)
   })

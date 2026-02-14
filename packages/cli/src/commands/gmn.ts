@@ -1,14 +1,9 @@
 import {
-  createClaudeManager,
   createCodexManager,
-  createGeminiManager,
   createOpenCodeManager,
   getCcmanDir,
-  getClaudeConfigPath,
   getCodexAuthPath,
   getCodexConfigPath,
-  getGeminiEnvPath,
-  getGeminiSettingsPath,
   getOpenCodeConfigPath,
 } from '@ccman/core'
 import chalk from 'chalk'
@@ -17,14 +12,10 @@ import { printLogo } from '../utils/logo.js'
 
 const PROVIDER_NAME = 'GMN'
 
-const VALID_PLATFORMS = ['claude', 'codex', 'gemini', 'opencode'] as const
+const VALID_PLATFORMS = ['codex', 'opencode'] as const
 type Platform = (typeof VALID_PLATFORMS)[number]
 const DEFAULT_PLATFORMS: Platform[] = ['codex', 'opencode']
 
-const GMN_BASE_URLS: Pick<Record<Platform, string>, 'claude' | 'gemini'> = {
-  claude: 'https://gmn.chuangzuoli.com/api',
-  gemini: 'https://gmn.chuangzuoli.com',
-}
 const GMN_OPENAI_BASE_URL = 'https://gmn.chuangzuoli.com'
 
 const TOTAL_STEPS = 3
@@ -58,8 +49,7 @@ function printKeyNotice(): void {
   console.log(
     chalk.yellow(
       [
-        '提示：Codex 与 OpenCode 共享 OpenAI 套餐/端点；Gemini 与 Claude 需单独订阅。',
-        '例如：Gemini 套餐不能用于 Codex/OpenCode，Claude 套餐也不能通用。',
+        '提示：本命令仅配置 Codex 与 OpenCode，两者共享 OpenAI 套餐/端点。',
         'VS Code 的 Codex 插件若使用本机默认配置，也会跟随本次写入生效。',
       ].join('\n')
     )
@@ -71,13 +61,6 @@ function printWriteTargets(platforms: Platform[]): void {
   if (platforms.includes('codex')) {
     console.log(chalk.gray(`  - Codex: ${getCodexConfigPath()}`))
     console.log(chalk.gray(`  - Codex: ${getCodexAuthPath()}`))
-  }
-  if (platforms.includes('claude')) {
-    console.log(chalk.gray(`  - Claude Code: ${getClaudeConfigPath()}`))
-  }
-  if (platforms.includes('gemini')) {
-    console.log(chalk.gray(`  - Gemini CLI: ${getGeminiSettingsPath()}`))
-    console.log(chalk.gray(`  - Gemini CLI: ${getGeminiEnvPath()}`))
   }
   if (platforms.includes('opencode')) {
     console.log(chalk.gray(`  - OpenCode: ${getOpenCodeConfigPath()}`))
@@ -137,11 +120,9 @@ async function promptPlatforms(): Promise<Platform[]> {
       message: '选择要配置的工具（可多选，空格选择 / a全选 / i反选 / 回车确认）:',
       dontShowHints: true,
       choices: [
-        { name: 'Claude Code（需单独订阅 Claude 套餐）', value: 'claude' },
         { name: 'Codex（需单独订阅 OpenAI 套餐）', value: 'codex' },
-        { name: 'Gemini CLI（需单独订阅 Gemini 套餐）', value: 'gemini' },
         { name: 'OpenCode（与 Codex 共享 OpenAI 套餐）', value: 'opencode' },
-        { name: '全部（将依次配置所有工具）', value: 'all' },
+        { name: '全部（将依次配置 Codex 和 OpenCode）', value: 'all' },
       ],
       default: DEFAULT_PLATFORMS,
       validate: (value) => {
@@ -194,9 +175,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string) {
 
   const openaiBaseUrl = GMN_OPENAI_BASE_URL
   const platformBaseUrls: Record<Platform, string> = {
-    claude: GMN_BASE_URLS.claude,
     codex: openaiBaseUrl,
-    gemini: GMN_BASE_URLS.gemini,
     opencode: openaiBaseUrl,
   }
 
@@ -209,9 +188,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string) {
   console.log()
 
   const ALL_TOOLS = {
-    claude: { name: 'Claude Code', manager: createClaudeManager() },
     codex: { name: 'Codex', manager: createCodexManager() },
-    gemini: { name: 'Gemini CLI', manager: createGeminiManager() },
     opencode: { name: 'OpenCode', manager: createOpenCodeManager() },
   }
 

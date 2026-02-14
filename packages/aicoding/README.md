@@ -1,11 +1,11 @@
 # @2ue/aicoding
 
-一键配置 GMN 到所有 AI 编程工具（Claude Code、Codex、Gemini CLI、OpenCode）
+一键配置 GMN 到 AI 编程工具（Codex、OpenCode）
 
 ## 特性
 
 - ✅ **轻量依赖**：使用 inquirer 提供清晰的交互式选择
-- ✅ **一键配置**：同时配置 4 个工具
+- ✅ **一键配置**：同时配置 2 个工具
 - ✅ **两种模式**：保护模式（默认）+ 全覆盖模式
 - ✅ **配置保护**：保留用户现有配置，只更新认证字段
 - ✅ **原子性写入**：使用临时文件 + rename，确保安全
@@ -98,8 +98,6 @@ npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
 ```
 
 **保护的配置**：
-- **Claude Code**: `permissions`、其他 `env` 变量
-- **Gemini CLI**: 其他环境变量
 - **OpenCode**: 其他 provider 配置
 - **Codex**: `config.toml/auth.json` 会先备份为 `.bak`，再覆盖写入（不保留手动修改）
 
@@ -124,9 +122,7 @@ npx @2ue/aicoding sk-ant-xxx --overwrite
 
 | 工具 | 配置文件 | 说明 |
 |------|---------|------|
-| **Claude Code** | `~/.claude/settings.json` | 更新 `ANTHROPIC_AUTH_TOKEN` 和 `ANTHROPIC_BASE_URL` |
 | **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | `config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`；`config.toml` 仅保留一个 `model_providers` |
-| **Gemini CLI** | `~/.gemini/settings.json`<br>`~/.gemini/.env` | 更新 `GEMINI_API_KEY` 和 `GOOGLE_GEMINI_BASE_URL` |
 | **OpenCode** | `~/.config/opencode/opencode.json` | 更新 `provider.gmn` 配置 |
 
 ## 示例
@@ -141,9 +137,7 @@ $ npx @2ue/aicoding
 
 ✅ 保护模式：尽量保留现有配置；认证字段强制更新（Codex 会先备份再覆盖写入）
 
-✅ Claude Code
 ✅ Codex
-✅ Gemini CLI
 ✅ OpenCode
 
 🎉 配置完成！
@@ -158,9 +152,7 @@ $ npx @2ue/aicoding sk-ant-new-key
 
 ✅ 保护模式：将保留现有配置，只更新认证字段
 
-✅ Claude Code
 ✅ Codex
-✅ Gemini CLI
 ✅ OpenCode
 
 🎉 配置完成！
@@ -177,9 +169,7 @@ $ npx @2ue/aicoding --overwrite
 
 🚀 开始配置...
 
-✅ Claude Code
 ✅ Codex
-✅ Gemini CLI
 ✅ OpenCode
 
 🎉 配置完成！
@@ -204,7 +194,7 @@ $ npx @2ue/aicoding --overwrite
 ### 保护模式（默认）
 
 1. 读取现有配置文件（Codex 除外：会先备份再覆盖写入）
-2. Claude/Gemini/OpenCode：深度合并默认配置和用户配置
+2. OpenCode：深度合并默认配置和用户配置
 3. 强制更新认证字段（API Key、Base URL）
 4. 使用原子性写入（临时文件 + rename）
 
@@ -228,7 +218,7 @@ $ npx @2ue/aicoding --overwrite
 如果遇到权限错误，确保配置目录有写入权限：
 
 ```bash
-chmod 700 ~/.claude ~/.codex ~/.gemini ~/.config/opencode
+chmod 700 ~/.codex ~/.config/opencode
 ```
 
 ### 配置未生效

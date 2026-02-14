@@ -2,7 +2,7 @@
 /**
  * GMN 快速配置脚本（独立版本，不依赖 ccman）
  *
- * 功能：直接修改 Claude Code、Codex、Gemini CLI、OpenCode 的配置文件
+ * 功能：直接修改 Codex、OpenCode 的配置文件
  *
  * 用法：
  *   node scripts/setup-gmn-standalone.mjs                    # 交互式输入（保护模式）
@@ -23,12 +23,10 @@ import * as path from 'path'
 import inquirer from 'inquirer'
 
 const GMN_BASE_URLS = {
-  claude: 'https://gmn.chuangzuoli.com/api',
   openai: 'https://gmn.chuangzuoli.com',
-  gemini: 'https://gmn.chuangzuoli.com',
 }
 let OPENAI_BASE_URL = GMN_BASE_URLS.openai
-const VALID_PLATFORMS = ['claude', 'codex', 'gemini', 'opencode']
+const VALID_PLATFORMS = ['codex', 'opencode']
 const DEFAULT_PLATFORMS = ['codex', 'opencode']
 const TOTAL_STEPS = 4
 
@@ -51,23 +49,6 @@ function ensureDir(dirPath) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true, mode: 0o700 })
   }
-}
-
-/**
- * 深度合并对象
- */
-function deepMerge(target, source) {
-  const result = { ...target }
-
-  for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-      result[key] = deepMerge(target[key] || {}, source[key])
-    } else {
-      result[key] = source[key]
-    }
-  }
-
-  return result
 }
 
 /**
@@ -108,8 +89,7 @@ function printBanner() {
 function printKeyNotice() {
   console.log(
     [
-      '提示：Codex 与 OpenCode 共享 OpenAI 套餐/端点；Gemini 与 Claude 需单独订阅。',
-      '例如：Gemini 套餐不能用于 Codex/OpenCode，Claude 套餐也不能通用。',
+      '提示：本命令仅配置 Codex 与 OpenCode，两者共享 OpenAI 套餐/端点。',
       'VS Code 的 Codex 插件若使用本机默认配置，也会跟随本次写入生效。',
     ].join('\n')
   )
@@ -156,11 +136,9 @@ async function promptPlatforms() {
       message: '选择要配置的工具（可多选，空格选择 / a全选 / i反选 / 回车确认）:',
       dontShowHints: true,
       choices: [
-        { name: 'Claude Code（需单独订阅 Claude 套餐）', value: 'claude' },
         { name: 'Codex（需单独订阅 OpenAI 套餐）', value: 'codex' },
-        { name: 'Gemini CLI（需单独订阅 Gemini 套餐）', value: 'gemini' },
         { name: 'OpenCode（与 Codex 共享 OpenAI 套餐）', value: 'opencode' },
-        { name: '全部（将依次配置所有工具）', value: 'all' },
+        { name: '全部（将依次配置 Codex 和 OpenCode）', value: 'all' },
       ],
       default: DEFAULT_PLATFORMS,
       validate: (value) => {
@@ -192,59 +170,6 @@ async function promptApiKey() {
   ])
 
   return answers.apiKey
-}
-
-// ============================================================================
-// Claude Code 配置
-// ============================================================================
-
-function configureClaudeCode(apiKey) {
-  const configDir = path.join(HOME_DIR, '.claude')
-  const configPath = path.join(configDir, 'settings.json')
-
-  ensureDir(configDir)
-
-  // 默认配置
-  const defaultConfig = {
-    env: {
-      ANTHROPIC_AUTH_TOKEN: apiKey,
-      ANTHROPIC_BASE_URL: GMN_BASE_URLS.claude,
-      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1,
-      CLAUDE_CODE_MAX_OUTPUT_TOKENS: 32000,
-    },
-    permissions: {
-      allow: [],
-      deny: [],
-    },
-  }
-
-  let finalConfig
-
-  if (OVERWRITE_MODE) {
-    // 全覆盖模式：使用默认配置
-    finalConfig = defaultConfig
-  } else {
-    // 保护模式：读取现有配置并深度合并
-    let userConfig = {}
-    if (fs.existsSync(configPath)) {
-      try {
-        userConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
-      } catch (error) {
-        console.warn(`  ⚠️  无法解析现有配置，将创建新配置`)
-      }
-    }
-
-    // 深度合并：默认配置为基础，用户配置覆盖
-    finalConfig = deepMerge(defaultConfig, userConfig)
-  }
-
-  // 无论哪种模式，都强制更新认证字段
-  finalConfig.env = finalConfig.env || {}
-  finalConfig.env.ANTHROPIC_AUTH_TOKEN = apiKey
-  finalConfig.env.ANTHROPIC_BASE_URL = GMN_BASE_URLS.claude
-
-  // 写入配置
-  atomicWrite(configPath, JSON.stringify(finalConfig, null, 2))
 }
 
 // ============================================================================
@@ -294,74 +219,6 @@ function configureCodex(apiKey) {
 
   const auth = { OPENAI_API_KEY: apiKey }
   atomicWrite(authPath, JSON.stringify(auth, null, 2))
-}
-
-// ============================================================================
-// Gemini CLI 配置
-// ============================================================================
-
-function configureGeminiCLI(apiKey) {
-  const configDir = path.join(HOME_DIR, '.gemini')
-  const settingsPath = path.join(configDir, 'settings.json')
-  const envPath = path.join(configDir, '.env')
-
-  ensureDir(configDir)
-
-  // 1. 处理 settings.json
-  let settings = {}
-
-  if (!OVERWRITE_MODE && fs.existsSync(settingsPath)) {
-    // 保护模式：读取现有配置
-    try {
-      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
-    } catch (error) {
-      console.warn(`  ⚠️  无法解析 settings.json，将创建新配置`)
-    }
-  }
-
-  // 确保启用 IDE 集成
-  settings.ide = settings.ide || {}
-  if (settings.ide.enabled === undefined) {
-    settings.ide.enabled = true
-  }
-
-  // 配置认证方式
-  settings.security = settings.security || {}
-  settings.security.auth = settings.security.auth || {}
-  if (settings.security.auth.selectedType === undefined) {
-    settings.security.auth.selectedType = 'gemini-api-key'
-  }
-
-  atomicWrite(settingsPath, JSON.stringify(settings, null, 2))
-
-  // 2. 处理 .env
-  const env = {
-    GEMINI_API_KEY: apiKey,
-    GEMINI_MODEL: 'gemini-2.5-pro',
-    GOOGLE_GEMINI_BASE_URL: GMN_BASE_URLS.gemini,
-  }
-
-  if (!OVERWRITE_MODE && fs.existsSync(envPath)) {
-    // 保护模式：读取现有 .env（保留其他变量）
-    const content = fs.readFileSync(envPath, 'utf-8')
-    for (const line of content.split('\n')) {
-      const trimmed = line.trim()
-      if (!trimmed || trimmed.startsWith('#')) continue
-      const eqIndex = trimmed.indexOf('=')
-      if (eqIndex === -1) continue
-      const key = trimmed.slice(0, eqIndex).trim()
-      const value = trimmed.slice(eqIndex + 1).trim()
-      if (key && !env[key]) {
-        env[key] = value
-      }
-    }
-  }
-
-  // 写入 .env（按 KEY 排序）
-  const lines = Object.keys(env)
-    .sort()
-    .map((key) => `${key}=${env[key]}`)
-  atomicWrite(envPath, lines.join('\n') + '\n')
 }
 
 // ============================================================================
@@ -511,7 +368,8 @@ async function main() {
       platforms = await promptPlatforms()
     }
   } catch (error) {
-    console.error(`❌ ${(error as Error).message}`)
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(`❌ ${message}`)
     process.exit(1)
   }
 
@@ -549,9 +407,7 @@ async function main() {
 
   // 6. 配置选中的工具
   const ALL_TOOLS = {
-    claude: { name: 'Claude Code', configure: configureClaudeCode },
     codex: { name: 'Codex', configure: configureCodex },
-    gemini: { name: 'Gemini CLI', configure: configureGeminiCLI },
     opencode: { name: 'OpenCode', configure: configureOpenCode },
   }
 
@@ -573,16 +429,9 @@ async function main() {
 
   // 只显示配置的工具的文件位置
   console.log('\n配置文件位置：')
-  if (platforms.includes('claude')) {
-    console.log(`  - Claude Code: ${path.join(HOME_DIR, '.claude/settings.json')}`)
-  }
   if (platforms.includes('codex')) {
     console.log(`  - Codex:       ${path.join(HOME_DIR, '.codex/config.toml')}`)
     console.log(`  - Codex:       ${path.join(HOME_DIR, '.codex/auth.json')}`)
-  }
-  if (platforms.includes('gemini')) {
-    console.log(`  - Gemini CLI:  ${path.join(HOME_DIR, '.gemini/settings.json')}`)
-    console.log(`  - Gemini CLI:  ${path.join(HOME_DIR, '.gemini/.env')}`)
   }
   if (platforms.includes('opencode')) {
     console.log(`  - OpenCode:    ${path.join(HOME_DIR, '.config/opencode/opencode.json')}`)
