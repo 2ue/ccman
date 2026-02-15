@@ -328,7 +328,7 @@ function configureOpenClaw(apiKey) {
   ensureDir(path.dirname(openclawPath))
   ensureDir(path.dirname(modelsPath))
 
-  const providerKey = 'sub2api'
+  const providerKey = 'gmn'
   const primaryModelId = 'gpt-5.3-codex'
   const secondaryModelId = 'gpt-5.2-codex'
 
@@ -351,7 +351,19 @@ function configureOpenClaw(apiKey) {
   const openclawConfig = {
     models: {
       mode: 'merge',
-      providers: {},
+      providers: {
+        [providerKey]: {
+          baseUrl: GMN_BASE_URLS.openclaw,
+          apiKey,
+          api: 'openai-responses',
+          headers: {
+            'User-Agent': 'curl/8.0',
+            'OpenAI-Beta': 'responses=v1',
+          },
+          authHeader: true,
+          models: [createOpenClawModel(primaryModelId), createOpenClawModel(secondaryModelId)],
+        },
+      },
     },
     agents: {
       defaults: {

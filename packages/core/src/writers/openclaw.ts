@@ -6,51 +6,19 @@ import { getOpenClawConfigPath, getOpenClawDir, getOpenClawModelsPath } from '..
 import { ensureDir, writeJSON } from '../utils/file.js'
 import { replaceVariables } from '../utils/template.js'
 
-interface OpenClawModel {
-  id: string
-  name: string
-  api: string
-  reasoning: boolean
-  input: string[]
-  cost: {
-    input: number
-    output: number
-    cacheRead: number
-    cacheWrite: number
-  }
-  contextWindow: number
-  maxTokens: number
-}
-
-interface OpenClawModelsProvider {
-  baseUrl?: string
-  apiKey?: string
-  api?: string
-  authHeader?: boolean
-  headers?: Record<string, string>
-  models?: OpenClawModel[]
-  [key: string]: unknown
-}
-
 interface OpenClawModelsFile {
-  providers?: Record<string, OpenClawModelsProvider>
+  providers?: Record<string, unknown>
   [key: string]: unknown
 }
 
 interface OpenClawConfigFile {
   models?: {
-    mode?: string
     providers?: Record<string, unknown>
     [key: string]: unknown
   }
   agents?: {
     defaults?: {
       workspace?: string
-      model?: {
-        primary?: string
-        [key: string]: unknown
-      }
-      thinkingDefault?: string
       [key: string]: unknown
     }
     [key: string]: unknown
@@ -58,17 +26,7 @@ interface OpenClawConfigFile {
   [key: string]: unknown
 }
 
-interface OpenClawModelMeta {
-  providerKey?: string
-  primaryModelId?: string
-  secondaryModelId?: string
-  includeSecondaryModel?: boolean
-}
-
-const DEFAULT_PROVIDER_KEY = 'sub2api'
-const DEFAULT_PRIMARY_MODEL_ID = 'gpt-5.3-codex'
-const DEFAULT_SECONDARY_MODEL_ID = 'gpt-5.2-codex'
-const OPENAI_RESPONSES_API = 'openai-responses'
+const DEFAULT_PROVIDER_NAME = 'gmn'
 
 // ESM 环境下获取当前文件所在目录
 const __filename = fileURLToPath(import.meta.url)
@@ -94,13 +52,46 @@ function resolveTemplatePath(relativePath: string): string | null {
 const OPENCLAW_CONFIG_TEMPLATE: OpenClawConfigFile = {
   models: {
     mode: 'merge',
-    providers: {},
+    providers: {
+      '{{providerName}}': {
+        baseUrl: '{{baseUrl}}',
+        apiKey: '{{apiKey}}',
+        api: 'openai-responses',
+        headers: {
+          'User-Agent': 'curl/8.0',
+          'OpenAI-Beta': 'responses=v1',
+        },
+        authHeader: true,
+        models: [
+          {
+            id: 'gpt-5.3-codex',
+            name: 'gpt-5.3-codex',
+            api: 'openai-responses',
+            reasoning: false,
+            input: ['text'],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: 200000,
+            maxTokens: 8192,
+          },
+          {
+            id: 'gpt-5.2-codex',
+            name: 'gpt-5.2-codex',
+            api: 'openai-responses',
+            reasoning: false,
+            input: ['text'],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: 200000,
+            maxTokens: 8192,
+          },
+        ],
+      },
+    },
   },
   agents: {
     defaults: {
       workspace: '',
       model: {
-        primary: `${DEFAULT_PROVIDER_KEY}/${DEFAULT_PRIMARY_MODEL_ID}`,
+        primary: '{{providerName}}/gpt-5.3-codex',
       },
       thinkingDefault: 'xhigh',
     },
@@ -109,10 +100,10 @@ const OPENCLAW_CONFIG_TEMPLATE: OpenClawConfigFile = {
 
 const OPENCLAW_MODELS_TEMPLATE: OpenClawModelsFile = {
   providers: {
-    [DEFAULT_PROVIDER_KEY]: {
-      baseUrl: 'https://gmn.chuangzuoli.com/v1',
-      apiKey: '',
-      api: OPENAI_RESPONSES_API,
+    '{{providerName}}': {
+      baseUrl: '{{baseUrl}}',
+      apiKey: '{{apiKey}}',
+      api: 'openai-responses',
       authHeader: true,
       headers: {
         'User-Agent': 'curl/8.0',
@@ -120,9 +111,9 @@ const OPENCLAW_MODELS_TEMPLATE: OpenClawModelsFile = {
       },
       models: [
         {
-          id: DEFAULT_PRIMARY_MODEL_ID,
-          name: DEFAULT_PRIMARY_MODEL_ID,
-          api: OPENAI_RESPONSES_API,
+          id: 'gpt-5.3-codex',
+          name: 'gpt-5.3-codex',
+          api: 'openai-responses',
           reasoning: false,
           input: ['text'],
           cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
@@ -130,9 +121,9 @@ const OPENCLAW_MODELS_TEMPLATE: OpenClawModelsFile = {
           maxTokens: 8192,
         },
         {
-          id: DEFAULT_SECONDARY_MODEL_ID,
-          name: DEFAULT_SECONDARY_MODEL_ID,
-          api: OPENAI_RESPONSES_API,
+          id: 'gpt-5.2-codex',
+          name: 'gpt-5.2-codex',
+          api: 'openai-responses',
           reasoning: false,
           input: ['text'],
           cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
@@ -160,58 +151,10 @@ function loadTemplate<T extends object>(relativePath: string, fallback: T): T {
   return fallback
 }
 
-function parseModelMeta(raw?: string): Required<OpenClawModelMeta> {
-  const defaults: Required<OpenClawModelMeta> = {
-    providerKey: DEFAULT_PROVIDER_KEY,
-    primaryModelId: DEFAULT_PRIMARY_MODEL_ID,
-    secondaryModelId: DEFAULT_SECONDARY_MODEL_ID,
-    includeSecondaryModel: true,
-  }
-
-  if (!raw || !raw.trim()) {
-    return defaults
-  }
-
-  // 兼容纯字符串：直接作为 primary model id
-  try {
-    const parsed = JSON.parse(raw)
-    if (!parsed || typeof parsed !== 'object') {
-      return defaults
-    }
-    const obj = parsed as OpenClawModelMeta
-    return {
-      providerKey: (obj.providerKey || defaults.providerKey).trim(),
-      primaryModelId: (obj.primaryModelId || defaults.primaryModelId).trim(),
-      secondaryModelId: (obj.secondaryModelId || defaults.secondaryModelId).trim(),
-      includeSecondaryModel:
-        obj.includeSecondaryModel === undefined
-          ? defaults.includeSecondaryModel
-          : Boolean(obj.includeSecondaryModel),
-    }
-  } catch {
-    return {
-      ...defaults,
-      primaryModelId: raw.trim(),
-    }
-  }
-}
-
-function createModel(id: string): OpenClawModel {
-  return {
-    id,
-    name: id,
-    api: OPENAI_RESPONSES_API,
-    reasoning: false,
-    input: ['text'],
-    cost: {
-      input: 0,
-      output: 0,
-      cacheRead: 0,
-      cacheWrite: 0,
-    },
-    contextWindow: 200000,
-    maxTokens: 8192,
-  }
+function resolveProviderName(provider: Provider): string {
+  const name = provider.name?.trim()
+  if (name) return name
+  return DEFAULT_PROVIDER_NAME
 }
 
 /**
@@ -226,16 +169,10 @@ export function writeOpenClawConfig(provider: Provider): void {
   const configPath = getOpenClawConfigPath()
   const modelsPath = getOpenClawModelsPath()
   const homeDir = path.dirname(getOpenClawDir())
+  const providerName = resolveProviderName(provider)
 
   ensureDir(getOpenClawDir())
   ensureDir(path.dirname(modelsPath))
-
-  const meta = parseModelMeta(provider.model)
-  const providerKey = meta.providerKey || DEFAULT_PROVIDER_KEY
-  const primaryModelId = meta.primaryModelId || DEFAULT_PRIMARY_MODEL_ID
-  const secondaryModelId = meta.secondaryModelId || DEFAULT_SECONDARY_MODEL_ID
-  const includeSecondaryModel =
-    meta.includeSecondaryModel && secondaryModelId && secondaryModelId !== primaryModelId
 
   const rawConfigTemplate = loadTemplate<OpenClawConfigFile>(
     'openclaw/openclaw.base.template.json',
@@ -247,58 +184,21 @@ export function writeOpenClawConfig(provider: Provider): void {
   )
 
   const variables = {
-    homeDir,
-    providerKey,
+    providerName,
     baseUrl: provider.baseUrl || '',
     apiKey: provider.apiKey || '',
-    primaryModelId,
-    secondaryModelId,
   }
 
-  const configTemplate = replaceVariables(rawConfigTemplate, variables) as OpenClawConfigFile
-  const modelsTemplate = replaceVariables(rawModelsTemplate, variables) as OpenClawModelsFile
+  const nextOpenClawConfig = replaceVariables(rawConfigTemplate, variables) as OpenClawConfigFile
+  const nextModelsConfig = replaceVariables(rawModelsTemplate, variables) as OpenClawModelsFile
+  const currentAgents = nextOpenClawConfig.agents || {}
+  const defaults = currentAgents.defaults || {}
 
-  // models.json：强制覆盖关键字段
-  const nextModelsConfig: OpenClawModelsFile = {
-    ...modelsTemplate,
-    providers: {
-      [providerKey]: {
-        ...((modelsTemplate.providers || {})[providerKey] || {}),
-        baseUrl: provider.baseUrl,
-        apiKey: provider.apiKey,
-        api: OPENAI_RESPONSES_API,
-        authHeader: true,
-        headers: {
-          'User-Agent': 'curl/8.0',
-          'OpenAI-Beta': 'responses=v1',
-        },
-        models: includeSecondaryModel
-          ? [createModel(primaryModelId), createModel(secondaryModelId)]
-          : [createModel(primaryModelId)],
-      },
-    },
-  }
-
-  // openclaw.json：强制覆盖关键字段
-  const defaults = configTemplate.agents?.defaults || {}
-  const nextOpenClawConfig: OpenClawConfigFile = {
-    ...configTemplate,
-    models: {
-      ...(configTemplate.models || {}),
-      mode: configTemplate.models?.mode || 'merge',
-      providers: configTemplate.models?.providers || {},
-    },
-    agents: {
-      ...(configTemplate.agents || {}),
-      defaults: {
-        ...defaults,
-        workspace: homeDir,
-        model: {
-          ...(defaults.model || {}),
-          primary: `${providerKey}/${primaryModelId}`,
-        },
-        thinkingDefault: defaults.thinkingDefault || 'xhigh',
-      },
+  nextOpenClawConfig.agents = {
+    ...currentAgents,
+    defaults: {
+      ...defaults,
+      workspace: homeDir,
     },
   }
 

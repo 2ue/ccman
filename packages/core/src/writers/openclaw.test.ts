@@ -49,10 +49,10 @@ describe('OpenClaw Writer', () => {
     const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
-    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('sub2api/gpt-5.3-codex')
+    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
     expect(typeof openclawConfig.agents?.defaults?.workspace).toBe('string')
 
-    const provider = modelsConfig.providers?.sub2api
+    const provider = modelsConfig.providers?.GMN
     expect(provider.baseUrl).toBe('https://gmn.chuangzuoli.com/v1')
     expect(provider.apiKey).toBe('sk-openclaw-test')
     expect(provider.api).toBe('openai-responses')
@@ -114,7 +114,7 @@ describe('OpenClaw Writer', () => {
     expect(openclawConfig.customField).toBeUndefined()
     expect(modelsConfig.customField).toBeUndefined()
     expect(modelsConfig.providers?.legacy).toBeUndefined()
-    expect(modelsConfig.providers?.sub2api?.apiKey).toBe('sk-new-openclaw')
+    expect(modelsConfig.providers?.GMN?.apiKey).toBe('sk-new-openclaw')
   })
 
   it('should fallback to built-in templates when template files are unavailable', () => {
@@ -137,8 +137,8 @@ describe('OpenClaw Writer', () => {
       const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
       const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
-      expect(openclawConfig.agents?.defaults?.model?.primary).toBe('sub2api/gpt-5.3-codex')
-      expect(modelsConfig.providers?.sub2api?.api).toBe('openai-responses')
+      expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
+      expect(modelsConfig.providers?.GMN?.api).toBe('openai-responses')
     } finally {
       fs.renameSync(openclawTemplateBackupPath, openclawTemplatePath)
       fs.renameSync(modelsTemplateBackupPath, modelsTemplatePath)

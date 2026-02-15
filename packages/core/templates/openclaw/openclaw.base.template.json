@@ -1,13 +1,46 @@
 {
   "models": {
     "mode": "merge",
-    "providers": {}
+    "providers": {
+      "{{providerName}}": {
+        "baseUrl": "{{baseUrl}}",
+        "apiKey": "{{apiKey}}",
+        "api": "openai-responses",
+        "headers": {
+          "User-Agent": "curl/8.0",
+          "OpenAI-Beta": "responses=v1"
+        },
+        "authHeader": true,
+        "models": [
+          {
+            "id": "gpt-5.3-codex",
+            "name": "gpt-5.3-codex",
+            "api": "openai-responses",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "gpt-5.2-codex",
+            "name": "gpt-5.2-codex",
+            "api": "openai-responses",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
   },
   "agents": {
     "defaults": {
-      "workspace": "{{homeDir}}",
+      "workspace": "",
       "model": {
-        "primary": "{{providerKey}}/{{primaryModelId}}"
+        "primary": "{{providerName}}/gpt-5.3-codex"
       },
       "thinkingDefault": "xhigh"
     }

@@ -30,10 +30,6 @@ describe('OpenClaw ToolManager', () => {
       name: providerName,
       baseUrl: 'https://gmn.chuangzuoli.com/v1',
       apiKey: 'sk-openclaw-provider',
-      model: JSON.stringify({
-        providerKey: 'sub2api',
-        primaryModelId: 'gpt-5.3-codex',
-      }),
     })
 
     manager.switch(provider.id)
@@ -47,7 +43,7 @@ describe('OpenClaw ToolManager', () => {
 
     const openclawConfig = JSON.parse(fs.readFileSync(openclawPath, 'utf-8'))
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
-    expect(openclawConfig.agents.defaults.model.primary).toBe('sub2api/gpt-5.3-codex')
-    expect(modelsConfig.providers.sub2api.baseUrl).toBe('https://gmn.chuangzuoli.com/v1')
+    expect(openclawConfig.agents.defaults.model.primary).toBe(`${providerName}/gpt-5.3-codex`)
+    expect(modelsConfig.providers[providerName].baseUrl).toBe('https://gmn.chuangzuoli.com/v1')
   })
 })
