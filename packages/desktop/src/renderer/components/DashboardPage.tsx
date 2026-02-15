@@ -1,5 +1,5 @@
 import type { Provider } from '@ccman/types'
-import { Server, Package, Trash2, Settings, Target, Code } from 'lucide-react'
+import { Server, Package, Trash2, Settings, Target, Code, Wrench } from 'lucide-react'
 import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
 import DashboardCard from './DashboardCard'
 
@@ -9,6 +9,7 @@ export type NavKey =
   | 'codex'
   | 'gemini'
   | 'opencode'
+  | 'openclaw'
   | 'mcp'
   | 'service-providers'
   | 'clean'
@@ -26,6 +27,7 @@ interface DashboardPageProps {
   codexData: ToolData
   geminiData: ToolData
   opencodeData: ToolData
+  openclawData: ToolData
   onEnterPage: (key: NavKey) => void
 }
 
@@ -34,6 +36,7 @@ export default function DashboardPage({
   codexData,
   geminiData,
   opencodeData,
+  openclawData,
   onEnterPage,
 }: DashboardPageProps) {
   return (
@@ -112,6 +115,18 @@ export default function DashboardPage({
               statusType={opencodeData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('opencode')}
             />
+
+            {/* OpenClaw */}
+            <DashboardCard
+              icon={Wrench}
+              title="OpenClaw"
+              statusLines={[
+                openclawData.current ? `已配置：${openclawData.current.name}` : '未配置',
+                `${openclawData.providers.length} 个服务商`,
+              ]}
+              statusType={openclawData.current ? 'success' : 'warning'}
+              onClick={() => onEnterPage('openclaw')}
+            />
           </div>
         </div>
 
@@ -144,7 +159,8 @@ export default function DashboardPage({
                   claudeData.presetsCount +
                   codexData.presetsCount +
                   geminiData.presetsCount +
-                  opencodeData.presetsCount
+                  opencodeData.presetsCount +
+                  openclawData.presetsCount
                 } 个模板`,
                 '快速添加服务商',
               ]}

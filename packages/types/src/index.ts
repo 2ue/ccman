@@ -9,9 +9,9 @@
 // 工具类型
 // ---------------------------------------------------------------------------
 
-export type ToolType = 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode'
+export type ToolType = 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode' | 'openclaw'
 
-export type MainToolType = 'codex' | 'claude' | 'gemini'
+export type MainToolType = 'codex' | 'claude' | 'gemini' | 'openclaw'
 
 // 和 @ccman/core 中 constants.ts 的结构保持一致,但不引入任何 Node 依赖
 export const TOOL_TYPES = {
@@ -20,12 +20,14 @@ export const TOOL_TYPES = {
   MCP: 'mcp',
   GEMINI: 'gemini',
   OPENCODE: 'opencode',
+  OPENCLAW: 'openclaw',
 } as const
 
 export const MAIN_TOOL_TYPES = {
   CODEX: TOOL_TYPES.CODEX,
   CLAUDE: TOOL_TYPES.CLAUDE,
   GEMINI: TOOL_TYPES.GEMINI,
+  OPENCLAW: TOOL_TYPES.OPENCLAW,
 } as const
 
 export const TOOL_CONFIG = {
@@ -68,6 +70,14 @@ export const TOOL_CONFIG = {
     bgColorClass: 'bg-amber-50',
     hoverBgColorClass: 'hover:bg-amber-100',
     description: 'OpenCode 配置'
+  },
+  [TOOL_TYPES.OPENCLAW]: {
+    displayName: 'OpenClaw',
+    color: 'teal',
+    textColorClass: 'text-teal-600',
+    bgColorClass: 'bg-teal-50',
+    hoverBgColorClass: 'hover:bg-teal-100',
+    description: 'OpenClaw 配置'
   }
 } as const
 

@@ -1,11 +1,11 @@
 # @2ue/aicoding
 
-一键配置 GMN 到 AI 编程工具（Codex、OpenCode）
+一键配置 GMN 到 AI 编程工具（Codex、OpenCode、OpenClaw）
 
 ## 特性
 
 - ✅ **轻量依赖**：使用 inquirer 提供清晰的交互式选择
-- ✅ **一键配置**：同时配置 2 个工具
+- ✅ **一键配置**：支持同时配置多个工具（默认 Codex + OpenCode）
 - ✅ **两种模式**：保护模式（默认）+ 全覆盖模式
 - ✅ **配置保护**：保留用户现有配置，只更新认证字段
 - ✅ **原子性写入**：使用临时文件 + rename，确保安全
@@ -48,6 +48,9 @@ curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh 
 # 仅配置 Codex + OpenCode
 curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- -p codex,opencode
 
+# 包含 OpenClaw（默认不选中）
+curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- -p codex,opencode,openclaw
+
 # 全覆盖模式
 curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh | bash -s -- --overwrite
 
@@ -89,7 +92,7 @@ npx @2ue/aicoding
 npx @2ue/aicoding sk-ant-xxx
 ```
 
-交互式流程会提示选择平台；如需自定义 Codex/OpenCode 的 OpenAI Base URL，可通过参数指定。
+交互式流程会提示选择平台（OpenClaw 可选但默认不选中）；如需自定义 Codex/OpenCode 的 OpenAI Base URL，可通过参数指定。
 
 **可选：指定 Codex/OpenCode 的 OpenAI Base URL**
 ```bash
@@ -100,6 +103,7 @@ npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
 **保护的配置**：
 - **OpenCode**: 其他 provider 配置
 - **Codex**: `config.toml/auth.json` 会先备份为 `.bak`，再覆盖写入（不保留手动修改）
+- **OpenClaw**: 固定直接覆盖写入（不受保护/全覆盖模式影响）
 
 ### 全覆盖模式（慎用）
 
@@ -124,6 +128,7 @@ npx @2ue/aicoding sk-ant-xxx --overwrite
 |------|---------|------|
 | **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | `config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`；`config.toml` 仅保留一个 `model_providers` |
 | **OpenCode** | `~/.config/opencode/opencode.json` | 更新 `provider.gmn` 配置 |
+| **OpenClaw** | `~/.openclaw/openclaw.json`<br>`~/.openclaw/agents/main/agent/models.json` | 固定覆盖写入，端点使用 `https://gmn.chuangzuoli.com/v1` |
 
 ## 示例
 
@@ -139,6 +144,7 @@ $ npx @2ue/aicoding
 
 ✅ Codex
 ✅ OpenCode
+✅ OpenClaw（若已选择）
 
 🎉 配置完成！
 ```
@@ -154,6 +160,7 @@ $ npx @2ue/aicoding sk-ant-new-key
 
 ✅ Codex
 ✅ OpenCode
+✅ OpenClaw（若已选择）
 
 🎉 配置完成！
 ```
@@ -218,7 +225,7 @@ $ npx @2ue/aicoding --overwrite
 如果遇到权限错误，确保配置目录有写入权限：
 
 ```bash
-chmod 700 ~/.codex ~/.config/opencode
+chmod 700 ~/.codex ~/.config/opencode ~/.openclaw
 ```
 
 ### 配置未生效

@@ -1,0 +1,15 @@
+{
+  "models": {
+    "mode": "merge",
+    "providers": {}
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "{{homeDir}}",
+      "model": {
+        "primary": "{{providerKey}}/{{primaryModelId}}"
+      },
+      "thinkingDefault": "xhigh"
+    }
+  }
+}

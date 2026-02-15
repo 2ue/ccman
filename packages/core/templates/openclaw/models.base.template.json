@@ -1,0 +1,36 @@
+{
+  "providers": {
+    "{{providerKey}}": {
+      "baseUrl": "{{baseUrl}}",
+      "apiKey": "{{apiKey}}",
+      "api": "openai-responses",
+      "authHeader": true,
+      "headers": {
+        "User-Agent": "curl/8.0",
+        "OpenAI-Beta": "responses=v1"
+      },
+      "models": [
+        {
+          "id": "{{primaryModelId}}",
+          "name": "{{primaryModelId}}",
+          "api": "openai-responses",
+          "reasoning": false,
+          "input": ["text"],
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 200000,
+          "maxTokens": 8192
+        },
+        {
+          "id": "{{secondaryModelId}}",
+          "name": "{{secondaryModelId}}",
+          "api": "openai-responses",
+          "reasoning": false,
+          "input": ["text"],
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 200000,
+          "maxTokens": 8192
+        }
+      ]
+    }
+  }
+}

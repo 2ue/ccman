@@ -23,6 +23,7 @@ let codexDir: string = path.join(rootDir, '.codex')
 let claudeDir: string = path.join(rootDir, '.claude')
 const geminiDir: string = path.join(rootDir, '.gemini')
 let opencodeDir: string = path.join(rootDir, '.config', 'opencode')
+let openclawDir: string = path.join(rootDir, '.openclaw')
 
 /**
  * 获取 ccman 配置目录
@@ -57,6 +58,13 @@ export function getGeminiDir(): string {
  */
 export function getOpenCodeDir(): string {
   return opencodeDir
+}
+
+/**
+ * 获取 OpenClaw 配置目录
+ */
+export function getOpenClawDir(): string {
+  return openclawDir
 }
 
 /**
@@ -131,6 +139,20 @@ export function getOpenCodeConfigPath(): string {
 }
 
 /**
+ * 获取 OpenClaw 主配置文件路径 (~/.openclaw/openclaw.json)
+ */
+export function getOpenClawConfigPath(): string {
+  return path.join(openclawDir, 'openclaw.json')
+}
+
+/**
+ * 获取 OpenClaw models 配置文件路径 (~/.openclaw/agents/main/agent/models.json)
+ */
+export function getOpenClawModelsPath(): string {
+  return path.join(openclawDir, 'agents', 'main', 'agent', 'models.json')
+}
+
+/**
  * 测试专用 API：设置自定义路径
  * 仅在测试环境可用，用于精确控制测试路径
  */
@@ -139,6 +161,7 @@ export function __setTestPaths(paths: {
   codex?: string
   claude?: string
   opencode?: string
+  openclaw?: string
 }): void {
   if (process.env.NODE_ENV !== 'test') {
     throw new Error('__setTestPaths can only be used in test environment')
@@ -147,4 +170,5 @@ export function __setTestPaths(paths: {
   if (paths.codex) codexDir = paths.codex
   if (paths.claude) claudeDir = paths.claude
   if (paths.opencode) opencodeDir = paths.opencode
+  if (paths.openclaw) openclawDir = paths.openclaw
 }

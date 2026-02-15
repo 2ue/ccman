@@ -68,6 +68,8 @@ export default function PresetFormModal({
             return window.electronAPI.gemini
           case TOOL_TYPES.OPENCODE:
             return window.electronAPI.opencode
+          case TOOL_TYPES.OPENCLAW:
+            return window.electronAPI.openclaw
         }
       })()
 

@@ -1,7 +1,7 @@
 /**
  * 工具管理器（Tool Manager）
  *
- * 统一管理 Codex、Claude Code、Gemini CLI、OpenCode 和 MCP 的服务商配置
+ * 统一管理 Codex、Claude Code、Gemini CLI、OpenCode、OpenClaw 和 MCP 的服务商配置
  * 采用工厂模式 + 数据驱动设计，零 if-else，易扩展
  *
  * 文件结构：
@@ -31,8 +31,10 @@ import { CC_PRESETS } from './presets/claude.js'
 import { MCP_PRESETS } from './presets/mcp.js'
 import { GEMINI_PRESETS } from './presets/gemini.js'
 import { OPENCODE_PRESETS } from './presets/opencode.js'
+import { OPENCLAW_PRESETS } from './presets/openclaw.js'
 import { writeGeminiConfig } from './writers/gemini.js'
 import { writeOpenCodeConfig } from './writers/opencode.js'
+import { writeOpenClawConfig } from './writers/openclaw.js'
 import type {
   ToolType,
   Provider,
@@ -137,6 +139,11 @@ const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
     configPath: path.join(getCcmanDir(), 'opencode.json'),
     builtinPresets: OPENCODE_PRESETS,
     writer: writeOpenCodeConfig,
+  },
+  openclaw: {
+    configPath: path.join(getCcmanDir(), 'openclaw.json'),
+    builtinPresets: OPENCLAW_PRESETS,
+    writer: writeOpenClawConfig,
   },
 }
 
@@ -584,4 +591,11 @@ export function createGeminiManager(): ToolManager {
  */
 export function createOpenCodeManager(): ToolManager {
   return createToolManager('opencode')
+}
+
+/**
+ * 创建 OpenClaw 管理器（对外 API）
+ */
+export function createOpenClawManager(): ToolManager {
+  return createToolManager('openclaw')
 }

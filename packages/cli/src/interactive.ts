@@ -7,6 +7,7 @@
  * - startCodexMenu(): Codex 菜单（ccman cx）
  * - startGeminiMenu(): Gemini 菜单（ccman gm）
  * - startOpenCodeMenu(): OpenCode 菜单（ccman oc）
+ * - startOpenClawMenu(): OpenClaw 菜单（ccman openclaw / ccman ow）
  */
 
 import inquirer from 'inquirer'
@@ -16,6 +17,7 @@ import {
   createClaudeManager,
   createGeminiManager,
   createOpenCodeManager,
+  createOpenClawManager,
   TOOL_TYPES,
   type ToolType,
   type ToolManager,
@@ -28,6 +30,7 @@ const CLI_TOOL_CONFIG = {
   [TOOL_TYPES.CLAUDE]: { name: 'Claude', emoji: '🔷', cmd: 'cc' },
   [TOOL_TYPES.GEMINI]: { name: 'Gemini', emoji: '💎', cmd: 'gm' },
   [TOOL_TYPES.OPENCODE]: { name: 'OpenCode', emoji: '🧩', cmd: 'oc' },
+  [TOOL_TYPES.OPENCLAW]: { name: 'OpenClaw', emoji: '🦀', cmd: 'ow' },
 } as const
 
 type CliToolType = Exclude<ToolType, 'mcp'>
@@ -45,6 +48,8 @@ function getManager(tool: CliToolType): ToolManager {
       return createGeminiManager()
     case TOOL_TYPES.OPENCODE:
       return createOpenCodeManager()
+    case TOOL_TYPES.OPENCLAW:
+      return createOpenClawManager()
   }
 }
 
@@ -143,6 +148,7 @@ export async function startMainMenu(): Promise<void> {
           { name: '🔶 Codex 管理', value: 'codex' },
           { name: '💎 Gemini 管理', value: 'gemini' },
           { name: '🧩 OpenCode 管理', value: 'opencode' },
+          { name: '🦀 OpenClaw 管理', value: 'openclaw' },
           { name: '🔄 WebDAV 同步', value: 'sync' },
           { name: '📦 预置服务商管理', value: 'presets' },
           { name: '❌ 退出', value: 'exit' },
@@ -163,6 +169,8 @@ export async function startMainMenu(): Promise<void> {
       await startGeminiMenu()
     } else if (choice === 'opencode') {
       await startOpenCodeMenu()
+    } else if (choice === 'openclaw') {
+      await startOpenClawMenu()
     } else if (choice === 'sync') {
       const { startSyncMenu } = await import('./commands/sync/index.js')
       await startSyncMenu()
@@ -214,6 +222,17 @@ export async function startGeminiMenu(): Promise<void> {
  */
 export async function startOpenCodeMenu(): Promise<void> {
   await showToolMenu(TOOL_TYPES.OPENCODE)
+}
+
+// ============================================================================
+// OpenClaw 菜单
+// ============================================================================
+
+/**
+ * OpenClaw 菜单 - ccman openclaw / ccman ow 入口
+ */
+export async function startOpenClawMenu(): Promise<void> {
+  await showToolMenu(TOOL_TYPES.OPENCLAW)
 }
 
 // ============================================================================

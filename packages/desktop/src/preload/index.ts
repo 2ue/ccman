@@ -184,12 +184,51 @@ const opencodeAPI: OpenCodeAPI = {
 }
 
 // ============================================================================
+// OpenClaw API
+// ============================================================================
+
+export interface OpenClawAPI {
+  addProvider: (input: AddProviderInput) => Promise<Provider>
+  listProviders: () => Promise<Provider[]>
+  getProvider: (id: string) => Promise<Provider | undefined>
+  switchProvider: (id: string) => Promise<void>
+  editProvider: (id: string, updates: EditProviderInput) => Promise<Provider>
+  removeProvider: (id: string) => Promise<void>
+  cloneProvider: (sourceId: string, newName: string) => Promise<Provider>
+  getCurrent: () => Promise<Provider | undefined>
+  findByName: (name: string) => Promise<Provider | undefined>
+
+  addPreset: (input: AddPresetInput) => Promise<PresetTemplate>
+  listPresets: () => Promise<PresetTemplate[]>
+  editPreset: (name: string, updates: EditPresetInput) => Promise<PresetTemplate>
+  removePreset: (name: string) => Promise<void>
+}
+
+const openclawAPI: OpenClawAPI = {
+  addProvider: (input) => ipcRenderer.invoke('openclaw:add-provider', input),
+  listProviders: () => ipcRenderer.invoke('openclaw:list-providers'),
+  getProvider: (id) => ipcRenderer.invoke('openclaw:get-provider', id),
+  switchProvider: (id) => ipcRenderer.invoke('openclaw:switch-provider', id),
+  editProvider: (id, updates) => ipcRenderer.invoke('openclaw:edit-provider', id, updates),
+  removeProvider: (id) => ipcRenderer.invoke('openclaw:remove-provider', id),
+  cloneProvider: (sourceId, newName) =>
+    ipcRenderer.invoke('openclaw:clone-provider', sourceId, newName),
+  getCurrent: () => ipcRenderer.invoke('openclaw:get-current'),
+  findByName: (name) => ipcRenderer.invoke('openclaw:find-by-name', name),
+
+  addPreset: (input) => ipcRenderer.invoke('openclaw:add-preset', input),
+  listPresets: () => ipcRenderer.invoke('openclaw:list-presets'),
+  editPreset: (name, updates) => ipcRenderer.invoke('openclaw:edit-preset', name, updates),
+  removePreset: (name) => ipcRenderer.invoke('openclaw:remove-preset', name),
+}
+
+// ============================================================================
 // 配置文件 API
 // ============================================================================
 
 export interface ConfigAPI {
   readConfigFiles: (
-    tool: 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode'
+    tool: 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode' | 'openclaw'
   ) => Promise<
     Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
   >
@@ -379,6 +418,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   claude: claudeAPI,
   gemini: geminiAPI,
   opencode: opencodeAPI,
+  openclaw: openclawAPI,
   config: configAPI,
   system: systemAPI,
   update: updateAPI,
@@ -397,6 +437,7 @@ export interface ElectronAPI {
   claude: ClaudeAPI
   gemini: GeminiAPI
   opencode: OpenCodeAPI
+  openclaw: OpenClawAPI
   config: ConfigAPI
   system: SystemAPI
   update: UpdateAPI

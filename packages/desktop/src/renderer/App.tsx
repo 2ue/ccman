@@ -19,6 +19,7 @@ import ClaudeCodePage from './components/ClaudeCodePage'
 import CodexPage from './components/CodexPage'
 import GeminiPage from './components/GeminiPage'
 import OpenCodePage from './components/OpenCodePage'
+import OpenClawPage from './components/OpenClawPage'
 import MCPManagerPage from './components/MCPManagerPage'
 import ServiceProviderConfigPage from './components/ServiceProviderConfigPage'
 import CleanPage from './components/CleanPage'
@@ -51,16 +52,20 @@ export default function App() {
   const [opencodeProviders, setOpencodeProviders] = useState<Provider[]>([])
   const [currentOpenCode, setCurrentOpenCode] = useState<Provider | undefined>()
 
+  // OpenClaw 数据
+  const [openclawProviders, setOpenClawProviders] = useState<Provider[]>([])
+  const [currentOpenClaw, setCurrentOpenClaw] = useState<Provider | undefined>()
+
   // Modal 状态
   const [showAddModal, setShowAddModal] = useState(false)
-  const [addModalTool, setAddModalTool] = useState<'codex' | 'claude' | 'gemini' | 'opencode'>(
-    'claude'
-  )
+  const [addModalTool, setAddModalTool] = useState<
+    'codex' | 'claude' | 'gemini' | 'opencode' | 'openclaw'
+  >('claude')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingProvider, setEditingProvider] = useState<Provider | undefined>()
-  const [editingTool, setEditingTool] = useState<'codex' | 'claude' | 'gemini' | 'opencode'>(
-    'claude'
-  )
+  const [editingTool, setEditingTool] = useState<
+    'codex' | 'claude' | 'gemini' | 'opencode' | 'openclaw'
+  >('claude')
   const [isCloneMode, setIsCloneMode] = useState(false)
 
   // Presets 数量
@@ -68,6 +73,7 @@ export default function App() {
   const [claudePresetsCount, setClaudePresetsCount] = useState(0)
   const [geminiPresetsCount, setGeminiPresetsCount] = useState(0)
   const [opencodePresetsCount, setOpencodePresetsCount] = useState(0)
+  const [openclawPresetsCount, setOpenClawPresetsCount] = useState(0)
 
   // Dialog 状态
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -140,6 +146,16 @@ export default function App() {
         setCurrentOpenCode(opencodeCurrent)
         const opencodePresets = await window.electronAPI.opencode.listPresets()
         setOpencodePresetsCount(opencodePresets.length)
+      }
+
+      // 加载 OpenClaw 数据
+      if (window.electronAPI.openclaw) {
+        const openclawList = await window.electronAPI.openclaw.listProviders()
+        setOpenClawProviders(openclawList)
+        const openclawCurrent = await window.electronAPI.openclaw.getCurrent()
+        setCurrentOpenClaw(openclawCurrent)
+        const openclawPresets = await window.electronAPI.openclaw.listPresets()
+        setOpenClawPresetsCount(openclawPresets.length)
       }
     } catch (error) {
       console.error('加载数据失败：', error)
@@ -411,6 +427,71 @@ export default function App() {
   }
 
   // ============================================================================
+  // OpenClaw 操作
+  // ============================================================================
+
+  const handleOpenClawSwitch = async (id: string) => {
+    try {
+      await window.electronAPI.openclaw.switchProvider(id)
+      await loadData()
+      setToast({
+        show: true,
+        message: '切换成功',
+      })
+    } catch (error) {
+      setAlertDialog({
+        show: true,
+        title: '切换失败',
+        message: (error as Error).message,
+        type: 'error',
+      })
+    }
+  }
+
+  const handleOpenClawDelete = (id: string, name: string) => {
+    setConfirmDialog({
+      show: true,
+      title: '确认删除',
+      message: `确定要删除 "${name}" 吗？`,
+      onConfirm: async () => {
+        setConfirmDialog({ ...confirmDialog, show: false })
+        try {
+          await window.electronAPI.openclaw.removeProvider(id)
+          await loadData()
+          setToast({
+            show: true,
+            message: '删除成功',
+          })
+        } catch (error) {
+          setAlertDialog({
+            show: true,
+            title: '删除失败',
+            message: (error as Error).message,
+            type: 'error',
+          })
+        }
+      },
+    })
+  }
+
+  const handleOpenClawClone = (provider: Provider) => {
+    setEditingProvider({
+      ...provider,
+      name: `${provider.name}（副本）`,
+    })
+    setEditingTool('openclaw')
+    setIsCloneMode(true)
+    setShowEditModal(true)
+  }
+
+  const handleOpenClawEdit = (provider: Provider) => {
+    setEditingProvider(provider)
+    setEditingTool('openclaw')
+    setIsCloneMode(false)
+    setShowEditModal(true)
+  }
+
+  // ============================================================================
   // 导航操作
   // ============================================================================
 
@@ -432,7 +513,7 @@ export default function App() {
   // 通用操作
   // ============================================================================
 
-  const handleAddProvider = (tool: 'codex' | 'claude' | 'gemini' | 'opencode') => {
+  const handleAddProvider = (tool: 'codex' | 'claude' | 'gemini' | 'opencode' | 'openclaw') => {
     setAddModalTool(tool)
     setShowAddModal(true)
   }
@@ -448,7 +529,9 @@ export default function App() {
             ? window.electronAPI.claude
             : editingTool === 'gemini'
               ? window.electronAPI.gemini
-              : window.electronAPI.opencode
+              : editingTool === 'opencode'
+                ? window.electronAPI.opencode
+                : window.electronAPI.openclaw
 
       if (isCloneMode) {
         // 克隆模式：创建新服务商
@@ -544,6 +627,11 @@ export default function App() {
               current: currentOpenCode,
               presetsCount: opencodePresetsCount,
             }}
+            openclawData={{
+              providers: openclawProviders,
+              current: currentOpenClaw,
+              presetsCount: openclawPresetsCount,
+            }}
             onEnterPage={handleEnterPage}
           />
         )}
@@ -597,6 +685,19 @@ export default function App() {
             onEdit={handleOpenCodeEdit}
             onDelete={handleOpenCodeDelete}
             onClone={handleOpenCodeClone}
+          />
+        )}
+
+        {/* OpenClaw 页面 */}
+        {currentView === 'openclaw' && (
+          <OpenClawPage
+            providers={openclawProviders}
+            currentProvider={currentOpenClaw}
+            onAdd={() => handleAddProvider('openclaw')}
+            onSwitch={handleOpenClawSwitch}
+            onEdit={handleOpenClawEdit}
+            onDelete={handleOpenClawDelete}
+            onClone={handleOpenClawClone}
           />
         )}
 
@@ -680,7 +781,9 @@ export default function App() {
                   ? 'Codex'
                   : editingTool === 'gemini'
                     ? 'Gemini'
-                    : 'OpenCode'}
+                    : editingTool === 'opencode'
+                      ? 'OpenCode'
+                      : 'OpenClaw'}
             </h2>
             <ProviderForm
               provider={editingProvider}
@@ -693,7 +796,9 @@ export default function App() {
                     ? claudeProviders
                     : editingTool === 'gemini'
                       ? geminiProviders
-                      : opencodeProviders
+                      : editingTool === 'opencode'
+                        ? opencodeProviders
+                        : openclawProviders
               }
               onSubmit={handleEditSubmit}
               onCancel={() => {

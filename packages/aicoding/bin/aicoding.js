@@ -2,7 +2,7 @@
 /**
  * GMN 快速配置脚本（独立版本，不依赖 ccman）
  *
- * 功能：直接修改 Codex、OpenCode 的配置文件
+ * 功能：直接修改 Codex、OpenCode、OpenClaw 的配置文件
  *
  * 用法：
  *   node scripts/setup-gmn-standalone.mjs                    # 交互式输入（保护模式）
@@ -24,16 +24,20 @@ import inquirer from 'inquirer'
 
 const GMN_BASE_URLS = {
   openai: 'https://gmn.chuangzuoli.com',
+  openclaw: 'https://gmn.chuangzuoli.com/v1',
 }
 let OPENAI_BASE_URL = GMN_BASE_URLS.openai
-const VALID_PLATFORMS = ['codex', 'opencode']
+const VALID_PLATFORMS = ['codex', 'opencode', 'openclaw']
 const DEFAULT_PLATFORMS = ['codex', 'opencode']
 const TOTAL_STEPS = 4
 
-// 开发环境支持
-const HOME_DIR = process.env.NODE_ENV === 'development'
-  ? path.join(os.tmpdir(), 'ccman-dev')
-  : os.homedir()
+// 统一路径策略（与 @ccman/core 保持一致）
+const NODE_ENV = process.env.NODE_ENV
+const HOME_DIR = NODE_ENV === 'test'
+  ? path.join('/tmp', 'ccman-test')
+  : NODE_ENV === 'development'
+    ? path.join(os.tmpdir(), 'ccman-dev')
+    : os.homedir()
 
 // 全局配置：写入模式
 let OVERWRITE_MODE = false
@@ -89,7 +93,8 @@ function printBanner() {
 function printKeyNotice() {
   console.log(
     [
-      '提示：本命令仅配置 Codex 与 OpenCode，两者共享 OpenAI 套餐/端点。',
+      '提示：本命令支持 Codex、OpenCode、OpenClaw。',
+      'Codex 与 OpenCode 共享 OpenAI 端点，OpenClaw 使用 /v1 端点。',
       'VS Code 的 Codex 插件若使用本机默认配置，也会跟随本次写入生效。',
     ].join('\n')
   )
@@ -138,7 +143,8 @@ async function promptPlatforms() {
       choices: [
         { name: 'Codex（需单独订阅 OpenAI 套餐）', value: 'codex' },
         { name: 'OpenCode（与 Codex 共享 OpenAI 套餐）', value: 'opencode' },
-        { name: '全部（将依次配置 Codex 和 OpenCode）', value: 'all' },
+        { name: 'OpenClaw（GMN /v1 端点，默认不选中）', value: 'openclaw' },
+        { name: '全部（将依次配置 Codex、OpenCode、OpenClaw）', value: 'all' },
       ],
       default: DEFAULT_PLATFORMS,
       validate: (value) => {
@@ -298,6 +304,72 @@ function configureOpenCode(apiKey) {
 }
 
 // ============================================================================
+// OpenClaw 配置（始终直接覆盖）
+// ============================================================================
+
+function createOpenClawModel(id) {
+  return {
+    id,
+    name: id,
+    api: 'openai-responses',
+    reasoning: false,
+    input: ['text'],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 200000,
+    maxTokens: 8192,
+  }
+}
+
+function configureOpenClaw(apiKey) {
+  const openclawDir = path.join(HOME_DIR, '.openclaw')
+  const openclawPath = path.join(openclawDir, 'openclaw.json')
+  const modelsPath = path.join(openclawDir, 'agents', 'main', 'agent', 'models.json')
+
+  ensureDir(path.dirname(openclawPath))
+  ensureDir(path.dirname(modelsPath))
+
+  const providerKey = 'sub2api'
+  const primaryModelId = 'gpt-5.3-codex'
+  const secondaryModelId = 'gpt-5.2-codex'
+
+  const modelsConfig = {
+    providers: {
+      [providerKey]: {
+        baseUrl: GMN_BASE_URLS.openclaw,
+        apiKey,
+        api: 'openai-responses',
+        authHeader: true,
+        headers: {
+          'User-Agent': 'curl/8.0',
+          'OpenAI-Beta': 'responses=v1',
+        },
+        models: [createOpenClawModel(primaryModelId), createOpenClawModel(secondaryModelId)],
+      },
+    },
+  }
+
+  const openclawConfig = {
+    models: {
+      mode: 'merge',
+      providers: {},
+    },
+    agents: {
+      defaults: {
+        workspace: HOME_DIR,
+        model: {
+          primary: `${providerKey}/${primaryModelId}`,
+        },
+        thinkingDefault: 'xhigh',
+      },
+    },
+  }
+
+  // OpenClaw 策略固定为直接覆盖，不受保护/全覆盖模式影响
+  atomicWrite(modelsPath, JSON.stringify(modelsConfig, null, 2))
+  atomicWrite(openclawPath, JSON.stringify(openclawConfig, null, 2))
+}
+
+// ============================================================================
 // 主函数
 // ============================================================================
 
@@ -403,12 +475,16 @@ async function main() {
   if (needsOpenAIBaseUrl && openaiBaseUrl) {
     console.log(`OpenAI Base URL: ${openaiBaseUrl}`)
   }
+  if (platforms.includes('openclaw')) {
+    console.log(`OpenClaw Base URL: ${GMN_BASE_URLS.openclaw}`)
+  }
   console.log('\n开始配置...\n')
 
   // 6. 配置选中的工具
   const ALL_TOOLS = {
     codex: { name: 'Codex', configure: configureCodex },
     opencode: { name: 'OpenCode', configure: configureOpenCode },
+    openclaw: { name: 'OpenClaw', configure: configureOpenClaw },
   }
 
   const tools = platforms.map(p => ALL_TOOLS[p])
@@ -435,6 +511,10 @@ async function main() {
   }
   if (platforms.includes('opencode')) {
     console.log(`  - OpenCode:    ${path.join(HOME_DIR, '.config/opencode/opencode.json')}`)
+  }
+  if (platforms.includes('openclaw')) {
+    console.log(`  - OpenClaw:    ${path.join(HOME_DIR, '.openclaw/openclaw.json')}`)
+    console.log(`  - OpenClaw:    ${path.join(HOME_DIR, '.openclaw/agents/main/agent/models.json')}`)
   }
 
   console.log('\n提示：请重启对应的工具以使配置生效。')

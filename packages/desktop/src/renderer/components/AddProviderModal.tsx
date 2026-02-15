@@ -6,7 +6,7 @@ import { AlertDialog, ConfirmDialog } from './dialogs'
 
 interface Props {
   show: boolean
-  type: 'codex' | 'claude' | 'gemini' | 'opencode'
+  type: 'codex' | 'claude' | 'gemini' | 'opencode' | 'openclaw'
   onClose: () => void
   onSubmit: () => void
   onSuccess?: (message: string) => void
@@ -47,7 +47,9 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
         ? window.electronAPI.claude
         : type === 'gemini'
           ? window.electronAPI.gemini
-          : window.electronAPI.opencode
+          : type === 'opencode'
+            ? window.electronAPI.opencode
+            : window.electronAPI.openclaw
 
   const resetState = () => {
     setSelectedPreset(undefined)
@@ -180,10 +182,15 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                 ? 'Codex'
                 : type === 'gemini'
                   ? 'Gemini CLI'
-                  : 'OpenCode'}{' '}
+                  : type === 'opencode'
+                    ? 'OpenCode'
+                    : 'OpenClaw'}{' '}
             服务商
           </h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -225,9 +232,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                 <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                   <Package className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                   <p className="text-gray-500 mb-2">暂无可用的预置服务商</p>
-                  <p className="text-sm text-gray-400 mb-4">
-                    点击上方"自定义添加"创建配置
-                  </p>
+                  <p className="text-sm text-gray-400 mb-4">点击上方"自定义添加"创建配置</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -255,7 +260,10 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
 
                       <p className="text-xs text-gray-600 mb-2">{preset.description}</p>
 
-                      <p className="text-xs text-gray-600 font-mono mb-3 truncate" title={preset.baseUrl}>
+                      <p
+                        className="text-xs text-gray-600 font-mono mb-3 truncate"
+                        title={preset.baseUrl}
+                      >
                         {preset.baseUrl}
                       </p>
 
@@ -300,4 +308,3 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
     </div>
   )
 }
-

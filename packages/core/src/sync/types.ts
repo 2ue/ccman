@@ -32,6 +32,10 @@ export interface SyncData {
   codex: ToolConfigForSync
   /** Claude 配置 */
   claude: ToolConfigForSync
+  /** Gemini 配置 */
+  gemini: ToolConfigForSync
+  /** OpenClaw 配置 */
+  openclaw: ToolConfigForSync
 }
 
 /**
