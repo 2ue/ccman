@@ -61,7 +61,7 @@ describe('OpenClaw Writer', () => {
     expect(provider.models?.[0]?.id).toBe('gpt-5.3-codex')
   })
 
-  it('should always overwrite target files instead of merging existing content', () => {
+  it('should merge openclaw fields incrementally instead of full overwrite', () => {
     const configPath = getOpenClawConfigPath()
     const modelsPath = getOpenClawModelsPath()
 
@@ -72,12 +72,23 @@ describe('OpenClaw Writer', () => {
       configPath,
       JSON.stringify(
         {
+          meta: { keep: true },
+          models: {
+            mode: 'merge',
+            providers: {
+              legacy: {
+                baseUrl: 'https://legacy.example.com/v1',
+                apiKey: 'legacy-key',
+              },
+            },
+          },
           agents: {
             defaults: {
               workspace: '/tmp/custom',
               model: {
                 primary: 'legacy/model',
               },
+              maxConcurrent: 8,
             },
           },
           customField: 'legacy-value',
@@ -111,9 +122,16 @@ describe('OpenClaw Writer', () => {
     const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
-    expect(openclawConfig.customField).toBeUndefined()
-    expect(modelsConfig.customField).toBeUndefined()
-    expect(modelsConfig.providers?.legacy).toBeUndefined()
+    expect(openclawConfig.customField).toBe('legacy-value')
+    expect(openclawConfig.meta?.keep).toBe(true)
+    expect(openclawConfig.models?.providers?.legacy?.baseUrl).toBe('https://legacy.example.com/v1')
+    expect(openclawConfig.models?.providers?.GMN?.apiKey).toBe('sk-new-openclaw')
+    expect(openclawConfig.agents?.defaults?.workspace).toBe('/tmp/custom')
+    expect(openclawConfig.agents?.defaults?.maxConcurrent).toBe(8)
+    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
+
+    expect(modelsConfig.customField).toBe('legacy-models-value')
+    expect(modelsConfig.providers?.legacy?.baseUrl).toBe('https://old.example.com')
     expect(modelsConfig.providers?.GMN?.apiKey).toBe('sk-new-openclaw')
   })
 

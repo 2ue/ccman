@@ -3,8 +3,8 @@ import * as path from 'path'
 import { fileURLToPath } from 'url'
 import type { Provider } from '../tool-manager.js'
 import { getOpenClawConfigPath, getOpenClawDir, getOpenClawModelsPath } from '../paths.js'
-import { ensureDir, writeJSON } from '../utils/file.js'
-import { replaceVariables } from '../utils/template.js'
+import { ensureDir, fileExists, readJSON, writeJSON } from '../utils/file.js'
+import { deepMerge, replaceVariables } from '../utils/template.js'
 
 interface OpenClawModelsFile {
   providers?: Record<string, unknown>
@@ -12,13 +12,14 @@ interface OpenClawModelsFile {
 }
 
 interface OpenClawConfigFile {
-  models?: {
-    providers?: Record<string, unknown>
-    [key: string]: unknown
-  }
+  models?: Record<string, unknown>
   agents?: {
     defaults?: {
       workspace?: string
+      model?: {
+        primary?: string
+        [key: string]: unknown
+      }
       [key: string]: unknown
     }
     [key: string]: unknown
@@ -157,12 +158,22 @@ function resolveProviderName(provider: Provider): string {
   return DEFAULT_PROVIDER_NAME
 }
 
+function loadExistingJSON<T extends object>(filePath: string): T | null {
+  if (!fileExists(filePath)) return null
+  try {
+    return readJSON<T>(filePath)
+  } catch {
+    return null
+  }
+}
+
 /**
  * 写入 OpenClaw 配置
  *
  * 策略：
  * 1. 模板优先 + 内置回退
- * 2. 每次切换 provider 直接覆盖写入 openclaw.json / models.json
+ * 2. openclaw.json: models 增量覆盖 + agents 智能合并（强制切换 primary）
+ * 3. models.json: providers 增量补充（仅更新当前 provider）
  * 3. 路径基于 HOME_DIR（通过 paths.ts 统一管理）
  */
 export function writeOpenClawConfig(provider: Provider): void {
@@ -191,18 +202,52 @@ export function writeOpenClawConfig(provider: Provider): void {
 
   const nextOpenClawConfig = replaceVariables(rawConfigTemplate, variables) as OpenClawConfigFile
   const nextModelsConfig = replaceVariables(rawModelsTemplate, variables) as OpenClawModelsFile
-  const currentAgents = nextOpenClawConfig.agents || {}
-  const defaults = currentAgents.defaults || {}
+  const existingOpenClawConfig = loadExistingJSON<OpenClawConfigFile>(configPath) || {}
+  const existingModelsConfig = loadExistingJSON<OpenClawModelsFile>(modelsPath) || {}
 
-  nextOpenClawConfig.agents = {
-    ...currentAgents,
-    defaults: {
-      ...defaults,
-      workspace: homeDir,
+  const mergedConfigModels = deepMerge(
+    existingOpenClawConfig.models || {},
+    nextOpenClawConfig.models || {}
+  )
+
+  const mergedAgents = deepMerge(
+    nextOpenClawConfig.agents || {},
+    existingOpenClawConfig.agents || {}
+  )
+  const mergedDefaults = mergedAgents.defaults || {}
+  const mergedModel = mergedDefaults.model || {}
+  const templatePrimary =
+    nextOpenClawConfig.agents?.defaults?.model?.primary || `${providerName}/gpt-5.3-codex`
+  const workspace =
+    typeof mergedDefaults.workspace === 'string' && mergedDefaults.workspace.trim()
+      ? mergedDefaults.workspace
+      : homeDir
+
+  const finalOpenClawConfig: OpenClawConfigFile = {
+    ...existingOpenClawConfig,
+    models: mergedConfigModels,
+    agents: {
+      ...mergedAgents,
+      defaults: {
+        ...mergedDefaults,
+        workspace,
+        model: {
+          ...mergedModel,
+          primary: templatePrimary,
+        },
+      },
     },
   }
 
-  // 直接覆盖写入（不读取/不合并现有文件）
-  writeJSON(configPath, nextOpenClawConfig)
-  writeJSON(modelsPath, nextModelsConfig)
+  const mergedProviders = deepMerge(
+    existingModelsConfig.providers || {},
+    nextModelsConfig.providers || {}
+  )
+  const finalModelsConfig: OpenClawModelsFile = {
+    ...existingModelsConfig,
+    providers: mergedProviders,
+  }
+
+  writeJSON(configPath, finalOpenClawConfig)
+  writeJSON(modelsPath, finalModelsConfig)
 }
