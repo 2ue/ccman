@@ -16,10 +16,11 @@ import { encryptProviders, decryptProviders } from './crypto.js'
 import { mergeProviders, mergePresets } from './merge-advanced.js'
 import { backupConfig } from './merge.js'
 import { getCcmanDir } from '../paths.js'
-import { readJSON, writeJSON } from '../utils/file.js'
+import { readJSON, writeJSON, fileExists } from '../utils/file.js'
 import { writeCodexConfig } from '../writers/codex.js'
 import { writeClaudeConfig } from '../writers/claude.js'
 import { writeGeminiConfig } from '../writers/gemini.js'
+import { writeOpenClawConfig } from '../writers/openclaw.js'
 import { MAIN_TOOL_TYPES, type MainToolType } from '../constants.js'
 
 /**
@@ -58,6 +59,11 @@ const TOOL_SYNC_CONFIG: Record<MainToolType, ToolSyncConfig> = {
     configFilename: 'gemini.json',
     writerFunc: writeGeminiConfig,
   },
+  [MAIN_TOOL_TYPES.OPENCLAW]: {
+    remotePath: '.ccman/openclaw.json',
+    configFilename: 'openclaw.json',
+    writerFunc: writeOpenClawConfig,
+  },
 } as const
 
 /**
@@ -70,6 +76,20 @@ interface ToolConfig {
   // 可能还有其他字段（通过扩展运算符自动保留）
 }
 
+function createEmptyToolConfig(): ToolConfig {
+  return {
+    providers: [],
+    presets: [],
+  }
+}
+
+function readLocalConfigOrEmpty(configPath: string): ToolConfig {
+  if (!fileExists(configPath)) {
+    return createEmptyToolConfig()
+  }
+  return readJSON<ToolConfig>(configPath)
+}
+
 /**
  * 模式1：上传到云端
  * 本地配置覆盖云端，加密 API Key
@@ -80,14 +100,20 @@ interface ToolConfig {
 export async function uploadToCloud(config: SyncConfig, password: string): Promise<void> {
   const ccmanDir = getCcmanDir()
   const toolKeys = Object.keys(TOOL_SYNC_CONFIG) as MainToolType[]
+  let uploadedCount = 0
 
   // 遍历所有工具，上传配置到云端
   for (const tool of toolKeys) {
     const { remotePath, configFilename } = TOOL_SYNC_CONFIG[tool]
     const configPath = path.join(ccmanDir, configFilename)
 
+    // 兼容旧环境：缺失文件直接跳过
+    if (!fileExists(configPath)) {
+      continue
+    }
+
     // 读取本地配置
-    const localConfig = readJSON<ToolConfig>(configPath)
+    const localConfig = readLocalConfigOrEmpty(configPath)
 
     // 加密 API Key（保留配置的所有其他字段）
     const encryptedProviders = encryptProviders(localConfig.providers, password)
@@ -101,6 +127,11 @@ export async function uploadToCloud(config: SyncConfig, password: string): Promi
     // 上传到 WebDAV
     const jsonContent = JSON.stringify(encryptedConfig, null, 2)
     await uploadToWebDAV(config, remotePath, jsonContent)
+    uploadedCount += 1
+  }
+
+  if (uploadedCount === 0) {
+    throw new Error('本地未找到可上传的配置文件')
   }
 
   // 更新最后同步时间
@@ -265,7 +296,7 @@ export async function mergeSync(
     const configPath = path.join(ccmanDir, configFilename)
 
     // 读取本地配置
-    const localConfig = readJSON<ToolConfig>(configPath)
+    const localConfig = readLocalConfigOrEmpty(configPath)
 
     // 下载并解密远程配置
     let remoteProviders: Provider[] = []
@@ -340,6 +371,16 @@ export async function mergeSync(
         ...localConfig, // 保留本地配置的所有字段
         providers: mergeResult.merged, // 替换为合并后的 providers
         presets: mergedPresets, // 替换为合并后的 presets
+      }
+
+      const shouldPersist =
+        fileExists(configPath) ||
+        existsChecks[i] ||
+        mergeResult.merged.length > 0 ||
+        (mergedPresets && mergedPresets.length > 0)
+
+      if (!shouldPersist) {
+        continue
       }
 
       // 写入本地

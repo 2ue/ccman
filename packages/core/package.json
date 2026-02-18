@@ -1,8 +1,8 @@
 {
   "name": "@ccman/core",
-  "version": "3.3.13",
+  "version": "3.3.14-beta.3",
   "type": "module",
-  "description": "Core business logic for ccman - Manage Codex, Claude Code, Gemini CLI, and MCP configurations",
+  "description": "Core business logic for ccman - Manage Codex, Claude Code, Gemini CLI, OpenCode, OpenClaw, and MCP configurations",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -21,6 +21,8 @@
     "claude-code",
     "gemini",
     "gemini-cli",
+    "opencode",
+    "openclaw",
     "mcp",
     "model-context-protocol",
     "ai",

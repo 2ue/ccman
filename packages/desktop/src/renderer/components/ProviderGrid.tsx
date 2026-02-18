@@ -4,7 +4,7 @@ import type { Provider } from '@ccman/types'
 interface Props {
   providers: Provider[]
   currentProviderId: string | undefined
-  tool: 'codex' | 'claude' | 'gemini' | 'opencode'
+  tool: 'codex' | 'claude' | 'gemini' | 'opencode' | 'openclaw'
   onSwitch: (id: string) => void
   onEdit: (provider: Provider) => void
   onDelete: (id: string, name: string) => void

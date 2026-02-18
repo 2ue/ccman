@@ -8,6 +8,7 @@ import { createClaudeCommands } from './commands/claude/index.js'
 import { createMCPCommands } from './commands/mcp/index.js'
 import { createGeminiCommands } from './commands/gemini/index.js'
 import { createOpenCodeCommands } from './commands/opencode/index.js'
+import { createOpenClawCommands } from './commands/openclaw/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
@@ -18,8 +19,16 @@ import {
   startCodexMenu,
   startGeminiMenu,
   startOpenCodeMenu,
+  startOpenClawMenu,
 } from './interactive.js'
-import { getCcmanDir, getCodexDir, getClaudeDir, getOpenCodeDir, VERSION } from '@ccman/core'
+import {
+  getCcmanDir,
+  getCodexDir,
+  getClaudeDir,
+  getOpenCodeDir,
+  getOpenClawDir,
+  VERSION,
+} from '@ccman/core'
 
 // 开发模式：输出配置目录
 if (process.env.NODE_ENV === 'development') {
@@ -28,6 +37,7 @@ if (process.env.NODE_ENV === 'development') {
   console.log(chalk.gray(`  codex:  ${getCodexDir()}`))
   console.log(chalk.gray(`  claude: ${getClaudeDir()}`))
   console.log(chalk.gray(`  opencode: ${getOpenCodeDir()}`))
+  console.log(chalk.gray(`  openclaw: ${getOpenClawDir()}`))
   console.log()
 }
 
@@ -35,7 +45,7 @@ const program = new Command()
 
 program
   .name('ccman')
-  .description('Codex/Claude Code/Gemini/OpenCode API 服务商配置管理工具')
+  .description('Codex/Claude Code/Gemini/OpenCode/OpenClaw API 服务商配置管理工具')
   .version(VERSION)
   .showHelpAfterError(false)
   .exitOverride((err) => {
@@ -52,7 +62,19 @@ program.on('command:*', (operands) => {
   console.error(chalk.red(`\n❌ 未知命令: ${unknownCommand}\n`))
 
   // 提供相似命令建议
-  const availableCommands = ['cx', 'cc', 'gm', 'oc', 'mcp', 'sync', 'export', 'import', 'gmn']
+  const availableCommands = [
+    'cx',
+    'cc',
+    'gm',
+    'oc',
+    'openclaw',
+    'ow',
+    'mcp',
+    'sync',
+    'export',
+    'import',
+    'gmn',
+  ]
   const suggestions = availableCommands.filter(
     (cmd) => cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
   )
@@ -110,6 +132,16 @@ oc.action(async () => {
   await startOpenCodeMenu()
 })
 
+// 创建 openclaw 子命令
+const openclaw = program.command('openclaw').alias('ow').description('管理 OpenClaw 服务商')
+createOpenClawCommands(openclaw)
+
+// openclaw 不带参数时进入交互模式
+openclaw.action(async () => {
+  printLogo()
+  await startOpenClawMenu()
+})
+
 // 创建 mcp 子命令
 const mcp = program.command('mcp').description('管理 MCP 服务器')
 createMCPCommands(mcp)
@@ -136,8 +168,8 @@ importCommand(program)
 // GMN 配置命令（顶层命令）
 program
   .command('gmn [apiKey]')
-  .description('配置 GMN 到 Codex 和 OpenCode')
-  .option('-p, --platform <platforms>', '指定平台 (codex,opencode,all)')
+  .description('配置 GMN 到 Codex、OpenCode、OpenClaw')
+  .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
   .action(async (apiKey, options) => {
     await gmnCommand(apiKey, options.platform)
   })

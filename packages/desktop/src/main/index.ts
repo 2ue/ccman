@@ -19,17 +19,21 @@ import {
   createMCPManager,
   createGeminiManager,
   createOpenCodeManager,
+  createOpenClawManager,
   migrateConfig,
   getClaudeConfigPath,
   getCodexConfigPath,
   getCodexAuthPath,
   getGeminiSettingsPath,
   getOpenCodeConfigPath,
+  getOpenClawConfigPath,
+  getOpenClawModelsPath,
   getCcmanDir,
   getCodexDir,
   getClaudeDir,
   getGeminiDir,
   getOpenCodeDir,
+  getOpenClawDir,
   getGeminiEnvPath,
   testWebDAVConnection,
   uploadToCloud,
@@ -100,6 +104,7 @@ if (isDev) {
   console.log(`  claude: ${getClaudeDir()}`)
   console.log(`  gemini: ${getGeminiDir()}`)
   console.log(`  opencode: ${getOpenCodeDir()}`)
+  console.log(`  openclaw: ${getOpenClawDir()}`)
   console.log()
 } else {
   console.log('\n[生产模式] 启动信息:')
@@ -108,6 +113,7 @@ if (isDev) {
   console.log(`  claude: ${getClaudeDir()}`)
   console.log(`  gemini: ${getGeminiDir()}`)
   console.log(`  opencode: ${getOpenCodeDir()}`)
+  console.log(`  openclaw: ${getOpenClawDir()}`)
   console.log(`  app.isPackaged: ${app.isPackaged}`)
   console.log()
 }
@@ -372,6 +378,64 @@ ipcMain.handle('opencode:find-by-name', async (_event, name: string) => {
 })
 
 // ============================================================================
+// IPC 处理器 - OpenClaw
+// ============================================================================
+
+// 添加 OpenClaw provider
+ipcMain.handle('openclaw:add-provider', async (_event, input: AddProviderInput) => {
+  const manager = createOpenClawManager()
+  return manager.add(input)
+})
+
+// 列出所有 OpenClaw providers
+ipcMain.handle('openclaw:list-providers', async () => {
+  const manager = createOpenClawManager()
+  return manager.list()
+})
+
+// 获取 OpenClaw provider
+ipcMain.handle('openclaw:get-provider', async (_event, id: string) => {
+  const manager = createOpenClawManager()
+  return manager.get(id)
+})
+
+// 切换 OpenClaw provider
+ipcMain.handle('openclaw:switch-provider', async (_event, id: string) => {
+  const manager = createOpenClawManager()
+  return manager.switch(id)
+})
+
+// 编辑 OpenClaw provider
+ipcMain.handle('openclaw:edit-provider', async (_event, id: string, updates: EditProviderInput) => {
+  const manager = createOpenClawManager()
+  return manager.edit(id, updates)
+})
+
+// 删除 OpenClaw provider
+ipcMain.handle('openclaw:remove-provider', async (_event, id: string) => {
+  const manager = createOpenClawManager()
+  return manager.remove(id)
+})
+
+// 克隆 OpenClaw provider
+ipcMain.handle('openclaw:clone-provider', async (_event, sourceId: string, newName: string) => {
+  const manager = createOpenClawManager()
+  return manager.clone(sourceId, newName)
+})
+
+// 获取当前 OpenClaw provider
+ipcMain.handle('openclaw:get-current', async () => {
+  const manager = createOpenClawManager()
+  return manager.getCurrent()
+})
+
+// 根据名称查找 OpenClaw provider
+ipcMain.handle('openclaw:find-by-name', async (_event, name: string) => {
+  const manager = createOpenClawManager()
+  return manager.findByName(name)
+})
+
+// ============================================================================
 // IPC 处理器 - OpenCode Presets
 // ============================================================================
 
@@ -396,6 +460,34 @@ ipcMain.handle('opencode:edit-preset', async (_event, name: string, updates: Edi
 // 删除 OpenCode preset
 ipcMain.handle('opencode:remove-preset', async (_event, name: string) => {
   const manager = createOpenCodeManager()
+  return manager.removePreset(name)
+})
+
+// ============================================================================
+// IPC 处理器 - OpenClaw Presets
+// ============================================================================
+
+// 获取 OpenClaw presets
+ipcMain.handle('openclaw:list-presets', async () => {
+  const manager = createOpenClawManager()
+  return manager.listPresets()
+})
+
+// 添加 OpenClaw preset
+ipcMain.handle('openclaw:add-preset', async (_event, input: AddPresetInput) => {
+  const manager = createOpenClawManager()
+  return manager.addPreset(input)
+})
+
+// 编辑 OpenClaw preset
+ipcMain.handle('openclaw:edit-preset', async (_event, name: string, updates: EditPresetInput) => {
+  const manager = createOpenClawManager()
+  return manager.editPreset(name, updates)
+})
+
+// 删除 OpenClaw preset
+ipcMain.handle('openclaw:remove-preset', async (_event, name: string) => {
+  const manager = createOpenClawManager()
   return manager.removePreset(name)
 })
 
@@ -548,7 +640,7 @@ ipcMain.handle('claude:remove-preset', async (_event, name: string) => {
 // 读取配置文件
 ipcMain.handle(
   'read-config-files',
-  async (_event, tool: 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode') => {
+  async (_event, tool: 'codex' | 'claude' | 'mcp' | 'gemini' | 'opencode' | 'openclaw') => {
     try {
       if (tool === 'claude') {
         const path = getClaudeConfigPath()
@@ -713,6 +805,52 @@ ipcMain.handle(
             language: 'json' as const,
           },
         ]
+      } else if (tool === 'openclaw') {
+        const openclawPath = getOpenClawConfigPath()
+        const modelsPath = getOpenClawModelsPath()
+
+        const result: Array<{
+          name: string
+          path: string
+          content: string
+          language: 'json' | 'toml' | 'env'
+        }> = []
+
+        if (fs.existsSync(openclawPath)) {
+          result.push({
+            name: 'openclaw.json',
+            path: openclawPath,
+            content: fs.readFileSync(openclawPath, 'utf-8'),
+            language: 'json',
+          })
+        } else {
+          result.push({
+            name: 'openclaw.json',
+            path: openclawPath,
+            content:
+              '# 配置文件不存在\n# 请先使用 ccman openclaw add 添加服务商，配置文件将自动创建\n',
+            language: 'json',
+          })
+        }
+
+        if (fs.existsSync(modelsPath)) {
+          result.push({
+            name: 'models.json',
+            path: modelsPath,
+            content: fs.readFileSync(modelsPath, 'utf-8'),
+            language: 'json',
+          })
+        } else {
+          result.push({
+            name: 'models.json',
+            path: modelsPath,
+            content:
+              '# 配置文件不存在\n# 请先使用 ccman openclaw use 切换服务商，配置文件将自动创建\n',
+            language: 'json',
+          })
+        }
+
+        return result
       }
       return []
     } catch (error) {
@@ -743,6 +881,7 @@ ipcMain.handle(
       try {
         // 写入所有文件
         for (const file of files) {
+          fs.mkdirSync(path.dirname(file.path), { recursive: true })
           fs.writeFileSync(file.path, file.content, 'utf-8')
         }
         return { success: true }
@@ -766,6 +905,7 @@ ipcMain.handle('read-ccman-config-files', async () => {
     const claudePath = path.join(getCcmanDir(), 'claude.json')
     const geminiPath = path.join(getCcmanDir(), 'gemini.json')
     const opencodePath = path.join(getCcmanDir(), 'opencode.json')
+    const openclawPath = path.join(getCcmanDir(), 'openclaw.json')
 
     const files: Array<{ name: string; path: string; content: string; language: 'json' }> = []
 
@@ -809,6 +949,16 @@ ipcMain.handle('read-ccman-config-files', async () => {
       language: 'json',
     })
 
+    // OpenClaw
+    files.push({
+      name: 'openclaw.json',
+      path: openclawPath,
+      content: fs.existsSync(openclawPath)
+        ? fs.readFileSync(openclawPath, 'utf-8')
+        : '{\n  "providers": [],\n  "presets": []\n}\n',
+      language: 'json',
+    })
+
     return files
   } catch (error) {
     throw new Error(`读取 ccman 配置文件失败：${(error as Error).message}`)
@@ -837,6 +987,7 @@ ipcMain.handle(
       try {
         // 写入所有文件
         for (const file of files) {
+          fs.mkdirSync(path.dirname(file.path), { recursive: true })
           fs.writeFileSync(file.path, file.content, 'utf-8')
         }
         return { success: true }

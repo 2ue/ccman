@@ -4,7 +4,7 @@
  * 统一使用主题色：蓝色 #4285F4
  */
 
-type ToolType = 'claude' | 'codex' | 'gemini' | 'opencode'
+type ToolType = 'claude' | 'codex' | 'gemini' | 'opencode' | 'openclaw'
 
 /**
  * 统一的主题色样式类名
@@ -33,6 +33,7 @@ export const BRAND_COLORS = {
   codex: THEME_COLORS,
   gemini: THEME_COLORS,
   opencode: THEME_COLORS,
+  openclaw: THEME_COLORS,
 } as const
 
 /**

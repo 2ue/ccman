@@ -1,7 +1,7 @@
 {
   "name": "@2ue/aicoding",
-  "version": "3.3.13",
-  "description": "一键配置 GMN 到 Codex、OpenCode",
+  "version": "3.3.14-beta.3",
+  "description": "一键配置 GMN 到 Codex、OpenCode、OpenClaw",
   "type": "module",
   "bin": {
     "aicoding": "./bin/aicoding.js"
@@ -14,6 +14,7 @@
     "gmn",
     "codex",
     "opencode",
+    "openclaw",
     "ai",
     "config",
     "aicoding"

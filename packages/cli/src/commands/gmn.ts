@@ -1,10 +1,13 @@
 import {
   createCodexManager,
   createOpenCodeManager,
+  createOpenClawManager,
   getCcmanDir,
   getCodexAuthPath,
   getCodexConfigPath,
   getOpenCodeConfigPath,
+  getOpenClawConfigPath,
+  getOpenClawModelsPath,
 } from '@ccman/core'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
@@ -12,11 +15,12 @@ import { printLogo } from '../utils/logo.js'
 
 const PROVIDER_NAME = 'GMN'
 
-const VALID_PLATFORMS = ['codex', 'opencode'] as const
+const VALID_PLATFORMS = ['codex', 'opencode', 'openclaw'] as const
 type Platform = (typeof VALID_PLATFORMS)[number]
 const DEFAULT_PLATFORMS: Platform[] = ['codex', 'opencode']
 
 const GMN_OPENAI_BASE_URL = 'https://gmn.chuangzuoli.com'
+const GMN_OPENCLAW_BASE_URL = 'https://gmn.chuangzuoli.com/v1'
 
 const TOTAL_STEPS = 3
 
@@ -49,7 +53,8 @@ function printKeyNotice(): void {
   console.log(
     chalk.yellow(
       [
-        '提示：本命令仅配置 Codex 与 OpenCode，两者共享 OpenAI 套餐/端点。',
+        '提示：本命令支持 Codex、OpenCode、OpenClaw 三个平台。',
+        'Codex 与 OpenCode 共享 OpenAI 端点；OpenClaw 使用 /v1 端点。',
         'VS Code 的 Codex 插件若使用本机默认配置，也会跟随本次写入生效。',
       ].join('\n')
     )
@@ -64,6 +69,10 @@ function printWriteTargets(platforms: Platform[]): void {
   }
   if (platforms.includes('opencode')) {
     console.log(chalk.gray(`  - OpenCode: ${getOpenCodeConfigPath()}`))
+  }
+  if (platforms.includes('openclaw')) {
+    console.log(chalk.gray(`  - OpenClaw: ${getOpenClawConfigPath()}`))
+    console.log(chalk.gray(`  - OpenClaw: ${getOpenClawModelsPath()}`))
   }
 
   const env = process.env.NODE_ENV
@@ -122,7 +131,8 @@ async function promptPlatforms(): Promise<Platform[]> {
       choices: [
         { name: 'Codex（需单独订阅 OpenAI 套餐）', value: 'codex' },
         { name: 'OpenCode（与 Codex 共享 OpenAI 套餐）', value: 'opencode' },
-        { name: '全部（将依次配置 Codex 和 OpenCode）', value: 'all' },
+        { name: 'OpenClaw（GMN /v1 端点，默认不选中）', value: 'openclaw' },
+        { name: '全部（将依次配置 Codex、OpenCode、OpenClaw）', value: 'all' },
       ],
       default: DEFAULT_PLATFORMS,
       validate: (value) => {
@@ -177,6 +187,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string) {
   const platformBaseUrls: Record<Platform, string> = {
     codex: openaiBaseUrl,
     opencode: openaiBaseUrl,
+    openclaw: GMN_OPENCLAW_BASE_URL,
   }
 
   console.log(chalk.cyan(`\n${renderStep(3, TOTAL_STEPS, '开始写入配置')}`))
@@ -184,12 +195,16 @@ export async function gmnCommand(apiKey?: string, platformArg?: string) {
   if (platforms.includes('codex') || platforms.includes('opencode')) {
     console.log(chalk.gray(`OpenAI Base URL: ${openaiBaseUrl}`))
   }
+  if (platforms.includes('openclaw')) {
+    console.log(chalk.gray(`OpenClaw Base URL: ${GMN_OPENCLAW_BASE_URL}`))
+  }
   printWriteTargets(platforms)
   console.log()
 
   const ALL_TOOLS = {
     codex: { name: 'Codex', manager: createCodexManager() },
     opencode: { name: 'OpenCode', manager: createOpenCodeManager() },
+    openclaw: { name: 'OpenClaw', manager: createOpenClawManager() },
   }
 
   const tools = platforms.map((platform) => ({

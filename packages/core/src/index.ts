@@ -1,6 +1,6 @@
 /**
  * ccman Core Module
- * Business logic for managing Codex and Claude Code service providers
+ * Business logic for managing Codex/Claude/Gemini/OpenCode/OpenClaw providers
  */
 import pkg from '../package.json' assert { type: 'json' }
 
@@ -26,6 +26,7 @@ export {
   createMCPManager,
   createGeminiManager,
   createOpenCodeManager,
+  createOpenClawManager,
   type ToolManager,
   type Provider,
   type AddProviderInput,
@@ -42,6 +43,7 @@ export { CC_PRESETS } from './presets/claude.js'
 export { MCP_PRESETS, MCP_PRESETS_DETAIL, type MCPPresetDetail } from './presets/mcp.js'
 export { GEMINI_PRESETS } from './presets/gemini.js'
 export { OPENCODE_PRESETS } from './presets/opencode.js'
+export { OPENCLAW_PRESETS } from './presets/openclaw.js'
 
 // MCP Writers (导出辅助函数)
 export {
@@ -70,6 +72,7 @@ export {
   getClaudeDir,
   getGeminiDir,
   getOpenCodeDir,
+  getOpenClawDir,
   getConfigPath,
   getCodexConfigPath,
   getCodexAuthPath,
@@ -78,6 +81,8 @@ export {
   getGeminiSettingsPath,
   getGeminiEnvPath,
   getOpenCodeConfigPath,
+  getOpenClawConfigPath,
+  getOpenClawModelsPath,
   __setTestPaths,
 } from './paths.js'
 

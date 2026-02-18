@@ -33,6 +33,8 @@ export function importCommand(program: Command): void {
           console.log(`  ${chalk.cyan('✓')} ${file}`)
         }
         console.log()
+        console.log(chalk.gray('未找到的受支持文件将自动跳过，不会中断导入'))
+        console.log()
         console.log(chalk.gray('当前配置将被覆盖（自动备份）'))
         console.log()
 
@@ -95,7 +97,7 @@ export function importCommand(program: Command): void {
           console.log(`  ${chalk.cyan('✓')} ${file}`)
         }
         console.log()
-        console.log(chalk.blue('💡 请使用 \'ccman cx use\' 或 \'ccman cc use\' 切换服务商\n'))
+        console.log(chalk.blue("💡 请使用 'ccman cx use' 或 'ccman cc use' 切换服务商\n"))
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
         process.exit(1)

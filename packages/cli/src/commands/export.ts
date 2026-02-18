@@ -24,9 +24,10 @@ export function exportCommand(program: Command): void {
           : path.resolve(targetDir)
 
         // 显示信息
-        console.log('导出文件:')
-        console.log(`  ${chalk.cyan('codex.json')}  - Codex 配置`)
-        console.log(`  ${chalk.cyan('claude.json')} - Claude 配置`)
+        console.log('导出文件（存在则导出，不存在则跳过）:')
+        console.log(`  ${chalk.cyan('codex.json')}    - Codex 配置`)
+        console.log(`  ${chalk.cyan('claude.json')}   - Claude 配置`)
+        console.log(`  ${chalk.cyan('openclaw.json')} - OpenClaw 配置`)
         console.log()
         console.log(`目标目录: ${chalk.cyan(resolvedPath)}`)
         console.log()

@@ -13,7 +13,7 @@ interface Props {
   preset?: PresetTemplate
   isClone?: boolean
   existingProviders?: Provider[]
-  tool?: 'codex' | 'claude' | 'gemini' | 'opencode'
+  tool?: 'codex' | 'claude' | 'gemini' | 'opencode' | 'openclaw'
   onSubmit: (input: AddProviderInput | EditProviderInput) => void | Promise<void>
   onCancel: () => void
 }

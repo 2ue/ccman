@@ -1,7 +1,13 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import { uploadToCloud, createCodexManager, createClaudeManager } from '@ccman/core'
+import {
+  uploadToCloud,
+  createCodexManager,
+  createClaudeManager,
+  createGeminiManager,
+  createOpenClawManager,
+} from '@ccman/core'
 import { ensureConfigExists } from './helpers.js'
 
 export function uploadCommand(program: Command): void {
@@ -35,13 +41,19 @@ export function uploadCommand(program: Command): void {
         // 显示配置信息
         const codexManager = createCodexManager()
         const claudeManager = createClaudeManager()
+        const geminiManager = createGeminiManager()
+        const openclawManager = createOpenClawManager()
         const codexProviders = codexManager.list()
         const claudeProviders = claudeManager.list()
+        const geminiProviders = geminiManager.list()
+        const openclawProviders = openclawManager.list()
 
         console.log(chalk.bold('\n📤 上传配置到云端\n'))
         console.log('配置信息:')
         console.log(`  Codex 服务商: ${chalk.cyan(codexProviders.length)} 个`)
         console.log(`  Claude 服务商: ${chalk.cyan(claudeProviders.length)} 个`)
+        console.log(`  Gemini 服务商: ${chalk.cyan(geminiProviders.length)} 个`)
+        console.log(`  OpenClaw 服务商: ${chalk.cyan(openclawProviders.length)} 个`)
         console.log()
         console.log(chalk.yellow('⚠️  云端现有配置将被覆盖'))
         console.log()
@@ -74,8 +86,10 @@ export function uploadCommand(program: Command): void {
         console.log(chalk.gray('远程文件:'))
         console.log(chalk.gray(`  ${config.webdavUrl}${config.remoteDir}/.ccman/codex.json`))
         console.log(chalk.gray(`  ${config.webdavUrl}${config.remoteDir}/.ccman/claude.json`))
+        console.log(chalk.gray(`  ${config.webdavUrl}${config.remoteDir}/.ccman/gemini.json`))
+        console.log(chalk.gray(`  ${config.webdavUrl}${config.remoteDir}/.ccman/openclaw.json`))
         console.log()
-        console.log(chalk.blue('💡 其他设备可通过 \'ccman sync download\' 获取配置\n'))
+        console.log(chalk.blue("💡 其他设备可通过 'ccman sync download' 获取配置\n"))
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
       }

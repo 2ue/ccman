@@ -1,7 +1,7 @@
 /**
  * 配置导入导出功能
  *
- * 导出：复制 codex.json + claude.json 到指定目录
+ * 导出：复制支持的配置文件到指定目录
  * 导入：备份 + 复制指定目录的文件到 ~/.ccman/
  */
 
@@ -14,8 +14,8 @@ import { backupConfig } from './sync/merge.js'
 /**
  * 配置文件名称
  */
-const CODEX_CONFIG_FILE = 'codex.json'
-const CLAUDE_CONFIG_FILE = 'claude.json'
+const SUPPORTED_CONFIG_FILES = ['codex.json', 'claude.json', 'openclaw.json'] as const
+type SupportedConfigFile = (typeof SUPPORTED_CONFIG_FILES)[number]
 
 /**
  * 导出验证结果
@@ -24,6 +24,7 @@ export interface ExportValidation {
   valid: boolean
   message?: string
   missingFiles?: string[]
+  foundFiles?: string[]
 }
 
 /**
@@ -58,28 +59,24 @@ export interface ImportResult {
  */
 export function validateExport(): ExportValidation {
   const ccmanDir = getCcmanDir()
-  const codexPath = path.join(ccmanDir, CODEX_CONFIG_FILE)
-  const claudePath = path.join(ccmanDir, CLAUDE_CONFIG_FILE)
+  const foundFiles = SUPPORTED_CONFIG_FILES.filter((filename) =>
+    fileExists(path.join(ccmanDir, filename))
+  )
 
-  const missingFiles: string[] = []
-
-  if (!fileExists(codexPath)) {
-    missingFiles.push(CODEX_CONFIG_FILE)
-  }
-
-  if (!fileExists(claudePath)) {
-    missingFiles.push(CLAUDE_CONFIG_FILE)
-  }
-
-  if (missingFiles.length > 0) {
+  if (foundFiles.length === 0) {
     return {
       valid: false,
-      message: `配置文件不存在: ${missingFiles.join(', ')}`,
-      missingFiles,
+      message: `未找到可导出的配置文件 (${SUPPORTED_CONFIG_FILES.join(' / ')})`,
+      missingFiles: [...SUPPORTED_CONFIG_FILES],
+      foundFiles: [],
     }
   }
 
-  return { valid: true }
+  return {
+    valid: true,
+    foundFiles,
+    missingFiles: SUPPORTED_CONFIG_FILES.filter((file) => !foundFiles.includes(file)),
+  }
 }
 
 /**
@@ -103,23 +100,14 @@ export function validateImportDir(sourceDir: string): ImportValidation {
     }
   }
 
-  const codexPath = path.join(sourceDir, CODEX_CONFIG_FILE)
-  const claudePath = path.join(sourceDir, CLAUDE_CONFIG_FILE)
-
-  const foundFiles: string[] = []
-
-  if (fileExists(codexPath)) {
-    foundFiles.push(CODEX_CONFIG_FILE)
-  }
-
-  if (fileExists(claudePath)) {
-    foundFiles.push(CLAUDE_CONFIG_FILE)
-  }
+  const foundFiles = SUPPORTED_CONFIG_FILES.filter((filename) =>
+    fileExists(path.join(sourceDir, filename))
+  )
 
   if (foundFiles.length === 0) {
     return {
       valid: false,
-      message: `未找到配置文件 (${CODEX_CONFIG_FILE} 或 ${CLAUDE_CONFIG_FILE})`,
+      message: `未找到配置文件 (${SUPPORTED_CONFIG_FILES.join(' / ')})`,
       foundFiles: [],
     }
   }
@@ -148,21 +136,15 @@ export function exportConfig(targetDir: string): ExportResult {
 
   const ccmanDir = getCcmanDir()
   const exportedFiles: string[] = []
+  const filesToExport = validation.foundFiles || []
 
-  // 复制 codex.json
-  const codexSrc = path.join(ccmanDir, CODEX_CONFIG_FILE)
-  const codexDst = path.join(targetDir, CODEX_CONFIG_FILE)
-  if (fileExists(codexSrc)) {
-    fs.copyFileSync(codexSrc, codexDst)
-    exportedFiles.push(CODEX_CONFIG_FILE)
-  }
-
-  // 复制 claude.json
-  const claudeSrc = path.join(ccmanDir, CLAUDE_CONFIG_FILE)
-  const claudeDst = path.join(targetDir, CLAUDE_CONFIG_FILE)
-  if (fileExists(claudeSrc)) {
-    fs.copyFileSync(claudeSrc, claudeDst)
-    exportedFiles.push(CLAUDE_CONFIG_FILE)
+  for (const file of filesToExport) {
+    const src = path.join(ccmanDir, file)
+    const dst = path.join(targetDir, file)
+    if (fileExists(src)) {
+      fs.copyFileSync(src, dst)
+      exportedFiles.push(file)
+    }
   }
 
   return {
@@ -193,36 +175,18 @@ export function importConfig(sourceDir: string): ImportResult {
   ensureDir(ccmanDir)
 
   try {
-    // 备份并导入 codex.json
-    if (validation.foundFiles.includes(CODEX_CONFIG_FILE)) {
-      const codexDst = path.join(ccmanDir, CODEX_CONFIG_FILE)
+    // 逐个处理支持的配置文件（缺失文件跳过）
+    for (const file of validation.foundFiles as SupportedConfigFile[]) {
+      const targetPath = path.join(ccmanDir, file)
+      const sourcePath = path.join(sourceDir, file)
 
-      // 如果目标文件存在，先备份
-      if (fileExists(codexDst)) {
-        const backupPath = backupConfig(codexDst)
+      if (fileExists(targetPath)) {
+        const backupPath = backupConfig(targetPath)
         backupPaths.push(backupPath)
       }
 
-      // 复制文件
-      const codexSrc = path.join(sourceDir, CODEX_CONFIG_FILE)
-      fs.copyFileSync(codexSrc, codexDst)
-      importedFiles.push(CODEX_CONFIG_FILE)
-    }
-
-    // 备份并导入 claude.json
-    if (validation.foundFiles.includes(CLAUDE_CONFIG_FILE)) {
-      const claudeDst = path.join(ccmanDir, CLAUDE_CONFIG_FILE)
-
-      // 如果目标文件存在，先备份
-      if (fileExists(claudeDst)) {
-        const backupPath = backupConfig(claudeDst)
-        backupPaths.push(backupPath)
-      }
-
-      // 复制文件
-      const claudeSrc = path.join(sourceDir, CLAUDE_CONFIG_FILE)
-      fs.copyFileSync(claudeSrc, claudeDst)
-      importedFiles.push(CLAUDE_CONFIG_FILE)
+      fs.copyFileSync(sourcePath, targetPath)
+      importedFiles.push(file)
     }
 
     return {
