@@ -57,7 +57,7 @@ describe('OpenClaw Writer', () => {
     expect(provider.apiKey).toBe('sk-openclaw-test')
     expect(provider.api).toBe('openai-responses')
     expect(provider.authHeader).toBe(true)
-    expect(provider.headers?.['OpenAI-Beta']).toBe('responses=v1')
+    expect(typeof provider.headers?.['User-Agent']).toBe('string')
     expect(provider.models?.[0]?.id).toBe('gpt-5.3-codex')
   })
 

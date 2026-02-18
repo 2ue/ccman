@@ -6,15 +6,14 @@
       "api": "openai-responses",
       "authHeader": true,
       "headers": {
-        "User-Agent": "curl/8.0",
-        "OpenAI-Beta": "responses=v1"
+        "User-Agent": "codex-rs/1.0.7"
       },
       "models": [
         {
           "id": "gpt-5.3-codex",
           "name": "gpt-5.3-codex",
           "api": "openai-responses",
-          "reasoning": false,
+          "reasoning": true,
           "input": ["text"],
           "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
           "contextWindow": 200000,
