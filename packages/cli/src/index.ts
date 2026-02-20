@@ -170,8 +170,9 @@ program
   .command('gmn [apiKey]')
   .description('配置 GMN 到 Codex、OpenCode、OpenClaw')
   .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
+  .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
   .action(async (apiKey, options) => {
-    await gmnCommand(apiKey, options.platform)
+    await gmnCommand(apiKey, options.platform, options.name)
   })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式

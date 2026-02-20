@@ -28,6 +28,7 @@ interface OpenClawConfigFile {
 }
 
 const DEFAULT_PROVIDER_NAME = 'gmn'
+const PRIMARY_MODEL_ID = 'gpt-5.3-codex'
 
 // ESM 环境下获取当前文件所在目录
 const __filename = fileURLToPath(import.meta.url)
@@ -167,6 +168,46 @@ function loadExistingJSON<T extends object>(filePath: string): T | null {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function forcePrimaryModelReasoning(models: unknown): unknown {
+  if (!Array.isArray(models)) return models
+
+  return models.map((item) => {
+    if (!isRecord(item)) return item
+
+    const modelId = typeof item.id === 'string' ? item.id : ''
+    const modelName = typeof item.name === 'string' ? item.name : ''
+    if (modelId !== PRIMARY_MODEL_ID && modelName !== PRIMARY_MODEL_ID) {
+      return item
+    }
+
+    return {
+      ...item,
+      reasoning: true,
+    }
+  })
+}
+
+function forceProviderPrimaryReasoning(
+  providers: Record<string, unknown> | undefined,
+  providerName: string
+): Record<string, unknown> | undefined {
+  if (!providers) return providers
+  const providerConfig = providers[providerName]
+  if (!isRecord(providerConfig)) return providers
+
+  return {
+    ...providers,
+    [providerName]: {
+      ...providerConfig,
+      models: forcePrimaryModelReasoning(providerConfig.models),
+    },
+  }
+}
+
 /**
  * 写入 OpenClaw 配置
  *
@@ -238,6 +279,15 @@ export function writeOpenClawConfig(provider: Provider): void {
       },
     },
   }
+  if (isRecord(finalOpenClawConfig.models)) {
+    finalOpenClawConfig.models = {
+      ...finalOpenClawConfig.models,
+      providers: forceProviderPrimaryReasoning(
+        finalOpenClawConfig.models.providers as Record<string, unknown> | undefined,
+        providerName
+      ),
+    }
+  }
 
   const mergedProviders = deepMerge(
     existingModelsConfig.providers || {},
@@ -245,7 +295,10 @@ export function writeOpenClawConfig(provider: Provider): void {
   )
   const finalModelsConfig: OpenClawModelsFile = {
     ...existingModelsConfig,
-    providers: mergedProviders,
+    providers: forceProviderPrimaryReasoning(
+      mergedProviders as Record<string, unknown> | undefined,
+      providerName
+    ),
   }
 
   writeJSON(configPath, finalOpenClawConfig)

@@ -2,6 +2,7 @@ import {
   createCodexManager,
   createOpenCodeManager,
   createOpenClawManager,
+  type Provider,
   getCcmanDir,
   getCodexAuthPath,
   getCodexConfigPath,
@@ -13,7 +14,7 @@ import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { printLogo } from '../utils/logo.js'
 
-const PROVIDER_NAME = 'GMN'
+const DEFAULT_PROVIDER_NAME = 'gmn'
 
 const VALID_PLATFORMS = ['codex', 'opencode', 'openclaw'] as const
 type Platform = (typeof VALID_PLATFORMS)[number]
@@ -156,18 +157,47 @@ async function resolvePlatforms(platformArg?: string): Promise<Platform[]> {
   return promptPlatforms()
 }
 
-export async function gmnCommand(apiKey?: string, platformArg?: string) {
+function resolveProviderName(providerNameArg?: string): string {
+  if (providerNameArg === undefined) {
+    return DEFAULT_PROVIDER_NAME
+  }
+
+  const providerName = providerNameArg.trim()
+  if (!providerName) {
+    throw new Error('服务商名称不能为空')
+  }
+
+  // 兼容历史 GMN 大小写写法，统一落为小写 gmn
+  if (providerName.toLowerCase() === DEFAULT_PROVIDER_NAME) {
+    return DEFAULT_PROVIDER_NAME
+  }
+
+  return providerName
+}
+
+function findPreferredProvider(providers: Provider[], targetName: string): Provider | undefined {
+  const exact = providers.find((p) => p.name.trim() === targetName)
+  if (exact) return exact
+
+  const lowerTarget = targetName.toLowerCase()
+  return providers.find((p) => p.name.trim().toLowerCase() === lowerTarget)
+}
+
+export async function gmnCommand(apiKey?: string, platformArg?: string, providerNameArg?: string) {
   printBanner()
 
   let platforms: Platform[]
+  let providerName: string
   try {
     console.log(chalk.cyan(`\n${renderStep(1, TOTAL_STEPS, '选择要配置的工具')}`))
     platforms = await resolvePlatforms(platformArg)
+    providerName = resolveProviderName(providerNameArg)
   } catch (error) {
     console.error(chalk.red(`❌ ${(error as Error).message}`))
     process.exit(1)
   }
   console.log(chalk.gray(`已选择: ${platforms.join(', ')}`))
+  console.log(chalk.gray(`服务商名称: ${providerName}`))
   printKeyNotice()
 
   let resolvedApiKey = apiKey?.trim()
@@ -217,10 +247,10 @@ export async function gmnCommand(apiKey?: string, platformArg?: string) {
     try {
       console.log(chalk.gray(`→ 配置 ${name}...`))
       const baseUrl = platformBaseUrls[platform]
-      const existing = manager.findByName(PROVIDER_NAME)
+      const existing = findPreferredProvider(manager.list(), providerName)
       const provider = existing
-        ? manager.edit(existing.id, { baseUrl, apiKey: resolvedApiKey })
-        : manager.add({ name: PROVIDER_NAME, baseUrl, apiKey: resolvedApiKey })
+        ? manager.edit(existing.id, { name: providerName, baseUrl, apiKey: resolvedApiKey })
+        : manager.add({ name: providerName, baseUrl, apiKey: resolvedApiKey })
 
       manager.switch(provider.id)
       completed += 1

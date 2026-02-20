@@ -59,6 +59,8 @@ describe('OpenClaw Writer', () => {
     expect(provider.authHeader).toBe(true)
     expect(typeof provider.headers?.['User-Agent']).toBe('string')
     expect(provider.models?.[0]?.id).toBe('gpt-5.3-codex')
+    expect(provider.models?.[0]?.reasoning).toBe(true)
+    expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
   })
 
   it('should merge openclaw fields incrementally instead of full overwrite', () => {
@@ -126,6 +128,7 @@ describe('OpenClaw Writer', () => {
     expect(openclawConfig.meta?.keep).toBe(true)
     expect(openclawConfig.models?.providers?.legacy?.baseUrl).toBe('https://legacy.example.com/v1')
     expect(openclawConfig.models?.providers?.GMN?.apiKey).toBe('sk-new-openclaw')
+    expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
     expect(openclawConfig.agents?.defaults?.workspace).toBe('/tmp/custom')
     expect(openclawConfig.agents?.defaults?.maxConcurrent).toBe(8)
     expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
@@ -133,6 +136,7 @@ describe('OpenClaw Writer', () => {
     expect(modelsConfig.customField).toBe('legacy-models-value')
     expect(modelsConfig.providers?.legacy?.baseUrl).toBe('https://old.example.com')
     expect(modelsConfig.providers?.GMN?.apiKey).toBe('sk-new-openclaw')
+    expect(modelsConfig.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
   })
 
   it('should fallback to built-in templates when template files are unavailable', () => {
@@ -157,6 +161,8 @@ describe('OpenClaw Writer', () => {
 
       expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
       expect(modelsConfig.providers?.GMN?.api).toBe('openai-responses')
+      expect(modelsConfig.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
+      expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
     } finally {
       fs.renameSync(openclawTemplateBackupPath, openclawTemplatePath)
       fs.renameSync(modelsTemplateBackupPath, modelsTemplatePath)
