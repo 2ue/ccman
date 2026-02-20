@@ -192,20 +192,35 @@ function forcePrimaryModelReasoning(models: unknown): unknown {
 }
 
 function forceProviderPrimaryReasoning(
-  providers: Record<string, unknown> | undefined,
-  providerName: string
+  providerConfig: unknown
 ): Record<string, unknown> | undefined {
-  if (!providers) return providers
-  const providerConfig = providers[providerName]
-  if (!isRecord(providerConfig)) return providers
-
+  if (!isRecord(providerConfig)) return undefined
   return {
-    ...providers,
-    [providerName]: {
-      ...providerConfig,
-      models: forcePrimaryModelReasoning(providerConfig.models),
-    },
+    ...providerConfig,
+    models: forcePrimaryModelReasoning(providerConfig.models),
   }
+}
+
+function replaceProviderEntry(
+  providers: Record<string, unknown> | undefined,
+  providerName: string,
+  nextProvider: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...(providers || {}) }
+  const target = providerName.toLowerCase()
+
+  // 先清理大小写变体（如 gmn / GMN / GmN），再写入标准 key
+  for (const key of Object.keys(result)) {
+    if (key.toLowerCase() === target) {
+      delete result[key]
+    }
+  }
+
+  if (nextProvider) {
+    result[providerName] = nextProvider
+  }
+
+  return result
 }
 
 /**
@@ -214,7 +229,7 @@ function forceProviderPrimaryReasoning(
  * 策略：
  * 1. 模板优先 + 内置回退
  * 2. openclaw.json: models 增量覆盖 + agents 智能合并（强制切换 primary）
- * 3. models.json: providers 增量补充（仅更新当前 provider）
+ * 3. providers 中当前服务商（含大小写变体）整段替换，其他 provider 保留
  * 3. 路径基于 HOME_DIR（通过 paths.ts 统一管理）
  */
 export function writeOpenClawConfig(provider: Provider): void {
@@ -246,9 +261,21 @@ export function writeOpenClawConfig(provider: Provider): void {
   const existingOpenClawConfig = loadExistingJSON<OpenClawConfigFile>(configPath) || {}
   const existingModelsConfig = loadExistingJSON<OpenClawModelsFile>(modelsPath) || {}
 
-  const mergedConfigModels = deepMerge(
+  const mergedConfigModels = deepMerge<Record<string, unknown>>(
     existingOpenClawConfig.models || {},
     nextOpenClawConfig.models || {}
+  )
+  const mergedConfigProviders = isRecord(mergedConfigModels.providers)
+    ? (mergedConfigModels.providers as Record<string, unknown>)
+    : undefined
+  const nextConfigProviders =
+    isRecord(nextOpenClawConfig.models) && isRecord(nextOpenClawConfig.models.providers)
+      ? (nextOpenClawConfig.models.providers as Record<string, unknown>)
+      : undefined
+  mergedConfigModels.providers = replaceProviderEntry(
+    mergedConfigProviders,
+    providerName,
+    forceProviderPrimaryReasoning(nextConfigProviders?.[providerName])
   )
 
   const mergedAgents = deepMerge(
@@ -279,25 +306,20 @@ export function writeOpenClawConfig(provider: Provider): void {
       },
     },
   }
-  if (isRecord(finalOpenClawConfig.models)) {
-    finalOpenClawConfig.models = {
-      ...finalOpenClawConfig.models,
-      providers: forceProviderPrimaryReasoning(
-        finalOpenClawConfig.models.providers as Record<string, unknown> | undefined,
-        providerName
-      ),
-    }
-  }
 
-  const mergedProviders = deepMerge(
+  const mergedProviders = deepMerge<Record<string, unknown>>(
     existingModelsConfig.providers || {},
     nextModelsConfig.providers || {}
   )
+  const nextModelsProviders = isRecord(nextModelsConfig.providers)
+    ? (nextModelsConfig.providers as Record<string, unknown>)
+    : undefined
   const finalModelsConfig: OpenClawModelsFile = {
     ...existingModelsConfig,
-    providers: forceProviderPrimaryReasoning(
-      mergedProviders as Record<string, unknown> | undefined,
-      providerName
+    providers: replaceProviderEntry(
+      mergedProviders,
+      providerName,
+      forceProviderPrimaryReasoning(nextModelsProviders?.[providerName])
     ),
   }
 

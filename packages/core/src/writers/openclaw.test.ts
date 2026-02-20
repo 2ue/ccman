@@ -82,6 +82,21 @@ describe('OpenClaw Writer', () => {
                 baseUrl: 'https://legacy.example.com/v1',
                 apiKey: 'legacy-key',
               },
+              gmn: {
+                baseUrl: 'https://gmn.chuangzuoli.com/',
+                apiKey: 'old-gmn-key',
+                api: 'openai-completions',
+                models: [
+                  {
+                    id: 'gpt-5.3-codex',
+                    name: 'Open Codex 5.3',
+                    compat: {
+                      supportsStore: false,
+                    },
+                    reasoning: false,
+                  },
+                ],
+              },
             },
           },
           agents: {
@@ -110,6 +125,21 @@ describe('OpenClaw Writer', () => {
               baseUrl: 'https://old.example.com',
               apiKey: 'old-key',
             },
+            gMn: {
+              baseUrl: 'https://gmn.chuangzuoli.com/',
+              apiKey: 'old-models-key',
+              api: 'openai-completions',
+              models: [
+                {
+                  id: 'gpt-5.3-codex',
+                  name: 'Open Codex 5.3',
+                  compat: {
+                    supportsStore: false,
+                  },
+                  reasoning: false,
+                },
+              ],
+            },
           },
           customField: 'legacy-models-value',
         },
@@ -128,6 +158,9 @@ describe('OpenClaw Writer', () => {
     expect(openclawConfig.meta?.keep).toBe(true)
     expect(openclawConfig.models?.providers?.legacy?.baseUrl).toBe('https://legacy.example.com/v1')
     expect(openclawConfig.models?.providers?.GMN?.apiKey).toBe('sk-new-openclaw')
+    expect(openclawConfig.models?.providers?.gmn).toBeUndefined()
+    expect(openclawConfig.models?.providers?.GMN?.api).toBe('openai-responses')
+    expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.compat).toBeUndefined()
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
     expect(openclawConfig.agents?.defaults?.workspace).toBe('/tmp/custom')
     expect(openclawConfig.agents?.defaults?.maxConcurrent).toBe(8)
@@ -136,6 +169,9 @@ describe('OpenClaw Writer', () => {
     expect(modelsConfig.customField).toBe('legacy-models-value')
     expect(modelsConfig.providers?.legacy?.baseUrl).toBe('https://old.example.com')
     expect(modelsConfig.providers?.GMN?.apiKey).toBe('sk-new-openclaw')
+    expect(modelsConfig.providers?.gMn).toBeUndefined()
+    expect(modelsConfig.providers?.GMN?.api).toBe('openai-responses')
+    expect(modelsConfig.providers?.GMN?.models?.[0]?.compat).toBeUndefined()
     expect(modelsConfig.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
   })
 
