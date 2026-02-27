@@ -272,10 +272,28 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.6'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.15.9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Incrementally update CHANGELOG.md
+        run: pnpm run changelog:latest
 
       - name: Extract changelog for current version
         id: changelog
@@ -368,3 +386,24 @@ jobs:
           prerelease: ${{ contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'beta') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync CHANGELOG.md back to main (best effort)
+        if: always()
+        continue-on-error: true
+        run: |
+          cp CHANGELOG.md /tmp/CHANGELOG.generated.md
+
+          git fetch origin main
+          git checkout -B changelog-sync origin/main
+          cp /tmp/CHANGELOG.generated.md CHANGELOG.md
+
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "CHANGELOG.md already up to date"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): update for v${{ steps.version.outputs.VERSION }} [skip ci]"
+          git push origin HEAD:main

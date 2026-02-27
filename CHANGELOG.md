@@ -1,3 +1,9 @@
+## [3.3.16](https://github.com/2ue/ccman/compare/v3.3.15...v3.3.16) (2026-02-27)
+
+### ✨ 新功能
+
+* enforce backup boundaries and add gmn transactional backup (00cdd6dde1177bd7a2bd99ddf8334eb65c77d742)
+
 ## [3.1.0](https://github.com/2ue/ccman/compare/v3.0.33...v3.1.0) (2025-11-20)
 
 ### Features

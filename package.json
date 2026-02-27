@@ -14,8 +14,8 @@
     "clean": "pnpm -r clean",
     "version": "node scripts/bump-version.js",
     "verify:versions": "node scripts/verify-versions.js",
-    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0 --config .changelogrc.js",
-    "changelog:latest": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s --config .changelogrc.js",
+    "changelog": "node scripts/update-changelog-incremental.js",
+    "changelog:latest": "node scripts/update-changelog-incremental.js",
     "changelog:dry": "conventional-changelog -p conventionalcommits --config .changelogrc.js",
     "prepare": "husky"
   },
