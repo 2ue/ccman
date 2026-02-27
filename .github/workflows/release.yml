@@ -292,8 +292,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Incrementally update CHANGELOG.md
-        run: pnpm run changelog:latest
+      - name: Update CHANGELOG.md from changesets (with fallback)
+        run: pnpm run changelog:consume
 
       - name: Extract changelog for current version
         id: changelog
@@ -392,18 +392,21 @@ jobs:
         continue-on-error: true
         run: |
           cp CHANGELOG.md /tmp/CHANGELOG.generated.md
+          cp -R .changeset /tmp/changeset.generated
 
           git fetch origin main
           git checkout -B changelog-sync origin/main
           cp /tmp/CHANGELOG.generated.md CHANGELOG.md
+          rm -rf .changeset
+          cp -R /tmp/changeset.generated .changeset
 
-          if git diff --quiet -- CHANGELOG.md; then
-            echo "CHANGELOG.md already up to date"
+          if git diff --quiet -- CHANGELOG.md .changeset; then
+            echo "CHANGELOG.md and .changeset already up to date"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
+          git add CHANGELOG.md .changeset
           git commit -m "docs(changelog): update for v${{ steps.version.outputs.VERSION }} [skip ci]"
           git push origin HEAD:main
