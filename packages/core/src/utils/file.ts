@@ -63,6 +63,17 @@ export function backupFile(filePath: string): string {
 }
 
 /**
+ * 备份文件（失败即中止，附带统一提示）
+ */
+export function backupFileOrThrow(filePath: string, operation: string): string {
+  try {
+    return backupFile(filePath)
+  } catch (error) {
+    throw new Error(`备份失败，已中止后续写入（${operation}）: ${(error as Error).message}`)
+  }
+}
+
+/**
  * 从备份恢复文件
  */
 export function restoreFromBackup(filePath: string): void {

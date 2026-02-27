@@ -125,15 +125,10 @@ describe('Codex Writer', () => {
       expect(config.features?.web_search_request).toBeUndefined()
       expect(config.web_search_request).toBeUndefined()
       expect(config.custom_field).toBeUndefined()
-
-      // 覆盖写入前应生成备份，并保留原始内容
-      const backupPath = `${configPath}.bak`
-      expect(fs.existsSync(backupPath)).toBe(true)
-      const backup = TOML.parse(fs.readFileSync(backupPath, 'utf-8') as any)
-      expect((backup as any).custom_field).toBe('should-be-removed')
+      expect(fs.existsSync(`${configPath}.bak`)).toBe(false)
     })
 
-    it('should backup and overwrite config.toml and auth.json', () => {
+    it('should overwrite config.toml and auth.json', () => {
       const configPath = getCodexConfigPath()
       const authPath = getCodexAuthPath()
 
@@ -183,19 +178,8 @@ describe('Codex Writer', () => {
       const auth = JSON.parse(authContent)
       expect(auth.OPENAI_API_KEY).toBe('new-key')
       expect(auth.CUSTOM_FIELD).toBeUndefined()
-
-      // 覆盖前应生成备份，并保留原始内容
-      const configBackupPath = `${configPath}.bak`
-      expect(fs.existsSync(configBackupPath)).toBe(true)
-      const configBackup: any = TOML.parse(fs.readFileSync(configBackupPath, 'utf-8'))
-      expect(configBackup.model_provider).toBe('OldProvider')
-      expect(configBackup.custom_field).toBe('should-be-preserved')
-
-      const authBackupPath = `${authPath}.bak`
-      expect(fs.existsSync(authBackupPath)).toBe(true)
-      const authBackup = JSON.parse(fs.readFileSync(authBackupPath, 'utf-8'))
-      expect(authBackup.OPENAI_API_KEY).toBe('old-key')
-      expect(authBackup.CUSTOM_FIELD).toBe('should-be-preserved')
+      expect(fs.existsSync(`${configPath}.bak`)).toBe(false)
+      expect(fs.existsSync(`${authPath}.bak`)).toBe(false)
     })
 
     it('should handle baseUrl without trailing slash', () => {

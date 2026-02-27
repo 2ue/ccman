@@ -27,6 +27,7 @@ export function backupConfig(configPath: string, keepCount: number = 3): string 
   const backupPath = `${configPath}.backup.${timestamp}`
 
   fs.copyFileSync(configPath, backupPath)
+  fs.chmodSync(backupPath, 0o600)
 
   // 自动清理旧备份
   cleanupOldBackups(configPath, keepCount)
@@ -51,8 +52,8 @@ function cleanupOldBackups(configPath: string, keepCount: number): void {
 
     // 筛选出所有备份文件，提取时间戳并排序
     const backups = files
-      .filter(f => f.startsWith(backupPrefix))
-      .map(f => {
+      .filter((f) => f.startsWith(backupPrefix))
+      .map((f) => {
         const timestampStr = f.substring(backupPrefix.length)
         const timestamp = parseInt(timestampStr, 10)
 
@@ -64,7 +65,7 @@ function cleanupOldBackups(configPath: string, keepCount: number): void {
         return {
           name: f,
           path: path.join(dir, f),
-          timestamp
+          timestamp,
         }
       })
       .filter((backup): backup is NonNullable<typeof backup> => backup !== null)
@@ -92,9 +93,7 @@ function cleanupOldBackups(configPath: string, keepCount: number): void {
  * @param providers - Provider 列表
  * @returns 不含 API Key 的 Provider 列表
  */
-export function stripApiKeys(
-  providers: Provider[]
-): Omit<Provider, 'apiKey'>[] {
+export function stripApiKeys(providers: Provider[]): Omit<Provider, 'apiKey'>[] {
   return providers.map((provider) => {
     // 只用于移除 apiKey 字段,不需要使用其值
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

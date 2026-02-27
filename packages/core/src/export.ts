@@ -8,7 +8,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { getCcmanDir } from './paths.js'
-import { fileExists, ensureDir } from './utils/file.js'
+import { fileExists, ensureDir, backupFileOrThrow } from './utils/file.js'
 import { backupConfig } from './sync/merge.js'
 
 /**
@@ -142,6 +142,9 @@ export function exportConfig(targetDir: string): ExportResult {
     const src = path.join(ccmanDir, file)
     const dst = path.join(targetDir, file)
     if (fileExists(src)) {
+      if (fileExists(dst)) {
+        backupFileOrThrow(dst, `export.${file}`)
+      }
       fs.copyFileSync(src, dst)
       exportedFiles.push(file)
     }

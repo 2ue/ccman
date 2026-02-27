@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
 import type { Provider } from '../tool-manager.js'
 import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
-import { backupFile, ensureDir, fileExists, writeJSON } from '../utils/file.js'
+import { ensureDir, writeJSON } from '../utils/file.js'
 
 /**
  * Codex config.toml 结构
@@ -191,11 +191,11 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
 }
 
 /**
- * 写入 Codex 配置（备份 + 覆盖）
+ * 写入 Codex 配置（覆盖写入）
  *
  * 策略：
- * 1. config.toml：若存在先备份为 config.toml.bak，再用模板覆盖写入（仅写入必要字段）
- * 2. auth.json：若存在先备份为 auth.json.bak，再覆盖写入（仅保留 OPENAI_API_KEY）
+ * 1. config.toml：用模板覆盖写入（仅写入必要字段）
+ * 2. auth.json：覆盖写入（仅保留 OPENAI_API_KEY）
  *
  * 版本迭代：
  * - 只需修改 CODEX_DEFAULT_CONFIG 对象
@@ -209,15 +209,8 @@ export function writeCodexConfig(provider: Provider): void {
   // 确保目录存在
   ensureDir(getCodexDir())
 
-  // 1. 处理 config.toml（备份 + 覆盖写入）
+  // 1. 处理 config.toml（覆盖写入）
   const configPath = getCodexConfigPath()
-  if (fileExists(configPath)) {
-    try {
-      backupFile(configPath)
-    } catch {
-      // 备份失败不影响写入（避免出现 config.toml 未更新的情况）
-    }
-  }
 
   const templateConfig = loadCodexTemplateConfig()
   const nextConfig: CodexConfig = { ...(templateConfig as CodexConfig) }
@@ -253,15 +246,8 @@ export function writeCodexConfig(provider: Provider): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fs.writeFileSync(configPath, stringifyToml(nextConfig as any), { mode: 0o600 })
 
-  // 2. 处理 auth.json（备份 + 覆盖写入，仅保留 OPENAI_API_KEY）
+  // 2. 处理 auth.json（覆盖写入，仅保留 OPENAI_API_KEY）
   const authPath = getCodexAuthPath()
-  if (fileExists(authPath)) {
-    try {
-      backupFile(authPath)
-    } catch {
-      // 备份失败不影响写入（避免出现 auth.json 未更新的情况）
-    }
-  }
 
   const auth: CodexAuth = { OPENAI_API_KEY: provider.apiKey }
   writeJSON(authPath, auth)

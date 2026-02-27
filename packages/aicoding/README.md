@@ -82,7 +82,7 @@ curl -fsSL https://raw.staticdn.net/2ue/ccman/main/scripts/aicoding.sh | bash
 
 ### 保护模式（默认，推荐）
 
-保护模式会尽量保留你的现有配置，只更新认证字段（Codex 的 `config.toml/auth.json` 会先备份再覆盖写入）。
+保护模式会尽量保留你的现有配置，只更新认证字段（所有已存在目标文件都会先备份，再写入）。
 
 ```bash
 # 交互式输入
@@ -103,7 +103,8 @@ npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
 **保护的配置**：
 - **OpenCode**: 其他 provider 配置
 - **Codex**: `config.toml/auth.json` 会先备份为 `.bak`，再覆盖写入（不保留手动修改）
-- **OpenClaw**: 固定直接覆盖写入（不受保护/全覆盖模式影响）
+- **OpenCode**: 写入前会备份 `opencode.json`
+- **OpenClaw**: `openclaw.json/models.json` 写入前会备份为 `.bak`，再覆盖写入
 
 ### 全覆盖模式（慎用）
 
@@ -128,7 +129,7 @@ npx @2ue/aicoding sk-ant-xxx --overwrite
 |------|---------|------|
 | **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | `config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`；`config.toml` 仅保留一个 `model_providers` |
 | **OpenCode** | `~/.config/opencode/opencode.json` | 更新 `provider.gmn` 配置 |
-| **OpenClaw** | `~/.openclaw/openclaw.json`<br>`~/.openclaw/agents/main/agent/models.json` | 固定覆盖写入，端点使用 `https://gmn.chuangzuoli.com/v1` |
+| **OpenClaw** | `~/.openclaw/openclaw.json`<br>`~/.openclaw/agents/main/agent/models.json` | 写入前会备份为 `.bak`，然后覆盖写入；端点使用 `https://gmn.chuangzuoli.com/v1` |
 
 ## 示例
 
@@ -200,7 +201,7 @@ $ npx @2ue/aicoding --overwrite
 
 ### 保护模式（默认）
 
-1. 读取现有配置文件（Codex 除外：会先备份再覆盖写入）
+1. 读取现有配置文件（写入前会先备份已存在文件）
 2. OpenCode：深度合并默认配置和用户配置
 3. 强制更新认证字段（API Key、Base URL）
 4. 使用原子性写入（临时文件 + rename）

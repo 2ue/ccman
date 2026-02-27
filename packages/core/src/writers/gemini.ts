@@ -146,7 +146,9 @@ function saveEnvFile(envPath: string, env: Record<string, string>): void {
     lines.push(`${key}=${String(env[key])}`)
   }
   const content = lines.join('\n') + (lines.length ? '\n' : '')
-  fs.writeFileSync(envPath, content, { mode: 0o600 })
+  const tempPath = `${envPath}.tmp`
+  fs.writeFileSync(tempPath, content, { mode: 0o600 })
+  fs.renameSync(tempPath, envPath)
 }
 
 /**

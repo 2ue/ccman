@@ -1,6 +1,6 @@
 {
   "name": "@2ue/aicoding",
-  "version": "3.3.15",
+  "version": "3.3.16",
   "description": "一键配置 GMN 到 Codex、OpenCode、OpenClaw",
   "type": "module",
   "bin": {

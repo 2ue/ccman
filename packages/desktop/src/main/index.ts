@@ -121,6 +121,65 @@ if (isDev) {
 let mainWindow: BrowserWindow | null = null
 const getMainWindow = () => mainWindow
 
+type EditableConfigFile = {
+  name: string
+  path: string
+  content: string
+  language: 'json' | 'toml' | 'env'
+}
+
+function createBackupOrThrow(filePath: string, operation: string): string | null {
+  if (!fs.existsSync(filePath)) {
+    return null
+  }
+
+  const backupPath = `${filePath}.bak`
+  try {
+    fs.copyFileSync(filePath, backupPath)
+    fs.chmodSync(backupPath, 0o600)
+    return backupPath
+  } catch (error) {
+    throw new Error(`备份失败，已中止后续写入（${operation}）: ${(error as Error).message}`)
+  }
+}
+
+function writeFilesWithBackup(
+  files: EditableConfigFile[],
+  operation: string,
+  withBackup: boolean = true
+): { success: boolean } {
+  const snapshots: Array<{ path: string; content: string }> = []
+
+  // 所有写入场景都保留内存快照用于失败回滚
+  for (const file of files) {
+    if (fs.existsSync(file.path)) {
+      snapshots.push({
+        path: file.path,
+        content: fs.readFileSync(file.path, 'utf-8'),
+      })
+      if (withBackup) {
+        // fail-closed: 任一文件备份失败，直接中止写入
+        createBackupOrThrow(file.path, operation)
+      }
+    }
+  }
+
+  try {
+    for (const file of files) {
+      fs.mkdirSync(path.dirname(file.path), { recursive: true })
+      const tempPath = `${file.path}.tmp`
+      fs.writeFileSync(tempPath, file.content, 'utf-8')
+      fs.renameSync(tempPath, file.path)
+    }
+    return { success: true }
+  } catch (error) {
+    for (const snapshot of snapshots) {
+      fs.writeFileSync(snapshot.path, snapshot.content, 'utf-8')
+    }
+    throw new Error(`写入失败，已回滚原文件: ${(error as Error).message}`)
+  }
+}
+
 function createWindow() {
   console.log('[Main] Creating window...')
 
@@ -860,43 +919,13 @@ ipcMain.handle(
 )
 
 // 写入配置文件
-ipcMain.handle(
-  'write-config-files',
-  async (
-    _event,
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
-  ) => {
-    try {
-      // 备份所有文件
-      const backups: Array<{ path: string; content: string }> = []
-      for (const file of files) {
-        if (fs.existsSync(file.path)) {
-          backups.push({
-            path: file.path,
-            content: fs.readFileSync(file.path, 'utf-8'),
-          })
-        }
-      }
-
-      try {
-        // 写入所有文件
-        for (const file of files) {
-          fs.mkdirSync(path.dirname(file.path), { recursive: true })
-          fs.writeFileSync(file.path, file.content, 'utf-8')
-        }
-        return { success: true }
-      } catch (error) {
-        // 回滚
-        for (const backup of backups) {
-          fs.writeFileSync(backup.path, backup.content, 'utf-8')
-        }
-        throw error
-      }
-    } catch (error) {
-      throw new Error(`写入配置文件失败：${(error as Error).message}`)
-    }
+ipcMain.handle('write-config-files', async (_event, files: EditableConfigFile[]) => {
+  try {
+    return writeFilesWithBackup(files, 'desktop.write-config-files', true)
+  } catch (error) {
+    throw new Error(`写入配置文件失败：${(error as Error).message}`)
   }
-)
+})
 
 // 读取 ccman 配置文件（用于 Settings 按钮）
 ipcMain.handle('read-ccman-config-files', async () => {
@@ -966,43 +995,13 @@ ipcMain.handle('read-ccman-config-files', async () => {
 })
 
 // 写入 ccman 配置文件（用于 Settings 按钮）
-ipcMain.handle(
-  'write-ccman-config-files',
-  async (
-    _event,
-    files: Array<{ name: string; path: string; content: string; language: 'json' | 'toml' | 'env' }>
-  ) => {
-    try {
-      // 备份所有文件
-      const backups: Array<{ path: string; content: string }> = []
-      for (const file of files) {
-        if (fs.existsSync(file.path)) {
-          backups.push({
-            path: file.path,
-            content: fs.readFileSync(file.path, 'utf-8'),
-          })
-        }
-      }
-
-      try {
-        // 写入所有文件
-        for (const file of files) {
-          fs.mkdirSync(path.dirname(file.path), { recursive: true })
-          fs.writeFileSync(file.path, file.content, 'utf-8')
-        }
-        return { success: true }
-      } catch (error) {
-        // 回滚
-        for (const backup of backups) {
-          fs.writeFileSync(backup.path, backup.content, 'utf-8')
-        }
-        throw error
-      }
-    } catch (error) {
-      throw new Error(`写入 ccman 配置文件失败：${(error as Error).message}`)
-    }
+ipcMain.handle('write-ccman-config-files', async (_event, files: EditableConfigFile[]) => {
+  try {
+    return writeFilesWithBackup(files, 'desktop.write-ccman-config-files', false)
+  } catch (error) {
+    throw new Error(`写入 ccman 配置文件失败：${(error as Error).message}`)
   }
-)
+})
 
 // ============================================================================
 // IPC 处理器 - 迁移

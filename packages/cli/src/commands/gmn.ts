@@ -10,6 +10,8 @@ import {
   getOpenClawConfigPath,
   getOpenClawModelsPath,
 } from '@ccman/core'
+import fs from 'fs'
+import path from 'path'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { printLogo } from '../utils/logo.js'
@@ -183,6 +185,98 @@ function findPreferredProvider(providers: Provider[], targetName: string): Provi
   return providers.find((p) => p.name.trim().toLowerCase() === lowerTarget)
 }
 
+interface BackupEntry {
+  originalPath: string
+  backupPath: string | null
+  existed: boolean
+}
+
+interface PlatformBackupResult {
+  backupDir: string
+  entries: BackupEntry[]
+}
+
+function getPlatformTargetFiles(platform: Platform): string[] {
+  const ccmanDir = getCcmanDir()
+
+  switch (platform) {
+    case 'codex':
+      return [path.join(ccmanDir, 'codex.json'), getCodexConfigPath(), getCodexAuthPath()]
+    case 'opencode':
+      return [path.join(ccmanDir, 'opencode.json'), getOpenCodeConfigPath()]
+    case 'openclaw':
+      return [
+        path.join(ccmanDir, 'openclaw.json'),
+        getOpenClawConfigPath(),
+        getOpenClawModelsPath(),
+      ]
+  }
+}
+
+function createPlatformBackupOrThrow(
+  platform: Platform,
+  backupRootDir: string
+): PlatformBackupResult {
+  const backupDir = path.join(backupRootDir, platform)
+  const entries: BackupEntry[] = []
+  const targetFiles = getPlatformTargetFiles(platform)
+
+  fs.mkdirSync(backupDir, { recursive: true, mode: 0o700 })
+
+  for (const [index, originalPath] of targetFiles.entries()) {
+    const existed = fs.existsSync(originalPath)
+    if (!existed) {
+      entries.push({ originalPath, backupPath: null, existed: false })
+      continue
+    }
+
+    const fileName = path.basename(originalPath).replace(/[^\w.-]/g, '_')
+    const backupPath = path.join(backupDir, `${String(index).padStart(2, '0')}-${fileName}.bak`)
+
+    try {
+      fs.copyFileSync(originalPath, backupPath)
+      fs.chmodSync(backupPath, 0o600)
+      entries.push({ originalPath, backupPath, existed: true })
+    } catch (error) {
+      throw new Error(`备份失败，已中止后续写入（${platform}）: ${(error as Error).message}`)
+    }
+  }
+
+  const manifestPath = path.join(backupDir, 'manifest.json')
+  const manifest = {
+    platform,
+    createdAt: new Date().toISOString(),
+    entries,
+  }
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), { mode: 0o600 })
+
+  return { backupDir, entries }
+}
+
+function rollbackFromBackupOrThrow(result: PlatformBackupResult): void {
+  const errors: string[] = []
+
+  for (const entry of result.entries) {
+    try {
+      if (entry.existed) {
+        if (!entry.backupPath || !fs.existsSync(entry.backupPath)) {
+          throw new Error(`备份文件缺失: ${entry.backupPath || entry.originalPath}`)
+        }
+        fs.mkdirSync(path.dirname(entry.originalPath), { recursive: true })
+        fs.copyFileSync(entry.backupPath, entry.originalPath)
+      } else if (fs.existsSync(entry.originalPath)) {
+        fs.rmSync(entry.originalPath, { force: true })
+      }
+    } catch (error) {
+      errors.push(`${entry.originalPath}: ${(error as Error).message}`)
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`回滚失败: ${errors.join('; ')}`)
+  }
+}
+
 export async function gmnCommand(apiKey?: string, platformArg?: string, providerNameArg?: string) {
   printBanner()
 
@@ -231,6 +325,15 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
   printWriteTargets(platforms)
   console.log()
 
+  const backupRootDir = path.join(
+    getCcmanDir(),
+    'backups',
+    `gmn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  )
+  fs.mkdirSync(backupRootDir, { recursive: true, mode: 0o700 })
+  console.log(chalk.gray(`备份根目录: ${backupRootDir}`))
+  console.log()
+
   const ALL_TOOLS = {
     codex: { name: 'Codex', manager: createCodexManager() },
     opencode: { name: 'OpenCode', manager: createOpenCodeManager() },
@@ -242,10 +345,28 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
     ...ALL_TOOLS[platform],
   }))
 
+  const successBackups: Array<{
+    name: string
+    backupDir: string
+    backupFiles: string[]
+  }> = []
   let completed = 0
   for (const { platform, name, manager } of tools) {
+    let backupResult: PlatformBackupResult | null = null
+
     try {
       console.log(chalk.gray(`→ 配置 ${name}...`))
+      backupResult = createPlatformBackupOrThrow(platform, backupRootDir)
+
+      const backupFiles = backupResult.entries
+        .map((entry) => entry.backupPath)
+        .filter((p): p is string => p !== null)
+      if (backupFiles.length > 0) {
+        console.log(chalk.gray(`  已备份 ${backupFiles.length} 个文件`))
+      } else {
+        console.log(chalk.gray('  无历史文件可备份'))
+      }
+
       const baseUrl = platformBaseUrls[platform]
       const existing = findPreferredProvider(manager.list(), providerName)
       const provider = existing
@@ -255,11 +376,46 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
       manager.switch(provider.id)
       completed += 1
       console.log(chalk.green(`✅ ${name}`))
+      successBackups.push({
+        name,
+        backupDir: backupResult.backupDir,
+        backupFiles,
+      })
     } catch (error) {
-      console.error(chalk.red(`❌ ${name}: ${(error as Error).message}`))
+      const operationError = error as Error
+      if (backupResult !== null) {
+        try {
+          rollbackFromBackupOrThrow(backupResult)
+          console.error(chalk.red(`❌ ${name}: ${operationError.message}（已回滚历史文件）`))
+        } catch (rollbackError) {
+          console.error(
+            chalk.red(
+              `❌ ${name}: ${operationError.message}；回滚也失败: ${(rollbackError as Error).message}`
+            )
+          )
+        }
+      } else {
+        console.error(chalk.red(`❌ ${name}: ${operationError.message}`))
+      }
     }
   }
 
   console.log(chalk.green(`\n🎉 GMN 配置完成！(${completed}/${tools.length})`))
+  console.log()
+  console.log(chalk.bold('备份信息:'))
+  if (successBackups.length === 0) {
+    console.log(chalk.gray('  无成功配置项，未生成可用备份目录。'))
+  } else {
+    for (const item of successBackups) {
+      console.log(chalk.gray(`  ${item.name}: ${item.backupDir}`))
+      if (item.backupFiles.length === 0) {
+        console.log(chalk.gray('    - 无历史文件可备份'))
+      } else {
+        for (const file of item.backupFiles) {
+          console.log(chalk.gray(`    - ${file}`))
+        }
+      }
+    }
+  }
   console.log(chalk.gray('提示：请重启对应工具/插件以使配置生效。'))
 }

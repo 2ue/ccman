@@ -52,8 +52,13 @@ function getFileSize(filePath: string): number {
 function backupFile(filePath: string): string {
   const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0]
   const backupPath = `${filePath}.backup-${timestamp}`
-  fs.copyFileSync(filePath, backupPath)
-  return backupPath
+  try {
+    fs.copyFileSync(filePath, backupPath)
+    fs.chmodSync(backupPath, 0o600)
+    return backupPath
+  } catch (error) {
+    throw new Error(`备份失败，已中止后续写入（claude-clean）: ${(error as Error).message}`)
+  }
 }
 
 /**
@@ -401,7 +406,7 @@ export function getProjectHistory(projectPath: string): HistoryEntry[] {
 }
 
 /**
- * 删除单条历史记录（不备份）
+ * 删除单条历史记录（先备份，失败即中止）
  */
 export function deleteHistoryEntry(projectPath: string, index: number): void {
   const filePath = getClaudeJsonPath()
@@ -409,6 +414,9 @@ export function deleteHistoryEntry(projectPath: string, index: number): void {
   if (!fs.existsSync(filePath)) {
     throw new Error(`${filePath} 文件不存在`)
   }
+
+  // 备份文件（fail-closed）
+  backupFile(filePath)
 
   const content = fs.readFileSync(filePath, 'utf-8')
   const config = JSON.parse(content)
@@ -424,12 +432,12 @@ export function deleteHistoryEntry(projectPath: string, index: number): void {
   // 删除指定索引的历史记录
   config.projects[projectPath].history.splice(index, 1)
 
-  // 原子写入（不备份）
+  // 原子写入
   saveJsonAtomic(filePath, config)
 }
 
 /**
- * 清空项目历史记录（不备份）
+ * 清空项目历史记录（先备份，失败即中止）
  */
 export function clearProjectHistory(projectPath: string): void {
   const filePath = getClaudeJsonPath()
@@ -437,6 +445,9 @@ export function clearProjectHistory(projectPath: string): void {
   if (!fs.existsSync(filePath)) {
     throw new Error(`${filePath} 文件不存在`)
   }
+
+  // 备份文件（fail-closed）
+  backupFile(filePath)
 
   const content = fs.readFileSync(filePath, 'utf-8')
   const config = JSON.parse(content)
@@ -448,6 +459,6 @@ export function clearProjectHistory(projectPath: string): void {
   // 清空历史记录
   config.projects[projectPath].history = []
 
-  // 原子写入（不备份）
+  // 原子写入
   saveJsonAtomic(filePath, config)
 }

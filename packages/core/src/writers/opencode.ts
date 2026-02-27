@@ -211,7 +211,9 @@ export function writeOpenCodeConfig(provider: Provider): void {
   })
 
   const existingProviders =
-    mergedConfig.provider && typeof mergedConfig.provider === 'object' && !Array.isArray(mergedConfig.provider)
+    mergedConfig.provider &&
+    typeof mergedConfig.provider === 'object' &&
+    !Array.isArray(mergedConfig.provider)
       ? { ...mergedConfig.provider }
       : {}
 
@@ -228,4 +230,3 @@ export function writeOpenCodeConfig(provider: Provider): void {
 
   writeJSON(configPath, nextConfig)
 }
-

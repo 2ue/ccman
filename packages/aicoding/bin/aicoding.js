@@ -64,6 +64,21 @@ function atomicWrite(filePath, content, mode = 0o600) {
   fs.renameSync(tempPath, filePath)
 }
 
+function backupFileOrThrow(filePath, operation) {
+  if (!fs.existsSync(filePath)) {
+    return null
+  }
+
+  const backupPath = `${filePath}.bak`
+  try {
+    fs.copyFileSync(filePath, backupPath)
+    fs.chmodSync(backupPath, 0o600)
+    return backupPath
+  } catch (error) {
+    throw new Error(`备份失败，已中止后续写入（${operation}）: ${error.message}`)
+  }
+}
+
 // ============================================================================
 // 交互式输入
 // ============================================================================
@@ -209,18 +224,14 @@ function configureCodex(apiKey) {
   ].join('\n')
 
   if (fs.existsSync(configPath)) {
-    const backupPath = `${configPath}.bak`
-    fs.copyFileSync(configPath, backupPath)
-    fs.chmodSync(backupPath, 0o600)
+    backupFileOrThrow(configPath, 'aicoding.codex.config.toml')
   }
 
   atomicWrite(configPath, minimalConfig)
 
   // 2. 处理 auth.json（先备份，再覆盖写入，仅保留 OPENAI_API_KEY）
   if (fs.existsSync(authPath)) {
-    const backupPath = `${authPath}.bak`
-    fs.copyFileSync(authPath, backupPath)
-    fs.chmodSync(backupPath, 0o600)
+    backupFileOrThrow(authPath, 'aicoding.codex.auth.json')
   }
 
   const auth = { OPENAI_API_KEY: apiKey }
@@ -300,6 +311,7 @@ function configureOpenCode(apiKey) {
     config.provider.gmn = gmnProvider
   }
 
+  backupFileOrThrow(configPath, 'aicoding.opencode.opencode.json')
   atomicWrite(configPath, JSON.stringify(config, null, 2))
 }
 
@@ -377,6 +389,8 @@ function configureOpenClaw(apiKey) {
   }
 
   // OpenClaw 策略固定为直接覆盖，不受保护/全覆盖模式影响
+  backupFileOrThrow(modelsPath, 'aicoding.openclaw.models.json')
+  backupFileOrThrow(openclawPath, 'aicoding.openclaw.openclaw.json')
   atomicWrite(modelsPath, JSON.stringify(modelsConfig, null, 2))
   atomicWrite(openclawPath, JSON.stringify(openclawConfig, null, 2))
 }
