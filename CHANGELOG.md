@@ -1,3 +1,14 @@
+## [3.3.17](https://github.com/2ue/ccman/compare/v3.3.16...v3.3.17) (2026-03-04)
+
+### 📝 变更
+
+* 迁移 changelog 到 Changesets 驱动，并新增 PR changeset 校验与发布时自动归档能力。
+
+### 📦 影响包
+
+* `@2ue/aicoding`: patch
+* `ccman`: patch
+
 ## [3.3.16](https://github.com/2ue/ccman/compare/v3.3.15...v3.3.16) (2026-02-27)
 
 ### ✨ 新功能
