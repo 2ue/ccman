@@ -22,8 +22,23 @@ const VALID_PLATFORMS = ['codex', 'opencode', 'openclaw'] as const
 type Platform = (typeof VALID_PLATFORMS)[number]
 const DEFAULT_PLATFORMS: Platform[] = ['codex', 'opencode']
 
-const GMN_OPENAI_BASE_URL = 'https://gmn.chuangzuoli.com'
-const GMN_OPENCLAW_BASE_URL = 'https://gmn.chuangzuoli.com/v1'
+interface GmnProfile {
+  commandName: 'gmn' | 'gmn1'
+  title: string
+  openaiBaseUrl: string
+}
+
+const GMN_PROFILE: GmnProfile = {
+  commandName: 'gmn',
+  title: 'GMN',
+  openaiBaseUrl: 'https://gmn.chuangzuoli.com',
+}
+
+const GMN1_PROFILE: GmnProfile = {
+  commandName: 'gmn1',
+  title: 'GMN1',
+  openaiBaseUrl: 'https://gmncode.cn',
+}
 
 const TOTAL_STEPS = 3
 
@@ -34,7 +49,7 @@ function renderStep(current: number, total: number, title: string): string {
   return `步骤 ${current}/${total} [${bar}] ${title}`
 }
 
-function printBanner(): void {
+function printBanner(title: string): void {
   printLogo()
   console.log(
     chalk.cyanBright(
@@ -45,7 +60,7 @@ function printBanner(): void {
         ' ██║   ██║ ██║╚██╔╝██║██║╚██╗██║',
         ' ╚██████╔╝ ██║ ╚═╝ ██║██║ ╚████║',
         '  ╚═════╝  ╚═╝     ╚═╝╚═╝  ╚═══╝',
-        '  CCMAN  GMN 一键配置向导',
+        `  CCMAN  ${title} 一键配置向导`,
       ].join('\n')
     )
   )
@@ -108,12 +123,12 @@ function parsePlatforms(platformArg: string): Platform[] {
   return platforms as Platform[]
 }
 
-async function promptApiKey(): Promise<string> {
+async function promptApiKey(title: string): Promise<string> {
   const answers = await inquirer.prompt([
     {
       type: 'password',
       name: 'apiKey',
-      message: '请输入 GMN API Key:',
+      message: `请输入 ${title} API Key:`,
       mask: '*',
       validate: (value) => {
         if (!value?.trim()) return 'API Key 不能为空'
@@ -124,7 +139,7 @@ async function promptApiKey(): Promise<string> {
   return (answers.apiKey as string).trim()
 }
 
-async function promptPlatforms(): Promise<Platform[]> {
+async function promptPlatforms(title: string): Promise<Platform[]> {
   const answers = await inquirer.prompt([
     {
       type: 'checkbox',
@@ -134,7 +149,7 @@ async function promptPlatforms(): Promise<Platform[]> {
       choices: [
         { name: 'Codex（需单独订阅 OpenAI 套餐）', value: 'codex' },
         { name: 'OpenCode（与 Codex 共享 OpenAI 套餐）', value: 'opencode' },
-        { name: 'OpenClaw（GMN /v1 端点，默认不选中）', value: 'openclaw' },
+        { name: `OpenClaw（${title} /v1 端点，默认不选中）`, value: 'openclaw' },
         { name: '全部（将依次配置 Codex、OpenCode、OpenClaw）', value: 'all' },
       ],
       default: DEFAULT_PLATFORMS,
@@ -152,11 +167,11 @@ async function promptPlatforms(): Promise<Platform[]> {
   return selected as Platform[]
 }
 
-async function resolvePlatforms(platformArg?: string): Promise<Platform[]> {
+async function resolvePlatforms(platformArg?: string, title = 'GMN'): Promise<Platform[]> {
   if (platformArg && platformArg.trim().length > 0) {
     return parsePlatforms(platformArg)
   }
-  return promptPlatforms()
+  return promptPlatforms(title)
 }
 
 function resolveProviderName(providerNameArg?: string): string {
@@ -277,14 +292,24 @@ function rollbackFromBackupOrThrow(result: PlatformBackupResult): void {
   }
 }
 
-export async function gmnCommand(apiKey?: string, platformArg?: string, providerNameArg?: string) {
-  printBanner()
+function buildOpenClawBaseUrl(openaiBaseUrl: string): string {
+  const normalized = openaiBaseUrl.replace(/\/+$/, '')
+  return `${normalized}/v1`
+}
+
+async function runGmnCommand(
+  profile: GmnProfile,
+  apiKey?: string,
+  platformArg?: string,
+  providerNameArg?: string
+) {
+  printBanner(profile.title)
 
   let platforms: Platform[]
   let providerName: string
   try {
     console.log(chalk.cyan(`\n${renderStep(1, TOTAL_STEPS, '选择要配置的工具')}`))
-    platforms = await resolvePlatforms(platformArg)
+    platforms = await resolvePlatforms(platformArg, profile.title)
     providerName = resolveProviderName(providerNameArg)
   } catch (error) {
     console.error(chalk.red(`❌ ${(error as Error).message}`))
@@ -297,7 +322,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
   let resolvedApiKey = apiKey?.trim()
   console.log(chalk.cyan(`\n${renderStep(2, TOTAL_STEPS, '输入 API Key')}`))
   if (!resolvedApiKey) {
-    resolvedApiKey = await promptApiKey()
+    resolvedApiKey = await promptApiKey(profile.title)
   } else {
     console.log(chalk.gray('已通过参数提供 API Key（已隐藏）'))
   }
@@ -307,11 +332,12 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
     process.exit(1)
   }
 
-  const openaiBaseUrl = GMN_OPENAI_BASE_URL
+  const openaiBaseUrl = profile.openaiBaseUrl
+  const openclawBaseUrl = buildOpenClawBaseUrl(openaiBaseUrl)
   const platformBaseUrls: Record<Platform, string> = {
     codex: openaiBaseUrl,
     opencode: openaiBaseUrl,
-    openclaw: GMN_OPENCLAW_BASE_URL,
+    openclaw: openclawBaseUrl,
   }
 
   console.log(chalk.cyan(`\n${renderStep(3, TOTAL_STEPS, '开始写入配置')}`))
@@ -320,7 +346,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
     console.log(chalk.gray(`OpenAI Base URL: ${openaiBaseUrl}`))
   }
   if (platforms.includes('openclaw')) {
-    console.log(chalk.gray(`OpenClaw Base URL: ${GMN_OPENCLAW_BASE_URL}`))
+    console.log(chalk.gray(`OpenClaw Base URL: ${openclawBaseUrl}`))
   }
   printWriteTargets(platforms)
   console.log()
@@ -328,7 +354,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
   const backupRootDir = path.join(
     getCcmanDir(),
     'backups',
-    `gmn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    `${profile.commandName}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   )
   fs.mkdirSync(backupRootDir, { recursive: true, mode: 0o700 })
   console.log(chalk.gray(`备份根目录: ${backupRootDir}`))
@@ -400,7 +426,7 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
     }
   }
 
-  console.log(chalk.green(`\n🎉 GMN 配置完成！(${completed}/${tools.length})`))
+  console.log(chalk.green(`\n🎉 ${profile.title} 配置完成！(${completed}/${tools.length})`))
   console.log()
   console.log(chalk.bold('备份信息:'))
   if (successBackups.length === 0) {
@@ -418,4 +444,12 @@ export async function gmnCommand(apiKey?: string, platformArg?: string, provider
     }
   }
   console.log(chalk.gray('提示：请重启对应工具/插件以使配置生效。'))
+}
+
+export async function gmnCommand(apiKey?: string, platformArg?: string, providerNameArg?: string) {
+  await runGmnCommand(GMN_PROFILE, apiKey, platformArg, providerNameArg)
+}
+
+export async function gmn1Command(apiKey?: string, platformArg?: string, providerNameArg?: string) {
+  await runGmnCommand(GMN1_PROFILE, apiKey, platformArg, providerNameArg)
 }

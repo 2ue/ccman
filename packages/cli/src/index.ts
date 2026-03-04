@@ -12,7 +12,7 @@ import { createOpenClawCommands } from './commands/openclaw/index.js'
 import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
-import { gmnCommand } from './commands/gmn.js'
+import { gmn1Command, gmnCommand } from './commands/gmn.js'
 import {
   startMainMenu,
   startClaudeMenu,
@@ -74,6 +74,7 @@ program.on('command:*', (operands) => {
     'export',
     'import',
     'gmn',
+    'gmn1',
   ]
   const suggestions = availableCommands.filter(
     (cmd) => cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
@@ -173,6 +174,15 @@ program
   .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
   .action(async (apiKey, options) => {
     await gmnCommand(apiKey, options.platform, options.name)
+  })
+
+program
+  .command('gmn1 [apiKey]')
+  .description('配置 GMN1 到 Codex、OpenCode、OpenClaw（默认 URL: https://gmncode.cn）')
+  .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
+  .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
+  .action(async (apiKey, options) => {
+    await gmn1Command(apiKey, options.platform, options.name)
   })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式
