@@ -28,7 +28,7 @@ interface OpenClawConfigFile {
 }
 
 const DEFAULT_PROVIDER_NAME = 'gmn'
-const PRIMARY_MODEL_ID = 'gpt-5.3-codex'
+const PRIMARY_MODEL_ID = 'gpt-5.4'
 
 // ESM 环境下获取当前文件所在目录
 const __filename = fileURLToPath(import.meta.url)
@@ -66,8 +66,8 @@ const OPENCLAW_CONFIG_TEMPLATE: OpenClawConfigFile = {
         authHeader: true,
         models: [
           {
-            id: 'gpt-5.3-codex',
-            name: 'gpt-5.3-codex',
+            id: 'gpt-5.4',
+            name: 'gpt-5.4',
             api: 'openai-responses',
             reasoning: false,
             input: ['text'],
@@ -93,7 +93,7 @@ const OPENCLAW_CONFIG_TEMPLATE: OpenClawConfigFile = {
     defaults: {
       workspace: '',
       model: {
-        primary: '{{providerName}}/gpt-5.3-codex',
+        primary: '{{providerName}}/gpt-5.4',
       },
       thinkingDefault: 'xhigh',
     },
@@ -113,8 +113,8 @@ const OPENCLAW_MODELS_TEMPLATE: OpenClawModelsFile = {
       },
       models: [
         {
-          id: 'gpt-5.3-codex',
-          name: 'gpt-5.3-codex',
+          id: 'gpt-5.4',
+          name: 'gpt-5.4',
           api: 'openai-responses',
           reasoning: false,
           input: ['text'],
@@ -285,7 +285,7 @@ export function writeOpenClawConfig(provider: Provider): void {
   const mergedDefaults = mergedAgents.defaults || {}
   const mergedModel = mergedDefaults.model || {}
   const templatePrimary =
-    nextOpenClawConfig.agents?.defaults?.model?.primary || `${providerName}/gpt-5.3-codex`
+    nextOpenClawConfig.agents?.defaults?.model?.primary || `${providerName}/gpt-5.4`
   const workspace =
     typeof mergedDefaults.workspace === 'string' && mergedDefaults.workspace.trim()
       ? mergedDefaults.workspace

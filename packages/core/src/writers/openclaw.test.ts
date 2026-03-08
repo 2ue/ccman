@@ -49,7 +49,7 @@ describe('OpenClaw Writer', () => {
     const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
-    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
+    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
     expect(typeof openclawConfig.agents?.defaults?.workspace).toBe('string')
 
     const provider = modelsConfig.providers?.GMN
@@ -58,7 +58,7 @@ describe('OpenClaw Writer', () => {
     expect(provider.api).toBe('openai-responses')
     expect(provider.authHeader).toBe(true)
     expect(typeof provider.headers?.['User-Agent']).toBe('string')
-    expect(provider.models?.[0]?.id).toBe('gpt-5.3-codex')
+    expect(provider.models?.[0]?.id).toBe('gpt-5.4')
     expect(provider.models?.[0]?.reasoning).toBe(true)
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
   })
@@ -88,8 +88,8 @@ describe('OpenClaw Writer', () => {
                 api: 'openai-completions',
                 models: [
                   {
-                    id: 'gpt-5.3-codex',
-                    name: 'Open Codex 5.3',
+                    id: 'gpt-5.4',
+                    name: 'GPT-5.4',
                     compat: {
                       supportsStore: false,
                     },
@@ -131,8 +131,8 @@ describe('OpenClaw Writer', () => {
               api: 'openai-completions',
               models: [
                 {
-                  id: 'gpt-5.3-codex',
-                  name: 'Open Codex 5.3',
+                  id: 'gpt-5.4',
+                  name: 'GPT-5.4',
                   compat: {
                     supportsStore: false,
                   },
@@ -164,7 +164,7 @@ describe('OpenClaw Writer', () => {
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
     expect(openclawConfig.agents?.defaults?.workspace).toBe('/tmp/custom')
     expect(openclawConfig.agents?.defaults?.maxConcurrent).toBe(8)
-    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
+    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
 
     expect(modelsConfig.customField).toBe('legacy-models-value')
     expect(modelsConfig.providers?.legacy?.baseUrl).toBe('https://old.example.com')
@@ -195,7 +195,7 @@ describe('OpenClaw Writer', () => {
       const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
       const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
-      expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.3-codex')
+      expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
       expect(modelsConfig.providers?.GMN?.api).toBe('openai-responses')
       expect(modelsConfig.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
       expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)

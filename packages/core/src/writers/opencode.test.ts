@@ -47,7 +47,7 @@ describe('OpenCode Writer', () => {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
 
       expect(config.$schema).toBe('https://opencode.ai/config.json')
-      expect(config.model).toBe('openai/gpt-5.2-codex')
+      expect(config.model).toBe('openai/gpt-5.4')
 
       expect(config.provider?.openai?.options?.baseURL).toBe(provider.baseUrl)
       expect(config.provider?.openai?.options?.apiKey).toBe(provider.apiKey)
@@ -55,9 +55,9 @@ describe('OpenCode Writer', () => {
       expect(config.agent?.build?.options?.store).toBe(false)
       expect(config.agent?.plan?.options?.store).toBe(false)
 
-      expect(config.provider?.openai?.models?.['gpt-5.2-codex']?.options?.store).toBe(false)
+      expect(config.provider?.openai?.models?.['gpt-5.4']?.options?.store).toBe(false)
       const variantKeys = Object.keys(
-        config.provider?.openai?.models?.['gpt-5.2-codex']?.variants || {}
+        config.provider?.openai?.models?.['gpt-5.4']?.variants || {}
       ).sort()
       expect(variantKeys).toEqual(['high', 'low', 'medium', 'xhigh'].sort())
     })
@@ -72,7 +72,7 @@ describe('OpenCode Writer', () => {
           {
             $schema: 'https://opencode.ai/config.json',
             theme: 'my-theme',
-            model: 'openai/gpt-5.2-codex',
+            model: 'openai/gpt-5.4',
             agent: {
               build: { options: { store: true, other: 'keep' } },
               plan: { options: { store: true } },
@@ -86,7 +86,7 @@ describe('OpenCode Writer', () => {
                   timeout: 12345,
                 },
                 models: {
-                  'gpt-5.2-codex': {
+                  'gpt-5.4': {
                     options: { store: true },
                     variants: { low: { disabled: true } },
                     extra: 'keep',
@@ -120,8 +120,8 @@ describe('OpenCode Writer', () => {
       expect(nextConfig.theme).toBe('my-theme')
       expect(nextConfig.provider.other.options.apiKey).toBe('should-not-change')
       expect(nextConfig.provider.openai.options.timeout).toBe(12345)
-      expect(nextConfig.provider.openai.models['gpt-5.2-codex'].variants.low.disabled).toBe(true)
-      expect(nextConfig.provider.openai.models['gpt-5.2-codex'].extra).toBe('keep')
+      expect(nextConfig.provider.openai.models['gpt-5.4'].variants.low.disabled).toBe(true)
+      expect(nextConfig.provider.openai.models['gpt-5.4'].extra).toBe('keep')
       expect(nextConfig.agent.customAgentField.enabled).toBe(true)
 
       // forced updates
@@ -129,7 +129,7 @@ describe('OpenCode Writer', () => {
       expect(nextConfig.provider.openai.options.apiKey).toBe(provider.apiKey)
       expect(nextConfig.agent.build.options.store).toBe(false)
       expect(nextConfig.agent.plan.options.store).toBe(false)
-      expect(nextConfig.provider.openai.models['gpt-5.2-codex'].options.store).toBe(false)
+      expect(nextConfig.provider.openai.models['gpt-5.4'].options.store).toBe(false)
     })
   })
 })

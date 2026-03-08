@@ -118,7 +118,7 @@ function resolveTemplatePath(relativePath: string): string | null {
  * - 这里定义的是其他默认字段
  */
 const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
-  model: 'gpt-5.3-codex',
+  model: 'gpt-5.4',
   model_reasoning_effort: 'xhigh',
   disable_response_storage: true,
   sandbox_mode: 'danger-full-access',
@@ -165,9 +165,19 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
   },
 }
 
+const GMN_PROVIDER_HOSTS = [
+  'gmn.chuangzuoli.com',
+  'cdn.gmnchuangzuoli.com',
+  'gmncodex.com',
+  'gmncode.cn',
+  'cdn.gmncode.cn',
+  'gmn.codex.com',
+  'cdn.gmncode.com',
+]
+
 function resolveCodexProviderKey(provider: Provider): string {
   const baseUrl = (provider.baseUrl || '').toLowerCase()
-  if (baseUrl.includes('gmn.chuangzuoli.com')) return 'gmn'
+  if (GMN_PROVIDER_HOSTS.some((host) => baseUrl.includes(host))) return 'gmn'
   return provider.name
 }
 
@@ -231,7 +241,7 @@ export function writeCodexConfig(provider: Provider): void {
   // 设置 Provider 相关字段（覆盖模板中的同名字段）
   const providerKey = resolveCodexProviderKey(provider)
   nextConfig.model_provider = providerKey
-  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.3-codex'
+  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.4'
 
   // 只保留一个 model provider（与 auth.json 覆盖策略保持一致）
   nextConfig.model_providers = {

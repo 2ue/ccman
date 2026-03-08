@@ -75,6 +75,7 @@ program.on('command:*', (operands) => {
     'import',
     'gmn',
     'gmn1',
+    'gmncode',
   ]
   const suggestions = availableCommands.filter(
     (cmd) => cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
@@ -169,20 +170,23 @@ importCommand(program)
 // GMN 配置命令（顶层命令）
 program
   .command('gmn [apiKey]')
-  .description('配置 GMN 到 Codex、OpenCode、OpenClaw')
+  .description('配置 GMN 到 Codex、OpenCode、OpenClaw（自动测速并默认选择最低延迟线路）')
   .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
   .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
+  .option('-b, --base-url <baseUrl>', '指定 Base URL；不指定时自动测速并可手动切换')
   .action(async (apiKey, options) => {
-    await gmnCommand(apiKey, options.platform, options.name)
+    await gmnCommand(apiKey, options.platform, options.name, options.baseUrl)
   })
 
 program
   .command('gmn1 [apiKey]')
+  .alias('gmncode')
   .description('配置 GMN1 到 Codex、OpenCode、OpenClaw（默认 URL: https://gmncode.cn）')
   .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
   .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
+  .option('-b, --base-url <baseUrl>', '指定 Base URL；不指定时自动测速并可手动切换')
   .action(async (apiKey, options) => {
-    await gmn1Command(apiKey, options.platform, options.name)
+    await gmn1Command(apiKey, options.platform, options.name, options.baseUrl)
   })
 
 // 如果没有提供任何命令,显示 logo 并进入交互模式

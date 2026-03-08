@@ -8,8 +8,8 @@ import { replaceVariables, deepMerge } from '../utils/template.js'
 
 const OPENCODE_SCHEMA = 'https://opencode.ai/config.json'
 const OPENCODE_PROVIDER_KEY = 'openai'
-const OPENCODE_MODEL = 'openai/gpt-5.2-codex'
-const OPENCODE_MODEL_KEY = 'gpt-5.2-codex'
+const OPENCODE_MODEL = 'openai/gpt-5.4'
+const OPENCODE_MODEL_KEY = 'gpt-5.4'
 
 interface OpenCodeProviderOptions {
   baseURL?: string
@@ -59,7 +59,7 @@ function resolveTemplatePath(relativePath: string): string | null {
 
 const DEFAULT_MODELS: Record<string, unknown> = {
   [OPENCODE_MODEL_KEY]: {
-    name: 'GPT-5.2 Codex',
+    name: 'GPT-5.4',
     options: {
       store: false,
     },

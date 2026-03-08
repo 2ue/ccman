@@ -10,8 +10,8 @@
       },
       "models": [
         {
-          "id": "gpt-5.3-codex",
-          "name": "gpt-5.3-codex",
+          "id": "gpt-5.4",
+          "name": "gpt-5.4",
           "api": "openai-responses",
           "reasoning": true,
           "input": ["text"],

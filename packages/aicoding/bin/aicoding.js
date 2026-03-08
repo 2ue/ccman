@@ -20,24 +20,64 @@
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
+import { request as httpRequest } from 'node:http'
+import { request as httpsRequest } from 'node:https'
+import { performance } from 'node:perf_hooks'
 import inquirer from 'inquirer'
 
-const GMN_BASE_URLS = {
-  openai: 'https://gmn.chuangzuoli.com',
-  openclaw: 'https://gmn.chuangzuoli.com/v1',
-}
-let OPENAI_BASE_URL = GMN_BASE_URLS.openai
+const GMN_ENDPOINTS = [
+  {
+    label: '原始地址',
+    url: 'https://gmn.chuangzuoli.com',
+    description: 'GMN 原始入口',
+  },
+  {
+    label: '旧域名 CDN',
+    url: 'https://cdn.gmnchuangzuoli.com',
+    description: 'CDN 回国加速',
+  },
+  {
+    label: '阿里云 CDN',
+    url: 'https://gmncodex.com',
+    description: '阿里云解析 CDN 回国加速',
+  },
+  {
+    label: '全球边缘 A',
+    url: 'https://gmncode.cn',
+    description: '全球边缘节点加速',
+  },
+  {
+    label: 'CF CDN A',
+    url: 'https://cdn.gmncode.cn',
+    description: 'CF 解析 CDN 回国加速',
+  },
+  {
+    label: '全球边缘 B',
+    url: 'https://gmn.codex.com',
+    description: '全球边缘节点加速',
+  },
+  {
+    label: 'CF CDN B',
+    url: 'https://cdn.gmncode.com',
+    description: 'CF 解析 CDN 回国加速',
+  },
+]
+const DEFAULT_OPENAI_BASE_URL = GMN_ENDPOINTS[0].url
+let OPENAI_BASE_URL = DEFAULT_OPENAI_BASE_URL
 const VALID_PLATFORMS = ['codex', 'opencode', 'openclaw']
 const DEFAULT_PLATFORMS = ['codex', 'opencode']
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 5
+const BASE_URL_PROBE_SAMPLE_COUNT = 3
+const BASE_URL_PROBE_TIMEOUT_MS = 2500
 
 // 统一路径策略（与 @ccman/core 保持一致）
 const NODE_ENV = process.env.NODE_ENV
-const HOME_DIR = NODE_ENV === 'test'
-  ? path.join('/tmp', 'ccman-test')
-  : NODE_ENV === 'development'
-    ? path.join(os.tmpdir(), 'ccman-dev')
-    : os.homedir()
+const HOME_DIR =
+  NODE_ENV === 'test'
+    ? path.join('/tmp', 'ccman-test')
+    : NODE_ENV === 'development'
+      ? path.join(os.tmpdir(), 'ccman-dev')
+      : os.homedir()
 
 // 全局配置：写入模式
 let OVERWRITE_MODE = false
@@ -77,6 +117,180 @@ function backupFileOrThrow(filePath, operation) {
   } catch (error) {
     throw new Error(`备份失败，已中止后续写入（${operation}）: ${error.message}`)
   }
+}
+
+function buildOpenClawBaseUrl(openaiBaseUrl) {
+  return openaiBaseUrl.replace(/\/+$/, '') + '/v1'
+}
+
+function normalizeEndpointUrl(url) {
+  const normalized = url.trim().replace(/\/+$/, '')
+  new URL(normalized)
+  return normalized
+}
+
+function calculateMedian(values) {
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 0) {
+    return Math.round((sorted[middle - 1] + sorted[middle]) / 2)
+  }
+  return sorted[middle]
+}
+
+function probeOnce(url, timeoutMs) {
+  return new Promise((resolve) => {
+    const target = new URL(url)
+    const requester = target.protocol === 'http:' ? httpRequest : httpsRequest
+    const start = performance.now()
+    let settled = false
+
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      resolve(result)
+    }
+
+    const req = requester(
+      target,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache',
+          'User-Agent': 'aicoding-latency-probe/1.0',
+        },
+      },
+      (response) => {
+        const latencyMs = Math.max(1, Math.round(performance.now() - start))
+        response.destroy()
+        finish({ latencyMs, statusCode: response.statusCode || null })
+      }
+    )
+
+    req.setTimeout(timeoutMs, () => {
+      req.destroy(new Error(`测速超时（>${timeoutMs}ms）`))
+    })
+
+    req.on('error', (error) => {
+      finish({
+        latencyMs: null,
+        statusCode: null,
+        error: error.message,
+      })
+    })
+
+    req.end()
+  })
+}
+
+function sortProbeResults(results) {
+  return [...results].sort((left, right) => {
+    const leftReachable = left.latencyMs !== null
+    const rightReachable = right.latencyMs !== null
+
+    if (leftReachable && !rightReachable) return -1
+    if (!leftReachable && rightReachable) return 1
+    if (!leftReachable && !rightReachable) return left.originalIndex - right.originalIndex
+    if (left.latencyMs !== right.latencyMs) return left.latencyMs - right.latencyMs
+    return left.originalIndex - right.originalIndex
+  })
+}
+
+function formatLatency(result) {
+  if (result.latencyMs === null) {
+    return result.error || '测速失败'
+  }
+  return `${result.latencyMs} ms`
+}
+
+async function probeEndpoint(endpoint, probeUrl, originalIndex) {
+  const samples = []
+  let lastError = null
+
+  for (let index = 0; index < BASE_URL_PROBE_SAMPLE_COUNT; index += 1) {
+    const result = await probeOnce(probeUrl, BASE_URL_PROBE_TIMEOUT_MS)
+    if (result.latencyMs !== null) {
+      samples.push(result.latencyMs)
+    } else if (!lastError) {
+      lastError = result.error
+    }
+  }
+
+  return {
+    ...endpoint,
+    url: normalizeEndpointUrl(endpoint.url),
+    probeUrl,
+    originalIndex,
+    samples,
+    latencyMs: samples.length > 0 ? calculateMedian(samples) : null,
+    error: samples.length > 0 ? null : lastError || '测速失败',
+  }
+}
+
+async function resolveOpenAiBaseUrl(openaiBaseUrlArg, platforms) {
+  if (openaiBaseUrlArg && openaiBaseUrlArg.trim().length > 0) {
+    const normalized = normalizeEndpointUrl(openaiBaseUrlArg)
+    console.log(`已通过参数指定 Base URL: ${normalized}`)
+    return normalized
+  }
+
+  const openclawOnly = platforms.length === 1 && platforms[0] === 'openclaw'
+  const probeResults = sortProbeResults(
+    await Promise.all(
+      GMN_ENDPOINTS.map((endpoint, index) =>
+        probeEndpoint(
+          endpoint,
+          openclawOnly ? buildOpenClawBaseUrl(endpoint.url) : endpoint.url,
+          index
+        )
+      )
+    )
+  )
+
+  console.log(
+    `测速方式：HTTPS 首包延迟（${BASE_URL_PROBE_SAMPLE_COUNT} 次中位数）${
+      openclawOnly ? '，当前仅检测 OpenClaw 的 /v1 端点' : ''
+    }`
+  )
+  for (const result of probeResults) {
+    console.log(`  ${result.label} · ${formatLatency(result)}`)
+    console.log(`    ${result.url}`)
+    console.log(`    ${result.description}`)
+  }
+
+  const defaultResult = probeResults[0]
+  const allFailed = probeResults.every((result) => result.latencyMs === null)
+  if (allFailed) {
+    console.log('⚠️  所有候选地址测速失败，将默认选中第一个地址，你也可以手动切换。')
+  } else {
+    console.log(`默认已选延迟最低地址：${defaultResult.url}`)
+  }
+
+  if (probeResults.length === 1) {
+    console.log(`已自动选择: ${defaultResult.url}`)
+    return defaultResult.url
+  }
+
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    console.log(`非交互环境，已自动使用默认地址：${defaultResult.url}`)
+    return defaultResult.url
+  }
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'baseUrl',
+      message: '选择要使用的 Base URL（默认已选延迟最低）:',
+      choices: probeResults.map((result) => ({
+        name: `${result.label} · ${result.url} · ${formatLatency(result)} · ${result.description}`,
+        value: result.url,
+      })),
+      default: defaultResult.url,
+    },
+  ])
+
+  return answers.baseUrl
 }
 
 // ============================================================================
@@ -208,7 +422,7 @@ function configureCodex(apiKey) {
   // 1. 处理 config.toml（先备份，再覆盖写入）
   const minimalConfig = [
     `model_provider = "${providerKey}"`,
-    'model = "gpt-5.2-codex"',
+    'model = "gpt-5.4"',
     'model_reasoning_effort = "high"',
     'network_access = "enabled"',
     'disable_response_storage = true',
@@ -257,7 +471,7 @@ function configureOpenCode(apiKey) {
       apiKey: apiKey,
     },
     models: {
-      'gpt-5.2-codex': {
+      'gpt-5.4': {
         variants: {
           xhigh: {
             reasoningEffort: 'xhigh',
@@ -341,13 +555,14 @@ function configureOpenClaw(apiKey) {
   ensureDir(path.dirname(modelsPath))
 
   const providerKey = 'gmn'
-  const primaryModelId = 'gpt-5.3-codex'
+  const primaryModelId = 'gpt-5.4'
   const secondaryModelId = 'gpt-5.2-codex'
+  const openclawBaseUrl = buildOpenClawBaseUrl(OPENAI_BASE_URL)
 
   const modelsConfig = {
     providers: {
       [providerKey]: {
-        baseUrl: GMN_BASE_URLS.openclaw,
+        baseUrl: openclawBaseUrl,
         apiKey,
         api: 'openai-responses',
         authHeader: true,
@@ -365,7 +580,7 @@ function configureOpenClaw(apiKey) {
       mode: 'merge',
       providers: {
         [providerKey]: {
-          baseUrl: GMN_BASE_URLS.openclaw,
+          baseUrl: openclawBaseUrl,
           apiKey,
           api: 'openai-responses',
           headers: {
@@ -475,16 +690,21 @@ async function main() {
   printKeyNotice()
 
   const needsOpenAIBaseUrl = platforms.includes('codex') || platforms.includes('opencode')
+  const needsBaseUrl = needsOpenAIBaseUrl || platforms.includes('openclaw')
 
-  // 3. 处理 OpenAI Base URL（Codex/OpenCode）
-  if (needsOpenAIBaseUrl) {
-    const resolvedOpenaiBaseUrl =
-      openaiBaseUrl && openaiBaseUrl.trim().length > 0 ? openaiBaseUrl.trim() : GMN_BASE_URLS.openai
-    openaiBaseUrl = resolvedOpenaiBaseUrl
-    OPENAI_BASE_URL = resolvedOpenaiBaseUrl
+  if (needsBaseUrl) {
+    console.log(`\n${renderStep(3, TOTAL_STEPS, '测速并选择 Base URL')}`)
+    try {
+      openaiBaseUrl = await resolveOpenAiBaseUrl(openaiBaseUrl, platforms)
+      OPENAI_BASE_URL = openaiBaseUrl
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`❌ ${message}`)
+      process.exit(1)
+    }
   }
 
-  console.log(`\n${renderStep(3, TOTAL_STEPS, '输入 API Key')}`)
+  console.log(`\n${renderStep(4, TOTAL_STEPS, '输入 API Key')}`)
   if (!apiKey) {
     apiKey = await promptApiKey()
   } else {
@@ -495,14 +715,14 @@ async function main() {
     throw new Error('API Key 不能为空')
   }
 
-  console.log(`\n${renderStep(4, TOTAL_STEPS, '开始写入配置')}`)
+  console.log(`\n${renderStep(5, TOTAL_STEPS, '开始写入配置')}`)
   console.log(`模式: ${OVERWRITE_MODE ? '全覆盖模式' : '保护模式'}`)
   console.log(`平台: ${platforms.join(', ')}`)
-  if (needsOpenAIBaseUrl && openaiBaseUrl) {
+  if (needsBaseUrl && openaiBaseUrl) {
     console.log(`OpenAI Base URL: ${openaiBaseUrl}`)
   }
   if (platforms.includes('openclaw')) {
-    console.log(`OpenClaw Base URL: ${GMN_BASE_URLS.openclaw}`)
+    console.log(`OpenClaw Base URL: ${buildOpenClawBaseUrl(openaiBaseUrl || OPENAI_BASE_URL)}`)
   }
   console.log('\n开始配置...\n')
 
@@ -513,7 +733,7 @@ async function main() {
     openclaw: { name: 'OpenClaw', configure: configureOpenClaw },
   }
 
-  const tools = platforms.map(p => ALL_TOOLS[p])
+  const tools = platforms.map((p) => ALL_TOOLS[p])
 
   let completed = 0
   for (const { name, configure } of tools) {
@@ -540,7 +760,9 @@ async function main() {
   }
   if (platforms.includes('openclaw')) {
     console.log(`  - OpenClaw:    ${path.join(HOME_DIR, '.openclaw/openclaw.json')}`)
-    console.log(`  - OpenClaw:    ${path.join(HOME_DIR, '.openclaw/agents/main/agent/models.json')}`)
+    console.log(
+      `  - OpenClaw:    ${path.join(HOME_DIR, '.openclaw/agents/main/agent/models.json')}`
+    )
   }
 
   console.log('\n提示：请重启对应的工具以使配置生效。')

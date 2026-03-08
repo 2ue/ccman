@@ -7,6 +7,7 @@
 - ✅ **轻量依赖**：使用 inquirer 提供清晰的交互式选择
 - ✅ **一键配置**：支持同时配置多个工具（默认 Codex + OpenCode）
 - ✅ **两种模式**：保护模式（默认）+ 全覆盖模式
+- ✅ **自动测速选线**：启动时测试多条 GMN 线路，默认选中当前机器延迟最低地址
 - ✅ **配置保护**：保留用户现有配置，只更新认证字段
 - ✅ **原子性写入**：使用临时文件 + rename，确保安全
 
@@ -32,6 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/2ue/ccman/main/scripts/aicoding.sh 
 ```
 
 说明：脚本会自动调用 `npx --yes @2ue/aicoding` 并保持交互式输入。
+未显式传入 `--openai-base-url` / `--base-url` 时，会先测速候选 GMN 域名并允许手动切换。
 
 传参示例（将参数传给 aicoding）：
 
@@ -95,12 +97,14 @@ npx @2ue/aicoding sk-ant-xxx
 交互式流程会提示选择平台（OpenClaw 可选但默认不选中）；如需自定义 Codex/OpenCode 的 OpenAI Base URL，可通过参数指定。
 
 **可选：指定 Codex/OpenCode 的 OpenAI Base URL**
+
 ```bash
 # 使用指定 Base URL（仅影响 Codex/OpenCode）
 npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
 ```
 
 **保护的配置**：
+
 - **OpenCode**: 其他 provider 配置
 - **Codex**: `config.toml/auth.json` 会先备份为 `.bak`，再覆盖写入（不保留手动修改）
 - **OpenCode**: 写入前会备份 `opencode.json`
@@ -119,17 +123,18 @@ npx @2ue/aicoding sk-ant-xxx --overwrite
 ```
 
 **警告**：全覆盖模式会丢失你的自定义配置，只在以下情况使用：
+
 - 配置文件损坏
 - 需要重置为默认配置
 - 确认要丢弃现有配置
 
 ## 配置的工具
 
-| 工具 | 配置文件 | 说明 |
-|------|---------|------|
-| **Codex** | `~/.codex/config.toml`<br>`~/.codex/auth.json` | `config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`；`config.toml` 仅保留一个 `model_providers` |
-| **OpenCode** | `~/.config/opencode/opencode.json` | 更新 `provider.gmn` 配置 |
-| **OpenClaw** | `~/.openclaw/openclaw.json`<br>`~/.openclaw/agents/main/agent/models.json` | 写入前会备份为 `.bak`，然后覆盖写入；端点使用 `https://gmn.chuangzuoli.com/v1` |
+| 工具         | 配置文件                                                                   | 说明                                                                                                                                  |
+| ------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Codex**    | `~/.codex/config.toml`<br>`~/.codex/auth.json`                             | `config.toml/auth.json` 会先备份为 `.bak` 再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`；`config.toml` 仅保留一个 `model_providers` |
+| **OpenCode** | `~/.config/opencode/opencode.json`                                         | 更新 `provider.gmn` 配置                                                                                                              |
+| **OpenClaw** | `~/.openclaw/openclaw.json`<br>`~/.openclaw/agents/main/agent/models.json` | 写入前会备份为 `.bak`，然后覆盖写入；端点使用 `https://gmn.chuangzuoli.com/v1`                                                        |
 
 ## 示例
 
@@ -185,15 +190,16 @@ $ npx @2ue/aicoding --overwrite
 
 ## 与 ccman 的区别
 
-| 特性 | aicoding | ccman |
-|------|----------|-------|
-| **用途** | 一键配置 GMN | 完整的服务商管理工具 |
-| **依赖** | 轻量依赖（inquirer） | 需要安装 ccman |
-| **功能** | 只配置 GMN | 管理多个服务商、CRUD 操作 |
-| **使用场景** | 快速配置、临时使用 | 日常管理、频繁切换 |
-| **命令** | `npx @2ue/aicoding` | `ccman gmn <apiKey>` |
+| 特性         | aicoding             | ccman                     |
+| ------------ | -------------------- | ------------------------- |
+| **用途**     | 一键配置 GMN         | 完整的服务商管理工具      |
+| **依赖**     | 轻量依赖（inquirer） | 需要安装 ccman            |
+| **功能**     | 只配置 GMN           | 管理多个服务商、CRUD 操作 |
+| **使用场景** | 快速配置、临时使用   | 日常管理、频繁切换        |
+| **命令**     | `npx @2ue/aicoding`  | `ccman gmn <apiKey>`      |
 
 **推荐**：
+
 - ✅ 使用 `@2ue/aicoding`：如果你只想快速配置 GMN
 - ✅ 使用 `ccman`：如果你需要管理多个服务商
 

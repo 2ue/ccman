@@ -43,7 +43,7 @@ describe('OpenClaw ToolManager', () => {
 
     const openclawConfig = JSON.parse(fs.readFileSync(openclawPath, 'utf-8'))
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
-    expect(openclawConfig.agents.defaults.model.primary).toBe(`${providerName}/gpt-5.3-codex`)
+    expect(openclawConfig.agents.defaults.model.primary).toBe(`${providerName}/gpt-5.4`)
     expect(modelsConfig.providers[providerName].baseUrl).toBe('https://gmn.chuangzuoli.com/v1')
   })
 })

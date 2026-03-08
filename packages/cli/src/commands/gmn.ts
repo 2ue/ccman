@@ -15,6 +15,14 @@ import path from 'path'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { printLogo } from '../utils/logo.js'
+import {
+  type EndpointCandidate,
+  type EndpointProbeResult,
+  normalizeEndpointUrl,
+  pickDefaultEndpoint,
+  probeEndpointCandidates,
+  sortEndpointProbeResults,
+} from '../utils/endpoint-latency.js'
 
 const DEFAULT_PROVIDER_NAME = 'gmn'
 
@@ -25,22 +33,68 @@ const DEFAULT_PLATFORMS: Platform[] = ['codex', 'opencode']
 interface GmnProfile {
   commandName: 'gmn' | 'gmn1'
   title: string
-  openaiBaseUrl: string
+  baseUrls: EndpointCandidate[]
 }
+
+const GMN_BASE_URLS: EndpointCandidate[] = [
+  {
+    label: '原始地址',
+    url: 'https://gmn.chuangzuoli.com',
+    description: 'GMN 原始入口',
+  },
+  {
+    label: '旧域名 CDN',
+    url: 'https://cdn.gmnchuangzuoli.com',
+    description: 'CDN 回国加速',
+  },
+  {
+    label: '阿里云 CDN',
+    url: 'https://gmncodex.com',
+    description: '阿里云解析 CDN 回国加速',
+  },
+  {
+    label: '全球边缘 A',
+    url: 'https://gmncode.cn',
+    description: '全球边缘节点加速',
+  },
+  {
+    label: 'CF CDN A',
+    url: 'https://cdn.gmncode.cn',
+    description: 'CF 解析 CDN 回国加速',
+  },
+  {
+    label: '全球边缘 B',
+    url: 'https://gmn.codex.com',
+    description: '全球边缘节点加速',
+  },
+  {
+    label: 'CF CDN B',
+    url: 'https://cdn.gmncode.com',
+    description: 'CF 解析 CDN 回国加速',
+  },
+]
 
 const GMN_PROFILE: GmnProfile = {
   commandName: 'gmn',
   title: 'GMN',
-  openaiBaseUrl: 'https://gmn.chuangzuoli.com',
+  baseUrls: GMN_BASE_URLS,
 }
 
 const GMN1_PROFILE: GmnProfile = {
   commandName: 'gmn1',
   title: 'GMN1',
-  openaiBaseUrl: 'https://gmncode.cn',
+  baseUrls: [
+    {
+      label: 'GMN1 默认线路',
+      url: 'https://gmncode.cn',
+      description: '全球边缘节点加速',
+    },
+  ],
 }
 
-const TOTAL_STEPS = 3
+const TOTAL_STEPS = 4
+const BASE_URL_PROBE_SAMPLE_COUNT = 3
+const BASE_URL_PROBE_TIMEOUT_MS = 2500
 
 function renderStep(current: number, total: number, title: string): string {
   const barLength = total
@@ -174,6 +228,105 @@ async function resolvePlatforms(platformArg?: string, title = 'GMN'): Promise<Pl
   return promptPlatforms(title)
 }
 
+function formatLatency(result: EndpointProbeResult): string {
+  if (result.latencyMs === null) {
+    return result.error || '测速失败'
+  }
+  return `${result.latencyMs} ms`
+}
+
+function buildProbeCandidates(
+  baseUrls: EndpointCandidate[],
+  platforms: Platform[]
+): EndpointCandidate[] {
+  const openClawOnly = platforms.length === 1 && platforms[0] === 'openclaw'
+
+  return baseUrls.map((item) => ({
+    ...item,
+    probeUrl: openClawOnly ? buildOpenClawBaseUrl(item.url) : item.url,
+  }))
+}
+
+function printBaseUrlProbeResults(results: EndpointProbeResult[], platforms: Platform[]): void {
+  const usingOpenClawPath = platforms.length === 1 && platforms[0] === 'openclaw'
+  console.log(
+    chalk.gray(
+      `测速方式：HTTPS 首包延迟（${BASE_URL_PROBE_SAMPLE_COUNT} 次中位数）${
+        usingOpenClawPath ? '，当前仅检测 OpenClaw 的 /v1 端点' : ''
+      }`
+    )
+  )
+
+  for (const result of results) {
+    const latencyText =
+      result.latencyMs === null
+        ? chalk.red(formatLatency(result))
+        : chalk.green(formatLatency(result))
+
+    console.log(`  ${chalk.cyan(result.label)} · ${latencyText}`)
+    console.log(chalk.gray(`    ${result.url}`))
+    console.log(chalk.gray(`    ${result.description}`))
+  }
+}
+
+async function resolveOpenAiBaseUrl(
+  profile: GmnProfile,
+  platforms: Platform[],
+  baseUrlArg?: string
+): Promise<string> {
+  if (baseUrlArg && baseUrlArg.trim().length > 0) {
+    const normalized = normalizeEndpointUrl(baseUrlArg)
+    console.log(chalk.gray(`已通过参数指定 Base URL: ${normalized}`))
+    return normalized
+  }
+
+  const probeResults = sortEndpointProbeResults(
+    await probeEndpointCandidates(buildProbeCandidates(profile.baseUrls, platforms), {
+      sampleCount: BASE_URL_PROBE_SAMPLE_COUNT,
+      timeoutMs: BASE_URL_PROBE_TIMEOUT_MS,
+    })
+  )
+
+  if (probeResults.length === 0) {
+    throw new Error('没有可用的 Base URL 候选项')
+  }
+
+  printBaseUrlProbeResults(probeResults, platforms)
+
+  const defaultResult = pickDefaultEndpoint(probeResults) || probeResults[0]
+  const allFailed = probeResults.every((result) => result.latencyMs === null)
+  if (allFailed) {
+    console.log(chalk.yellow('⚠️ 所有候选地址测速失败，将默认选中第一个地址，你也可以手动切换。'))
+  } else {
+    console.log(chalk.gray(`默认已选延迟最低地址：${defaultResult.url}`))
+  }
+
+  if (probeResults.length === 1) {
+    console.log(chalk.green(`已自动选择: ${defaultResult.url}`))
+    return defaultResult.url
+  }
+
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    console.log(chalk.yellow(`非交互环境，已自动使用默认地址：${defaultResult.url}`))
+    return defaultResult.url
+  }
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'baseUrl',
+      message: '选择要使用的 Base URL（默认已选延迟最低）:',
+      choices: probeResults.map((result) => ({
+        name: `${result.label} · ${result.url} · ${formatLatency(result)} · ${result.description}`,
+        value: result.url,
+      })),
+      default: defaultResult.url,
+    },
+  ])
+
+  return answers.baseUrl as string
+}
+
 function resolveProviderName(providerNameArg?: string): string {
   if (providerNameArg === undefined) {
     return DEFAULT_PROVIDER_NAME
@@ -301,7 +454,8 @@ async function runGmnCommand(
   profile: GmnProfile,
   apiKey?: string,
   platformArg?: string,
-  providerNameArg?: string
+  providerNameArg?: string,
+  baseUrlArg?: string
 ) {
   printBanner(profile.title)
 
@@ -319,8 +473,23 @@ async function runGmnCommand(
   console.log(chalk.gray(`服务商名称: ${providerName}`))
   printKeyNotice()
 
+  console.log(chalk.cyan(`\n${renderStep(2, TOTAL_STEPS, '测速并选择 Base URL')}`))
+  let openaiBaseUrl: string
+  try {
+    openaiBaseUrl = await resolveOpenAiBaseUrl(profile, platforms, baseUrlArg)
+  } catch (error) {
+    console.error(chalk.red(`❌ ${(error as Error).message}`))
+    process.exit(1)
+  }
+  const openclawBaseUrl = buildOpenClawBaseUrl(openaiBaseUrl)
+  const platformBaseUrls: Record<Platform, string> = {
+    codex: openaiBaseUrl,
+    opencode: openaiBaseUrl,
+    openclaw: openclawBaseUrl,
+  }
+
   let resolvedApiKey = apiKey?.trim()
-  console.log(chalk.cyan(`\n${renderStep(2, TOTAL_STEPS, '输入 API Key')}`))
+  console.log(chalk.cyan(`\n${renderStep(3, TOTAL_STEPS, '输入 API Key')}`))
   if (!resolvedApiKey) {
     resolvedApiKey = await promptApiKey(profile.title)
   } else {
@@ -332,19 +501,9 @@ async function runGmnCommand(
     process.exit(1)
   }
 
-  const openaiBaseUrl = profile.openaiBaseUrl
-  const openclawBaseUrl = buildOpenClawBaseUrl(openaiBaseUrl)
-  const platformBaseUrls: Record<Platform, string> = {
-    codex: openaiBaseUrl,
-    opencode: openaiBaseUrl,
-    openclaw: openclawBaseUrl,
-  }
-
-  console.log(chalk.cyan(`\n${renderStep(3, TOTAL_STEPS, '开始写入配置')}`))
+  console.log(chalk.cyan(`\n${renderStep(4, TOTAL_STEPS, '开始写入配置')}`))
   console.log(chalk.gray(`已选择平台: ${platforms.join(', ')}`))
-  if (platforms.includes('codex') || platforms.includes('opencode')) {
-    console.log(chalk.gray(`OpenAI Base URL: ${openaiBaseUrl}`))
-  }
+  console.log(chalk.gray(`OpenAI Base URL: ${openaiBaseUrl}`))
   if (platforms.includes('openclaw')) {
     console.log(chalk.gray(`OpenClaw Base URL: ${openclawBaseUrl}`))
   }
@@ -446,10 +605,20 @@ async function runGmnCommand(
   console.log(chalk.gray('提示：请重启对应工具/插件以使配置生效。'))
 }
 
-export async function gmnCommand(apiKey?: string, platformArg?: string, providerNameArg?: string) {
-  await runGmnCommand(GMN_PROFILE, apiKey, platformArg, providerNameArg)
+export async function gmnCommand(
+  apiKey?: string,
+  platformArg?: string,
+  providerNameArg?: string,
+  baseUrlArg?: string
+) {
+  await runGmnCommand(GMN_PROFILE, apiKey, platformArg, providerNameArg, baseUrlArg)
 }
 
-export async function gmn1Command(apiKey?: string, platformArg?: string, providerNameArg?: string) {
-  await runGmnCommand(GMN1_PROFILE, apiKey, platformArg, providerNameArg)
+export async function gmn1Command(
+  apiKey?: string,
+  platformArg?: string,
+  providerNameArg?: string,
+  baseUrlArg?: string
+) {
+  await runGmnCommand(GMN1_PROFILE, apiKey, platformArg, providerNameArg, baseUrlArg)
 }
