@@ -170,7 +170,7 @@ importCommand(program)
 // GMN 配置命令（顶层命令）
 program
   .command('gmn [apiKey]')
-  .description('配置 GMN 到 Codex、OpenCode、OpenClaw（自动测速并默认选择最低延迟线路）')
+  .description('配置 GMN 到 Codex、OpenCode、OpenClaw（测速并选择最低延迟路线）')
   .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
   .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
   .option('-b, --base-url <baseUrl>', '指定 Base URL；不指定时自动测速并可手动切换')
@@ -181,7 +181,7 @@ program
 program
   .command('gmn1 [apiKey]')
   .alias('gmncode')
-  .description('配置 GMN1 到 Codex、OpenCode、OpenClaw（默认 URL: https://gmncode.cn）')
+  .description('配置 GMN1 到 Codex、OpenCode、OpenClaw（测速并选择最低延迟路线）')
   .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
   .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
   .option('-b, --base-url <baseUrl>', '指定 Base URL；不指定时自动测速并可手动切换')
