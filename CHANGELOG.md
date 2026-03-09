@@ -1,3 +1,12 @@
+## [3.3.19](https://github.com/2ue/ccman/compare/v3.3.18...v3.3.19) (2026-03-09)
+
+### 🔧 其他变更
+
+* release v3.3.19 (78ee49ffd517aa17fcc88ff7921628d63ea91710)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.18 [skip ci] (b79a214ab7c99c1d6736febbd420aad5b5b1d9db)
+
 ## [3.3.18](https://github.com/2ue/ccman/compare/v3.3.17...v3.3.18) (2026-03-09)
 
 ### 🔧 其他变更
