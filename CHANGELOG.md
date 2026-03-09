@@ -1,3 +1,15 @@
+## [3.3.18](https://github.com/2ue/ccman/compare/v3.3.17...v3.3.18) (2026-03-09)
+
+### 🔧 其他变更
+
+* release v3.3.18 (c4797e10fd88afdc0a26718e0a816dac92cd3ca8)
+### ✨ 新功能
+
+* add codex bootstrap installer and GMN endpoint selection (e1f497813aa23843177aca81e2dddb2e95b7122d)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.17 [skip ci] (5e87979165d8ce13b38458df04288acf29b8d5bd)
+
 ## [3.3.17](https://github.com/2ue/ccman/compare/v3.3.16...v3.3.17) (2026-03-04)
 
 ### 📝 变更
