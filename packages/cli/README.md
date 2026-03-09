@@ -9,7 +9,7 @@
 - 🔄 **一键切换**：一条命令切换服务商，自动修改配置文件
 - 📦 **内置预设**：提供常用预设（Claude: 1 个，Gemini: 2 个，Codex: 2 个，OpenCode: 1 个，MCP: 多个），只需填写 API Key
 - 🛠️ **自定义配置**：支持添加任意第三方服务商
-- 🔐 **安全写入**：写入前备份；Codex 的 `config.toml/auth.json` 备份后覆盖写入，其他工具尽量保留用户字段
+- 🔐 **安全写入**：常规管理命令默认增量更新；GMN/GMN1 等快捷配置命令对所涉及工具执行覆盖式写入
 - 🎯 **多工具支持**：同时管理 Codex、Claude Code、Gemini CLI、OpenCode 和 MCP 服务器
 - 📱 **双界面**：提供 CLI（命令行）和 Desktop（图形界面）
 - 🔁 **克隆功能**：快速复制配置，管理多个 API Key
@@ -171,54 +171,54 @@ ccman mcp remove   # 删除 MCP 服务器
 
 ## 完整命令
 
-| 命令 | 说明 |
-|------|------|
-| `ccman` | 主菜单（选择 Codex、Claude Code、Gemini CLI 或 OpenCode） |
-| **Codex 管理** | |
-| `ccman cx` | Codex 交互式菜单 |
-| `ccman cx add` | 添加 Codex 服务商（支持预设模板和自定义） |
-| `ccman cx list` | 列出所有 Codex 服务商 |
-| `ccman cx use [name]` | 切换 Codex 服务商 |
-| `ccman cx current` | 查看当前 Codex 服务商 |
-| `ccman cx edit [name]` | 编辑 Codex 服务商 |
-| `ccman cx remove [name]` | 删除 Codex 服务商 |
-| `ccman cx clone [source]` | 克隆 Codex 服务商 |
-| **Claude Code 管理** | |
-| `ccman cc` | Claude Code 交互式菜单 |
-| `ccman cc add` | 添加 Claude Code 服务商 |
-| `ccman cc list` | 列出所有 Claude Code 服务商 |
-| `ccman cc use [name]` | 切换 Claude Code 服务商 |
-| `ccman cc current` | 查看当前 Claude Code 服务商 |
-| `ccman cc edit [name]` | 编辑 Claude Code 服务商 |
-| `ccman cc remove [name]` | 删除 Claude Code 服务商 |
-| `ccman cc clone [source]` | 克隆 Claude Code 服务商 |
-| **Gemini CLI 管理** | |
-| `ccman gm` | Gemini CLI 交互式菜单 |
-| `ccman gm add` | 添加 Gemini CLI 服务商 |
-| `ccman gm list` | 列出所有 Gemini CLI 服务商 |
-| `ccman gm use [name]` | 切换 Gemini CLI 服务商 |
-| `ccman gm current` | 查看当前 Gemini CLI 服务商 |
-| `ccman gm edit [name]` | 编辑 Gemini CLI 服务商 |
-| `ccman gm remove [name]` | 删除 Gemini CLI 服务商 |
-| `ccman gm clone [source]` | 克隆 Gemini CLI 服务商 |
-| **OpenCode 管理** | |
-| `ccman oc` | OpenCode 交互式菜单 |
-| `ccman oc add` | 添加 OpenCode 服务商 |
-| `ccman oc list` | 列出所有 OpenCode 服务商 |
-| `ccman oc use [name]` | 切换 OpenCode 服务商 |
-| `ccman oc current` | 查看当前 OpenCode 服务商 |
-| `ccman oc edit [name]` | 编辑 OpenCode 服务商 |
-| `ccman oc remove [name]` | 删除 OpenCode 服务商 |
-| `ccman oc clone [source]` | 克隆 OpenCode 服务商 |
-| **MCP 服务器管理** | |
-| `ccman mcp add` | 添加 MCP 服务器 |
-| `ccman mcp list` | 列出所有 MCP 服务器 |
-| `ccman mcp edit [name]` | 编辑 MCP 服务器 |
-| `ccman mcp remove [name]` | 删除 MCP 服务器 |
-| **配置同步和导入导出** | |
-| `ccman sync` | WebDAV 同步配置（备份/恢复/合并） |
-| `ccman export [dir]` | 导出配置到本地目录 |
-| `ccman import [dir]` | 从本地目录导入配置 |
+| 命令                      | 说明                                                      |
+| ------------------------- | --------------------------------------------------------- |
+| `ccman`                   | 主菜单（选择 Codex、Claude Code、Gemini CLI 或 OpenCode） |
+| **Codex 管理**            |                                                           |
+| `ccman cx`                | Codex 交互式菜单                                          |
+| `ccman cx add`            | 添加 Codex 服务商（支持预设模板和自定义）                 |
+| `ccman cx list`           | 列出所有 Codex 服务商                                     |
+| `ccman cx use [name]`     | 切换 Codex 服务商                                         |
+| `ccman cx current`        | 查看当前 Codex 服务商                                     |
+| `ccman cx edit [name]`    | 编辑 Codex 服务商                                         |
+| `ccman cx remove [name]`  | 删除 Codex 服务商                                         |
+| `ccman cx clone [source]` | 克隆 Codex 服务商                                         |
+| **Claude Code 管理**      |                                                           |
+| `ccman cc`                | Claude Code 交互式菜单                                    |
+| `ccman cc add`            | 添加 Claude Code 服务商                                   |
+| `ccman cc list`           | 列出所有 Claude Code 服务商                               |
+| `ccman cc use [name]`     | 切换 Claude Code 服务商                                   |
+| `ccman cc current`        | 查看当前 Claude Code 服务商                               |
+| `ccman cc edit [name]`    | 编辑 Claude Code 服务商                                   |
+| `ccman cc remove [name]`  | 删除 Claude Code 服务商                                   |
+| `ccman cc clone [source]` | 克隆 Claude Code 服务商                                   |
+| **Gemini CLI 管理**       |                                                           |
+| `ccman gm`                | Gemini CLI 交互式菜单                                     |
+| `ccman gm add`            | 添加 Gemini CLI 服务商                                    |
+| `ccman gm list`           | 列出所有 Gemini CLI 服务商                                |
+| `ccman gm use [name]`     | 切换 Gemini CLI 服务商                                    |
+| `ccman gm current`        | 查看当前 Gemini CLI 服务商                                |
+| `ccman gm edit [name]`    | 编辑 Gemini CLI 服务商                                    |
+| `ccman gm remove [name]`  | 删除 Gemini CLI 服务商                                    |
+| `ccman gm clone [source]` | 克隆 Gemini CLI 服务商                                    |
+| **OpenCode 管理**         |                                                           |
+| `ccman oc`                | OpenCode 交互式菜单                                       |
+| `ccman oc add`            | 添加 OpenCode 服务商                                      |
+| `ccman oc list`           | 列出所有 OpenCode 服务商                                  |
+| `ccman oc use [name]`     | 切换 OpenCode 服务商                                      |
+| `ccman oc current`        | 查看当前 OpenCode 服务商                                  |
+| `ccman oc edit [name]`    | 编辑 OpenCode 服务商                                      |
+| `ccman oc remove [name]`  | 删除 OpenCode 服务商                                      |
+| `ccman oc clone [source]` | 克隆 OpenCode 服务商                                      |
+| **MCP 服务器管理**        |                                                           |
+| `ccman mcp add`           | 添加 MCP 服务器                                           |
+| `ccman mcp list`          | 列出所有 MCP 服务器                                       |
+| `ccman mcp edit [name]`   | 编辑 MCP 服务器                                           |
+| `ccman mcp remove [name]` | 删除 MCP 服务器                                           |
+| **配置同步和导入导出**    |                                                           |
+| `ccman sync`              | WebDAV 同步配置（备份/恢复/合并）                         |
+| `ccman export [dir]`      | 导出配置到本地目录                                        |
+| `ccman import [dir]`      | 从本地目录导入配置                                        |
 
 ---
 
@@ -228,30 +228,30 @@ ccman mcp remove   # 删除 MCP 服务器
 
 ### Claude Code 预设（2 个）
 
-| 预设名称 | Base URL |
-|---------|----------|
-| Anthropic Official | `https://api.anthropic.com` |
-| GMN | `https://gmn.chuangzuoli.com/api` |
+| 预设名称           | Base URL                          |
+| ------------------ | --------------------------------- |
+| Anthropic Official | `https://api.anthropic.com`       |
+| GMN                | `https://gmn.chuangzuoli.com/api` |
 
 ### Gemini CLI 预设（2 个）
 
-| 预设名称 | Base URL |
-|---------|----------|
-| Google Gemini (API Key) | 官方默认 |
-| GMN | `https://gmn.chuangzuoli.com` |
+| 预设名称                | Base URL                      |
+| ----------------------- | ----------------------------- |
+| Google Gemini (API Key) | 官方默认                      |
+| GMN                     | `https://gmn.chuangzuoli.com` |
 
 ### Codex 预设（2 个）
 
-| 预设名称 | Base URL |
-|---------|----------|
-| OpenAI Official | `https://api.openai.com/v1` |
-| GMN | `https://gmn.chuangzuoli.com` |
+| 预设名称        | Base URL                      |
+| --------------- | ----------------------------- |
+| OpenAI Official | `https://api.openai.com/v1`   |
+| GMN             | `https://gmn.chuangzuoli.com` |
 
 ### OpenCode 预设（1 个）
 
-| 预设名称 | Base URL |
-|---------|----------|
-| GMN | `https://gmn.chuangzuoli.com` |
+| 预设名称 | Base URL                      |
+| -------- | ----------------------------- |
+| GMN      | `https://gmn.chuangzuoli.com` |
 
 ### MCP 预设（多个）
 
@@ -338,6 +338,7 @@ $ ccman cc use "Claude Test"
 ## 配置文件
 
 **ccman 配置**：
+
 - `~/.ccman/codex.json` - Codex 服务商配置
 - `~/.ccman/claude.json` - Claude Code 服务商配置
 - `~/.ccman/gemini.json` - Gemini CLI 服务商配置
@@ -345,14 +346,17 @@ $ ccman cc use "Claude Test"
 - `~/.ccman/mcp.json` - MCP 服务器配置
 
 **工具配置**（ccman 会自动修改）：
+
 - **Codex**: `~/.codex/config.toml`
 - **Claude Code**: `~/.claude/settings.json`
 - **Gemini CLI**: `~/.gemini/settings.json` 和 `~/.gemini/.env`
 - **OpenCode**: `~/.config/opencode/opencode.json`
 
 **安全写入承诺**：
+
 - 写入前备份（`.bak`），失败时自动回滚
-- Codex 的 `config.toml/auth.json` 采用备份后覆盖写入（避免遗留字段导致报错/告警）
+- 常规管理命令（如 `ccman cx` / `ccman cc` / `ccman gm` / `ccman oc` / `ccman openclaw`）默认采用增量更新
+- 快捷配置命令（如 `ccman gmn` / `ccman gmn1` / `ccman gmncode`）会对所涉及工具执行覆盖式写入
 - API Key 存储在本地，权限 `0600`
 
 ---

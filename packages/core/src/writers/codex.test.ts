@@ -105,7 +105,7 @@ describe('Codex Writer', () => {
       expect(config.model_providers['自定义 GMN']).toBeUndefined()
     })
 
-    it('should remove deprecated web_search_request and legacy ccman feature keys', () => {
+    it('should remove deprecated web_search_request while preserving unrelated fields in merge mode', () => {
       const configPath = getCodexConfigPath()
       fs.mkdirSync(path.dirname(configPath), { recursive: true })
 
@@ -144,11 +144,11 @@ describe('Codex Writer', () => {
 
       expect(config.features?.web_search_request).toBeUndefined()
       expect(config.web_search_request).toBeUndefined()
-      expect(config.custom_field).toBeUndefined()
+      expect(config.custom_field).toBe('should-be-removed')
       expect(fs.existsSync(`${configPath}.bak`)).toBe(false)
     })
 
-    it('should overwrite config.toml and auth.json', () => {
+    it('should merge config.toml and auth.json by default', () => {
       const configPath = getCodexConfigPath()
       const authPath = getCodexAuthPath()
 
@@ -191,15 +191,65 @@ describe('Codex Writer', () => {
 
       expect(config.model_provider).toBe('NewProvider')
       expect(config.model_providers.NewProvider.base_url).toBe('https://new.example.com')
-      expect(config.custom_field).toBeUndefined()
+      expect(config.custom_field).toBe('should-be-preserved')
+      expect(config.model_providers.OldProvider.base_url).toBe('https://old.example.com')
 
       // 验证 auth.json
       const authContent = fs.readFileSync(authPath, 'utf-8')
       const auth = JSON.parse(authContent)
       expect(auth.OPENAI_API_KEY).toBe('new-key')
-      expect(auth.CUSTOM_FIELD).toBeUndefined()
+      expect(auth.CUSTOM_FIELD).toBe('should-be-preserved')
       expect(fs.existsSync(`${configPath}.bak`)).toBe(false)
       expect(fs.existsSync(`${authPath}.bak`)).toBe(false)
+    })
+
+    it('should overwrite config.toml and auth.json in overwrite mode', () => {
+      const configPath = getCodexConfigPath()
+      const authPath = getCodexAuthPath()
+
+      const existingConfig = {
+        model_provider: 'OldProvider',
+        model: 'some-model',
+        custom_field: 'should-be-removed',
+        model_providers: {
+          OldProvider: {
+            name: 'OldProvider',
+            base_url: 'https://old.example.com',
+          },
+        },
+      }
+
+      const existingAuth = {
+        OPENAI_API_KEY: 'old-key',
+        CUSTOM_FIELD: 'should-be-removed',
+      }
+
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+      fs.writeFileSync(configPath, TOML.stringify(existingConfig as any), 'utf-8')
+      fs.writeFileSync(authPath, JSON.stringify(existingAuth, null, 2), 'utf-8')
+
+      const provider: Provider = {
+        id: 'new-id',
+        name: 'NewProvider',
+        type: 'codex',
+        baseUrl: 'https://new.example.com',
+        apiKey: 'new-key',
+        createdAt: Date.now(),
+      }
+      writeCodexConfig(provider, { mode: 'overwrite' })
+
+      const configContent = fs.readFileSync(configPath, 'utf-8')
+      const config: any = TOML.parse(configContent)
+
+      expect(config.model_provider).toBe('NewProvider')
+      expect(config.model_providers.NewProvider.base_url).toBe('https://new.example.com')
+      expect(config.custom_field).toBeUndefined()
+      expect(config.model_providers.OldProvider).toBeUndefined()
+
+      const authContent = fs.readFileSync(authPath, 'utf-8')
+      const auth = JSON.parse(authContent)
+      expect(auth.OPENAI_API_KEY).toBe('new-key')
+      expect(auth.CUSTOM_FIELD).toBeUndefined()
     })
 
     it('should handle baseUrl without trailing slash', () => {

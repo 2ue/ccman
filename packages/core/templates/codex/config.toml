@@ -9,6 +9,8 @@ file_opener = "vscode"
 model_provider = "gmn"
 web_search = "cached"
 suppress_unstable_features_warning = true
+model_context_window = 1000000
+model_auto_compact_token_limit = 900000
 
 [history]
 persistence = "save-all"

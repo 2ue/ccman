@@ -50,6 +50,7 @@ describe('OpenClaw Writer', () => {
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
     expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
+    expect(openclawConfig.agents?.defaults?.imageModel).toBe('GMN/gpt-5.4')
     expect(typeof openclawConfig.agents?.defaults?.workspace).toBe('string')
 
     const provider = modelsConfig.providers?.GMN
@@ -59,7 +60,14 @@ describe('OpenClaw Writer', () => {
     expect(provider.authHeader).toBe(true)
     expect(typeof provider.headers?.['User-Agent']).toBe('string')
     expect(provider.models?.[0]?.id).toBe('gpt-5.4')
+    expect(provider.models?.[0]?.input).toEqual(['text', 'image'])
     expect(provider.models?.[0]?.reasoning).toBe(true)
+    expect(provider.models?.[0]?.contextWindow).toBe(1050000)
+    expect(provider.models?.[0]?.maxTokens).toBe(128000)
+    expect(provider.models?.[1]?.id).toBe('gpt-5.3-codex')
+    expect(provider.models?.[1]?.input).toEqual(['text', 'image'])
+    expect(provider.models?.[1]?.contextWindow).toBe(400000)
+    expect(provider.models?.[1]?.maxTokens).toBe(128000)
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
   })
 
@@ -165,6 +173,14 @@ describe('OpenClaw Writer', () => {
     expect(openclawConfig.agents?.defaults?.workspace).toBe('/tmp/custom')
     expect(openclawConfig.agents?.defaults?.maxConcurrent).toBe(8)
     expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
+    expect(openclawConfig.agents?.defaults?.imageModel).toBe('GMN/gpt-5.4')
+    expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.input).toEqual(['text', 'image'])
+    expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.contextWindow).toBe(1050000)
+    expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.maxTokens).toBe(128000)
+    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.id).toBe('gpt-5.3-codex')
+    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.input).toEqual(['text', 'image'])
+    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.contextWindow).toBe(400000)
+    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.maxTokens).toBe(128000)
 
     expect(modelsConfig.customField).toBe('legacy-models-value')
     expect(modelsConfig.providers?.legacy?.baseUrl).toBe('https://old.example.com')
@@ -173,6 +189,69 @@ describe('OpenClaw Writer', () => {
     expect(modelsConfig.providers?.GMN?.api).toBe('openai-responses')
     expect(modelsConfig.providers?.GMN?.models?.[0]?.compat).toBeUndefined()
     expect(modelsConfig.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
+    expect(modelsConfig.providers?.GMN?.models?.[0]?.input).toEqual(['text', 'image'])
+    expect(modelsConfig.providers?.GMN?.models?.[0]?.contextWindow).toBe(1050000)
+    expect(modelsConfig.providers?.GMN?.models?.[0]?.maxTokens).toBe(128000)
+    expect(modelsConfig.providers?.GMN?.models?.[1]?.id).toBe('gpt-5.3-codex')
+    expect(modelsConfig.providers?.GMN?.models?.[1]?.input).toEqual(['text', 'image'])
+    expect(modelsConfig.providers?.GMN?.models?.[1]?.contextWindow).toBe(400000)
+    expect(modelsConfig.providers?.GMN?.models?.[1]?.maxTokens).toBe(128000)
+  })
+
+  it('should overwrite unrelated providers and fields in overwrite mode', () => {
+    const configPath = getOpenClawConfigPath()
+    const modelsPath = getOpenClawModelsPath()
+
+    fs.mkdirSync(path.dirname(configPath), { recursive: true })
+    fs.mkdirSync(path.dirname(modelsPath), { recursive: true })
+
+    fs.writeFileSync(
+      configPath,
+      JSON.stringify(
+        {
+          customField: 'remove-me',
+          models: {
+            mode: 'merge',
+            providers: {
+              legacy: {
+                baseUrl: 'https://legacy.example.com/v1',
+              },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    )
+    fs.writeFileSync(
+      modelsPath,
+      JSON.stringify(
+        {
+          customField: 'remove-me-too',
+          providers: {
+            legacy: {
+              baseUrl: 'https://legacy.example.com/v1',
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    )
+
+    writeOpenClawConfig(createProvider({ apiKey: 'sk-overwrite-openclaw' }), { mode: 'overwrite' })
+
+    const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+    const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
+
+    expect(openclawConfig.customField).toBeUndefined()
+    expect(openclawConfig.models?.providers?.legacy).toBeUndefined()
+    expect(openclawConfig.models?.providers?.GMN?.apiKey).toBe('sk-overwrite-openclaw')
+    expect(modelsConfig.customField).toBeUndefined()
+    expect(modelsConfig.providers?.legacy).toBeUndefined()
+    expect(modelsConfig.providers?.GMN?.apiKey).toBe('sk-overwrite-openclaw')
   })
 
   it('should fallback to built-in templates when template files are unavailable', () => {

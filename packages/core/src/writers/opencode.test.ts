@@ -56,10 +56,15 @@ describe('OpenCode Writer', () => {
       expect(config.agent?.plan?.options?.store).toBe(false)
 
       expect(config.provider?.openai?.models?.['gpt-5.4']?.options?.store).toBe(false)
+      expect(config.provider?.openai?.models?.['gpt-5.3-codex']?.options?.store).toBe(false)
       const variantKeys = Object.keys(
         config.provider?.openai?.models?.['gpt-5.4']?.variants || {}
       ).sort()
       expect(variantKeys).toEqual(['high', 'low', 'medium', 'xhigh'].sort())
+      const codexVariantKeys = Object.keys(
+        config.provider?.openai?.models?.['gpt-5.3-codex']?.variants || {}
+      ).sort()
+      expect(codexVariantKeys).toEqual(['high', 'low', 'medium', 'xhigh'].sort())
     })
 
     it('should preserve existing fields and force-update baseURL/apiKey + store flags', () => {
@@ -130,6 +135,56 @@ describe('OpenCode Writer', () => {
       expect(nextConfig.agent.build.options.store).toBe(false)
       expect(nextConfig.agent.plan.options.store).toBe(false)
       expect(nextConfig.provider.openai.models['gpt-5.4'].options.store).toBe(false)
+      expect(nextConfig.provider.openai.models['gpt-5.3-codex'].options.store).toBe(false)
+    })
+
+    it('should overwrite unrelated fields in overwrite mode', () => {
+      const configPath = getOpenCodeConfigPath()
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+      fs.writeFileSync(
+        configPath,
+        JSON.stringify(
+          {
+            $schema: 'https://opencode.ai/config.json',
+            theme: 'remove-me',
+            provider: {
+              openai: {
+                options: {
+                  baseURL: 'https://old.example.com',
+                  apiKey: 'old-key',
+                },
+              },
+              other: {
+                options: {
+                  apiKey: 'should-be-removed',
+                },
+              },
+            },
+          },
+          null,
+          2
+        ),
+        'utf-8'
+      )
+
+      const now = Date.now()
+      const provider = {
+        id: 'overwrite-id',
+        name: 'Overwrite Provider',
+        baseUrl: 'https://new.example.com/v1',
+        apiKey: 'new-key',
+        createdAt: now,
+        lastModified: now,
+      }
+
+      writeOpenCodeConfig(provider, { mode: 'overwrite' })
+
+      const nextConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+      expect(nextConfig.theme).toBeUndefined()
+      expect(nextConfig.provider.other).toBeUndefined()
+      expect(nextConfig.provider.openai.options.baseURL).toBe(provider.baseUrl)
+      expect(nextConfig.provider.openai.options.apiKey).toBe(provider.apiKey)
+      expect(nextConfig.provider.openai.models['gpt-5.3-codex'].options.store).toBe(false)
     })
   })
 })

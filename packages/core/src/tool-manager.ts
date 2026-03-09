@@ -41,6 +41,8 @@ import type {
   PresetTemplate,
   InternalPresetTemplate,
   ToolConfig,
+  WriteOptions,
+  EditOptions,
   AddProviderInput,
   EditProviderInput,
   AddPresetInput,
@@ -58,6 +60,8 @@ export type {
   ToolType,
   Provider,
   PresetTemplate,
+  WriteOptions,
+  EditOptions,
   AddProviderInput,
   EditProviderInput,
   AddPresetInput,
@@ -74,7 +78,7 @@ export { ProviderNotFoundError, ProviderNameConflictError, PresetNameConflictErr
 interface ToolConfigMapping {
   configPath: string
   builtinPresets: InternalPresetTemplate[]
-  writer: (provider: Provider) => void
+  writer: (provider: Provider, options?: WriteOptions) => void
   /** 是否在每个操作（add/edit/remove）后自动同步配置 */
   autoSync?: boolean
   /** 自定义配置加载器（可选，用于特殊配置格式如 MCP）*/
@@ -298,7 +302,7 @@ function createToolManager(tool: ToolType): ToolManager {
       return config.providers.find((p) => p.name.trim().toLowerCase() === lowerName)
     },
 
-    switch(id: string): void {
+    switch(id: string, options?: WriteOptions): void {
       const config = loadConfig()
       const provider = config.providers.find((p) => p.id === id)
 
@@ -311,7 +315,7 @@ function createToolManager(tool: ToolType): ToolManager {
       saveConfig(config)
 
       // 使用配置映射的 writer（零 if-else）
-      toolConfig.writer(provider)
+      toolConfig.writer(provider, options)
     },
 
     getCurrent(): Provider | null {
@@ -328,10 +332,11 @@ function createToolManager(tool: ToolType): ToolManager {
     // 注：edit 方法的"复杂度"来自必要的业务逻辑（检查存在性、名称冲突、更新 4 个可选字段、同步配置）
     // 每个 if 都不可避免，没有特殊情况或嵌套逻辑，因此禁用 complexity 检查
     // eslint-disable-next-line complexity
-    edit(id: string, updates: EditProviderInput): Provider {
+    edit(id: string, updates: EditProviderInput, options: EditOptions = {}): Provider {
       const config = loadConfig()
       const provider = config.providers.find((p) => p.id === id)
       const normalizedUpdates = trimProviderUpdates(updates)
+      const shouldApplyWrite = options.applyWrite !== false
 
       if (!provider) {
         throw new ProviderNotFoundError(id)
@@ -362,12 +367,12 @@ function createToolManager(tool: ToolType): ToolManager {
       saveConfig(config)
 
       // 如果是当前激活的 provider,重新写入配置
-      if (config.currentProviderId === id) {
+      if (shouldApplyWrite && config.currentProviderId === id) {
         toolConfig.writer(provider)
       }
 
       // 如果配置了自动同步，则立即同步配置（即使不是当前激活的）
-      if (toolConfig.autoSync) {
+      if (shouldApplyWrite && toolConfig.autoSync) {
         toolConfig.writer(provider)
       }
 

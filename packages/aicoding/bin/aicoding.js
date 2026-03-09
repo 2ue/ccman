@@ -5,14 +5,14 @@
  * 功能：直接修改 Codex、OpenCode、OpenClaw 的配置文件
  *
  * 用法：
- *   node scripts/setup-gmn-standalone.mjs                    # 交互式输入（保护模式）
- *   node scripts/setup-gmn-standalone.mjs sk-ant-xxx         # 直接传入 API Key（保护模式）
- *   node scripts/setup-gmn-standalone.mjs --overwrite        # 全覆盖模式（交互式）
- *   node scripts/setup-gmn-standalone.mjs sk-ant-xxx --overwrite  # 全覆盖模式（直接传入）
+ *   npx @2ue/aicoding                                        # 交互式输入（快捷覆盖模式）
+ *   npx @2ue/aicoding sk-ant-xxx                             # 直接传入 API Key（快捷覆盖模式）
+ *   npx @2ue/aicoding --overwrite                            # 兼容旧参数（行为不变）
+ *   npx @2ue/aicoding sk-ant-xxx --overwrite                 # 兼容旧参数（行为不变）
  *
- * 模式说明：
- *   - 保护模式（默认）：尽量保留现有配置；认证字段强制更新（Codex 的 config.toml/auth.json 会先备份再覆盖写入）
- *   - 全覆盖模式：使用默认配置覆盖所有字段（认证字段除外）
+ * 策略说明：
+ *   - 快捷配置入口统一采用覆盖写入：直接落下选中工具的托管配置
+ *   - 写入前会备份已有目标文件
  *
  * 依赖：Node.js 内置 API + inquirer（交互式选择）
  */
@@ -79,8 +79,8 @@ const HOME_DIR =
       ? path.join(os.tmpdir(), 'ccman-dev')
       : os.homedir()
 
-// 全局配置：写入模式
-let OVERWRITE_MODE = false
+// 快捷配置入口统一使用覆盖写入
+let OVERWRITE_MODE = true
 
 // ============================================================================
 // 工具函数
@@ -648,29 +648,12 @@ async function main() {
     }
   }
 
-  // 2. 交互式补全参数（与 ccman gmn 一致）
-  console.log(`\n${renderStep(1, TOTAL_STEPS, '选择写入模式')}`)
-  if (!overwriteArgProvided) {
-    const mode = await promptMode()
-    OVERWRITE_MODE = mode === 'overwrite'
-  } else {
-    console.log(`已通过参数指定模式：${OVERWRITE_MODE ? '全覆盖模式' : '保护模式'}`)
+  // 2. 快捷配置策略说明（与 ccman gmn 保持一致）
+  console.log(`\n${renderStep(1, TOTAL_STEPS, '确认快捷写入策略')}`)
+  if (overwriteArgProvided) {
+    console.log('已显式指定 --overwrite（当前快捷入口默认即为覆盖写入）')
   }
-
-  if (OVERWRITE_MODE) {
-    const { confirm } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: '全覆盖模式会覆盖配置，确认继续？',
-        default: false,
-      },
-    ])
-    if (!confirm) {
-      console.log('已取消')
-      return
-    }
-  }
+  console.log('快捷配置入口将直接覆盖选中工具的托管配置，并在覆盖前备份已有目标文件。')
 
   console.log(`\n${renderStep(2, TOTAL_STEPS, '选择要配置的工具')}`)
   let platforms
@@ -716,7 +699,7 @@ async function main() {
   }
 
   console.log(`\n${renderStep(5, TOTAL_STEPS, '开始写入配置')}`)
-  console.log(`模式: ${OVERWRITE_MODE ? '全覆盖模式' : '保护模式'}`)
+  console.log('模式: 快捷覆盖模式')
   console.log(`平台: ${platforms.join(', ')}`)
   if (needsBaseUrl && openaiBaseUrl) {
     console.log(`OpenAI Base URL: ${openaiBaseUrl}`)

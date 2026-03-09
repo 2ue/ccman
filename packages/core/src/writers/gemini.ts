@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import { getGeminiDir, getGeminiSettingsPath, getGeminiEnvPath } from '../paths.js'
 import { ensureDir, fileExists } from '../utils/file.js'
 import type { Provider } from '../tool-manager.js'
+import type { WriteOptions } from '../tool-manager.types.js'
 import { deepMerge } from '../utils/template.js'
 
 /**
@@ -165,7 +166,7 @@ function saveEnvFile(envPath: string, env: Record<string, string>): void {
  * GEMINI_API_KEY=YOUR_API_KEY
  * GEMINI_MODEL=gemini-2.5-pro
  */
-export function writeGeminiConfig(provider: Provider): void {
+export function writeGeminiConfig(provider: Provider, options: WriteOptions = {}): void {
   const settingsPath = getGeminiSettingsPath()
   const envPath = getGeminiEnvPath()
   const dir = getGeminiDir()
@@ -173,10 +174,10 @@ export function writeGeminiConfig(provider: Provider): void {
   // 确保目录存在
   ensureDir(dir)
 
-  // 1. 更新 settings.json（模板 + 深度合并）
+  const settingsTemplate = loadGeminiSettingsTemplate()
   let userSettings: GeminiSettings = {}
 
-  if (fileExists(settingsPath)) {
+  if (options.mode !== 'overwrite' && fileExists(settingsPath)) {
     try {
       const content = fs.readFileSync(settingsPath, 'utf-8')
       const parsed = JSON.parse(content)
@@ -188,8 +189,10 @@ export function writeGeminiConfig(provider: Provider): void {
     }
   }
 
-  const settingsTemplate = loadGeminiSettingsTemplate()
-  const settings = deepMerge<GeminiSettings>(settingsTemplate, userSettings)
+  const settings =
+    options.mode === 'overwrite'
+      ? ({ ...settingsTemplate } as GeminiSettings)
+      : deepMerge<GeminiSettings>(settingsTemplate, userSettings)
 
   // 确保启用 IDE 集成
   if (!settings.ide || typeof settings.ide !== 'object') {
@@ -222,7 +225,7 @@ export function writeGeminiConfig(provider: Provider): void {
   }
 
   // 2. 更新 ~/.gemini/.env
-  const existingEnv = loadEnvFile(envPath)
+  const existingEnv = options.mode === 'overwrite' ? {} : loadEnvFile(envPath)
   const templateEnv = loadGeminiEnvTemplate(provider)
   const env = {
     ...existingEnv,

@@ -2,8 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs'
+import * as TOML from '@iarna/toml'
 import { createCodexManager } from './tool-manager.js'
-import { __setTestPaths } from './paths.js'
+import { __setTestPaths, getCodexAuthPath, getCodexConfigPath } from './paths.js'
 
 describe('ToolManager trim inputs', () => {
   beforeEach(() => {
@@ -89,5 +90,152 @@ describe('ToolManager trim inputs', () => {
     expect(p2.description).toBe('d2')
 
     expect(() => manager.removePreset(`  ${preset2}  `)).not.toThrow()
+  })
+
+  it('should use merge mode by default in manager switch and allow explicit overwrite', () => {
+    const seed = `mode-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    const configPath = getCodexConfigPath()
+    const authPath = getCodexAuthPath()
+    fs.mkdirSync(path.dirname(configPath), { recursive: true })
+    fs.writeFileSync(
+      configPath,
+      TOML.stringify({
+        custom_field: 'keep-me',
+        model_providers: {
+          legacy: {
+            name: 'legacy',
+            base_url: 'https://legacy.example.com',
+          },
+        },
+      } as any),
+      'utf-8'
+    )
+    fs.writeFileSync(
+      authPath,
+      JSON.stringify(
+        {
+          OPENAI_API_KEY: 'old-key',
+          CUSTOM_FIELD: 'keep-me',
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    )
+
+    const manager = createCodexManager()
+    const mergeProvider = manager.add({
+      name: `${seed}-merge`,
+      baseUrl: 'https://gmn.chuangzuoli.com',
+      apiKey: 'sk-merge',
+    })
+    manager.switch(mergeProvider.id)
+
+    const mergedConfig = TOML.parse(fs.readFileSync(configPath, 'utf-8')) as any
+    const mergedAuth = JSON.parse(fs.readFileSync(authPath, 'utf-8'))
+
+    expect(mergedConfig.custom_field).toBe('keep-me')
+    expect(mergedConfig.model_providers.legacy).toBeDefined()
+    expect(mergedConfig.model_providers.gmn.base_url).toBe('https://gmn.chuangzuoli.com')
+    expect(mergedAuth.CUSTOM_FIELD).toBe('keep-me')
+    expect(mergedAuth.OPENAI_API_KEY).toBe('sk-merge')
+
+    fs.writeFileSync(
+      configPath,
+      TOML.stringify({
+        custom_field: 'remove-me',
+      } as any),
+      'utf-8'
+    )
+    fs.writeFileSync(
+      authPath,
+      JSON.stringify(
+        {
+          OPENAI_API_KEY: 'old-key',
+          CUSTOM_FIELD: 'remove-me',
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    )
+
+    const overwriteProvider = manager.add({
+      name: `${seed}-overwrite`,
+      baseUrl: 'https://gmncodex.com',
+      apiKey: 'sk-overwrite',
+    })
+    manager.switch(overwriteProvider.id, { mode: 'overwrite' })
+
+    const overwrittenConfig = TOML.parse(fs.readFileSync(configPath, 'utf-8')) as any
+    const overwrittenAuth = JSON.parse(fs.readFileSync(authPath, 'utf-8'))
+
+    expect(overwrittenConfig.custom_field).toBeUndefined()
+    expect(overwrittenConfig.model_providers.gmn.base_url).toBe('https://gmncodex.com')
+    expect(overwrittenAuth.CUSTOM_FIELD).toBeUndefined()
+    expect(overwrittenAuth.OPENAI_API_KEY).toBe('sk-overwrite')
+  })
+
+  it('should allow editing the active provider without applying an intermediate write', () => {
+    const configPath = getCodexConfigPath()
+    const authPath = getCodexAuthPath()
+    fs.mkdirSync(path.dirname(configPath), { recursive: true })
+
+    const manager = createCodexManager()
+    const provider = manager.add({
+      name: `active-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      baseUrl: 'https://before.example.com',
+      apiKey: 'sk-before',
+    })
+
+    manager.switch(provider.id, { mode: 'overwrite' })
+
+    fs.writeFileSync(
+      configPath,
+      TOML.stringify({
+        custom_field: 'should-stay-before-overwrite',
+      } as any),
+      'utf-8'
+    )
+    fs.writeFileSync(
+      authPath,
+      JSON.stringify(
+        {
+          OPENAI_API_KEY: 'old-key',
+          CUSTOM_FIELD: 'should-stay-before-overwrite',
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    )
+
+    manager.edit(
+      provider.id,
+      {
+        baseUrl: 'https://after.example.com',
+        apiKey: 'sk-after',
+      },
+      { applyWrite: false }
+    )
+
+    const untouchedConfig = TOML.parse(fs.readFileSync(configPath, 'utf-8')) as any
+    const untouchedAuth = JSON.parse(fs.readFileSync(authPath, 'utf-8'))
+
+    expect(untouchedConfig.custom_field).toBe('should-stay-before-overwrite')
+    expect(untouchedAuth.CUSTOM_FIELD).toBe('should-stay-before-overwrite')
+    expect(untouchedAuth.OPENAI_API_KEY).toBe('old-key')
+
+    manager.switch(provider.id, { mode: 'overwrite' })
+
+    const overwrittenConfig = TOML.parse(fs.readFileSync(configPath, 'utf-8')) as any
+    const overwrittenAuth = JSON.parse(fs.readFileSync(authPath, 'utf-8'))
+
+    expect(overwrittenConfig.custom_field).toBeUndefined()
+    expect(overwrittenConfig.model_providers[provider.name].base_url).toBe(
+      'https://after.example.com'
+    )
+    expect(overwrittenAuth.CUSTOM_FIELD).toBeUndefined()
+    expect(overwrittenAuth.OPENAI_API_KEY).toBe('sk-after')
   })
 })

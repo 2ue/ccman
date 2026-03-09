@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 import type { Provider } from '../tool-manager.js'
+import type { WriteOptions } from '../tool-manager.types.js'
 import { getOpenCodeConfigPath, getOpenCodeDir } from '../paths.js'
 import { ensureDir, fileExists, readJSON, writeJSON } from '../utils/file.js'
 import { replaceVariables, deepMerge } from '../utils/template.js'
@@ -10,6 +11,7 @@ const OPENCODE_SCHEMA = 'https://opencode.ai/config.json'
 const OPENCODE_PROVIDER_KEY = 'openai'
 const OPENCODE_MODEL = 'openai/gpt-5.4'
 const OPENCODE_MODEL_KEY = 'gpt-5.4'
+const OPENCODE_SECONDARY_MODEL_KEY = 'gpt-5.3-codex'
 
 interface OpenCodeProviderOptions {
   baseURL?: string
@@ -60,6 +62,18 @@ function resolveTemplatePath(relativePath: string): string | null {
 const DEFAULT_MODELS: Record<string, unknown> = {
   [OPENCODE_MODEL_KEY]: {
     name: 'GPT-5.4',
+    options: {
+      store: false,
+    },
+    variants: {
+      low: {},
+      medium: {},
+      high: {},
+      xhigh: {},
+    },
+  },
+  [OPENCODE_SECONDARY_MODEL_KEY]: {
+    name: 'GPT-5.3 Codex',
     options: {
       store: false,
     },
@@ -147,9 +161,21 @@ function enforceAgentStoreFalse(agent: unknown): Record<string, unknown> {
 
 function enforceModelStoreFalse(models: unknown): Record<string, unknown> {
   const base = models && typeof models === 'object' && !Array.isArray(models) ? (models as any) : {}
+  const mergedModels = deepMerge<Record<string, unknown>>(DEFAULT_MODELS, base)
 
-  return deepMerge<Record<string, unknown>>(base, {
+  return deepMerge<Record<string, unknown>>(mergedModels, {
     [OPENCODE_MODEL_KEY]: {
+      options: {
+        store: false,
+      },
+      variants: {
+        low: {},
+        medium: {},
+        high: {},
+        xhigh: {},
+      },
+    },
+    [OPENCODE_SECONDARY_MODEL_KEY]: {
       options: {
         store: false,
       },
@@ -172,13 +198,16 @@ function enforceModelStoreFalse(models: unknown): Record<string, unknown> {
  * 3. 强制更新 provider.openai.options.baseURL/apiKey 与隐私相关 store 配置
  * 4. 写入 ~/.config/opencode/opencode.json
  */
-export function writeOpenCodeConfig(provider: Provider): void {
+export function writeOpenCodeConfig(provider: Provider, options: WriteOptions = {}): void {
   ensureDir(getOpenCodeDir())
 
   const configPath = getOpenCodeConfigPath()
-  const existingConfig: OpenCodeConfig = fileExists(configPath)
-    ? readJSON<OpenCodeConfig>(configPath)
-    : {}
+  const existingConfig: OpenCodeConfig =
+    options.mode === 'overwrite'
+      ? {}
+      : fileExists(configPath)
+        ? readJSON<OpenCodeConfig>(configPath)
+        : {}
 
   const meta = parseProviderMeta(provider.model)
 
@@ -190,7 +219,10 @@ export function writeOpenCodeConfig(provider: Provider): void {
   }) as OpenCodeConfig
 
   // 2) 合并用户现有配置（用户优先，保留未管理字段）
-  const mergedConfig = deepMerge<OpenCodeConfig>(defaultConfig, existingConfig)
+  const mergedConfig =
+    options.mode === 'overwrite'
+      ? ({ ...defaultConfig } as OpenCodeConfig)
+      : deepMerge<OpenCodeConfig>(defaultConfig, existingConfig)
 
   // 3) 构建/更新 provider.openai（强制更新认证与端点）
   const templateProvider = defaultConfig.provider?.[OPENCODE_PROVIDER_KEY]
@@ -211,11 +243,13 @@ export function writeOpenCodeConfig(provider: Provider): void {
   })
 
   const existingProviders =
-    mergedConfig.provider &&
-    typeof mergedConfig.provider === 'object' &&
-    !Array.isArray(mergedConfig.provider)
-      ? { ...mergedConfig.provider }
-      : {}
+    options.mode === 'overwrite'
+      ? {}
+      : mergedConfig.provider &&
+          typeof mergedConfig.provider === 'object' &&
+          !Array.isArray(mergedConfig.provider)
+        ? { ...mergedConfig.provider }
+        : {}
 
   const nextConfig: OpenCodeConfig = {
     ...mergedConfig,

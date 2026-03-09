@@ -6,8 +6,8 @@
         "apiKey": "{{apiKey}}"
       },
       "models": {
-        "gpt-5.2-codex": {
-          "name": "GPT-5.2 Codex",
+        "gpt-5.3-codex": {
+          "name": "GPT-5.3 Codex",
           "options": {
             "store": false
           },

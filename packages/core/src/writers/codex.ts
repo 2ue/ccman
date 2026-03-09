@@ -3,8 +3,10 @@ import * as path from 'path'
 import { fileURLToPath } from 'url'
 import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
 import type { Provider } from '../tool-manager.js'
+import type { WriteOptions } from '../tool-manager.types.js'
 import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
-import { ensureDir, writeJSON } from '../utils/file.js'
+import { ensureDir, fileExists, readJSON, writeJSON } from '../utils/file.js'
+import { deepMerge } from '../utils/template.js'
 
 /**
  * Codex config.toml 结构
@@ -84,6 +86,7 @@ interface CodexModelProvider {
  */
 interface CodexAuth {
   OPENAI_API_KEY: string
+  [key: string]: unknown
 }
 
 // ESM 环境下获取当前文件所在目录
@@ -200,6 +203,118 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
   return CODEX_DEFAULT_CONFIG
 }
 
+function removeDeprecatedKeys(config: CodexConfig): void {
+  if (
+    config.features &&
+    typeof config.features === 'object' &&
+    !Array.isArray(config.features) &&
+    'web_search_request' in config.features
+  ) {
+    delete (config.features as Record<string, unknown>).web_search_request
+  }
+  if ('web_search_request' in config) {
+    delete (config as Record<string, unknown>).web_search_request
+  }
+}
+
+function loadExistingCodexConfig(configPath: string): CodexConfig {
+  if (!fileExists(configPath)) {
+    return {}
+  }
+
+  try {
+    const content = fs.readFileSync(configPath, 'utf-8')
+    return parseToml(content) as CodexConfig
+  } catch {
+    return {}
+  }
+}
+
+function buildManagedProvider(provider: Provider, providerKey: string): CodexModelProvider {
+  return {
+    name: providerKey,
+    base_url: provider.baseUrl,
+    wire_api: 'responses',
+    requires_openai_auth: true,
+  }
+}
+
+function writeCodexConfigOverwrite(provider: Provider): void {
+  ensureDir(getCodexDir())
+
+  const configPath = getCodexConfigPath()
+  const templateConfig = loadCodexTemplateConfig()
+  const nextConfig: CodexConfig = { ...(templateConfig as CodexConfig) }
+
+  removeDeprecatedKeys(nextConfig)
+
+  const providerKey = resolveCodexProviderKey(provider)
+  nextConfig.model_provider = providerKey
+  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.4'
+  nextConfig.model_providers = {
+    [providerKey]: buildManagedProvider(provider, providerKey),
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fs.writeFileSync(configPath, stringifyToml(nextConfig as any), { mode: 0o600 })
+
+  const authPath = getCodexAuthPath()
+  const auth: CodexAuth = { OPENAI_API_KEY: provider.apiKey }
+  writeJSON(authPath, auth)
+}
+
+function writeCodexConfigMerge(provider: Provider): void {
+  ensureDir(getCodexDir())
+
+  const configPath = getCodexConfigPath()
+  const existingConfig = loadExistingCodexConfig(configPath)
+  const templateConfig = loadCodexTemplateConfig()
+  const nextConfig = deepMerge<CodexConfig>(templateConfig as CodexConfig, existingConfig)
+  const providerKey = resolveCodexProviderKey(provider)
+
+  removeDeprecatedKeys(nextConfig)
+
+  nextConfig.model_provider = providerKey
+  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.4'
+
+  const existingProviders =
+    nextConfig.model_providers &&
+    typeof nextConfig.model_providers === 'object' &&
+    !Array.isArray(nextConfig.model_providers)
+      ? { ...nextConfig.model_providers }
+      : {}
+  const lowerProviderKey = providerKey.toLowerCase()
+
+  for (const key of Object.keys(existingProviders)) {
+    if (key.toLowerCase() === lowerProviderKey) {
+      delete existingProviders[key]
+    }
+  }
+
+  nextConfig.model_providers = {
+    ...existingProviders,
+    [providerKey]: buildManagedProvider(provider, providerKey),
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fs.writeFileSync(configPath, stringifyToml(nextConfig as any), { mode: 0o600 })
+
+  const authPath = getCodexAuthPath()
+  let existingAuth: CodexAuth = { OPENAI_API_KEY: '' }
+  if (fileExists(authPath)) {
+    try {
+      existingAuth = readJSON<CodexAuth>(authPath)
+    } catch {
+      existingAuth = { OPENAI_API_KEY: '' }
+    }
+  }
+  const nextAuth: CodexAuth = {
+    ...existingAuth,
+    OPENAI_API_KEY: provider.apiKey,
+  }
+  writeJSON(authPath, nextAuth)
+}
+
 /**
  * 写入 Codex 配置（覆盖写入）
  *
@@ -215,50 +330,11 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
  * - TOML 解析器会丢失注释，这是已知限制
  * - 用户如果需要注释，建议放在单独的文档文件中
  */
-export function writeCodexConfig(provider: Provider): void {
-  // 确保目录存在
-  ensureDir(getCodexDir())
-
-  // 1. 处理 config.toml（覆盖写入）
-  const configPath = getCodexConfigPath()
-
-  const templateConfig = loadCodexTemplateConfig()
-  const nextConfig: CodexConfig = { ...(templateConfig as CodexConfig) }
-
-  // 清理已废弃字段
-  if (
-    nextConfig.features &&
-    typeof nextConfig.features === 'object' &&
-    !Array.isArray(nextConfig.features) &&
-    'web_search_request' in nextConfig.features
-  ) {
-    delete (nextConfig.features as Record<string, unknown>).web_search_request
-  }
-  if ('web_search_request' in nextConfig) {
-    delete (nextConfig as Record<string, unknown>).web_search_request
+export function writeCodexConfig(provider: Provider, options: WriteOptions = {}): void {
+  if (options.mode === 'overwrite') {
+    writeCodexConfigOverwrite(provider)
+    return
   }
 
-  // 设置 Provider 相关字段（覆盖模板中的同名字段）
-  const providerKey = resolveCodexProviderKey(provider)
-  nextConfig.model_provider = providerKey
-  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.4'
-
-  // 只保留一个 model provider（与 auth.json 覆盖策略保持一致）
-  nextConfig.model_providers = {
-    [providerKey]: {
-      name: providerKey,
-      base_url: provider.baseUrl,
-      wire_api: 'responses',
-      requires_openai_auth: true,
-    },
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fs.writeFileSync(configPath, stringifyToml(nextConfig as any), { mode: 0o600 })
-
-  // 2. 处理 auth.json（覆盖写入，仅保留 OPENAI_API_KEY）
-  const authPath = getCodexAuthPath()
-
-  const auth: CodexAuth = { OPENAI_API_KEY: provider.apiKey }
-  writeJSON(authPath, auth)
+  writeCodexConfigMerge(provider)
 }

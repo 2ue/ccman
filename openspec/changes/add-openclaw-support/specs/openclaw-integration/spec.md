@@ -14,15 +14,21 @@
 - **WHEN** 用户在 Desktop 中进入 OpenClaw 页面并执行 Provider 操作
 - **THEN** 系统 SHALL 通过与 CLI 等价的核心逻辑完成配置管理并刷新界面状态
 
-### Requirement: OpenClaw 配置文件覆盖写入
-系统 SHALL 在切换 OpenClaw 当前 Provider 时，直接覆盖写入 OpenClaw 目标配置文件，并写入 GMN/OpenAI Responses 所需关键字段。
+### Requirement: OpenClaw 配置文件按入口选择写入模式
+系统 SHALL 按入口语义写入 OpenClaw 目标配置文件：常规管理命令增量写入，快捷配置入口覆盖写入，并写入 GMN/OpenAI Responses 所需关键字段。
 
 #### Scenario: 使用 core 模板生成 OpenClaw 配置
 - **WHEN** 系统执行 OpenClaw 配置写入
 - **THEN** 系统 SHALL 使用 `packages/core/templates/openclaw/openclaw.base.template.json` 与 `packages/core/templates/openclaw/models.base.template.json` 作为模板来源
 
-#### Scenario: 切换 Provider 时覆盖写入目标文件
-- **WHEN** 用户切换到某个 OpenClaw Provider
+#### Scenario: 常规管理切换 Provider 时增量写入目标文件
+- **WHEN** 用户通过 `ccman openclaw`、Desktop、或其他常规管理入口切换到某个 OpenClaw Provider
+- **THEN** 系统 SHALL 增量写入 `~/.openclaw/openclaw.json` 与 `~/.openclaw/agents/main/agent/models.json`
+- **AND** 它 SHALL 尽量保留与当前 Provider 无关的现有配置字段
+- **AND** 写入内容 SHALL 包含 `baseUrl`、`apiKey`、`api=openai-responses`、`authHeader`、`headers`、`models`、`agents.defaults.model.primary`
+
+#### Scenario: 快捷配置入口覆盖写入目标文件
+- **WHEN** 用户通过 `ccman gmn`、`aicoding` 或其他快捷配置入口应用 OpenClaw 配置
 - **THEN** 系统 SHALL 覆盖写入 `~/.openclaw/openclaw.json` 与 `~/.openclaw/agents/main/agent/models.json`
 - **AND** 写入内容 SHALL 包含 `baseUrl`、`apiKey`、`api=openai-responses`、`authHeader`、`headers`、`models`、`agents.defaults.model.primary`
 
@@ -56,10 +62,10 @@
 - **THEN** 系统 SHALL 对 OpenClaw 写入 `baseUrl=https://gmn.chuangzuoli.com/v1`
 - **AND** 其他既有平台 SHALL 继续使用其原有端点策略
 
-#### Scenario: aicoding 保护模式下 OpenClaw 仍覆盖写入
-- **WHEN** 用户在 `aicoding` 保护模式中选择 `openclaw`
+#### Scenario: aicoding 快捷入口选择 OpenClaw 时覆盖写入
+- **WHEN** 用户通过 `aicoding` 选择 `openclaw`
 - **THEN** 系统 SHALL 对 OpenClaw 执行直接覆盖写入
-- **AND** 其他平台 SHALL 保持既有保护/覆盖语义
+- **AND** 该快捷入口 SHALL 遵循全局快捷覆盖策略
 
 ### Requirement: Sync 纳入 OpenClaw 配置
 系统 SHALL 在上传、下载、合并同步流程中纳入 OpenClaw 配置文件，并保持现有工具同步行为不变。

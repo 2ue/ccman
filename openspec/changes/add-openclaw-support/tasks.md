@@ -37,4 +37,4 @@
 - [x] 5.2 补充 README 与关键路径示例（尤其是覆盖写入策略、`/v1` 规则与平台默认值）
 - [ ] 5.3 人工验证：CLI、gmn、aicoding、Desktop、sync、import/export 端到端流程
 - [x] 5.4 文档中统一术语为 `openclaw`（清理 `openclawd` 残留）
-- [ ] 5.5 明确历史 `scripts/setup-gmn*.mjs` 不在本次行为改造范围
+- [x] 5.5 明确历史 `scripts/setup-gmn*.mjs` 与全局快捷覆盖策略的边界关系

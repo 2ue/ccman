@@ -555,10 +555,14 @@ async function runGmnCommand(
       const baseUrl = platformBaseUrls[platform]
       const existing = findPreferredProvider(manager.list(), providerName)
       const provider = existing
-        ? manager.edit(existing.id, { name: providerName, baseUrl, apiKey: resolvedApiKey })
+        ? manager.edit(
+            existing.id,
+            { name: providerName, baseUrl, apiKey: resolvedApiKey },
+            { applyWrite: false }
+          )
         : manager.add({ name: providerName, baseUrl, apiKey: resolvedApiKey })
 
-      manager.switch(provider.id)
+      manager.switch(provider.id, { mode: 'overwrite' })
       completed += 1
       console.log(chalk.green(`✅ ${name}`))
       successBackups.push({

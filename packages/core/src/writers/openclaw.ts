@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 import type { Provider } from '../tool-manager.js'
+import type { WriteOptions } from '../tool-manager.types.js'
 import { getOpenClawConfigPath, getOpenClawDir, getOpenClawModelsPath } from '../paths.js'
 import { ensureDir, fileExists, readJSON, writeJSON } from '../utils/file.js'
 import { deepMerge, replaceVariables } from '../utils/template.js'
@@ -16,6 +17,7 @@ interface OpenClawConfigFile {
   agents?: {
     defaults?: {
       workspace?: string
+      imageModel?: string
       model?: {
         primary?: string
         [key: string]: unknown
@@ -29,6 +31,9 @@ interface OpenClawConfigFile {
 
 const DEFAULT_PROVIDER_NAME = 'gmn'
 const PRIMARY_MODEL_ID = 'gpt-5.4'
+const SECONDARY_MODEL_ID = 'gpt-5.3-codex'
+const PRIMARY_MODEL_INPUTS = ['text', 'image']
+const SECONDARY_MODEL_INPUTS = ['text', 'image']
 
 // ESM 环境下获取当前文件所在目录
 const __filename = fileURLToPath(import.meta.url)
@@ -69,21 +74,21 @@ const OPENCLAW_CONFIG_TEMPLATE: OpenClawConfigFile = {
             id: 'gpt-5.4',
             name: 'gpt-5.4',
             api: 'openai-responses',
-            reasoning: false,
-            input: ['text'],
+            reasoning: true,
+            input: PRIMARY_MODEL_INPUTS,
             cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-            contextWindow: 200000,
-            maxTokens: 8192,
+            contextWindow: 1050000,
+            maxTokens: 128000,
           },
           {
-            id: 'gpt-5.2-codex',
-            name: 'gpt-5.2-codex',
+            id: SECONDARY_MODEL_ID,
+            name: SECONDARY_MODEL_ID,
             api: 'openai-responses',
             reasoning: false,
-            input: ['text'],
+            input: SECONDARY_MODEL_INPUTS,
             cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-            contextWindow: 200000,
-            maxTokens: 8192,
+            contextWindow: 400000,
+            maxTokens: 128000,
           },
         ],
       },
@@ -92,6 +97,7 @@ const OPENCLAW_CONFIG_TEMPLATE: OpenClawConfigFile = {
   agents: {
     defaults: {
       workspace: '',
+      imageModel: '{{providerName}}/gpt-5.4',
       model: {
         primary: '{{providerName}}/gpt-5.4',
       },
@@ -116,21 +122,21 @@ const OPENCLAW_MODELS_TEMPLATE: OpenClawModelsFile = {
           id: 'gpt-5.4',
           name: 'gpt-5.4',
           api: 'openai-responses',
-          reasoning: false,
-          input: ['text'],
+          reasoning: true,
+          input: PRIMARY_MODEL_INPUTS,
           cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-          contextWindow: 200000,
-          maxTokens: 8192,
+          contextWindow: 1050000,
+          maxTokens: 128000,
         },
         {
-          id: 'gpt-5.2-codex',
-          name: 'gpt-5.2-codex',
+          id: SECONDARY_MODEL_ID,
+          name: SECONDARY_MODEL_ID,
           api: 'openai-responses',
           reasoning: false,
-          input: ['text'],
+          input: SECONDARY_MODEL_INPUTS,
           cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-          contextWindow: 200000,
-          maxTokens: 8192,
+          contextWindow: 400000,
+          maxTokens: 128000,
         },
       ],
     },
@@ -232,7 +238,7 @@ function replaceProviderEntry(
  * 3. providers 中当前服务商（含大小写变体）整段替换，其他 provider 保留
  * 3. 路径基于 HOME_DIR（通过 paths.ts 统一管理）
  */
-export function writeOpenClawConfig(provider: Provider): void {
+export function writeOpenClawConfig(provider: Provider, options: WriteOptions = {}): void {
   const configPath = getOpenClawConfigPath()
   const modelsPath = getOpenClawModelsPath()
   const homeDir = path.dirname(getOpenClawDir())
@@ -258,6 +264,30 @@ export function writeOpenClawConfig(provider: Provider): void {
 
   const nextOpenClawConfig = replaceVariables(rawConfigTemplate, variables) as OpenClawConfigFile
   const nextModelsConfig = replaceVariables(rawModelsTemplate, variables) as OpenClawModelsFile
+
+  if (options.mode === 'overwrite') {
+    const overwriteConfig: OpenClawConfigFile = {
+      ...nextOpenClawConfig,
+      agents: {
+        ...nextOpenClawConfig.agents,
+        defaults: {
+          ...(nextOpenClawConfig.agents?.defaults || {}),
+          workspace: homeDir,
+          imageModel: nextOpenClawConfig.agents?.defaults?.imageModel || `${providerName}/gpt-5.4`,
+          model: {
+            ...(nextOpenClawConfig.agents?.defaults?.model || {}),
+            primary:
+              nextOpenClawConfig.agents?.defaults?.model?.primary || `${providerName}/gpt-5.4`,
+          },
+        },
+      },
+    }
+
+    writeJSON(configPath, overwriteConfig)
+    writeJSON(modelsPath, nextModelsConfig)
+    return
+  }
+
   const existingOpenClawConfig = loadExistingJSON<OpenClawConfigFile>(configPath) || {}
   const existingModelsConfig = loadExistingJSON<OpenClawModelsFile>(modelsPath) || {}
 
@@ -286,6 +316,8 @@ export function writeOpenClawConfig(provider: Provider): void {
   const mergedModel = mergedDefaults.model || {}
   const templatePrimary =
     nextOpenClawConfig.agents?.defaults?.model?.primary || `${providerName}/gpt-5.4`
+  const templateImageModel =
+    nextOpenClawConfig.agents?.defaults?.imageModel || `${providerName}/gpt-5.4`
   const workspace =
     typeof mergedDefaults.workspace === 'string' && mergedDefaults.workspace.trim()
       ? mergedDefaults.workspace
@@ -299,6 +331,7 @@ export function writeOpenClawConfig(provider: Provider): void {
       defaults: {
         ...mergedDefaults,
         workspace,
+        imageModel: templateImageModel,
         model: {
           ...mergedModel,
           primary: templatePrimary,

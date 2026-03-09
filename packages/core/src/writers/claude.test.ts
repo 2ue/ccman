@@ -10,7 +10,10 @@ import * as fs from 'fs'
 describe('Claude Writer', () => {
   beforeEach(() => {
     // 设置测试环境路径（使用随机数避免并发冲突）
-    const testDir = path.join(os.tmpdir(), `ccman-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    const testDir = path.join(
+      os.tmpdir(),
+      `ccman-test-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    )
     __setTestPaths({
       ccman: path.join(testDir, '.ccman'),
       codex: path.join(testDir, '.codex'),
@@ -84,6 +87,45 @@ describe('Claude Writer', () => {
       expect(config.env.CUSTOM_ENV_VAR).toBe('should-be-preserved')
       expect(config.permissions).toEqual({ allow: ['*'], deny: [] })
       expect(config.customField).toBe('should-be-preserved')
+    })
+
+    it('should overwrite unrelated fields in overwrite mode', () => {
+      const claudePath = getClaudeConfigPath()
+      fs.mkdirSync(path.dirname(claudePath), { recursive: true })
+      fs.writeFileSync(
+        claudePath,
+        JSON.stringify(
+          {
+            env: {
+              ANTHROPIC_AUTH_TOKEN: 'old-key',
+              ANTHROPIC_BASE_URL: 'https://old.anthropic.com',
+              CUSTOM_ENV_VAR: 'should-be-removed',
+            },
+            customField: 'should-be-removed',
+          },
+          null,
+          2
+        ),
+        'utf-8'
+      )
+
+      const provider: Provider = {
+        id: 'test-id',
+        name: 'Test',
+        baseUrl: 'https://new.anthropic.com',
+        apiKey: 'new-key',
+        createdAt: Date.now(),
+      }
+
+      writeClaudeConfig(provider, { mode: 'overwrite' })
+
+      const content = fs.readFileSync(claudePath, 'utf-8')
+      const config = JSON.parse(content)
+
+      expect(config.env.ANTHROPIC_AUTH_TOKEN).toBe('new-key')
+      expect(config.env.ANTHROPIC_BASE_URL).toBe('https://new.anthropic.com')
+      expect(config.env.CUSTOM_ENV_VAR).toBeUndefined()
+      expect(config.customField).toBeUndefined()
     })
 
     it('should handle baseUrl without trailing slash', () => {

@@ -3,6 +3,7 @@
  * GMN 快速配置脚本（基于 ccman）
  *
  * 功能：将 GMN 服务商配置到所有 AI 编程工具
+ * 策略：快捷配置入口，最终按覆盖写入应用到目标工具配置
  *
  * 用法：
  *   node scripts/setup-gmn.mjs              # 交互式输入
@@ -59,10 +60,10 @@ async function main() {
       const existing = manager.findByName(PROVIDER_NAME)
 
       const provider = existing
-        ? manager.edit(existing.id, { baseUrl, apiKey })
+        ? manager.edit(existing.id, { baseUrl, apiKey }, { applyWrite: false })
         : manager.add({ name: PROVIDER_NAME, baseUrl, apiKey })
 
-      manager.switch(provider.id)
+      manager.switch(provider.id, { mode: 'overwrite' })
       console.log(`✅ ${name}`)
     } catch (error) {
       console.error(`❌ ${name}: ${error.message}`)

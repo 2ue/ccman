@@ -5,14 +5,14 @@
  * 功能：直接修改 Claude Code、Codex、Gemini CLI、OpenCode 的配置文件
  *
  * 用法：
- *   node scripts/setup-gmn-standalone.mjs                    # 交互式输入（保护模式）
- *   node scripts/setup-gmn-standalone.mjs sk-ant-xxx         # 直接传入 API Key（保护模式）
- *   node scripts/setup-gmn-standalone.mjs --overwrite        # 全覆盖模式（交互式）
- *   node scripts/setup-gmn-standalone.mjs sk-ant-xxx --overwrite  # 全覆盖模式（直接传入）
+ *   node scripts/setup-gmn-standalone.mjs                    # 交互式输入（快捷覆盖模式）
+ *   node scripts/setup-gmn-standalone.mjs sk-ant-xxx         # 直接传入 API Key（快捷覆盖模式）
+ *   node scripts/setup-gmn-standalone.mjs --overwrite        # 兼容旧参数（行为不变）
+ *   node scripts/setup-gmn-standalone.mjs sk-ant-xxx --overwrite  # 兼容旧参数（行为不变）
  *
- * 模式说明：
- *   - 保护模式（默认）：尽量保留现有配置；认证字段强制更新（Codex 的 config.toml/auth.json 会先备份再覆盖写入）
- *   - 全覆盖模式：使用默认配置覆盖所有字段（认证字段除外）
+ * 策略说明：
+ *   - 快捷配置入口统一采用覆盖写入：直接落下托管配置
+ *   - 写入前会备份已有目标文件
  *
  * 依赖：零依赖，只使用 Node.js 内置 API
  */
@@ -31,8 +31,8 @@ const GMN_BASE_URLS = {
 }
 const HOME_DIR = os.homedir()
 
-// 全局配置：写入模式
-let OVERWRITE_MODE = false
+// 快捷配置入口统一使用覆盖写入
+let OVERWRITE_MODE = true
 
 // ============================================================================
 // 工具函数
@@ -349,19 +349,8 @@ async function main() {
     throw new Error('API Key 不能为空')
   }
 
-  // 3. 显示模式信息
-  if (OVERWRITE_MODE) {
-    console.log('⚠️  全覆盖模式：将使用默认配置覆盖所有字段（认证字段除外）')
-    const rl = createInterface({ input: stdin, output: stdout })
-    const confirm = await rl.question('确认继续？(y/N): ')
-    rl.close()
-    if (confirm.toLowerCase() !== 'y') {
-      console.log('已取消')
-      return
-    }
-  } else {
-    console.log('✅ 保护模式：尽量保留现有配置；认证字段强制更新（Codex 会先备份再覆盖写入）')
-  }
+  // 3. 显示快捷写入信息
+  console.log('⚠️  快捷覆盖模式：将直接覆盖托管配置，并在写入前备份已有目标文件')
 
   console.log('\n开始配置...\n')
 

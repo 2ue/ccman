@@ -48,6 +48,16 @@ export interface ToolConfig {
   presets?: InternalPresetTemplate[]
 }
 
+export type WriteMode = 'merge' | 'overwrite'
+
+export interface WriteOptions {
+  mode?: WriteMode
+}
+
+export interface EditOptions {
+  applyWrite?: boolean
+}
+
 /**
  * 工具管理器接口
  */
@@ -61,11 +71,11 @@ export interface ToolManager {
   /** 根据 name 查找 provider */
   findByName(name: string): Provider | undefined
   /** 切换当前 provider */
-  switch(id: string): void
+  switch(id: string, options?: WriteOptions): void
   /** 获取当前 provider */
   getCurrent(): Provider | null
   /** 编辑 provider */
-  edit(id: string, updates: EditProviderInput): Provider
+  edit(id: string, updates: EditProviderInput, options?: EditOptions): Provider
   /** 删除 provider */
   remove(id: string): void
   /** 克隆 provider */

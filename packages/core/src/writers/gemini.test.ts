@@ -168,4 +168,47 @@ describe('Gemini Writer', () => {
     expect(nextEnv).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
     expect(nextEnv).toContain('GEMINI_API_KEY=sk-new')
   })
+
+  it('should overwrite settings and env in overwrite mode', () => {
+    const settingsPath = getGeminiSettingsPath()
+    const envPath = getGeminiEnvPath()
+    fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+    fs.writeFileSync(
+      settingsPath,
+      JSON.stringify(
+        {
+          someField: 'remove-me',
+          ide: { enabled: false },
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    )
+    fs.writeFileSync(
+      envPath,
+      ['CUSTOM_ENV=remove-me', 'GEMINI_MODEL=legacy-model'].join('\n') + '\n'
+    )
+
+    const provider: Provider = {
+      id: 'gemini-overwrite',
+      name: 'GMN',
+      baseUrl: 'https://gmn.chuangzuoli.com',
+      apiKey: 'sk-overwrite',
+      createdAt: Date.now(),
+      lastModified: Date.now(),
+    }
+
+    writeGeminiConfig(provider, { mode: 'overwrite' })
+
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
+    expect(settings.someField).toBeUndefined()
+    expect(settings.ide.enabled).toBe(true)
+
+    const envContent = fs.readFileSync(envPath, 'utf-8')
+    expect(envContent).not.toContain('CUSTOM_ENV=remove-me')
+    expect(envContent).not.toContain('GEMINI_MODEL=legacy-model')
+    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
+    expect(envContent).toContain('GEMINI_API_KEY=sk-overwrite')
+  })
 })

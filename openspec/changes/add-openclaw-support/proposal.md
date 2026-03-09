@@ -23,21 +23,22 @@
 3. 在 `packages/core/templates/openclaw/` 新增基础模板文件：
 - `openclaw.base.template.json`
 - `models.base.template.json`
-4. OpenClaw 写入策略采用“直接覆盖写入”（不做深度合并）。
+4. OpenClaw 写入策略与全局入口语义保持一致：常规管理命令增量写入，快捷配置入口覆盖写入。
 5. CLI 增加 `ccman openclaw` 命令入口（可包含短别名），并在 `ccman` 无参交互主菜单中新增 OpenClaw 选项。
 6. `ccman gmn` 与 `aicoding` 增加 `openclaw` 平台选项，但默认平台保持现状（不默认选中 `openclaw`）。
 7. Desktop 新增 OpenClaw 管理入口（Provider CRUD、切换、预置、配置查看/编辑）。
 8. Sync / Export / Import 增加 OpenClaw 配置文件管理，保持对旧数据和旧流程兼容。
 9. 明确 OpenClaw 的 GMN 端点策略：`openclaw` 使用 `https://gmn.chuangzuoli.com/v1`，不改变其他平台现有端点策略。
-10. 明确 `aicoding` 与 OpenClaw 的优先级规则：即使处于保护模式，OpenClaw 仍按“直接覆盖”策略写入。
+10. 明确快捷配置入口中的 OpenClaw 写入规则：`ccman gmn` / `aicoding` 等快捷入口对 OpenClaw 使用覆盖写入，常规管理入口使用增量写入。
 11. 对 Sync 的核心集合与 CLI 状态/上传展示文案做一致性收敛（展示集合与实际同步集合一致）。
 12. 导入导出校验语义调整为“支持集合中至少一个文件存在即可执行；缺失文件跳过”，保持旧包兼容。
-13. 明确本次不改造历史 `scripts/setup-gmn*.mjs` 行为，仅保证 `ccman gmn` 与 `aicoding` 两条主链路一致。
+13. 明确历史 `scripts/setup-gmn*.mjs` 不承担 OpenClaw 接入，但其快捷写入语义遵循全局“快捷入口覆盖写入”策略。
 
 ## 兼容性与风险控制
 - 现有命令与现有工具配置行为保持不变（Codex/Claude/Gemini/OpenCode/MCP 不回归）。
 - 新能力以“增量接入”为主：新增 OpenClaw 路径、常量、manager、writer，不重构现有核心流程。
 - OpenClaw 写入优先从 `packages/core/templates/openclaw/` 读取模板，并提供内置回退模板，适配打包场景。
+- OpenClaw 的常规管理与快捷配置都复用同一 writer，仅由入口选择 `merge/overwrite` 模式。
 - 对同步与导入导出采用“文件存在即处理，不存在跳过”的兼容策略，避免旧用户报错。
 - 路径解析统一走现有 `paths` 机制（生产环境 `os.homedir()`，开发/测试环境复用当前规则），确保跨机器一致性。
 - `aicoding` 中仅对 OpenClaw 采用“覆盖优先”，Codex/OpenCode 继续遵循既有保护/覆盖模式语义。

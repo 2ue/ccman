@@ -2,7 +2,11 @@
  * ccman Core Module
  * Business logic for managing Codex/Claude/Gemini/OpenCode/OpenClaw providers
  */
-import pkg from '../package.json' assert { type: 'json' }
+import { readFileSync } from 'node:fs'
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8')) as {
+  version: string
+}
 
 /** Core version */
 export const VERSION = pkg.version as string
@@ -29,6 +33,8 @@ export {
   createOpenClawManager,
   type ToolManager,
   type Provider,
+  type WriteOptions,
+  type EditOptions,
   type AddProviderInput,
   type EditProviderInput,
   type PresetTemplate,

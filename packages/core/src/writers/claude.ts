@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 import type { Provider } from '../tool-manager.js'
+import type { WriteOptions } from '../tool-manager.types.js'
 import { getClaudeConfigPath, getClaudeDir } from '../paths.js'
 import { ensureDir, fileExists } from '../utils/file.js'
 import { replaceVariables, deepMerge } from '../utils/template.js'
@@ -102,18 +103,11 @@ function loadClaudeTemplateConfig(): ClaudeSettings {
  * - 新增/删除字段会自动处理
  * - 用户的自定义配置始终保留
  */
-export function writeClaudeConfig(provider: Provider): void {
+export function writeClaudeConfig(provider: Provider, options: WriteOptions = {}): void {
   // 确保目录存在
   ensureDir(getClaudeDir())
 
   const configPath = getClaudeConfigPath()
-
-  // 1. 读取用户现有配置
-  let userConfig: ClaudeSettings = {}
-  if (fileExists(configPath)) {
-    const content = fs.readFileSync(configPath, 'utf-8')
-    userConfig = JSON.parse(content) as ClaudeSettings
-  }
 
   // 2. 替换模板变量，生成默认配置
   const defaultTemplate = loadClaudeTemplateConfig()
@@ -121,6 +115,18 @@ export function writeClaudeConfig(provider: Provider): void {
     apiKey: provider.apiKey,
     baseUrl: provider.baseUrl,
   }) as ClaudeSettings
+
+  if (options.mode === 'overwrite') {
+    fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2), { mode: 0o600 })
+    return
+  }
+
+  // 1. 读取用户现有配置
+  let userConfig: ClaudeSettings = {}
+  if (fileExists(configPath)) {
+    const content = fs.readFileSync(configPath, 'utf-8')
+    userConfig = JSON.parse(content) as ClaudeSettings
+  }
 
   // 3. 深度合并：默认配置为基础，用户配置覆盖
   const mergedConfig = deepMerge<ClaudeSettings>(defaultConfig, userConfig)

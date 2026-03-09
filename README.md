@@ -1098,8 +1098,8 @@ packages/
 
 ## 🛡️ 写入策略说明
 
-- **Claude/Gemini/OpenCode**：尽量保留用户已有字段，仅覆盖认证相关必要字段
-- **Codex**：写入 `config.toml` 与 `auth.json`（两者都会先备份为 `.bak`，再覆盖写入；`auth.json` 仅保留 `OPENAI_API_KEY`，`config.toml` 仅保留一个 `model_providers`）
+- **常规管理命令**（如 `ccman cx` / `ccman cc` / `ccman gm` / `ccman oc` / `ccman openclaw`）：默认采用增量更新，尽量保留用户已有字段
+- **快捷配置命令**（如 `ccman gmn` / `ccman gmn1` / `ccman gmncode`）：对所涉及工具执行覆盖式写入，确保快速落下已知可用配置
 - **Gemini** 会写入 `settings.json` 与 `.env`
 - **OpenCode** 会写入 `~/.config/opencode/opencode.json`
 
