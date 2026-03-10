@@ -11,18 +11,18 @@ export interface GmnProfile {
 export const GMN_PROFILE: GmnProfile = {
   commandName: 'gmn',
   title: 'GMN',
-  endpointGroupLabel: '创作里域名线路',
-  endpointGroupDescription: '仅包含 chuangzuoli 域名下的 2 条地址',
+  endpointGroupLabel: 'GMN 域名线路',
+  endpointGroupDescription: '仅包含主域名和 CDN 的 2 条地址',
   baseUrls: [
     {
-      label: '创作里主站',
+      label: 'GMN 主站',
       url: 'https://gmn.chuangzuoli.com',
-      description: 'chuangzuoli 主域名入口',
+      description: 'GMN 主域名入口',
     },
     {
-      label: '创作里 CDN',
-      url: 'https://cdn.gmnchuangzuoli.com',
-      description: 'chuangzuoli 域名 CDN 加速入口',
+      label: 'GMN CDN',
+      url: 'https://cdn-gmn.chuangzuoli.com',
+      description: 'GMN CDN 加速入口',
     },
   ],
 }

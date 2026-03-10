@@ -11,7 +11,7 @@ import {
 test('GMN should only include chuangzuoli domain endpoints', () => {
   assert.deepEqual(
     GMN_PROFILE.baseUrls.map((item) => item.url),
-    ['https://gmn.chuangzuoli.com', 'https://cdn.gmnchuangzuoli.com']
+    ['https://gmn.chuangzuoli.com', 'https://cdn-gmn.chuangzuoli.com']
   )
   assert.ok(GMN_PROFILE.baseUrls.every((item) => item.url.includes('chuangzuoli.com')))
 })
@@ -36,13 +36,13 @@ test('endpoint choice label should use a compact numbered format', () => {
   assert.equal(
     formatEndpointChoiceLabel(
       {
-        label: '创作里主站',
+        label: 'GMN 主站',
         url: 'https://gmn.chuangzuoli.com',
         latencyMs: 42,
       },
       0
     ),
-    '1. 创作里主站 | gmn.chuangzuoli.com | 42 ms'
+    '1. GMN 主站 | gmn.chuangzuoli.com | 42 ms'
   )
 
   assert.equal(

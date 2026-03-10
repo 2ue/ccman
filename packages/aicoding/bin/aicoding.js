@@ -32,8 +32,8 @@ const GMN_ENDPOINTS = [
     description: 'GMN 原始入口',
   },
   {
-    label: '旧域名 CDN',
-    url: 'https://cdn.gmnchuangzuoli.com',
+    label: 'GMN CDN',
+    url: 'https://cdn-gmn.chuangzuoli.com',
     description: 'CDN 回国加速',
   },
   {
