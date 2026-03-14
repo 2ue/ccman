@@ -1,3 +1,15 @@
+## [3.3.20](https://github.com/2ue/ccman/compare/v3.3.19...v3.3.20) (2026-03-14)
+
+### 🐛 问题修复
+
+* **core:** remove codex context window defaults (308e7b03478c8c6e976d703cf5dfa21d486053c1)
+### 🔧 其他变更
+
+* release v3.3.20 (e27ae1efb3ce2a7b17c3e04058eb242ab4f1f4d0)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.19 [skip ci] (ee44bfb9d9b40dbbb7e240bdbaa5c910e62d8f56)
+
 ## [3.3.19](https://github.com/2ue/ccman/compare/v3.3.18...v3.3.19) (2026-03-09)
 
 ### 🔧 其他变更
