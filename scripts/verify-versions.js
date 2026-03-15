@@ -16,28 +16,46 @@ const path = require('path')
 
 const rootDir = path.resolve(__dirname, '..')
 
-// 需要检查的 package.json 路径
-const packagePaths = [
-  path.join(rootDir, 'package.json'),
-  path.join(rootDir, 'packages', 'core', 'package.json'),
-  path.join(rootDir, 'packages', 'cli', 'package.json'),
-  path.join(rootDir, 'packages', 'desktop', 'package.json'),
+const versionSourcePath = path.join(rootDir, 'packages', 'core', 'src', 'version.ts')
+
+// 需要检查的版本来源
+const versionTargets = [
+  { path: path.join(rootDir, 'package.json'), type: 'package-json' },
+  { path: path.join(rootDir, 'packages', 'core', 'package.json'), type: 'package-json' },
+  { path: path.join(rootDir, 'packages', 'cli', 'package.json'), type: 'package-json' },
+  { path: path.join(rootDir, 'packages', 'desktop', 'package.json'), type: 'package-json' },
+  { path: path.join(rootDir, 'packages', 'aicoding', 'package.json'), type: 'package-json' },
+  { path: versionSourcePath, type: 'version-source' },
 ]
 
 console.log('🔍 验证版本号一致性...\n')
 
-// 读取所有 package.json
-const packages = packagePaths.map((pkgPath) => {
+// 读取所有版本来源
+const packages = versionTargets.map((target) => {
   try {
-    const content = fs.readFileSync(pkgPath, 'utf-8')
-    const pkg = JSON.parse(content)
+    const content = fs.readFileSync(target.path, 'utf-8')
+
+    if (target.type === 'package-json') {
+      const pkg = JSON.parse(content)
+      return {
+        path: path.relative(rootDir, target.path),
+        name: pkg.name,
+        version: pkg.version,
+      }
+    }
+
+    const match = content.match(/export const VERSION = '([^']+)'/)
+    if (!match) {
+      throw new Error('无法从 version.ts 中解析 VERSION')
+    }
+
     return {
-      path: path.relative(rootDir, pkgPath),
-      name: pkg.name,
-      version: pkg.version,
+      path: path.relative(rootDir, target.path),
+      name: 'core-source-version',
+      version: match[1],
     }
   } catch (error) {
-    console.error(`❌ 读取失败: ${pkgPath}`)
+    console.error(`❌ 读取失败: ${target.path}`)
     console.error(`   ${error.message}`)
     process.exit(1)
   }
