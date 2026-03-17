@@ -1,3 +1,9 @@
+## [3.3.22](https://github.com/2ue/ccman/compare/v3.3.21...v3.3.22) (2026-03-17)
+
+### 📝 文档更新
+
+* **changelog:** update for v3.3.21 [skip ci] (c6bb7e04f6ad2149603eac4ebf1da7027b824197)
+
 ## [3.3.21](https://github.com/2ue/ccman/compare/v3.3.20...v3.3.21) (2026-03-17)
 
 ### 🐛 问题修复
