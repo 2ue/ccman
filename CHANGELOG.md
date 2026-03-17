@@ -1,3 +1,15 @@
+## [3.3.21](https://github.com/2ue/ccman/compare/v3.3.20...v3.3.21) (2026-03-17)
+
+### 🐛 问题修复
+
+* **ci:** migrate npm publish to OIDC trusted publishing (8f62d50393320d0225f7486f7ff7a979842eb585)* **desktop:** resolve package.json loading error in Electron (099c54311c0b5a17eb43521f80f5c1420614fa86)
+### 🔧 其他变更
+
+* release v3.3.21 (b7814351c075ae02ae8eedf039cf47697a8ca482)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.20 [skip ci] (33d0349f28f8a94487a58dd006281d34d579b5bd)
+
 ## [3.3.20](https://github.com/2ue/ccman/compare/v3.3.19...v3.3.20) (2026-03-14)
 
 ### 🐛 问题修复
