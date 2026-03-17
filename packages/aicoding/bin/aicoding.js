@@ -53,7 +53,7 @@ const GMN_ENDPOINTS = [
   },
   {
     label: '全球边缘 B',
-    url: 'https://gmn.codex.com',
+    url: 'https://gmncode.com',
     description: '全球边缘节点加速',
   },
   {

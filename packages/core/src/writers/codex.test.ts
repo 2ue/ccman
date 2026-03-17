@@ -90,7 +90,7 @@ describe('Codex Writer', () => {
         id: 'test-id',
         name: '自定义 GMN',
         type: 'codex',
-        baseUrl: 'https://cdn.gmncode.com',
+        baseUrl: 'https://gmncode.com',
         apiKey: 'test-api-key-123',
         createdAt: Date.now(),
       }
@@ -103,6 +103,26 @@ describe('Codex Writer', () => {
       expect(config.model_provider).toBe('gmn')
       expect(config.model_providers.gmn.base_url).toBe(provider.baseUrl)
       expect(config.model_providers['自定义 GMN']).toBeUndefined()
+    })
+
+    it('should keep treating CDN GMN domains as gmn provider key', () => {
+      const provider: Provider = {
+        id: 'test-id-cdn',
+        name: '自定义 GMN CDN',
+        type: 'codex',
+        baseUrl: 'https://cdn.gmncode.com',
+        apiKey: 'test-api-key-123',
+        createdAt: Date.now(),
+      }
+
+      writeCodexConfig(provider)
+
+      const configContent = fs.readFileSync(getCodexConfigPath(), 'utf-8')
+      const config: any = TOML.parse(configContent)
+
+      expect(config.model_provider).toBe('gmn')
+      expect(config.model_providers.gmn.base_url).toBe(provider.baseUrl)
+      expect(config.model_providers['自定义 GMN CDN']).toBeUndefined()
     })
 
     it('should remove deprecated web_search_request while preserving unrelated fields in merge mode', () => {

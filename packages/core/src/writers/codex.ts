@@ -174,6 +174,8 @@ const GMN_PROVIDER_HOSTS = [
   'gmncodex.com',
   'gmncode.cn',
   'cdn.gmncode.cn',
+  'gmncode.com',
+  // Keep the historical typo for compatibility with previously written configs.
   'gmn.codex.com',
   'cdn.gmncode.com',
 ]

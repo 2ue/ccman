@@ -23,7 +23,7 @@ test('GMN1 should include only non-chuangzuoli endpoints', () => {
       'https://gmncodex.com',
       'https://gmncode.cn',
       'https://cdn.gmncode.cn',
-      'https://gmn.codex.com',
+      'https://gmncode.com',
       'https://cdn.gmncode.com',
     ]
   )
