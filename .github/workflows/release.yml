@@ -192,13 +192,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19.6'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 9.15.9
+      - name: Ensure npm >= 11.5.1 for OIDC trusted publishing
+        run: npm install -g npm@latest
 
       - name: Download CLI build artifacts
         uses: actions/download-artifact@v4
@@ -223,7 +221,7 @@ jobs:
           cd packages/cli
           # 备份原始 package.json
           cp package.json package.json.bak
-          # 修改包名为 ccman，删除 @ccman/core 依赖（源码已编译到 dist）
+          # 修改包名为 ccman，删除 @ccman/core 和 workspace 依赖（源码已编译到 dist）
           node -e "
             const pkg = require('./package.json');
             pkg.name = 'ccman';
@@ -231,27 +229,23 @@ jobs:
             require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           "
 
-      - name: Publish ccman CLI
+      - name: Publish ccman CLI (OIDC trusted publishing)
         run: |
           cd packages/cli
           if npm view ccman@${{ steps.version.outputs.VERSION }} version >/dev/null 2>&1; then
             echo "ccman@${{ steps.version.outputs.VERSION }} already published, skip"
           else
-            pnpm publish --access public --no-git-checks
+            npm publish --access public --provenance
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish aicoding
+      - name: Publish aicoding (OIDC trusted publishing)
         run: |
           cd packages/aicoding
           if npm view @2ue/aicoding@${{ steps.version.outputs.VERSION }} version >/dev/null 2>&1; then
             echo "@2ue/aicoding@${{ steps.version.outputs.VERSION }} already published, skip"
           else
-            pnpm publish --access public --no-git-checks
+            npm publish --access public --provenance
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Restore original package.json
         if: always()
