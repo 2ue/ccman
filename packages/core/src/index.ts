@@ -2,18 +2,10 @@
  * ccman Core Module
  * Business logic for managing Codex/Claude/Gemini/OpenCode/OpenClaw providers
  */
-import { readFileSync } from 'node:fs'
-import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8')) as {
-  version: string
-}
+import { loadVersion } from './version.js'
 
 /** Core version */
-export const VERSION = pkg.version as string
+export const VERSION = loadVersion()
 
 // Constants (全局常量和配置)
 export {
