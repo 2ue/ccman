@@ -1,3 +1,15 @@
+## [3.3.23](https://github.com/2ue/ccman/compare/v3.3.22...v3.3.23) (2026-03-18)
+
+### 🔧 其他变更
+
+* **release:** 3.3.23 (5555e142ffe06ba3b52d874a735de203eea62757)
+### 🐛 问题修复
+
+* **core:** resolve runtime version lookup (931728bdf6d65c1b809a22828f3af59ba85a27e8)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.22 [skip ci] (ccb9b42c8674b5e21ce394d0cf465ec895a0512a)
+
 ## [3.3.22](https://github.com/2ue/ccman/compare/v3.3.21...v3.3.22) (2026-03-17)
 
 ### 📝 文档更新
