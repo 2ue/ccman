@@ -23,6 +23,7 @@ import {
   type ToolManager,
 } from '@ccman/core'
 import { formatProviderTable } from './utils/format.js'
+import { promptConfirm } from './utils/confirm.js'
 
 // CLI 专用配置（emoji 和命令缩写）
 const CLI_TOOL_CONFIG = {
@@ -421,14 +422,7 @@ async function handleAdd(tool: CliToolType): Promise<void> {
   console.log()
 
   // 询问是否切换
-  const { switchNow } = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'switchNow',
-      message: '是否立即切换到此服务商?',
-      default: true,
-    },
-  ])
+  const switchNow = await promptConfirm('是否立即切换到此服务商?', true)
 
   if (switchNow) {
     manager.switch(provider.id)
@@ -647,14 +641,7 @@ async function handleRemove(tool: CliToolType): Promise<void> {
 
   const provider = providers.find((p) => p.id === providerId)!
 
-  const { confirm } = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'confirm',
-      message: `确定要删除 "${provider.name}" 吗?`,
-      default: false,
-    },
-  ])
+  const confirm = await promptConfirm(`确定要删除 "${provider.name}" 吗?`, false)
 
   if (confirm) {
     manager.remove(providerId)

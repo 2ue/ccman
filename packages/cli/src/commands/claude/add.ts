@@ -7,6 +7,7 @@ import {
   getClaudeConfigPath,
 } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
+import { promptConfirm } from '../../utils/confirm.js'
 
 export function addCommand(program: Command): void {
   program
@@ -119,14 +120,7 @@ export function addCommand(program: Command): void {
         console.log()
 
         // 询问是否立即切换
-        const { switchNow } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'switchNow',
-            message: '是否立即切换到此服务商?',
-            default: true,
-          },
-        ])
+        const switchNow = await promptConfirm('是否立即切换到此服务商?', true)
 
         if (switchNow) {
           manager.switch(provider.id)

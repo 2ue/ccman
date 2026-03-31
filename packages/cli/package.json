@@ -14,6 +14,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "NODE_ENV=development tsx src/index.ts",
+    "test": "tsx --test src/utils/*.test.ts",
     "clean": "rm -rf dist"
   },
   "keywords": [

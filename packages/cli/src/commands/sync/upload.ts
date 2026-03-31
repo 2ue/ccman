@@ -9,6 +9,7 @@ import {
   createOpenClawManager,
 } from '@ccman/core'
 import { ensureConfigExists } from './helpers.js'
+import { promptConfirm } from '../../utils/confirm.js'
 
 export function uploadCommand(program: Command): void {
   program
@@ -59,14 +60,7 @@ export function uploadCommand(program: Command): void {
         console.log()
 
         // 确认上传
-        const { confirm } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirm',
-            message: '确认上传?',
-            default: false,
-          },
-        ])
+        const confirm = await promptConfirm('确认上传?', false)
 
         if (!confirm) {
           console.log(chalk.gray('\n❌ 已取消\n'))

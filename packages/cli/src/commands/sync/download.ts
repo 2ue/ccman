@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { downloadFromCloud } from '@ccman/core'
 import { ensureConfigExists } from './helpers.js'
+import { promptConfirm } from '../../utils/confirm.js'
 
 export function downloadCommand(program: Command): void {
   program
@@ -37,14 +38,7 @@ export function downloadCommand(program: Command): void {
         console.log()
 
         // 确认下载
-        const { confirm } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirm',
-            message: '确认下载?',
-            default: false,
-          },
-        ])
+        const confirm = await promptConfirm('确认下载?', false)
 
         if (!confirm) {
           console.log(chalk.gray('\n❌ 已取消\n'))

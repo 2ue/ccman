@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { createOpenCodeManager, OPENCODE_PRESETS, getOpenCodeConfigPath } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
+import { promptConfirm } from '../../utils/confirm.js'
 
 export function addCommand(program: Command): void {
   program
@@ -109,14 +110,7 @@ export function addCommand(program: Command): void {
         console.log(`  ${chalk.gray(provider.baseUrl)}`)
         console.log()
 
-        const { switchNow } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'switchNow',
-            message: '是否立即切换到此服务商?',
-            default: true,
-          },
-        ])
+        const switchNow = await promptConfirm('是否立即切换到此服务商?', true)
 
         if (switchNow) {
           manager.switch(provider.id)

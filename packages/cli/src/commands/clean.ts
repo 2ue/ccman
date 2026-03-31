@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { analyzeClaudeJson, cleanClaudeJson, CleanPresets, type CleanOptions } from '@ccman/core'
+import { promptConfirm } from '../utils/confirm.js'
 
 /**
  * 格式化字节大小
@@ -99,14 +100,7 @@ export function cleanCommand(program: Command): void {
         }
 
         // 确认操作
-        const { confirmed } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirmed',
-            message: '确认执行清理？（会自动备份原文件）',
-            default: true,
-          },
-        ])
+        const confirmed = await promptConfirm('确认执行清理？（会自动备份原文件）', true)
 
         if (!confirmed) {
           console.log(chalk.yellow('\n❌ 已取消\n'))
@@ -235,38 +229,28 @@ async function promptForOptions(analysis: any): Promise<CleanOptions> {
   }
 
   // 自定义选项
-  const customAnswers = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'cleanHistory',
-      message: '清理项目历史记录？',
-      default: true,
-    },
-    {
-      type: 'number',
-      name: 'keepCount',
-      message: '每个项目保留最近多少条记录？',
-      default: 10,
-      when: (answers) => answers.cleanHistory,
-    },
-    {
-      type: 'confirm',
-      name: 'cleanCache',
-      message: '清理缓存数据？',
-      default: true,
-    },
-    {
-      type: 'confirm',
-      name: 'cleanStats',
-      message: '重置使用统计？',
-      default: false,
-    },
-  ])
+  const cleanHistory = await promptConfirm('清理项目历史记录？', true)
+
+  let keepCount = 10
+  if (cleanHistory) {
+    const answers = await inquirer.prompt([
+      {
+        type: 'number',
+        name: 'keepCount',
+        message: '每个项目保留最近多少条记录？',
+        default: 10,
+      },
+    ])
+    keepCount = answers.keepCount
+  }
+
+  const cleanCache = await promptConfirm('清理缓存数据？', true)
+  const cleanStats = await promptConfirm('重置使用统计？', false)
 
   return {
-    cleanProjectHistory: customAnswers.cleanHistory,
-    keepRecentCount: customAnswers.keepCount || 0,
-    cleanCache: customAnswers.cleanCache,
-    cleanStats: customAnswers.cleanStats,
+    cleanProjectHistory: cleanHistory,
+    keepRecentCount: cleanHistory ? keepCount || 0 : 0,
+    cleanCache,
+    cleanStats,
   }
 }

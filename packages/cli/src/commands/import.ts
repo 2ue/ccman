@@ -1,8 +1,8 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
-import inquirer from 'inquirer'
 import path from 'path'
 import { importConfig, validateImportDir } from '@ccman/core'
+import { promptConfirm } from '../utils/confirm.js'
 
 export function importCommand(program: Command): void {
   program
@@ -39,14 +39,7 @@ export function importCommand(program: Command): void {
         console.log()
 
         // 第一次确认
-        const { confirmFirst } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirmFirst',
-            message: '确认导入？',
-            default: false,
-          },
-        ])
+        const confirmFirst = await promptConfirm('确认导入？', false)
 
         if (!confirmFirst) {
           console.log(chalk.gray('\n❌ 已取消\n'))
@@ -58,14 +51,7 @@ export function importCommand(program: Command): void {
         console.log(chalk.red.bold('⚠️  最后确认：此操作将覆盖所有当前配置！'))
         console.log()
 
-        const { confirmSecond } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirmSecond',
-            message: '真的要继续吗？',
-            default: false,
-          },
-        ])
+        const confirmSecond = await promptConfirm('真的要继续吗？', false)
 
         if (!confirmSecond) {
           console.log(chalk.gray('\n❌ 已取消\n'))

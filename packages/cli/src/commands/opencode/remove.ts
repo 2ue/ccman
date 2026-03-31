@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { createOpenCodeManager, ProviderNotFoundError } from '@ccman/core'
+import { promptConfirm } from '../../utils/confirm.js'
 
 export function removeCommand(program: Command): void {
   program
@@ -45,14 +46,7 @@ export function removeCommand(program: Command): void {
           targetName = provider.name
         }
 
-        const { confirmed } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirmed',
-            message: `确定删除 "${targetName}"?`,
-            default: false,
-          },
-        ])
+        const confirmed = await promptConfirm(`确定删除 "${targetName}"?`, false)
 
         if (!confirmed) {
           console.log(chalk.gray('\n已取消\n'))

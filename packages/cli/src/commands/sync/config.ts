@@ -4,6 +4,7 @@ import inquirer from 'inquirer'
 import type { WebDAVAuthType } from '@ccman/core'
 import { loadSyncConfig, saveSyncConfig, getSyncConfigPath, type LocalSyncConfig } from '../../utils/sync-config.js'
 import { testWebDAVConnection } from '@ccman/core'
+import { promptConfirm } from '../../utils/confirm.js'
 
 export function configCommand(program: Command): void {
   program
@@ -81,13 +82,12 @@ export function configCommand(program: Command): void {
               : '同步密码（用于加密 API Key）:',
             mask: '*',
           },
-          {
-            type: 'confirm',
-            name: 'rememberSyncPassword',
-            message: '记住同步密码?',
-            default: existingConfig?.rememberSyncPassword ?? true,
-          },
         ])
+
+        const rememberSyncPassword = await promptConfirm(
+          '记住同步密码?',
+          existingConfig?.rememberSyncPassword ?? true
+        )
 
         // Trim 所有输入（处理空格的情况）
         const trimmedAnswers = {
@@ -97,7 +97,7 @@ export function configCommand(program: Command): void {
           authType: answers.authType,
           remoteDir: answers.remoteDir?.trim(),
           syncPassword: answers.syncPassword?.trim(),
-          rememberSyncPassword: answers.rememberSyncPassword,
+          rememberSyncPassword,
         }
 
         // 如果是更新模式，先检查是否有任何实质性输入
@@ -213,14 +213,7 @@ export function configCommand(program: Command): void {
         console.log()
 
         // 询问是否测试连接
-        const { testNow } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'testNow',
-            message: '是否立即测试连接?',
-            default: true,
-          },
-        ])
+        const testNow = await promptConfirm('是否立即测试连接?', true)
 
         if (testNow) {
           console.log(chalk.bold('\n🔍 测试 WebDAV 连接...\n'))

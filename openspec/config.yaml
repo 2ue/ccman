@@ -1,0 +1,27 @@
+schema: spec-driven
+
+context: |
+  ccman 是一个面向 AI 编码助手的 API 服务商配置管理工具，提供 CLI 和 Desktop 两个入口。
+  目标是帮助用户在 Codex、Claude Code、Gemini CLI 和 MCP 之间切换配置、同步配置，并保持零破坏写入。
+  仓库使用 TypeScript 5、Node.js >= 18 和 pnpm workspace，核心包包括 packages/types、packages/core、packages/cli、packages/desktop 和 packages/aicoding。
+  代码风格要求 2 空格缩进、单引号、尾随逗号，文件名使用小写短横线，并优先采用数据驱动实现，避免过度抽象。
+  测试必须使用隔离目录，禁止修改真实的 ~/.ccman、~/.codex、~/.claude 和 ~/.gemini。
+  CLI 确认交互统一使用 Y(y) / N(n)，并且必须完全兼容大小写 y/n。
+  OpenSpec 工作流遵循 proposal -> specs -> design -> tasks；新能力、破坏性变更、架构调整、性能或安全变化先写 proposal。
+
+rules:
+  proposal:
+    - 先说明问题和目标，再说明要改什么，最后说明影响、风险和迁移成本。
+    - 新能力、破坏性变更、架构调整、性能或安全变化必须先提交 proposal。
+    - 配置、文案或测试修正如果只是恢复既有行为，可以直接处理，不必强行拆成提案。
+  specs:
+    - 规范性要求必须使用 SHALL 或 MUST。
+    - 每个 requirement 至少包含一个 #### Scenario:。
+    - 需求应描述可验证的结果，而不是实现细节。
+  design:
+    - 跨多个包、涉及迁移、外部依赖或数据模型变化时再写 design。
+    - design 只保留必要决策，避免重复 proposal。
+  tasks:
+    - 拆成顺序清晰、粒度足够小、可独立验收的任务。
+    - 每项任务都应是可执行动作，不要写成空泛目标。
+    - 完成后把所有任务勾选为 - [x]。

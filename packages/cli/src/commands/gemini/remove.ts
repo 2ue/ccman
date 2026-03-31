@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { createGeminiManager } from '@ccman/core'
+import { promptConfirm } from '../../utils/confirm.js'
 
 export function removeCommand(program: Command): void {
   program
@@ -47,14 +48,7 @@ export function removeCommand(program: Command): void {
           targetName = provider.name
         }
 
-        const { confirm } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirm',
-            message: `确定要删除服务商 "${targetName}" 吗？`,
-            default: false,
-          },
-        ])
+        const confirm = await promptConfirm(`确定要删除服务商 "${targetName}" 吗？`, false)
 
         if (!confirm) {
           console.log(chalk.gray('\n已取消删除\n'))
@@ -69,4 +63,3 @@ export function removeCommand(program: Command): void {
       }
     })
 }
-

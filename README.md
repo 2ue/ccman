@@ -122,7 +122,7 @@ $ ccman cx add
   GMN [Codex]
   https://gmn.chuangzuoli.com
 
-? 是否立即切换到此服务商? (Y/n)
+? 是否立即切换到此服务商? (Y(y) / N(n))
 ✅ 已切换到新服务商
 
 配置已更新:
@@ -234,7 +234,7 @@ $ ccman cx remove
   OpenAI Official - https://api.openai.com/v1
   GMN - https://gmn.chuangzuoli.com
 
-? 确定删除 "GMN"? (y/N)
+? 确定删除 "GMN"? (Y(y) / N(n))
 
 ✅ 已删除: GMN
 ```
@@ -267,7 +267,7 @@ $ ccman cc add
   Anthropic Official [Claude Code]
   https://api.anthropic.com
 
-? 是否立即切换到此服务商? (Y/n)
+? 是否立即切换到此服务商? (Y(y) / N(n))
 ✅ 已切换到新服务商
 
 配置已更新:
@@ -369,7 +369,7 @@ $ ccman cc remove
 ? 选择要删除的服务商:
   Anthropic Official - https://api.anthropic.com
 
-? 确定删除 "Anthropic Official"? (y/N)
+? 确定删除 "Anthropic Official"? (Y(y) / N(n))
 
 ✅ 已删除: Anthropic Official
 ```
@@ -403,7 +403,7 @@ $ ccman gm add
   GMN [Gemini CLI]
   https://gmn.chuangzuoli.com
 
-? 是否立即切换到此服务商? (Y/n)
+? 是否立即切换到此服务商? (Y(y) / N(n))
 ✅ 已切换到新服务商
 
 配置已更新:
@@ -500,7 +500,7 @@ $ ccman gm remove
   Google Gemini (API Key) - (默认端点)
   GMN - https://gmn.chuangzuoli.com
 
-? 确定要删除服务商 "GMN" 吗？ (y/N)
+? 确定要删除服务商 "GMN" 吗？ (Y(y) / N(n))
 
 ✅ 已删除服务商
 ```
@@ -534,7 +534,7 @@ $ ccman oc add
   GMN [OpenCode]
   https://gmn.chuangzuoli.com
 
-? 是否立即切换到此服务商? (Y/n)
+? 是否立即切换到此服务商? (Y(y) / N(n))
 ✅ 已切换到新服务商
 
 配置已更新:
@@ -629,7 +629,7 @@ $ ccman oc remove
 ? 选择要删除的服务商:
   GMN - https://gmn.chuangzuoli.com
 
-? 确定删除 "GMN"? (y/N)
+? 确定删除 "GMN"? (Y(y) / N(n))
 
 ✅ 已删除: GMN
 ```
@@ -741,7 +741,7 @@ $ ccman mcp remove
   filesystem - npx -y @modelcontextprotocol/server-filesystem /path/to/allowed/files
   github - npx -y @modelcontextprotocol/server-github
 
-? 确定删除 "github"? (y/N)
+? 确定删除 "github"? (Y(y) / N(n))
 
 ✅ 已删除: github
 
@@ -795,13 +795,13 @@ $ ccman sync config
 ? 认证类型: Basic Auth（基础认证）
 ? 远程同步目录: /ccman
 ? 同步密码（用于加密 API Key）: ********
-? 记住同步密码? (Y/n)
+? 记住同步密码? (Y(y) / N(n))
 
 ✅ 配置保存成功
 
 配置文件: ~/.ccman/config.json
 
-? 是否立即测试连接? (Y/n)
+? 是否立即测试连接? (Y(y) / N(n))
 
 🔍 测试 WebDAV 连接...
 
@@ -841,7 +841,7 @@ $ ccman sync upload
 
 ⚠️  云端现有配置将被覆盖
 
-? 确认上传? (y/N)
+? 确认上传? (Y(y) / N(n))
 
 🔐 加密 API Key...
 📤 上传到 WebDAV...
@@ -864,7 +864,7 @@ $ ccman sync download
 
 ⚠️  将覆盖本地配置（自动备份）
 
-? 确认下载? (y/N)
+? 确认下载? (Y(y) / N(n))
 
 💾 备份本地配置...
 📥 下载远程配置...
@@ -975,11 +975,11 @@ $ ccman import ~/backup/ccman
 
 当前配置将被覆盖（自动备份）
 
-? 确认导入？ (y/N)
+? 确认导入？ (Y(y) / N(n))
 
 ⚠️  最后确认：此操作将覆盖所有当前配置！
 
-? 真的要继续吗？ (y/N)
+? 真的要继续吗？ (Y(y) / N(n))
 
 💾 备份当前配置...
 📥 导入新配置...
@@ -1050,7 +1050,7 @@ $ ccman cc clean
     激进清理 - 清空历史记录，清理缓存和统计 (节省约 14.8 MB)
     自定义 - 自定义清理选项
 
-? 确认执行清理？（会自动备份原文件） (Y/n)
+? 确认执行清理？（会自动备份原文件） (Y(y) / N(n))
 
 正在清理...
 
