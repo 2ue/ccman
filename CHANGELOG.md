@@ -1,3 +1,12 @@
+## [3.3.24](https://github.com/2ue/ccman/compare/v3.3.23...v3.3.24) (2026-03-31)
+
+### 🔧 其他变更
+
+* **release:** 3.3.24 (3fa7418bd75a077d11f1e5a1e428b9be00daf6ad)* update cli prompts and openspec config (46cc5e7d8514ca4dd5cf50f74528eb1829bce2e3)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.23 [skip ci] (3d53e663fc7a7dafdc1e1fbc26c4c0a653992152)
+
 ## [3.3.23](https://github.com/2ue/ccman/compare/v3.3.22...v3.3.23) (2026-03-18)
 
 ### 🔧 其他变更
