@@ -54,6 +54,11 @@ function testVersionMatching() {
 
 function testPlannerVariants() {
   const providerProfile = resolveProviderProfile('gmn', '', '')
+  const gmn1Profile = resolveProviderProfile('gmn1', '', '')
+
+  assert.equal(providerProfile.providerName, 'gmn')
+  assert.equal(gmn1Profile.providerName, 'gmn1')
+  assert.equal(gmn1Profile.baseUrl, 'https://gmncode.cn')
 
   const compatiblePlan = planCodexBootstrap({
     snapshot: createSnapshot(),

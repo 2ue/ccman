@@ -24,7 +24,7 @@ import { createInterface } from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
 
 const GMN_BASE_URLS = {
-  claude: 'https://gmn.chuangzuoli.com/api',
+  claude: 'https://gmn.chuangzuoli.com',
   codex: 'https://gmn.chuangzuoli.com',
   gemini: 'https://gmn.chuangzuoli.com',
   opencode: 'https://gmn.chuangzuoli.com',

@@ -1,4 +1,5 @@
 import type { InternalPresetTemplate } from '../tool-manager.types.js'
+import { createDualGmnPresets } from './gmn.js'
 
 /**
  * Gemini CLI 预置服务商
@@ -14,9 +15,5 @@ export const GEMINI_PRESETS: InternalPresetTemplate[] = [
     baseUrl: '',
     description: '使用官方 Gemini API（通过 GEMINI_API_KEY 或 GOOGLE_API_KEY 认证）',
   },
-  {
-    name: 'GMN',
-    baseUrl: 'https://gmn.chuangzuoli.com',
-    description: 'GMN 服务 (Gemini 兼容)',
-  },
+  ...createDualGmnPresets(),
 ]

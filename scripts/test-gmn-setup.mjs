@@ -17,7 +17,7 @@ import { execSync } from 'child_process'
 // 测试配置
 const TEST_API_KEY = 'sk-ant-test-key-123456'
 const GMN_BASE_URLS = {
-  claude: 'https://gmn.chuangzuoli.com/api',
+  claude: 'https://gmn.chuangzuoli.com',
   codex: 'https://gmn.chuangzuoli.com',
   gemini: 'https://gmn.chuangzuoli.com',
   opencode: 'https://gmn.chuangzuoli.com',

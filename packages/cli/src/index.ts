@@ -183,7 +183,7 @@ program
   .alias('gmncode')
   .description('配置 GMN1 到 Codex、OpenCode、OpenClaw（测速并选择最低延迟路线）')
   .option('-p, --platform <platforms>', '指定平台 (codex,opencode,openclaw,all)')
-  .option('-n, --name <providerName>', '指定服务商名称（默认: gmn）')
+  .option('-n, --name <providerName>', '指定服务商名称（默认: gmn1）')
   .option('-b, --base-url <baseUrl>', '指定 Base URL；不指定时自动测速并可手动切换')
   .action(async (apiKey, options) => {
     await gmn1Command(apiKey, options.platform, options.name, options.baseUrl)

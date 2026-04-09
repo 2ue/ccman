@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 
 $ProfileKey = 'gmn'
 $ProfileTitle = 'GMN'
-$ProviderName = 'gmn'
+$ProviderName = ''
 $BaseUrl = ''
 $ApiKey = ''
 $DryRun = $false
@@ -86,7 +86,7 @@ for ($index = 0; $index -lt $CliArgs.Count; $index += 1) {
       continue
     }
     '--help' {
-      Write-Host 'Usage: install-codex.ps1 [--dry-run] [--yes] [--skip-config] [--provider gmn|gmn1] [--base-url url] [--api-key key]'
+      Write-Host 'Usage: install-codex.ps1 [--dry-run] [--yes] [--skip-config] [--provider gmn|gmn1] [--provider-name name] [--base-url url] [--api-key key]'
       exit 0
     }
     default {
@@ -102,10 +102,12 @@ for ($index = 0; $index -lt $CliArgs.Count; $index += 1) {
 switch ($ProfileKey) {
   'gmn' {
     $ProfileTitle = 'GMN'
+    if ([string]::IsNullOrWhiteSpace($ProviderName)) { $ProviderName = 'gmn' }
     if ([string]::IsNullOrWhiteSpace($BaseUrl)) { $BaseUrl = 'https://gmn.chuangzuoli.com' }
   }
   'gmn1' {
     $ProfileTitle = 'GMN1'
+    if ([string]::IsNullOrWhiteSpace($ProviderName)) { $ProviderName = 'gmn1' }
     if ([string]::IsNullOrWhiteSpace($BaseUrl)) { $BaseUrl = 'https://gmncode.cn' }
   }
   default {

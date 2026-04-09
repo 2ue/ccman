@@ -27,21 +27,25 @@
 ### Claude Code
 
 - **Anthropic Official**：`https://api.anthropic.com`
-- **GMN**：`https://gmn.chuangzuoli.com/api`
+- **GMN**：`https://gmn.chuangzuoli.com`
+- **GMN1**：`https://gmncode.cn`
 
 ### Codex
 
 - **OpenAI Official**：`https://api.openai.com/v1`
 - **GMN**：`https://gmn.chuangzuoli.com`
+- **GMN1**：`https://gmncode.cn`
 
 ### Gemini CLI
 
 - **Google Gemini (API Key)**：官方默认（无需设置 baseUrl）
 - **GMN**：`https://gmn.chuangzuoli.com`
+- **GMN1**：`https://gmncode.cn`
 
 ### OpenCode
 
 - **GMN**：`https://gmn.chuangzuoli.com`（npm: `@ai-sdk/openai`）
+- **GMN1**：`https://gmncode.cn`（npm: `@ai-sdk/openai`）
 
 ## 🧭 CLI 使用速览
 

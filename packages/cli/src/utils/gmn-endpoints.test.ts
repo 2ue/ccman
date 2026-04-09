@@ -9,6 +9,7 @@ import {
 } from './gmn-endpoints.js'
 
 test('GMN should only include chuangzuoli domain endpoints', () => {
+  assert.equal(GMN_PROFILE.defaultProviderName, 'gmn')
   assert.deepEqual(
     GMN_PROFILE.baseUrls.map((item) => item.url),
     ['https://gmn.chuangzuoli.com', 'https://cdn-gmn.chuangzuoli.com']
@@ -17,6 +18,7 @@ test('GMN should only include chuangzuoli domain endpoints', () => {
 })
 
 test('GMN1 should include only non-chuangzuoli endpoints', () => {
+  assert.equal(GMN1_PROFILE.defaultProviderName, 'gmn1')
   assert.deepEqual(
     GMN1_PROFILE.baseUrls.map((item) => item.url),
     [

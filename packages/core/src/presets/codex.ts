@@ -1,3 +1,5 @@
+import { createDualGmnPresets } from './gmn.js'
+
 /**
  * Codex 预设模板(不包含 API Key 和 isBuiltIn)
  * isBuiltIn 字段由 tool-manager 在运行时添加
@@ -20,9 +22,5 @@ export const CODEX_PRESETS: PresetTemplate[] = [
     baseUrl: 'https://api.openai.com/v1',
     description: 'OpenAI 官方 API',
   },
-  {
-    name: 'GMN',
-    baseUrl: 'https://gmn.chuangzuoli.com',
-    description: 'GMN 服务 (OpenAI/Codex 兼容)',
-  },
+  ...createDualGmnPresets(),
 ]

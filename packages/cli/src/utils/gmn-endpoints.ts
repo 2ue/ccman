@@ -3,6 +3,7 @@ import type { EndpointCandidate } from './endpoint-latency.js'
 export interface GmnProfile {
   commandName: 'gmn' | 'gmn1'
   title: string
+  defaultProviderName: 'gmn' | 'gmn1'
   endpointGroupLabel: string
   endpointGroupDescription: string
   baseUrls: EndpointCandidate[]
@@ -11,6 +12,7 @@ export interface GmnProfile {
 export const GMN_PROFILE: GmnProfile = {
   commandName: 'gmn',
   title: 'GMN',
+  defaultProviderName: 'gmn',
   endpointGroupLabel: 'GMN 域名线路',
   endpointGroupDescription: '仅包含主域名和 CDN 的 2 条地址',
   baseUrls: [
@@ -30,6 +32,7 @@ export const GMN_PROFILE: GmnProfile = {
 export const GMN1_PROFILE: GmnProfile = {
   commandName: 'gmn1',
   title: 'GMN1',
+  defaultProviderName: 'gmn1',
   endpointGroupLabel: '扩展加速线路',
   endpointGroupDescription: '包含除 chuangzuoli 之外的其余 5 条地址',
   baseUrls: [

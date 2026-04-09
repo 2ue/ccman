@@ -10,7 +10,7 @@
 - ✅ Claude Code 配置写入（`~/.claude/settings.json`）
 - ✅ Gemini CLI 配置写入（`~/.gemini/settings.json` + `.env`）
 - ✅ 环境隔离（test/development/production）
-- ✅ 预设模板（官方 + GMN）
+- ✅ 预设模板（官方 + GMN/GMN1）
 
 ## 使用
 

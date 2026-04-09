@@ -31,8 +31,6 @@ import {
   getEndpointHost,
 } from '../utils/gmn-endpoints.js'
 
-const DEFAULT_PROVIDER_NAME = 'gmn'
-
 const VALID_PLATFORMS = ['codex', 'opencode', 'openclaw'] as const
 type Platform = (typeof VALID_PLATFORMS)[number]
 const DEFAULT_PLATFORMS: Platform[] = ['codex', 'opencode']
@@ -282,9 +280,9 @@ async function resolveOpenAiBaseUrl(
   return answers.baseUrl as string
 }
 
-function resolveProviderName(providerNameArg?: string): string {
+function resolveProviderName(profile: GmnProfile, providerNameArg?: string): string {
   if (providerNameArg === undefined) {
-    return DEFAULT_PROVIDER_NAME
+    return profile.defaultProviderName
   }
 
   const providerName = providerNameArg.trim()
@@ -292,9 +290,9 @@ function resolveProviderName(providerNameArg?: string): string {
     throw new Error('服务商名称不能为空')
   }
 
-  // 兼容历史 GMN 大小写写法，统一落为小写 gmn
-  if (providerName.toLowerCase() === DEFAULT_PROVIDER_NAME) {
-    return DEFAULT_PROVIDER_NAME
+  // 兼容历史默认 provider 名的大小写写法，统一落为小写的 gmn / gmn1
+  if (providerName.toLowerCase() === profile.defaultProviderName) {
+    return profile.defaultProviderName
   }
 
   return providerName
@@ -419,7 +417,7 @@ async function runGmnCommand(
   try {
     console.log(chalk.cyan(`\n${renderStep(1, TOTAL_STEPS, '选择要配置的工具')}`))
     platforms = await resolvePlatforms(platformArg, profile.title)
-    providerName = resolveProviderName(providerNameArg)
+    providerName = resolveProviderName(profile, providerNameArg)
   } catch (error) {
     console.error(chalk.red(`❌ ${(error as Error).message}`))
     process.exit(1)

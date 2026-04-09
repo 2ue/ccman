@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROFILE_KEY="gmn"
 PROFILE_TITLE="GMN"
-PROVIDER_NAME="gmn"
+PROVIDER_NAME=""
 BASE_URL=""
 API_KEY=""
 DRY_RUN=0
@@ -88,7 +88,7 @@ Options:
   --yes                   跳过确认提示
   --skip-config           只安装/升级 Codex，不写入 ~/.codex 配置
   --provider <gmn|gmn1>   选择预设线路
-  --provider-name <name>  记录用名称（默认: gmn）
+  --provider-name <name>  记录用名称（默认跟随 provider，gmn / gmn1）
   --base-url <url>        覆盖预设 Base URL
   --api-key <key>         直接提供 API Key
   -h, --help              显示帮助
@@ -99,10 +99,12 @@ resolve_profile_defaults() {
   case "$PROFILE_KEY" in
     gmn)
       PROFILE_TITLE="GMN"
+      [[ -z "$PROVIDER_NAME" ]] && PROVIDER_NAME="gmn"
       [[ -z "$BASE_URL" ]] && BASE_URL="https://gmn.chuangzuoli.com"
       ;;
     gmn1)
       PROFILE_TITLE="GMN1"
+      [[ -z "$PROVIDER_NAME" ]] && PROVIDER_NAME="gmn1"
       [[ -z "$BASE_URL" ]] && BASE_URL="https://gmncode.cn"
       ;;
     *)

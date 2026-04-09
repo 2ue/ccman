@@ -16,7 +16,7 @@ export const PROVIDER_PROFILES = {
   gmn1: {
     key: 'gmn1',
     title: 'GMN1',
-    providerName: 'gmn',
+    providerName: 'gmn1',
     baseUrl: 'https://gmncode.cn',
   },
 }
