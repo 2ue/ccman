@@ -79,6 +79,15 @@ ccman gm add|list|use|current|edit|remove|clone
 ccman oc add|list|use|current|edit|remove|clone
 ```
 
+常用命令支持参数模式，适合非交互执行：
+
+```bash
+ccman cx add --name work --base-url https://api.example.com --api-key sk-xxx --switch
+ccman cc add --preset GMN --api-key sk-xxx --switch
+ccman gm edit default --new-name personal --base-url '' --api-key ''
+ccman oc remove old-provider --yes
+```
+
 交互式工具菜单（以 Codex 为例）：
 
 ```bash
@@ -768,6 +777,35 @@ ccman sync status
 ```
 
 > WebDAV 同步目前覆盖 Codex / Claude / Gemini 配置，OpenCode 与 MCP 暂不参与同步。
+
+**非交互模式**
+
+```bash
+ccman sync config \
+  --webdav-url https://dav.example.com \
+  --username alice \
+  --password 'YOUR_WEBDAV_PASSWORD' \
+  --remote-dir /ccman \
+  --sync-password 'YOUR_SYNC_PASSWORD' \
+  --remember-sync-password
+
+ccman sync download --yes
+ccman sync upload --yes
+ccman sync merge
+```
+
+也可以用环境变量：
+
+```bash
+export CCMAN_WEBDAV_URL='https://dav.example.com'
+export CCMAN_WEBDAV_USERNAME='alice'
+export CCMAN_WEBDAV_PASSWORD='YOUR_WEBDAV_PASSWORD'
+export CCMAN_WEBDAV_REMOTE_DIR='/ccman'
+export CCMAN_SYNC_PASSWORD='YOUR_SYNC_PASSWORD'
+
+ccman sync config
+ccman sync download --yes
+```
 
 执行效果示例（WebDAV）：
 

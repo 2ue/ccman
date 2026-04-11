@@ -220,6 +220,40 @@ ccman mcp remove   # 删除 MCP 服务器
 | `ccman export [dir]`      | 导出配置到本地目录                                        |
 | `ccman import [dir]`      | 从本地目录导入配置                                        |
 
+服务商管理命令也支持参数模式：
+
+```bash
+ccman cx add --name work --base-url https://api.example.com --api-key sk-xxx --switch
+ccman cc add --preset GMN --api-key sk-xxx --switch
+ccman gm edit default --new-name personal --base-url '' --api-key ''
+ccman oc remove old-provider --yes
+```
+
+WebDAV 同步支持参数模式和环境变量模式，适合在其他机器非交互执行：
+
+```bash
+ccman sync config \
+  --webdav-url https://dav.example.com \
+  --username alice \
+  --password 'YOUR_WEBDAV_PASSWORD' \
+  --remote-dir /ccman \
+  --sync-password 'YOUR_SYNC_PASSWORD' \
+  --remember-sync-password
+
+ccman sync download --yes
+```
+
+```bash
+export CCMAN_WEBDAV_URL='https://dav.example.com'
+export CCMAN_WEBDAV_USERNAME='alice'
+export CCMAN_WEBDAV_PASSWORD='YOUR_WEBDAV_PASSWORD'
+export CCMAN_WEBDAV_REMOTE_DIR='/ccman'
+export CCMAN_SYNC_PASSWORD='YOUR_SYNC_PASSWORD'
+
+ccman sync config
+ccman sync upload --yes
+```
+
 ---
 
 ## 内置预设
