@@ -21,9 +21,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@ccman/types": "workspace:*",
     "@ccman/core": "workspace:*",
-    "@lobehub/icons-static-svg": "^1.73.0",
+    "@ccman/types": "workspace:*",
+    "@lobehub/icons-static-svg": "^1.86.0",
     "@radix-ui/react-tooltip": "^1.2.8",
     "electron-updater": "^6.1.8",
     "lucide-react": "^0.314.0",

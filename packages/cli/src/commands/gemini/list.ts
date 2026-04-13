@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import { createGeminiManager } from '@ccman/core'
 import { formatProviderTable } from '../../utils/format.js'
+import { printWarning, printTip } from '../../utils/cli-output.js'
 
 export function listCommand(program: Command): void {
   program
@@ -15,17 +16,17 @@ export function listCommand(program: Command): void {
         const current = manager.getCurrent()
 
         if (providers.length === 0) {
-          console.log(chalk.yellow('\n⚠️  暂无 Gemini CLI 服务商\n'))
-          console.log(chalk.blue('💡 添加服务商:') + chalk.white(' ccman gm add\n'))
+          printWarning('暂无 Gemini CLI 服务商')
+          printTip('添加服务商: ' + chalk.white('ccman gm add'))
           return
         }
 
-        console.log(chalk.bold(`\n📋 Gemini CLI 服务商 (${providers.length} 个)`))
-        console.log(formatProviderTable(providers, current?.id))
+        console.log(
+          formatProviderTable(providers, current?.id, `Gemini CLI 服务商 (${providers.length} 个)`)
+        )
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
         process.exit(1)
       }
     })
 }
-

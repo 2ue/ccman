@@ -220,7 +220,7 @@ export default function CleanPage({ onSuccess, onError }: CleanPageProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white">
+    <div className="flex-1 flex flex-col overflow-hidden">
       {/* 主内容区 */}
       <main className="flex-1 overflow-y-auto p-6">
         <div className="space-y-6">

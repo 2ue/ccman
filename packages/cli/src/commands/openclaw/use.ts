@@ -7,6 +7,8 @@ import {
   getOpenClawModelsPath,
   ProviderNotFoundError,
 } from '@ccman/core'
+import { printSuccess, printWarning, printTip } from '../../utils/cli-output.js'
+import { toolBadge } from '../../utils/cli-theme.js'
 
 export function useCommand(program: Command): void {
   program
@@ -18,8 +20,8 @@ export function useCommand(program: Command): void {
         const providers = manager.list()
 
         if (providers.length === 0) {
-          console.log(chalk.yellow('\n⚠️  暂无 OpenClaw 服务商\n'))
-          console.log(chalk.blue('💡 添加服务商:') + chalk.white(' ccman openclaw add\n'))
+          printWarning('暂无 OpenClaw 服务商')
+          printTip('添加服务商: ' + chalk.white('ccman openclaw add'))
           return
         }
 
@@ -50,13 +52,12 @@ export function useCommand(program: Command): void {
 
         const provider = manager.get(targetId)
 
-        console.log(chalk.green('\n✅ 切换成功\n'))
-        console.log(`  ${chalk.bold(provider.name)} ${chalk.blue('[OpenClaw]')}`)
-        console.log(`  ${chalk.gray(`URL: ${provider.baseUrl}`)}`)
-        console.log()
-        console.log(chalk.gray('配置已更新:'))
-        console.log(chalk.gray(`  - ${getOpenClawConfigPath()}`))
-        console.log(chalk.gray(`  - ${getOpenClawModelsPath()}`))
+        printSuccess('切换成功', [
+          `${chalk.bold(provider.name)} ${toolBadge('openclaw')}`,
+          chalk.gray(`URL: ${provider.baseUrl}`),
+          chalk.gray(`配置已更新: ${getOpenClawConfigPath()}`),
+          chalk.gray(`配置已更新: ${getOpenClawModelsPath()}`),
+        ])
       } catch (error) {
         if (error instanceof ProviderNotFoundError) {
           console.error(chalk.red(`\n❌ 服务商不存在: ${name}\n`))

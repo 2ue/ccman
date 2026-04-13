@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { MCPServer, AppType } from '@ccman/types'
-import { Server, Edit2, Trash2, Copy, Terminal, Settings } from 'lucide-react'
+import { Edit2, Trash2, Copy, Terminal, Settings } from 'lucide-react'
+import { ClaudeIcon, OpenAIIcon, GeminiIcon, McpIcon } from './icons/BrandIcons'
 import { CARD_STYLES } from '../styles/card'
 
 // 应用信息配置
@@ -8,23 +9,23 @@ const APP_INFO: Record<
   AppType,
   {
     name: string
-    icon: string
+    icon: React.ElementType
     supported: boolean
   }
 > = {
   claude: {
     name: 'Claude Code',
-    icon: '\ud83e\udd16',
+    icon: ClaudeIcon,
     supported: true,
   },
   codex: {
     name: 'Codex',
-    icon: '\ud83d\udce6',
+    icon: OpenAIIcon,
     supported: false, // Codex 暂不支持 MCP
   },
   gemini: {
     name: 'Gemini CLI',
-    icon: '\ud83d\udca1',
+    icon: GeminiIcon,
     supported: true,
   },
 }
@@ -60,7 +61,7 @@ export default function MCPCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Server className="w-5 h-5 text-blue-600" />
+          <McpIcon size={20} />
           <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
             {server.name}
           </h3>
@@ -129,6 +130,7 @@ export default function MCPCard({
             const appInfo = APP_INFO[app]
             const isEnabled = enabledApps.includes(app)
             const isSupported = appInfo.supported
+            const AppIcon = appInfo.icon
 
             return (
               <label
@@ -151,7 +153,7 @@ export default function MCPCard({
                   onChange={(e) => onToggleApp(app, e.target.checked)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <span className="text-lg">{appInfo.icon}</span>
+                <AppIcon size={16} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-gray-700 truncate">{appInfo.name}</div>
                   {!isSupported && <div className="text-[10px] text-gray-400">暂不支持</div>}

@@ -1,4 +1,4 @@
-import { LucideIcon, ArrowRight, CheckCircle2, AlertCircle, XCircle, Info } from 'lucide-react'
+import { LucideIcon } from 'lucide-react'
 
 export type StatusType = 'success' | 'warning' | 'error' | 'info'
 
@@ -19,41 +19,38 @@ export default function DashboardCard({
   onClick,
   isBrandIcon = false,
 }: DashboardCardProps) {
-  const statusColors = {
-    success: 'bg-blue-50 border-blue-200 hover:border-blue-300',
-    warning: 'bg-yellow-50 border-yellow-200 hover:border-yellow-300',
-    error: 'bg-red-50 border-red-200 hover:border-red-300',
-    info: 'bg-blue-50 border-blue-200 hover:border-blue-300',
+  const dotColors = {
+    success: 'bg-green-400',
+    warning: 'bg-yellow-400',
+    error: 'bg-red-400',
+    info: 'bg-blue-400',
   }
-
-  const statusIcons = {
-    success: CheckCircle2,
-    warning: AlertCircle,
-    error: XCircle,
-    info: Info,
-  }
-
-  const StatusIcon = statusIcons[statusType]
 
   return (
     <div
       onClick={onClick}
       className={`
-        group relative w-full h-32 rounded-lg border-2 p-4
-        ${statusColors[statusType]}
-        hover:shadow-lg hover:scale-[1.02]
+        group relative w-full rounded-xl border border-gray-200 p-5
+        bg-white
+        hover:shadow-lg hover:border-blue-300 hover:-translate-y-0.5
         transition-all duration-200 cursor-pointer
       `}
     >
-      {/* 状态角标 */}
-      <div className="absolute top-3 right-3">
-        <StatusIcon className="w-4 h-4 text-gray-600" />
-      </div>
-
       {/* 图标 + 标题 */}
-      <div className="flex items-center gap-2.5 mb-3">
-        {isBrandIcon ? <Icon size={36} /> : <Icon className="w-9 h-9 text-gray-700" />}
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <div className="flex items-center gap-3 mb-3">
+        {isBrandIcon ? (
+          <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-blue-50">
+            <Icon size={28} />
+          </div>
+        ) : (
+          <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-blue-100/60">
+            <Icon className="w-6 h-6 text-blue-600" />
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold tracking-tight text-gray-900">{title}</h3>
+          <span className={`w-2 h-2 rounded-full ${dotColors[statusType]}`} />
+        </div>
       </div>
 
       {/* 状态信息 */}
@@ -65,11 +62,9 @@ export default function DashboardCard({
         ))}
       </div>
 
-      {/* 进入按钮（Hover 显示） */}
-      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="text-xs font-medium text-blue-600 flex items-center gap-1">
-          进入 <ArrowRight className="w-3.5 h-3.5" />
-        </span>
+      {/* 进入链接（始终可见） */}
+      <div className="flex justify-end">
+        <span className="text-xs font-medium text-blue-500">进入 →</span>
       </div>
     </div>
   )

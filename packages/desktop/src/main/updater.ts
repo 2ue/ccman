@@ -13,14 +13,40 @@ type UpdateEvent =
   | { type: 'available'; version: string; notes?: string | null }
   | { type: 'not-available'; version: string }
   | { type: 'error'; message: string }
-  | { type: 'progress'; percent: number; bytesPerSecond: number; transferred: number; total: number }
+  | {
+      type: 'progress'
+      percent: number
+      bytesPerSecond: number
+      transferred: number
+      total: number
+    }
   | { type: 'downloaded'; version: string }
   | { type: 'manual-downloaded'; filePath: string }
 
 const REPO_OWNER = '2ue'
 const REPO_NAME = 'ccman'
 
-type UpdaterStatus = 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'ready' | 'error'
+/** 简单 semver 比较：remote > current 时返回 true */
+function isNewerVersion(remote: string, current: string): boolean {
+  const r = remote.split('.').map(Number)
+  const c = current.split('.').map(Number)
+  for (let i = 0; i < Math.max(r.length, c.length); i++) {
+    const rv = r[i] || 0
+    const cv = c[i] || 0
+    if (rv > cv) return true
+    if (rv < cv) return false
+  }
+  return false
+}
+
+type UpdaterStatus =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'ready'
+  | 'error'
 const state: {
   status: UpdaterStatus
   version?: string
@@ -107,7 +133,7 @@ async function checkManualUpdate(win: BrowserWindow | null) {
   const remoteVersion = tag?.startsWith('v') ? tag.slice(1) : tag
   const currentVersion = app.getVersion()
 
-  if (remoteVersion !== currentVersion) {
+  if (isNewerVersion(remoteVersion, currentVersion)) {
     state.status = 'available'
     state.version = remoteVersion
     send(win, { type: 'available', version: remoteVersion, notes: rel.body })
@@ -123,7 +149,12 @@ function followableGet(u: string) {
   return parsed.protocol === 'http:' ? http.get : https.get
 }
 
-function downloadWithProgress(urlStr: string, targetPath: string, onProgress: (p: UpdateEvent) => void, maxRedirects = 5) {
+function downloadWithProgress(
+  urlStr: string,
+  targetPath: string,
+  onProgress: (p: UpdateEvent) => void,
+  maxRedirects = 5
+) {
   return new Promise<string>((resolve, reject) => {
     const file = fs.createWriteStream(targetPath)
     const makeReq = (u: string, redirectsLeft: number) => {
@@ -163,7 +194,7 @@ function downloadWithProgress(urlStr: string, targetPath: string, onProgress: (p
           if (now - lastTick > 500) {
             const deltaBytes = transferred - lastTransferred
             const deltaMs = now - lastTick
-            const bps = deltaMs > 0 ? (deltaBytes / (deltaMs / 1000)) : 0
+            const bps = deltaMs > 0 ? deltaBytes / (deltaMs / 1000) : 0
             onProgress({
               type: 'progress',
               percent: total > 0 ? (transferred / total) * 100 : 0,
@@ -228,20 +259,16 @@ export function registerUpdaterHandlers(winProvider: () => BrowserWindow | null)
   autoUpdater.autoInstallOnAppQuit = true
 
   autoUpdater.on('checking-for-update', () => send(win(), { type: 'checking' }))
-  autoUpdater.on('update-available', (info) =>
-    {
-      state.status = 'available'
-      state.version = info?.version ?? ''
-      send(win(), { type: 'available', version: state.version, notes: (info as any)?.releaseNotes })
-    }
-  )
-  autoUpdater.on('update-not-available', (info) =>
-    {
-      state.status = 'not-available'
-      state.version = info?.version ?? app.getVersion()
-      send(win(), { type: 'not-available', version: state.version })
-    }
-  )
+  autoUpdater.on('update-available', (info) => {
+    state.status = 'available'
+    state.version = info?.version ?? ''
+    send(win(), { type: 'available', version: state.version, notes: (info as any)?.releaseNotes })
+  })
+  autoUpdater.on('update-not-available', (info) => {
+    state.status = 'not-available'
+    state.version = info?.version ?? app.getVersion()
+    send(win(), { type: 'not-available', version: state.version })
+  })
   autoUpdater.on('error', (err) => {
     state.status = 'error'
     state.lastError = err?.message || String(err)
@@ -256,13 +283,11 @@ export function registerUpdaterHandlers(winProvider: () => BrowserWindow | null)
       total: p.total,
     })
   )
-  autoUpdater.on('update-downloaded', (info) =>
-    {
-      state.status = 'ready'
-      state.version = info?.version ?? state.version
-      send(win(), { type: 'downloaded', version: state.version || '' })
-    }
-  )
+  autoUpdater.on('update-downloaded', (info) => {
+    state.status = 'ready'
+    state.version = info?.version ?? state.version
+    send(win(), { type: 'downloaded', version: state.version || '' })
+  })
 
   // IPC: interactive check (no autoDownload)
   ipcMain.handle('update:check', async () => {
@@ -309,6 +334,25 @@ export function registerUpdaterHandlers(winProvider: () => BrowserWindow | null)
     if (state.status === 'ready') {
       return { ok: true }
     }
+
+    const useAutoUpdater = hasAutoUpdateConfig()
+
+    // 没有 app-update.yml 时直接走手动下载，不浪费时间尝试 autoUpdater
+    if (!useAutoUpdater) {
+      try {
+        state.status = 'downloading'
+        state.downloadPromise = manualDownloadLatest(win())
+        const { filePath } = await state.downloadPromise
+        state.downloadPromise = null
+        return { ok: true, path: filePath, manual: true }
+      } catch (err: any) {
+        state.status = 'error'
+        state.lastError = err?.message || String(err)
+        state.downloadPromise = null
+        return { ok: false, error: state.lastError }
+      }
+    }
+
     try {
       autoUpdater.autoDownload = true
       state.status = 'downloading'
@@ -318,7 +362,7 @@ export function registerUpdaterHandlers(winProvider: () => BrowserWindow | null)
       state.downloadPromise = null
       return { ok: true, path: result }
     } catch (e: any) {
-      // Fallback manual
+      // autoUpdater 失败，fallback 到手动下载
       try {
         state.downloadPromise = manualDownloadLatest(win())
         const { filePath } = await state.downloadPromise
@@ -400,6 +444,9 @@ export function registerUpdaterHandlers(winProvider: () => BrowserWindow | null)
 }
 
 export async function backgroundCheckOnce() {
+  // 开发环境没有 app-update.yml，静默跳过后台检查
+  if (!hasAutoUpdateConfig()) return
+
   try {
     if (state.status === 'checking' || state.status === 'downloading') {
       return

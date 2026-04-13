@@ -24,14 +24,16 @@ import {
 } from '@ccman/core'
 import { formatProviderTable } from './utils/format.js'
 import { promptConfirm } from './utils/confirm.js'
+import { toolBadge } from './utils/cli-theme.js'
+import { printSuccess, printInfo, printWarning, printTip } from './utils/cli-output.js'
 
-// CLI 专用配置（emoji 和命令缩写）
+// CLI 专用配置（命令缩写和显示名）
 const CLI_TOOL_CONFIG = {
-  [TOOL_TYPES.CODEX]: { name: 'Codex', emoji: '🔶', cmd: 'cx' },
-  [TOOL_TYPES.CLAUDE]: { name: 'Claude', emoji: '🔷', cmd: 'cc' },
-  [TOOL_TYPES.GEMINI]: { name: 'Gemini', emoji: '💎', cmd: 'gm' },
-  [TOOL_TYPES.OPENCODE]: { name: 'OpenCode', emoji: '🧩', cmd: 'oc' },
-  [TOOL_TYPES.OPENCLAW]: { name: 'OpenClaw', emoji: '🦀', cmd: 'ow' },
+  [TOOL_TYPES.CODEX]: { name: 'Codex', cmd: 'cx' },
+  [TOOL_TYPES.CLAUDE]: { name: 'Claude', cmd: 'cc' },
+  [TOOL_TYPES.GEMINI]: { name: 'Gemini', cmd: 'gm' },
+  [TOOL_TYPES.OPENCODE]: { name: 'OpenCode', cmd: 'oc' },
+  [TOOL_TYPES.OPENCLAW]: { name: 'OpenClaw', cmd: 'ow' },
 } as const
 
 type CliToolType = Exclude<ToolType, 'mcp'>
@@ -145,11 +147,11 @@ export async function startMainMenu(): Promise<void> {
         name: 'choice',
         message: '请选择操作:',
         choices: [
-          { name: '🔷 Claude 管理', value: 'claude' },
-          { name: '🔶 Codex 管理', value: 'codex' },
-          { name: '💎 Gemini 管理', value: 'gemini' },
-          { name: '🧩 OpenCode 管理', value: 'opencode' },
-          { name: '🦀 OpenClaw 管理', value: 'openclaw' },
+          { name: `${toolBadge('claude')} Claude 管理`, value: 'claude' },
+          { name: `${toolBadge('codex')} Codex 管理`, value: 'codex' },
+          { name: `${toolBadge('gemini')} Gemini 管理`, value: 'gemini' },
+          { name: `${toolBadge('opencode')} OpenCode 管理`, value: 'opencode' },
+          { name: `${toolBadge('openclaw')} OpenClaw 管理`, value: 'openclaw' },
           { name: '🔄 WebDAV 同步', value: 'sync' },
           { name: '📦 预置服务商管理', value: 'presets' },
           { name: '❌ 退出', value: 'exit' },
@@ -241,7 +243,8 @@ export async function startOpenClawMenu(): Promise<void> {
 // ============================================================================
 
 async function showToolMenu(tool: CliToolType): Promise<void> {
-  const { name: toolName, emoji: toolEmoji } = CLI_TOOL_CONFIG[tool]
+  const { name: toolDisplayName } = CLI_TOOL_CONFIG[tool]
+  const badge = toolBadge(tool)
 
   // 交互式菜单需要一个无限循环,直到用户选择返回
   // eslint-disable-next-line no-constant-condition
@@ -251,7 +254,7 @@ async function showToolMenu(tool: CliToolType): Promise<void> {
       {
         type: 'list',
         name: 'action',
-        message: `${toolEmoji} ${toolName} 操作:`,
+        message: `${badge} ${toolDisplayName} 操作:`,
         choices: [
           { name: '➕ 添加服务商', value: 'add' },
           { name: '🔄 切换服务商', value: 'switch' },
@@ -322,9 +325,9 @@ async function showPresetsMenu(): Promise<void> {
 
 async function handleAdd(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
-  const { name: toolName, cmd } = CLI_TOOL_CONFIG[tool]
   const presets = manager.listPresets()
 
+  const { name: toolName, cmd } = CLI_TOOL_CONFIG[tool]
   console.log(chalk.bold(`\n📝 添加 ${toolName} 服务商\n`))
 
   // 询问是否使用预置
@@ -414,21 +417,19 @@ async function handleAdd(tool: CliToolType): Promise<void> {
 
   const provider = manager.add({ name, desc, baseUrl, apiKey })
 
-  console.log()
-  console.log(chalk.green('✅ 添加成功'))
-  console.log()
-  console.log(`  ${chalk.bold(provider.name)} ${chalk.blue(`[${toolName}]`)}`)
-  console.log(`  ${chalk.gray(provider.baseUrl)}`)
-  console.log()
+  printSuccess('添加成功', [
+    `${chalk.bold(provider.name)} ${toolBadge(tool)}`,
+    chalk.gray(provider.baseUrl),
+  ])
 
   // 询问是否切换
   const switchNow = await promptConfirm('是否立即切换到此服务商?', true)
 
   if (switchNow) {
     manager.switch(provider.id)
-    console.log(chalk.green('✅ 已切换到新服务商\n'))
+    printSuccess('已切换到新服务商')
   } else {
-    console.log(chalk.blue('💡 稍后切换:') + chalk.white(` ccman ${cmd} use "${provider.name}"\n`))
+    printTip(`稍后切换: ${chalk.white(`ccman ${cmd} use "${provider.name}"`)}`)
   }
 }
 
@@ -438,7 +439,7 @@ async function handleSwitch(tool: CliToolType): Promise<void> {
   const current = manager.getCurrent()
 
   if (providers.length === 0) {
-    console.log(chalk.yellow('\n⚠️  暂无服务商\n'))
+    printWarning('暂无服务商')
     return
   }
 
@@ -456,44 +457,42 @@ async function handleSwitch(tool: CliToolType): Promise<void> {
 
   manager.switch(providerId)
   const provider = providers.find((p) => p.id === providerId)!
-  console.log(chalk.green(`\n✅ 已切换到: ${provider.name}\n`))
+  printSuccess('切换成功', [
+    `${chalk.bold(provider.name)} ${toolBadge(tool)}`,
+    chalk.gray(provider.baseUrl),
+  ])
 }
 
 async function handleList(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const providers = manager.list()
   const current = manager.getCurrent()
-  const { name: toolName } = CLI_TOOL_CONFIG[tool]
+  const { name: tn, cmd } = CLI_TOOL_CONFIG[tool]
 
   if (providers.length === 0) {
-    console.log(chalk.yellow(`\n⚠️  暂无 ${toolName} 服务商\n`))
+    printWarning(`暂无 ${tn} 服务商`)
+    printTip(`添加服务商: ${chalk.white(`ccman ${cmd} add`)}`)
     return
   }
 
-  console.log(chalk.bold(`\n📋 ${toolName} 服务商 (${providers.length} 个)`))
-  console.log(formatProviderTable(providers, current?.id))
+  console.log(formatProviderTable(providers, current?.id, `${tn} 服务商 (${providers.length} 个)`))
 }
 
 async function handleCurrent(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const current = manager.getCurrent()
-  const { name: toolName } = CLI_TOOL_CONFIG[tool]
+  const { name: tn } = CLI_TOOL_CONFIG[tool]
 
   if (!current) {
-    console.log(chalk.yellow(`\n⚠️  未选择任何 ${toolName} 服务商\n`))
+    printWarning(`未选择任何 ${tn} 服务商`)
     return
   }
 
-  console.log(chalk.bold(`\n👁️  当前 ${toolName} 服务商\n`))
-  console.log(`  ${chalk.green.bold(current.name)}`)
-  console.log(`  ${chalk.gray(current.baseUrl)}`)
-
+  const lines = [chalk.green.bold(current.name), chalk.gray(`URL: ${current.baseUrl}`)]
   if (current.lastUsedAt) {
-    const date = new Date(current.lastUsedAt).toLocaleString('zh-CN')
-    console.log(`  ${chalk.gray(`最后使用: ${date}`)}`)
+    lines.push(chalk.gray(`最后使用: ${new Date(current.lastUsedAt).toLocaleString('zh-CN')}`))
   }
-
-  console.log()
+  printInfo(`📍 当前 ${tn} 服务商`, lines)
 }
 
 async function handleEdit(tool: CliToolType): Promise<void> {
@@ -501,7 +500,7 @@ async function handleEdit(tool: CliToolType): Promise<void> {
   const providers = manager.list()
 
   if (providers.length === 0) {
-    console.log(chalk.yellow('\n⚠️  暂无服务商\n'))
+    printWarning('暂无服务商')
     return
   }
 
@@ -561,7 +560,7 @@ async function handleEdit(tool: CliToolType): Promise<void> {
     apiKey: answers.apiKey || undefined,
   })
 
-  console.log(chalk.green('\n✅ 编辑成功\n'))
+  printSuccess('编辑成功')
 }
 
 async function handleClone(tool: CliToolType): Promise<void> {
@@ -569,7 +568,7 @@ async function handleClone(tool: CliToolType): Promise<void> {
   const providers = manager.list()
 
   if (providers.length === 0) {
-    console.log(chalk.yellow('\n⚠️  暂无服务商\n'))
+    printWarning('暂无服务商')
     return
   }
 
@@ -612,10 +611,7 @@ async function handleClone(tool: CliToolType): Promise<void> {
     apiKey: answers.apiKey,
   })
 
-  console.log(chalk.green('\n✅ 克隆成功\n'))
-  console.log(`  ${chalk.bold(newProvider.name)}`)
-  console.log(`  ${chalk.gray(newProvider.baseUrl)}`)
-  console.log()
+  printSuccess('克隆成功', [chalk.bold(newProvider.name), chalk.gray(newProvider.baseUrl)])
 }
 
 async function handleRemove(tool: CliToolType): Promise<void> {
@@ -623,7 +619,7 @@ async function handleRemove(tool: CliToolType): Promise<void> {
   const providers = manager.list()
 
   if (providers.length === 0) {
-    console.log(chalk.yellow('\n⚠️  暂无服务商\n'))
+    printWarning('暂无服务商')
     return
   }
 
@@ -645,7 +641,7 @@ async function handleRemove(tool: CliToolType): Promise<void> {
 
   if (confirm) {
     manager.remove(providerId)
-    console.log(chalk.green(`\n✅ 已删除: ${provider.name}\n`))
+    printSuccess(`已删除: ${provider.name}`)
   } else {
     console.log(chalk.gray('\n❌ 已取消\n'))
   }

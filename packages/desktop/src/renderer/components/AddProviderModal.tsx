@@ -270,7 +270,7 @@ export default function AddProviderModal({ show, type, onClose, onSubmit, onSucc
                       <div className="flex gap-2 pt-2 border-t border-gray-100">
                         <button
                           onClick={() => handleSelectPreset(preset)}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                           title="使用此预置"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />

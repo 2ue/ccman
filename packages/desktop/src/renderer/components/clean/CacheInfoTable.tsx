@@ -27,7 +27,7 @@ function formatDate(timestamp?: number): string {
 export default function CacheInfoTable({ caches, onDelete, loading }: CacheInfoTableProps) {
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           <span className="ml-3 text-gray-600">加载缓存信息...</span>
@@ -38,7 +38,7 @@ export default function CacheInfoTable({ caches, onDelete, loading }: CacheInfoT
 
   if (caches.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
         <div className="text-center text-gray-500">
           <Database className="w-12 h-12 mx-auto mb-3 text-gray-400" />
           <p>暂无缓存数据</p>
@@ -48,10 +48,10 @@ export default function CacheInfoTable({ caches, onDelete, loading }: CacheInfoT
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       {/* 标题 */}
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-lg font-semibold text-gray-900">缓存数据</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-gray-900">缓存数据</h3>
         <p className="text-sm text-gray-600 mt-1">共 {caches.length} 项缓存</p>
       </div>
 

@@ -9,6 +9,8 @@ import {
 } from '@ccman/core'
 import { promptProviderForm } from '../../interactive.js'
 import { promptConfirm } from '../../utils/confirm.js'
+import { printSuccess, printTip } from '../../utils/cli-output.js'
+import { toolBadge } from '../../utils/cli-theme.js'
 import {
   addProviderAddOptions,
   resolveProviderAddInput,
@@ -29,24 +31,19 @@ export function addCommand(program: Command): void {
       if (resolved.nonInteractive && resolved.input) {
         const provider = manager.add(resolved.input)
 
-        console.log()
-        console.log(chalk.green('✅ 添加成功'))
-        console.log()
-        console.log(`  ${chalk.bold(provider.name)} ${chalk.blue('[OpenClaw]')}`)
-        console.log(`  ${chalk.gray(provider.baseUrl)}`)
-        console.log()
+        printSuccess('添加成功', [
+          `${chalk.bold(provider.name)} ${toolBadge('openclaw')}`,
+          chalk.gray(provider.baseUrl),
+        ])
 
         if (resolved.switchNow) {
           manager.switch(provider.id)
-          console.log(chalk.green('✅ 已切换到新服务商'))
-          console.log()
-          console.log(chalk.gray('配置已更新:'))
-          console.log(chalk.gray(`  - ${getOpenClawConfigPath()}`))
-          console.log(chalk.gray(`  - ${getOpenClawModelsPath()}`))
+          printSuccess('已切换到新服务商', [
+            chalk.gray(`配置已更新: ${getOpenClawConfigPath()}`),
+            chalk.gray(`配置已更新: ${getOpenClawModelsPath()}`),
+          ])
         } else {
-          console.log(
-            chalk.blue('💡 稍后切换:') + chalk.white(` ccman openclaw use "${provider.name}"`)
-          )
+          printTip(`稍后切换: ${chalk.white(`ccman openclaw use "${provider.name}"`)}`)
         }
         return
       }
@@ -139,26 +136,21 @@ export function addCommand(program: Command): void {
         apiKey,
       })
 
-      console.log()
-      console.log(chalk.green('✅ 添加成功'))
-      console.log()
-      console.log(`  ${chalk.bold(provider.name)} ${chalk.blue('[OpenClaw]')}`)
-      console.log(`  ${chalk.gray(provider.baseUrl)}`)
-      console.log()
+      printSuccess('添加成功', [
+        `${chalk.bold(provider.name)} ${toolBadge('openclaw')}`,
+        chalk.gray(provider.baseUrl),
+      ])
 
       const switchNow = await promptConfirm('是否立即切换到此服务商?', true)
 
       if (switchNow) {
         manager.switch(provider.id)
-        console.log(chalk.green('✅ 已切换到新服务商'))
-        console.log()
-        console.log(chalk.gray('配置已更新:'))
-        console.log(chalk.gray(`  - ${getOpenClawConfigPath()}`))
-        console.log(chalk.gray(`  - ${getOpenClawModelsPath()}`))
+        printSuccess('已切换到新服务商', [
+          chalk.gray(`配置已更新: ${getOpenClawConfigPath()}`),
+          chalk.gray(`配置已更新: ${getOpenClawModelsPath()}`),
+        ])
       } else {
-        console.log(
-          chalk.blue('💡 稍后切换:') + chalk.white(` ccman openclaw use "${provider.name}"`)
-        )
+        printTip(`稍后切换: ${chalk.white(`ccman openclaw use "${provider.name}"`)}`)
       }
     } catch (error) {
       console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))

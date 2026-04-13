@@ -48,7 +48,7 @@ export default function HomePage({
         <div className="text-center mb-12 relative">
           <button
             onClick={handleOpenFolder}
-            className="absolute top-0 right-0 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="absolute top-0 right-0 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
             title="打开配置文件夹"
           >
             <FolderOpen className="w-5 h-5" />

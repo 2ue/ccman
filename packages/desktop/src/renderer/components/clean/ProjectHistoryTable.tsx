@@ -147,7 +147,7 @@ export default function ProjectHistoryTable({
 }: ProjectHistoryTableProps) {
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           <span className="ml-3 text-gray-600">加载项目历史...</span>
@@ -158,7 +158,7 @@ export default function ProjectHistoryTable({
 
   if (projects.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
         <div className="text-center text-gray-500">
           <Folder className="w-12 h-12 mx-auto mb-3 text-gray-400" />
           <p>暂无项目历史记录</p>
@@ -168,9 +168,9 @@ export default function ProjectHistoryTable({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-lg font-semibold text-gray-900">项目历史记录</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-gray-900">项目历史记录</h3>
         <p className="text-sm text-gray-600 mt-1">共 {projects.length} 个项目</p>
       </div>
 

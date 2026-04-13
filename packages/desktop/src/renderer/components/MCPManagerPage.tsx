@@ -6,7 +6,8 @@ import AddMCPModal from './AddMCPModal'
 import EditMCPModal from './EditMCPModal'
 import CloneMCPModal from './CloneMCPModal'
 import { AlertDialog, ConfirmDialog } from './dialogs'
-import { Plus, Inbox, Search, Server, FileCode2 } from 'lucide-react'
+import { Plus, Inbox, Search, FileCode2 } from 'lucide-react'
+import { McpIcon } from './icons/BrandIcons'
 import { BUTTON_WITH_ICON, BUTTON_STYLES } from '../styles/button'
 
 export default function MCPManagerPage() {
@@ -210,7 +211,7 @@ export default function MCPManagerPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <p className="mt-2 text-gray-600">加载中...</p>
@@ -220,13 +221,13 @@ export default function MCPManagerPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white">
+    <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-100 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Server className="w-7 h-7 text-blue-600" />
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+              <McpIcon size={28} />
               MCP 服务器管理
             </h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -254,7 +255,7 @@ export default function MCPManagerPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索 MCP 服务器..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>

@@ -595,7 +595,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-gray-50">
       {/* 小侧边栏（始终显示） */}
       <MiniSidebar
         activeKey={currentView === 'dashboard' ? 'home' : (currentView as NavKey)}

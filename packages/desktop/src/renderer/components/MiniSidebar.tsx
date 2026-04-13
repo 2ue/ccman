@@ -1,6 +1,13 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { Home, Server, Package, Trash2, Settings, Info, Code, Wrench } from 'lucide-react'
-import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
+import { Home, Package, Trash2, Settings, Info } from 'lucide-react'
+import {
+  ClaudeIcon,
+  OpenAIIcon,
+  GeminiIcon,
+  McpIcon,
+  OpenCodeIcon,
+  OpenClawIcon,
+} from './icons/BrandIcons'
 import type { NavKey } from './DashboardPage'
 
 interface MiniSidebarProps {
@@ -32,9 +39,9 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
     { key: 'claude', icon: ClaudeIcon, label: 'Claude Code', isBrandIcon: true },
     { key: 'codex', icon: OpenAIIcon, label: 'Codex', isBrandIcon: true },
     { key: 'gemini', icon: GeminiIcon, label: 'Gemini CLI', isBrandIcon: true },
-    { key: 'opencode', icon: Code, label: 'OpenCode' },
-    { key: 'openclaw', icon: Wrench, label: 'OpenClaw' },
-    { key: 'mcp', icon: Server, label: 'MCP 服务器' },
+    { key: 'opencode', icon: OpenCodeIcon, label: 'OpenCode', isBrandIcon: true },
+    { key: 'openclaw', icon: OpenClawIcon, label: 'OpenClaw', isBrandIcon: true },
+    { key: 'mcp', icon: McpIcon, label: 'MCP 服务器', isBrandIcon: true },
     { key: 'service-providers', icon: Package, label: '预置服务商' },
     { key: 'clean', icon: Trash2, label: '清理工具' },
     { type: 'spacer' },
@@ -83,7 +90,7 @@ export default function MiniSidebar({ activeKey, onNavigate }: MiniSidebarProps)
                 <Tooltip.Content
                   side="right"
                   sideOffset={8}
-                  className="bg-gray-900 text-white px-3 py-1.5 rounded-md text-sm shadow-lg z-50"
+                  className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-sm shadow-lg z-50"
                 >
                   {navItem.label}
                   <Tooltip.Arrow className="fill-gray-900" />

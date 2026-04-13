@@ -1,6 +1,13 @@
 import type { Provider } from '@ccman/types'
-import { Server, Package, Trash2, Settings, Target, Code, Wrench } from 'lucide-react'
-import { ClaudeIcon, OpenAIIcon, GeminiIcon } from './icons/BrandIcons'
+import { Package, Trash2, Settings } from 'lucide-react'
+import {
+  ClaudeIcon,
+  OpenAIIcon,
+  GeminiIcon,
+  McpIcon,
+  OpenCodeIcon,
+  OpenClawIcon,
+} from './icons/BrandIcons'
 import DashboardCard from './DashboardCard'
 
 export type NavKey =
@@ -40,13 +47,17 @@ export default function DashboardPage({
   onEnterPage,
 }: DashboardPageProps) {
   return (
-    <div className="flex-1 overflow-y-auto bg-white">
+    <div className="flex-1 overflow-y-auto">
       <div className="max-w-[880px] mx-auto p-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Target className="w-10 h-10 text-blue-600" />
-            <h1 className="text-4xl font-bold text-gray-900">ccman</h1>
+            <div className="bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl p-1 text-white w-10 h-10 flex items-center justify-center">
+              <span className="text-sm font-bold leading-none">CC</span>
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              ccman
+            </h1>
           </div>
           <p className="text-xl text-gray-600">AI 代码助手配置管理工具</p>
           <p className="text-sm text-gray-500 mt-2">
@@ -56,15 +67,11 @@ export default function DashboardPage({
 
         {/* AI 代码助手区域 */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider px-3">
-              AI 代码助手
-            </h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-          </div>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-5">
+            AI 代码助手
+          </h2>
           {/* 响应式网格：2个工具显示2列，3+个工具显示3列，自动换行 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Claude Code */}
             <DashboardCard
               icon={ClaudeIcon}
@@ -106,7 +113,7 @@ export default function DashboardPage({
 
             {/* OpenCode */}
             <DashboardCard
-              icon={Code}
+              icon={OpenCodeIcon}
               title="OpenCode"
               statusLines={[
                 opencodeData.current ? `已配置：${opencodeData.current.name}` : '未配置',
@@ -114,11 +121,12 @@ export default function DashboardPage({
               ]}
               statusType={opencodeData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('opencode')}
+              isBrandIcon
             />
 
             {/* OpenClaw */}
             <DashboardCard
-              icon={Wrench}
+              icon={OpenClawIcon}
               title="OpenClaw"
               statusLines={[
                 openclawData.current ? `已配置：${openclawData.current.name}` : '未配置',
@@ -126,28 +134,26 @@ export default function DashboardPage({
               ]}
               statusType={openclawData.current ? 'success' : 'warning'}
               onClick={() => onEnterPage('openclaw')}
+              isBrandIcon
             />
           </div>
         </div>
 
         {/* 配置与工具区域 */}
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider px-3">
-              配置与工具
-            </h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-          </div>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-5">
+            配置与工具
+          </h2>
           {/* 响应式网格：自动适应卡片数量 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* MCP 服务器 */}
             <DashboardCard
-              icon={Server}
+              icon={McpIcon}
               title="MCP 服务器"
               statusLines={['Model Context Protocol', '扩展 AI 工具能力']}
               statusType="info"
               onClick={() => onEnterPage('mcp')}
+              isBrandIcon
             />
 
             {/* 预置服务商 */}

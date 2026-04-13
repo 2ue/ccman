@@ -336,12 +336,15 @@ export default function ServiceProviderConfigPage({
   )
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white">
+    <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-100 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">预置服务商</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+              <Package className="w-7 h-7 text-blue-600" />
+              预置服务商
+            </h1>
             <p className="text-sm text-gray-500 mt-1">
               从预置模板快速添加服务商（共{' '}
               {codexPresets.length +
@@ -355,7 +358,7 @@ export default function ServiceProviderConfigPage({
           <div className="flex gap-2">
             <button
               onClick={handleEditConfig}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               title="编辑预置配置文件"
             >
               <FileCode2 className="w-5 h-5" />
@@ -372,7 +375,7 @@ export default function ServiceProviderConfigPage({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索预置服务商..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -385,14 +388,14 @@ export default function ServiceProviderConfigPage({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Codex 预置</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-gray-900">Codex 预置</h2>
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredCodexPresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.CODEX)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 Codex 预置
@@ -408,7 +411,7 @@ export default function ServiceProviderConfigPage({
               {filteredCodexPresets.map((preset) => (
                 <div
                   key={`codex-${preset.name}`}
-                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+                  className="bg-white rounded-xl p-3 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
@@ -439,7 +442,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -449,14 +452,14 @@ export default function ServiceProviderConfigPage({
                       <>
                         <button
                           onClick={() => handleEditPreset(preset)}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="编辑预置"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePreset(preset)}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="删除预置"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -475,14 +478,16 @@ export default function ServiceProviderConfigPage({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Claude Code 预置</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+                Claude Code 预置
+              </h2>
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredClaudeCodePresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.CLAUDE)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 Claude Code 预置
@@ -498,7 +503,7 @@ export default function ServiceProviderConfigPage({
               {filteredClaudeCodePresets.map((preset) => (
                 <div
                   key={`claudecode-${preset.name}`}
-                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+                  className="bg-white rounded-xl p-3 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
@@ -529,7 +534,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -539,14 +544,14 @@ export default function ServiceProviderConfigPage({
                       <>
                         <button
                           onClick={() => handleEditPreset(preset)}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="编辑预置"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePreset(preset)}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="删除预置"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -565,14 +570,16 @@ export default function ServiceProviderConfigPage({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Gemini CLI 预置</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+                Gemini CLI 预置
+              </h2>
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredGeminiPresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.GEMINI)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 Gemini CLI 预置
@@ -588,7 +595,7 @@ export default function ServiceProviderConfigPage({
               {filteredGeminiPresets.map((preset) => (
                 <div
                   key={`gemini-${preset.name}`}
-                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+                  className="bg-white rounded-xl p-3 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
@@ -619,7 +626,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -629,14 +636,14 @@ export default function ServiceProviderConfigPage({
                       <>
                         <button
                           onClick={() => handleEditPreset(preset)}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="编辑预置"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePreset(preset)}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="删除预置"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -655,14 +662,14 @@ export default function ServiceProviderConfigPage({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">OpenCode 预置</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-gray-900">OpenCode 预置</h2>
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredOpenCodePresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.OPENCODE)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 OpenCode 预置
@@ -678,7 +685,7 @@ export default function ServiceProviderConfigPage({
               {filteredOpenCodePresets.map((preset) => (
                 <div
                   key={`opencode-${preset.name}`}
-                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+                  className="bg-white rounded-xl p-3 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
@@ -709,7 +716,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -719,14 +726,14 @@ export default function ServiceProviderConfigPage({
                       <>
                         <button
                           onClick={() => handleEditPreset(preset)}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="编辑预置"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePreset(preset)}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="删除预置"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -745,14 +752,14 @@ export default function ServiceProviderConfigPage({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">OpenClaw 预置</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-gray-900">OpenClaw 预置</h2>
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                 {filteredOpenClawPresets.length}
               </span>
             </div>
             <button
               onClick={() => handleAddPreset(TOOL_TYPES.OPENCLAW)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               添加 OpenClaw 预置
@@ -768,7 +775,7 @@ export default function ServiceProviderConfigPage({
               {filteredOpenClawPresets.map((preset) => (
                 <div
                   key={`openclaw-${preset.name}`}
-                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
+                  className="bg-white rounded-xl p-3 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
@@ -799,7 +806,7 @@ export default function ServiceProviderConfigPage({
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => handleUsePreset(preset)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                       title="使用此预置"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -809,14 +816,14 @@ export default function ServiceProviderConfigPage({
                       <>
                         <button
                           onClick={() => handleEditPreset(preset)}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="编辑预置"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePreset(preset)}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="删除预置"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -877,8 +884,10 @@ export default function ServiceProviderConfigPage({
       {/* Use Preset Modal */}
       {showUsePresetModal && usingPreset && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">使用预置服务商</h2>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+              使用预置服务商
+            </h2>
             <ProviderForm
               preset={usingPreset}
               tool={usingPreset.type}

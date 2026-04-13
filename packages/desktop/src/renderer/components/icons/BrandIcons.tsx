@@ -5,6 +5,9 @@
 import ClaudeSvg from '@lobehub/icons-static-svg/icons/claude.svg?react'
 import OpenAISvg from '@lobehub/icons-static-svg/icons/openai.svg?react'
 import GeminiSvg from '@lobehub/icons-static-svg/icons/gemini.svg?react'
+import McpSvg from '@lobehub/icons-static-svg/icons/mcp.svg?react'
+import OpenCodeSvg from '@lobehub/icons-static-svg/icons/opencode.svg?react'
+import OpenClawSvg from '@lobehub/icons-static-svg/icons/openclaw.svg?react'
 
 interface BrandIconProps {
   className?: string
@@ -49,4 +52,16 @@ export function OpenAIIcon(props: BrandIconProps) {
 
 export function GeminiIcon(props: BrandIconProps) {
   return <SvgIcon SvgComponent={GeminiSvg} {...props} />
+}
+
+export function McpIcon(props: BrandIconProps) {
+  return <SvgIcon SvgComponent={McpSvg} {...props} />
+}
+
+export function OpenCodeIcon(props: BrandIconProps) {
+  return <SvgIcon SvgComponent={OpenCodeSvg} {...props} />
+}
+
+export function OpenClawIcon(props: BrandIconProps) {
+  return <SvgIcon SvgComponent={OpenClawSvg} {...props} />
 }

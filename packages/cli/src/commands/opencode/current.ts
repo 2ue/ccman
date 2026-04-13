@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import { createOpenCodeManager } from '@ccman/core'
+import { printInfo, printWarning } from '../../utils/cli-output.js'
 
 export function currentCommand(program: Command): void {
   program
@@ -12,15 +13,14 @@ export function currentCommand(program: Command): void {
         const current = manager.getCurrent()
 
         if (!current) {
-          console.log(chalk.yellow('\n⚠️  当前没有激活的 OpenCode 服务商\n'))
-          console.log(chalk.blue('💡 列出服务商:') + chalk.white(' ccman oc list\n'))
+          printWarning('未选择任何 OpenCode 服务商')
           return
         }
 
-        console.log(chalk.bold('\n🎯 当前 OpenCode 服务商\n'))
-        console.log(`  名称: ${chalk.bold(current.name)}`)
-        console.log(`  地址: ${chalk.gray(current.baseUrl)}`)
-        console.log()
+        printInfo('📍 当前 OpenCode 服务商', [
+          chalk.green.bold(current.name),
+          chalk.gray(`URL: ${current.baseUrl}`),
+        ])
       } catch (error) {
         console.error(chalk.red(`\n❌ ${(error as Error).message}\n`))
         process.exit(1)

@@ -18,6 +18,8 @@ export default defineConfig({
     '@iarna/toml', // TOML 库需要 external（使用 require('stream')）
     'proper-lockfile',
     'webdav',
+    'boxen',
+    'gradient-string',
   ],
   noExternal: ['@ccman/core'], // 强制打包 @ccman/core 源码（Core 不会发布到 npm）
   bundle: true,

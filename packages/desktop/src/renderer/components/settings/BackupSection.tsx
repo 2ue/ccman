@@ -1,9 +1,10 @@
 /**
  * 本地备份配置区块
+ * 结构与 WebDAVSync 一致：标题在外，内容分卡片
  */
 
 import { useState } from 'react'
-import { FileUp, FileDown, HardDrive, Package, AlertTriangle } from 'lucide-react'
+import { FileUp, FileDown, HardDrive, AlertTriangle } from 'lucide-react'
 import { BUTTON_WITH_ICON } from '../../styles/button'
 import { ConfirmDialog } from '../dialogs/ConfirmDialog'
 
@@ -22,17 +23,12 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
   const handleExport = async () => {
     try {
       setIsExporting(true)
-
-      // 选择目标文件夹
       const targetDir = await window.electronAPI.importExport.selectFolder('选择导出目录')
       if (!targetDir) {
         setIsExporting(false)
         return
       }
-
-      // 执行导出
       const result = await window.electronAPI.importExport.exportConfig(targetDir)
-
       if (result.success) {
         onSuccess(`配置已导出到：${targetDir}\n包含文件：${result.exportedFiles.join(', ')}`)
       }
@@ -45,20 +41,13 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
 
   const handleImportClick = async () => {
     try {
-      // 选择源文件夹
       const sourceDir = await window.electronAPI.importExport.selectFolder('选择导入目录')
-      if (!sourceDir) {
-        return
-      }
-
-      // 验证目录
+      if (!sourceDir) return
       const validation = await window.electronAPI.importExport.validateImportDir(sourceDir)
       if (!validation.valid) {
         onError('导入失败', validation.message || '无效的导入目录')
         return
       }
-
-      // 显示确认对话框
       setImportDir(sourceDir)
       setImportFiles(validation.foundFiles)
       setShowImportConfirm(true)
@@ -69,14 +58,10 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
 
   const handleImportConfirm = async () => {
     if (!importDir) return
-
     try {
       setIsImporting(true)
       setShowImportConfirm(false)
-
-      // 执行导入
       const result = await window.electronAPI.importExport.importConfig(importDir)
-
       if (result.success) {
         let message = `配置已导入\n导入文件：${result.importedFiles.join(', ')}`
         if (result.backupPaths.length > 0) {
@@ -94,62 +79,42 @@ export default function BackupSection({ onSuccess, onError }: BackupSectionProps
   }
 
   return (
-    <div className="w-full">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <HardDrive className="w-6 h-6" />
-        本地备份
-      </h2>
+    <div className="w-full space-y-6">
+      {/* 页面标题 */}
+      <div className="flex items-center gap-2">
+        <HardDrive className="w-5 h-5 text-blue-600" />
+        <h2 className="text-xl font-semibold tracking-tight text-gray-900">本地备份</h2>
+      </div>
 
-      <div className="bg-white rounded-lg shadow p-6 space-y-6">
-        {/* 说明 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-          <h3 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
-            <Package className="w-4 h-4" />
-            导入/导出说明
-          </h3>
-          <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-            <li>
-              <strong>导出配置</strong>：将配置保存到本地文件夹（包含 API Key）
-            </li>
-            <li>
-              <strong>导入配置</strong>：从本地文件夹导入配置（会覆盖当前配置，自动备份）
-            </li>
-            <li>适用场景：本地备份、迁移到其他设备、版本控制</li>
-          </ul>
-        </div>
-
-        {/* 操作按钮 */}
-        <div className="flex flex-wrap gap-3">
+      {/* 操作卡片 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className={`${BUTTON_WITH_ICON.primary} bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="flex flex-col items-center gap-2 px-4 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FileUp className="w-4 h-4" />
-            {isExporting ? '导出中...' : '导出配置'}
+            <FileUp className="w-5 h-5" />
+            <span className="text-sm font-medium">{isExporting ? '导出中...' : '导出配置'}</span>
+            <span className="text-xs text-blue-500">保存到本地文件夹</span>
           </button>
 
           <button
             onClick={handleImportClick}
             disabled={isImporting}
-            className={`${BUTTON_WITH_ICON.primary} bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="flex flex-col items-center gap-2 px-4 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FileDown className="w-4 h-4" />
-            {isImporting ? '导入中...' : '导入配置'}
+            <FileDown className="w-5 h-5" />
+            <span className="text-sm font-medium">{isImporting ? '导入中...' : '导入配置'}</span>
+            <span className="text-xs text-blue-500">从本地文件夹导入</span>
           </button>
         </div>
 
-        {/* 安全提示 */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <h3 className="text-sm font-medium text-yellow-900 mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            安全提示
-          </h3>
-          <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
-            <li>导出的配置文件包含完整的 API Key，请妥善保管</li>
-            <li>导入操作会覆盖当前配置，请确认后再操作</li>
-            <li>所有导入操作都会自动备份当前配置</li>
-          </ul>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+          <p className="text-xs text-yellow-700 flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            导出文件包含 API Key，请妥善保管；导入会自动备份当前配置
+          </p>
         </div>
       </div>
 
