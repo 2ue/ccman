@@ -5,6 +5,8 @@
   "description": "Manage Codex, Claude Code, Gemini CLI, and MCP API service provider configurations",
   "scripts": {
     "build": "pnpm --filter=!@ccman/desktop -r build",
+    "cli:build": "pnpm --filter ccman build",
+    "cli:testdir": "mkdir -p .tmp/cli-manual-test/home && HOME=$PWD/.tmp/cli-manual-test/home node ./packages/cli/dist/index.js",
     "dev:desktop": "pnpm --filter=@ccman/desktop dev",
     "build:all": "pnpm -r build",
     "test": "pnpm --filter=!@ccman/desktop -r test",

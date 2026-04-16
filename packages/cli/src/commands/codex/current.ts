@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import chalk from 'chalk'
 import { createCodexManager } from '@ccman/core'
-import { printInfo, printWarning } from '../../utils/cli-output.js'
+import { printInfo, printTip, printWarning } from '../../utils/cli-output.js'
 
 export function currentCommand(program: Command): void {
   program
@@ -14,10 +14,15 @@ export function currentCommand(program: Command): void {
 
         if (!current) {
           printWarning('未选择任何 Codex 服务商')
+          printTip('选择服务商: ' + chalk.white('ccman cx use'))
           return
         }
 
-        const lines = [chalk.green.bold(current.name), chalk.gray(`URL: ${current.baseUrl}`)]
+        const lines = [
+          chalk.green.bold(current.name),
+          chalk.gray(`ID: ${current.id}`),
+          chalk.gray(`URL: ${current.baseUrl}`),
+        ]
         if (current.lastUsedAt) {
           lines.push(
             chalk.gray(`最后使用: ${new Date(current.lastUsedAt).toLocaleString('zh-CN')}`)

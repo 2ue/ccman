@@ -10,16 +10,6 @@ const TOOL_COLORS: Record<string, chalk.Chalk> = {
   mcp: chalk.hex('#9B59B6'), // 紫色
 }
 
-// 工具缩写标签
-const TOOL_LABELS: Record<string, string> = {
-  codex: 'CX',
-  claude: 'CC',
-  gemini: 'GM',
-  opencode: 'OC',
-  openclaw: 'OW',
-  mcp: 'MCP',
-}
-
 // 工具显示名
 const TOOL_NAMES: Record<string, string> = {
   codex: 'Codex',
@@ -35,10 +25,10 @@ export function toolColor(tool: string): chalk.Chalk {
   return TOOL_COLORS[tool] || chalk.blue
 }
 
-/** 返回彩色工具缩写标签，如 [CC] */
+/** 返回彩色工具标签，如 [Claude Code] */
 export function toolBadge(tool: string): string {
   const color = TOOL_COLORS[tool] || chalk.blue
-  const label = TOOL_LABELS[tool] || tool.toUpperCase()
+  const label = TOOL_NAMES[tool] || tool
   return color.bold(`[${label}]`)
 }
 

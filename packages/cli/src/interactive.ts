@@ -29,11 +29,11 @@ import { printSuccess, printInfo, printWarning, printTip } from './utils/cli-out
 
 // CLI 专用配置（命令缩写和显示名）
 const CLI_TOOL_CONFIG = {
-  [TOOL_TYPES.CODEX]: { name: 'Codex', cmd: 'cx' },
-  [TOOL_TYPES.CLAUDE]: { name: 'Claude', cmd: 'cc' },
-  [TOOL_TYPES.GEMINI]: { name: 'Gemini', cmd: 'gm' },
-  [TOOL_TYPES.OPENCODE]: { name: 'OpenCode', cmd: 'oc' },
-  [TOOL_TYPES.OPENCLAW]: { name: 'OpenClaw', cmd: 'ow' },
+  [TOOL_TYPES.CODEX]: { name: 'Codex', emoji: '🔶', cmd: 'cx' },
+  [TOOL_TYPES.CLAUDE]: { name: 'Claude', emoji: '🔷', cmd: 'cc' },
+  [TOOL_TYPES.GEMINI]: { name: 'Gemini', emoji: '💎', cmd: 'gm' },
+  [TOOL_TYPES.OPENCODE]: { name: 'OpenCode', emoji: '🧩', cmd: 'oc' },
+  [TOOL_TYPES.OPENCLAW]: { name: 'OpenClaw', emoji: '🦀', cmd: 'ow' },
 } as const
 
 type CliToolType = Exclude<ToolType, 'mcp'>
@@ -147,11 +147,11 @@ export async function startMainMenu(): Promise<void> {
         name: 'choice',
         message: '请选择操作:',
         choices: [
-          { name: `${toolBadge('claude')} Claude 管理`, value: 'claude' },
-          { name: `${toolBadge('codex')} Codex 管理`, value: 'codex' },
-          { name: `${toolBadge('gemini')} Gemini 管理`, value: 'gemini' },
-          { name: `${toolBadge('opencode')} OpenCode 管理`, value: 'opencode' },
-          { name: `${toolBadge('openclaw')} OpenClaw 管理`, value: 'openclaw' },
+          { name: '🔷 Claude 管理', value: 'claude' },
+          { name: '🔶 Codex 管理', value: 'codex' },
+          { name: '💎 Gemini 管理', value: 'gemini' },
+          { name: '🧩 OpenCode 管理', value: 'opencode' },
+          { name: '🦀 OpenClaw 管理', value: 'openclaw' },
           { name: '🔄 WebDAV 同步', value: 'sync' },
           { name: '📦 预置服务商管理', value: 'presets' },
           { name: '❌ 退出', value: 'exit' },
@@ -243,8 +243,7 @@ export async function startOpenClawMenu(): Promise<void> {
 // ============================================================================
 
 async function showToolMenu(tool: CliToolType): Promise<void> {
-  const { name: toolDisplayName } = CLI_TOOL_CONFIG[tool]
-  const badge = toolBadge(tool)
+  const { name: toolDisplayName, emoji } = CLI_TOOL_CONFIG[tool]
 
   // 交互式菜单需要一个无限循环,直到用户选择返回
   // eslint-disable-next-line no-constant-condition
@@ -254,7 +253,7 @@ async function showToolMenu(tool: CliToolType): Promise<void> {
       {
         type: 'list',
         name: 'action',
-        message: `${badge} ${toolDisplayName} 操作:`,
+        message: `${emoji} ${toolDisplayName} 操作:`,
         choices: [
           { name: '➕ 添加服务商', value: 'add' },
           { name: '🔄 切换服务商', value: 'switch' },
@@ -481,14 +480,19 @@ async function handleList(tool: CliToolType): Promise<void> {
 async function handleCurrent(tool: CliToolType): Promise<void> {
   const manager = getManager(tool)
   const current = manager.getCurrent()
-  const { name: tn } = CLI_TOOL_CONFIG[tool]
+  const { name: tn, cmd } = CLI_TOOL_CONFIG[tool]
 
   if (!current) {
     printWarning(`未选择任何 ${tn} 服务商`)
+    printTip(`选择服务商: ${chalk.white(`ccman ${cmd} use`)}`)
     return
   }
 
-  const lines = [chalk.green.bold(current.name), chalk.gray(`URL: ${current.baseUrl}`)]
+  const lines = [
+    chalk.green.bold(current.name),
+    chalk.gray(`ID: ${current.id}`),
+    chalk.gray(`URL: ${current.baseUrl || '(默认端点)'}`),
+  ]
   if (current.lastUsedAt) {
     lines.push(chalk.gray(`最后使用: ${new Date(current.lastUsedAt).toLocaleString('zh-CN')}`))
   }
