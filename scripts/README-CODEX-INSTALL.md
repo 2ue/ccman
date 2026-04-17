@@ -12,7 +12,6 @@
 
 - Unix/macOS/Linux: `scripts/install-codex.sh`
 - Windows PowerShell: `scripts/install-codex.ps1`
-- Node 版规划/模拟入口: `scripts/install-codex.mjs`
 
 ## 推荐使用
 
@@ -61,11 +60,10 @@ bash scripts/install-codex.sh --skip-config
 
 - 自动化验证不会真实安装 Node.js / Codex
 - 推荐分发方式是直接分发 `install-codex.sh` 或 `install-codex.ps1`
-- `install-codex.mjs` 主要用于仓库内规划/模拟，不是最终分发入口
 - Windows 侧仍建议优先在 WSL 中实际使用 Codex
 
-## 模拟测试
+## 基础验证
 
 ```bash
-node scripts/test-codex-bootstrap.mjs
+bash -n scripts/install-codex.sh
 ```
