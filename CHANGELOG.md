@@ -1,3 +1,18 @@
+## [3.3.25](https://github.com/2ue/ccman/compare/v3.3.24...v3.3.25) (2026-04-20)
+
+### 🐛 问题修复
+
+* **ci:** disable auto package manager cache (15a4ada870d6abe5be54a0bb007a53591cdab5c1)* **ci:** stabilize release publishing workflow (3e236f8c290419ab6345a5fcd8e33387bc5ba338)
+### 🔧 其他变更
+
+* **release:** 3.3.25 (7f4bb07f2430bad470a8ba423f6c813c572cb48d)
+### ✨ 新功能
+
+* add GMN1 presets and simplify GMN labels (b9e5cb1cff9d371683ee72777b5c4b1297a6f184)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.24 [skip ci] (fa0f802114ba04017cbf674dba9efac98f3203d5)
+
 ## [3.3.24](https://github.com/2ue/ccman/compare/v3.3.23...v3.3.24) (2026-03-31)
 
 ### 🔧 其他变更
