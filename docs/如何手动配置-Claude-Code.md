@@ -21,6 +21,7 @@ Claude Code 通过读取用户目录下的配置文件来获取 API 认证信息
 ```
 
 当你运行 Claude Code 时，它会自动读取此文件中的环境变量配置，包括：
+
 - API 认证令牌（ANTHROPIC_AUTH_TOKEN）
 - API 基础地址（ANTHROPIC_BASE_URL）
 - 其他可选配置项
@@ -59,6 +60,7 @@ code ~/.claude/settings.json
 
 ```json
 {
+  "model": "sonnet",
   "env": {
     "ANTHROPIC_AUTH_TOKEN": "sk-ant-xxx",
     "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
@@ -74,12 +76,13 @@ code ~/.claude/settings.json
 
 **关键配置项说明**：
 
-| 字段 | 说明 | 必填 |
-|------|------|------|
-| `ANTHROPIC_AUTH_TOKEN` | API 认证令牌，由服务商提供（格式通常为 `sk-ant-xxx`） | ✅ 必填 |
-| `ANTHROPIC_BASE_URL` | API 基础地址，由服务商提供 | ✅ 必填 |
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | 禁用非必要流量（可选，建议保留） | ❌ 可选 |
-| `CLAUDE_CODE_MAX_OUTPUT_TOKENS` | 最大输出令牌数（可选，建议保留） | ❌ 可选 |
+| 字段                                       | 说明                                                              | 必填    |
+| ------------------------------------------ | ----------------------------------------------------------------- | ------- |
+| `model`                                    | Claude Code 默认模型；`sonnet` 是官方别名，会跟随最新 Sonnet 版本 | ❌ 可选 |
+| `ANTHROPIC_AUTH_TOKEN`                     | API 认证令牌，由服务商提供（格式通常为 `sk-ant-xxx`）             | ✅ 必填 |
+| `ANTHROPIC_BASE_URL`                       | API 基础地址，由服务商提供                                        | ✅ 必填 |
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | 禁用非必要流量（可选，建议保留）                                  | ❌ 可选 |
+| `CLAUDE_CODE_MAX_OUTPUT_TOKENS`            | 最大输出令牌数（可选，建议保留）                                  | ❌ 可选 |
 
 ### 第 4 步：验证配置
 
@@ -97,6 +100,7 @@ claude --version
 
 ```json
 {
+  "model": "sonnet",
   "env": {
     "ANTHROPIC_AUTH_TOKEN": "sk-ant-api03-Ov7xJ9K3...",
     "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
@@ -117,6 +121,7 @@ claude --version
 如果你需要在多个服务商之间切换，只需修改 `settings.json` 中的两个字段：
 
 1. **修改前（服务商 A）**：
+
    ```json
    {
      "env": {
@@ -127,6 +132,7 @@ claude --version
    ```
 
 2. **修改后（服务商 B）**：
+
    ```json
    {
      "env": {
@@ -159,10 +165,12 @@ touch ~/.claude/settings.json
 ### 2. 修改配置后不生效？
 
 **可能原因**：
+
 - Claude Code 进程未重启
 - 配置文件格式错误（JSON 语法错误）
 
 **解决方法**：
+
 1. 完全退出 Claude Code
 2. 检查 JSON 格式是否正确（可使用 [JSONLint](https://jsonlint.com/) 验证）
 3. 重新启动 Claude Code
@@ -200,13 +208,13 @@ chmod 600 ~/.claude/settings.json
 
 手动配置虽然可行，但存在以下问题：
 
-| 手动配置 | 使用 ccman |
-|---------|-----------|
-| ❌ 需要记住配置文件路径 | ✅ 一条命令搞定 |
-| ❌ 容易写错 JSON 格式 | ✅ 自动生成正确配置 |
-| ❌ 切换服务商麻烦 | ✅ `ccman cc use <id>` 即可 |
-| ❌ 无法管理多个服务商 | ✅ 统一管理所有服务商 |
-| ❌ 容易破坏现有配置 | ✅ 零破坏性写入 |
+| 手动配置                | 使用 ccman                  |
+| ----------------------- | --------------------------- |
+| ❌ 需要记住配置文件路径 | ✅ 一条命令搞定             |
+| ❌ 容易写错 JSON 格式   | ✅ 自动生成正确配置         |
+| ❌ 切换服务商麻烦       | ✅ `ccman cc use <id>` 即可 |
+| ❌ 无法管理多个服务商   | ✅ 统一管理所有服务商       |
+| ❌ 容易破坏现有配置     | ✅ 零破坏性写入             |
 
 ---
 

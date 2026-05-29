@@ -131,8 +131,8 @@ function resolveTemplatePath(relativePath: string): string | null {
  * - 这里定义的是其他默认字段
  */
 const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
-  model: 'gpt-5.4',
-  review_model: 'gpt-5.4',
+  model: 'gpt-5.5',
+  review_model: 'gpt-5.5',
   model_reasoning_effort: 'xhigh',
   plan_mode_reasoning_effort: 'xhigh',
   model_reasoning_summary: 'auto',
@@ -279,7 +279,7 @@ function writeCodexConfigOverwrite(provider: Provider): void {
 
   const providerKey = resolveCodexProviderKey(provider)
   nextConfig.model_provider = providerKey
-  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.4'
+  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.5'
   nextConfig.model_providers = {
     [providerKey]: buildManagedProvider(provider, providerKey),
   }
@@ -304,7 +304,7 @@ function writeCodexConfigMerge(provider: Provider): void {
   removeDeprecatedKeys(nextConfig)
 
   nextConfig.model_provider = providerKey
-  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.4'
+  nextConfig.model = provider.model || nextConfig.model || 'gpt-5.5'
 
   const existingProviders =
     nextConfig.model_providers &&

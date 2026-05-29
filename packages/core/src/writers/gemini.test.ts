@@ -59,6 +59,7 @@ describe('Gemini Writer', () => {
     const envContent = fs.readFileSync(envPath, 'utf-8')
     expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com')
     expect(envContent).toContain('GEMINI_API_KEY=sk-test-123')
+    expect(envContent).toContain('GEMINI_MODEL=gemini-3.5-flash')
   })
 
   it('should respect defaultModel and env in provider.model', () => {
@@ -90,7 +91,7 @@ describe('Gemini Writer', () => {
 
   it('should fallback GEMINI_MODEL from defaultModel when not provided in env', () => {
     const meta = {
-      defaultModel: 'gemini-2.5-pro',
+      defaultModel: 'gemini-3.5-flash',
     }
 
     const provider: Provider = {
@@ -108,7 +109,7 @@ describe('Gemini Writer', () => {
     const envPath = getGeminiEnvPath()
     const envContent = fs.readFileSync(envPath, 'utf-8')
     // 默认从 defaultModel 填充 GEMINI_MODEL
-    expect(envContent).toContain('GEMINI_MODEL=gemini-2.5-pro')
+    expect(envContent).toContain('GEMINI_MODEL=gemini-3.5-flash')
   })
 
   it('should preserve existing unrelated fields when updating', () => {
@@ -210,5 +211,6 @@ describe('Gemini Writer', () => {
     expect(envContent).not.toContain('GEMINI_MODEL=legacy-model')
     expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com')
     expect(envContent).toContain('GEMINI_API_KEY=sk-overwrite')
+    expect(envContent).toContain('GEMINI_MODEL=gemini-3.5-flash')
   })
 })

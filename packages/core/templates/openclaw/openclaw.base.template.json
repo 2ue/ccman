@@ -12,23 +12,13 @@
         "authHeader": true,
         "models": [
           {
-            "id": "gpt-5.4",
-            "name": "gpt-5.4",
+            "id": "gpt-5.5",
+            "name": "gpt-5.5",
             "api": "openai-responses",
             "reasoning": true,
             "input": ["text", "image"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
             "contextWindow": 1050000,
-            "maxTokens": 128000
-          },
-          {
-            "id": "gpt-5.3-codex",
-            "name": "gpt-5.3-codex",
-            "api": "openai-responses",
-            "reasoning": false,
-            "input": ["text", "image"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-            "contextWindow": 400000,
             "maxTokens": 128000
           }
         ]
@@ -38,9 +28,9 @@
   "agents": {
     "defaults": {
       "workspace": "",
-      "imageModel": "{{providerName}}/gpt-5.4",
+      "imageModel": "{{providerName}}/gpt-5.5",
       "model": {
-        "primary": "{{providerName}}/gpt-5.4"
+        "primary": "{{providerName}}/gpt-5.5"
       },
       "thinkingDefault": "xhigh"
     }

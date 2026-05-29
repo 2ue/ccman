@@ -145,11 +145,15 @@ test('应该创建所有配置文件', () => {
   assert(fs.existsSync(path.join(TEST_HOME, '.codex/auth.json')), 'Codex auth 未创建')
   assert(fs.existsSync(path.join(TEST_HOME, '.gemini/settings.json')), 'Gemini 配置未创建')
   assert(fs.existsSync(path.join(TEST_HOME, '.gemini/.env')), 'Gemini .env 未创建')
-  assert(fs.existsSync(path.join(TEST_HOME, '.config/opencode/opencode.json')), 'OpenCode 配置未创建')
+  assert(
+    fs.existsSync(path.join(TEST_HOME, '.config/opencode/opencode.json')),
+    'OpenCode 配置未创建'
+  )
 })
 
 test('Claude 配置应该包含正确的认证信息', () => {
   const config = readTestConfig('claude')
+  assert(config.model === 'sonnet', 'Claude 默认模型不正确')
   assert(config.env.ANTHROPIC_AUTH_TOKEN === TEST_API_KEY, 'API Key 不正确')
   assert(config.env.ANTHROPIC_BASE_URL === GMN_BASE_URLS.claude, 'Base URL 不正确')
 })
@@ -157,12 +161,15 @@ test('Claude 配置应该包含正确的认证信息', () => {
 test('Codex 配置应该包含 GMN provider', () => {
   const config = readTestConfig('codex')
   assert(config.includes('model_provider = "gmn"'), 'model_provider 不正确')
-  assert(config.includes('model = "gpt-5.2-codex"'), 'model 不正确')
+  assert(config.includes('model = "gpt-5.5"'), 'model 不正确')
   assert(config.includes('model_reasoning_effort = "high"'), 'model_reasoning_effort 不正确')
   assert(config.includes('model_verbosity = "high"'), 'model_verbosity 不正确')
   assert(config.includes('network_access = "enabled"'), 'network_access 不正确')
   assert(config.includes('disable_response_storage = true'), 'disable_response_storage 不正确')
-  assert(config.includes('windows_wsl_setup_acknowledged = true'), 'windows_wsl_setup_acknowledged 不正确')
+  assert(
+    config.includes('windows_wsl_setup_acknowledged = true'),
+    'windows_wsl_setup_acknowledged 不正确'
+  )
   assert(config.includes('[model_providers.gmn]'), 'gmn provider 块不存在')
   assert(config.includes(GMN_BASE_URLS.codex), 'Base URL 不存在')
 })
@@ -181,6 +188,7 @@ test('Gemini .env 应该包含认证信息', () => {
   const env = readTestConfig('gemini-env')
   assert(env.includes(`GEMINI_API_KEY=${TEST_API_KEY}`), 'API Key 不存在')
   assert(env.includes(`GOOGLE_GEMINI_BASE_URL=${GMN_BASE_URLS.gemini}`), 'Base URL 不存在')
+  assert(env.includes('GEMINI_MODEL=gemini-3.5-flash'), 'Gemini 默认模型不正确')
 })
 
 test('OpenCode 配置应该包含 GMN provider', () => {
@@ -191,10 +199,10 @@ test('OpenCode 配置应该包含 GMN provider', () => {
 })
 
 // ============================================================================
-// 测试 2: setup-gmn-standalone.mjs - 保护模式（保留现有配置）
+// 测试 2: setup-gmn-standalone.mjs - 快捷覆盖模式（覆盖托管配置）
 // ============================================================================
 
-console.log('\n📋 测试 2: 独立脚本 - 保护模式（保留现有配置）\n')
+console.log('\n📋 测试 2: 独立脚本 - 快捷覆盖模式（覆盖托管配置）\n')
 
 // 创建包含自定义配置的文件
 createTestConfig('claude', {
@@ -242,19 +250,21 @@ createTestConfig('opencode', {
 const result2 = runScript('scripts/setup-gmn-standalone.mjs', [TEST_API_KEY])
 assert(result2.success, '脚本执行失败')
 
-test('Claude 应该保留自定义字段', () => {
+test('Claude 应该覆盖托管配置', () => {
   const config = readTestConfig('claude')
+  assert(config.model === 'sonnet', 'Claude 默认模型不正确')
   assert(config.env.ANTHROPIC_AUTH_TOKEN === TEST_API_KEY, 'API Key 未更新')
   assert(config.env.ANTHROPIC_BASE_URL === GMN_BASE_URLS.claude, 'Base URL 未更新')
-  assert(config.env.CUSTOM_ENV === 'should-be-preserved', '自定义 env 丢失')
-  assert(config.permissions.allow[0] === 'custom-permission', 'permissions 丢失')
-  assert(config.customField === 'custom-value', '自定义字段丢失')
+  assert(config.env.CUSTOM_ENV === undefined, '不应保留自定义 env')
+  assert(config.permissions.allow.length === 0, 'permissions.allow 应该被覆盖为空数组')
+  assert(config.customField === undefined, '不应保留自定义字段')
 })
 
-test('Gemini .env 应该保留其他变量', () => {
+test('Gemini .env 应该覆盖托管变量', () => {
   const env = readTestConfig('gemini-env')
-  assert(env.includes('CUSTOM_VAR=custom-value'), '自定义变量丢失')
+  assert(!env.includes('CUSTOM_VAR=custom-value'), '不应保留自定义变量')
   assert(env.includes(`GEMINI_API_KEY=${TEST_API_KEY}`), 'API Key 未更新')
+  assert(env.includes('GEMINI_MODEL=gemini-3.5-flash'), 'Gemini 默认模型不正确')
 })
 
 test('Codex auth.json 应该备份并覆盖写入（仅保留 OPENAI_API_KEY）', () => {
@@ -287,10 +297,9 @@ test('Codex config.toml 应该备份并覆盖写入', () => {
   assert(backup.includes('custom_field = "should-be-removed"'), '备份未保留原字段')
 })
 
-test('OpenCode 应该保留其他 provider', () => {
+test('OpenCode 应该覆盖托管 provider', () => {
   const config = readTestConfig('opencode')
-  assert(config.provider.other, '其他 provider 丢失')
-  assert(config.provider.other.name === 'Other Provider', '其他 provider 内容丢失')
+  assert(!config.provider.other, '不应保留其他 provider')
   assert(config.provider.gmn, 'GMN provider 未添加')
 })
 

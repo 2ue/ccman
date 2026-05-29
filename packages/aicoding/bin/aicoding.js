@@ -422,8 +422,8 @@ function configureCodex(apiKey) {
   // 1. 处理 config.toml（先备份，再覆盖写入）
   const minimalConfig = [
     `model_provider = "${providerKey}"`,
-    'model = "gpt-5.4"',
-    'review_model = "gpt-5.4"',
+    'model = "gpt-5.5"',
+    'review_model = "gpt-5.5"',
     'model_reasoning_effort = "xhigh"',
     'plan_mode_reasoning_effort = "xhigh"',
     'model_reasoning_summary = "auto"',
@@ -487,7 +487,7 @@ function configureOpenCode(apiKey) {
       apiKey: apiKey,
     },
     models: {
-      'gpt-5.4': {
+      'gpt-5.5': {
         variants: {
           xhigh: {
             reasoningEffort: 'xhigh',
@@ -554,11 +554,11 @@ function createOpenClawModel(id) {
     id,
     name: id,
     api: 'openai-responses',
-    reasoning: false,
-    input: ['text'],
+    reasoning: true,
+    input: ['text', 'image'],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 200000,
-    maxTokens: 8192,
+    contextWindow: 1050000,
+    maxTokens: 128000,
   }
 }
 
@@ -571,8 +571,7 @@ function configureOpenClaw(apiKey) {
   ensureDir(path.dirname(modelsPath))
 
   const providerKey = 'gmn'
-  const primaryModelId = 'gpt-5.4'
-  const secondaryModelId = 'gpt-5.2-codex'
+  const primaryModelId = 'gpt-5.5'
   const openclawBaseUrl = buildOpenClawBaseUrl(OPENAI_BASE_URL)
 
   const modelsConfig = {
@@ -586,7 +585,7 @@ function configureOpenClaw(apiKey) {
           'User-Agent': 'curl/8.0',
           'OpenAI-Beta': 'responses=v1',
         },
-        models: [createOpenClawModel(primaryModelId), createOpenClawModel(secondaryModelId)],
+        models: [createOpenClawModel(primaryModelId)],
       },
     },
   }
@@ -604,7 +603,7 @@ function configureOpenClaw(apiKey) {
             'OpenAI-Beta': 'responses=v1',
           },
           authHeader: true,
-          models: [createOpenClawModel(primaryModelId), createOpenClawModel(secondaryModelId)],
+          models: [createOpenClawModel(primaryModelId)],
         },
       },
     },

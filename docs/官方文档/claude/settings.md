@@ -67,7 +67,7 @@ The `settings.json` file is our official mechanism for configuring Claude Code t
 | `permissions` | See table below for structure of permissions. | |
 | `hooks` | Configure custom commands to run before or after tool executions. See [hooks documentation](https://code.claude.com/docs/en/hooks) | `{"PreToolUse": {"Bash": "echo 'Running command...'"}}` |
 | `disableAllHooks` | Disable all [hooks](https://code.claude.com/docs/en/hooks) | `true` |
-| `model` | Override the default model to use for Claude Code | `"claude-sonnet-4-5-20250929"` |
+| `model` | Override the default model to use for Claude Code | `"claude-sonnet-4-6"` |
 | `statusLine` | Configure a custom status line to display context. See [statusLine documentation](https://code.claude.com/docs/en/statusline) | `{"type": "command", "command": "~/.claude/statusline.sh"}` |
 | `outputStyle` | Configure an output style to adjust the system prompt. See [output styles documentation](https://code.claude.com/docs/en/output-styles) | `"Explanatory"` |
 | `forceLoginMethod` | Use `claudeai` to restrict login to Claude.ai accounts, `console` to restrict login to Claude Console (API usage billing) accounts | `claudeai` |

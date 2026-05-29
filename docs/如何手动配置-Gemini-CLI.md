@@ -37,12 +37,7 @@
 ```bash
 GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com
 GEMINI_API_KEY=your_api_key_here
-```
-
-可选模型字段：
-
-```bash
-GEMINI_MODEL=gemini-2.5-pro
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
 ---

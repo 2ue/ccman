@@ -9,9 +9,8 @@ import { replaceVariables, deepMerge } from '../utils/template.js'
 
 const OPENCODE_SCHEMA = 'https://opencode.ai/config.json'
 const OPENCODE_PROVIDER_KEY = 'openai'
-const OPENCODE_MODEL = 'openai/gpt-5.4'
-const OPENCODE_MODEL_KEY = 'gpt-5.4'
-const OPENCODE_SECONDARY_MODEL_KEY = 'gpt-5.3-codex'
+const OPENCODE_MODEL = 'openai/gpt-5.5'
+const OPENCODE_MODEL_KEY = 'gpt-5.5'
 
 interface OpenCodeProviderOptions {
   baseURL?: string
@@ -61,19 +60,7 @@ function resolveTemplatePath(relativePath: string): string | null {
 
 const DEFAULT_MODELS: Record<string, unknown> = {
   [OPENCODE_MODEL_KEY]: {
-    name: 'GPT-5.4',
-    options: {
-      store: false,
-    },
-    variants: {
-      low: {},
-      medium: {},
-      high: {},
-      xhigh: {},
-    },
-  },
-  [OPENCODE_SECONDARY_MODEL_KEY]: {
-    name: 'GPT-5.3 Codex',
+    name: 'GPT-5.5',
     options: {
       store: false,
     },
@@ -165,17 +152,6 @@ function enforceModelStoreFalse(models: unknown): Record<string, unknown> {
 
   return deepMerge<Record<string, unknown>>(mergedModels, {
     [OPENCODE_MODEL_KEY]: {
-      options: {
-        store: false,
-      },
-      variants: {
-        low: {},
-        medium: {},
-        high: {},
-        xhigh: {},
-      },
-    },
-    [OPENCODE_SECONDARY_MODEL_KEY]: {
       options: {
         store: false,
       },

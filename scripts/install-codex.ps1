@@ -379,8 +379,8 @@ function Write-CodexConfig {
   New-Item -ItemType Directory -Force -Path $codexDir | Out-Null
 
   $configContent = @"
-model = "gpt-5.4"
-review_model = "gpt-5.4"
+model = "gpt-5.5"
+review_model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
 plan_mode_reasoning_effort = "xhigh"
 model_reasoning_summary = "auto"

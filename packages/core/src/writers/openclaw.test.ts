@@ -49,8 +49,8 @@ describe('OpenClaw Writer', () => {
     const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
-    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
-    expect(openclawConfig.agents?.defaults?.imageModel).toBe('GMN/gpt-5.4')
+    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.5')
+    expect(openclawConfig.agents?.defaults?.imageModel).toBe('GMN/gpt-5.5')
     expect(typeof openclawConfig.agents?.defaults?.workspace).toBe('string')
 
     const provider = modelsConfig.providers?.GMN
@@ -59,15 +59,12 @@ describe('OpenClaw Writer', () => {
     expect(provider.api).toBe('openai-responses')
     expect(provider.authHeader).toBe(true)
     expect(typeof provider.headers?.['User-Agent']).toBe('string')
-    expect(provider.models?.[0]?.id).toBe('gpt-5.4')
+    expect(provider.models?.[0]?.id).toBe('gpt-5.5')
     expect(provider.models?.[0]?.input).toEqual(['text', 'image'])
     expect(provider.models?.[0]?.reasoning).toBe(true)
     expect(provider.models?.[0]?.contextWindow).toBe(1050000)
     expect(provider.models?.[0]?.maxTokens).toBe(128000)
-    expect(provider.models?.[1]?.id).toBe('gpt-5.3-codex')
-    expect(provider.models?.[1]?.input).toEqual(['text', 'image'])
-    expect(provider.models?.[1]?.contextWindow).toBe(400000)
-    expect(provider.models?.[1]?.maxTokens).toBe(128000)
+    expect(provider.models).toHaveLength(1)
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
   })
 
@@ -96,8 +93,8 @@ describe('OpenClaw Writer', () => {
                 api: 'openai-completions',
                 models: [
                   {
-                    id: 'gpt-5.4',
-                    name: 'GPT-5.4',
+                    id: 'gpt-5.5',
+                    name: 'GPT-5.5',
                     compat: {
                       supportsStore: false,
                     },
@@ -139,8 +136,8 @@ describe('OpenClaw Writer', () => {
               api: 'openai-completions',
               models: [
                 {
-                  id: 'gpt-5.4',
-                  name: 'GPT-5.4',
+                  id: 'gpt-5.5',
+                  name: 'GPT-5.5',
                   compat: {
                     supportsStore: false,
                   },
@@ -172,15 +169,12 @@ describe('OpenClaw Writer', () => {
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
     expect(openclawConfig.agents?.defaults?.workspace).toBe('/tmp/custom')
     expect(openclawConfig.agents?.defaults?.maxConcurrent).toBe(8)
-    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
-    expect(openclawConfig.agents?.defaults?.imageModel).toBe('GMN/gpt-5.4')
+    expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.5')
+    expect(openclawConfig.agents?.defaults?.imageModel).toBe('GMN/gpt-5.5')
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.input).toEqual(['text', 'image'])
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.contextWindow).toBe(1050000)
     expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.maxTokens).toBe(128000)
-    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.id).toBe('gpt-5.3-codex')
-    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.input).toEqual(['text', 'image'])
-    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.contextWindow).toBe(400000)
-    expect(openclawConfig.models?.providers?.GMN?.models?.[1]?.maxTokens).toBe(128000)
+    expect(openclawConfig.models?.providers?.GMN?.models).toHaveLength(1)
 
     expect(modelsConfig.customField).toBe('legacy-models-value')
     expect(modelsConfig.providers?.legacy?.baseUrl).toBe('https://old.example.com')
@@ -192,10 +186,7 @@ describe('OpenClaw Writer', () => {
     expect(modelsConfig.providers?.GMN?.models?.[0]?.input).toEqual(['text', 'image'])
     expect(modelsConfig.providers?.GMN?.models?.[0]?.contextWindow).toBe(1050000)
     expect(modelsConfig.providers?.GMN?.models?.[0]?.maxTokens).toBe(128000)
-    expect(modelsConfig.providers?.GMN?.models?.[1]?.id).toBe('gpt-5.3-codex')
-    expect(modelsConfig.providers?.GMN?.models?.[1]?.input).toEqual(['text', 'image'])
-    expect(modelsConfig.providers?.GMN?.models?.[1]?.contextWindow).toBe(400000)
-    expect(modelsConfig.providers?.GMN?.models?.[1]?.maxTokens).toBe(128000)
+    expect(modelsConfig.providers?.GMN?.models).toHaveLength(1)
   })
 
   it('should overwrite unrelated providers and fields in overwrite mode', () => {
@@ -274,7 +265,7 @@ describe('OpenClaw Writer', () => {
       const openclawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
       const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
 
-      expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.4')
+      expect(openclawConfig.agents?.defaults?.model?.primary).toBe('GMN/gpt-5.5')
       expect(modelsConfig.providers?.GMN?.api).toBe('openai-responses')
       expect(modelsConfig.providers?.GMN?.models?.[0]?.reasoning).toBe(true)
       expect(openclawConfig.models?.providers?.GMN?.models?.[0]?.reasoning).toBe(true)

@@ -45,6 +45,7 @@ describe('Claude Writer', () => {
       const content = fs.readFileSync(claudePath, 'utf-8')
       const config = JSON.parse(content)
 
+      expect(config.model).toBe('sonnet')
       expect(config.env?.ANTHROPIC_AUTH_TOKEN).toBe(provider.apiKey)
       expect(config.env?.ANTHROPIC_BASE_URL).toBe(provider.baseUrl)
     })
@@ -86,6 +87,7 @@ describe('Claude Writer', () => {
       expect(config.env.ANTHROPIC_BASE_URL).toBe('https://new.anthropic.com')
       expect(config.env.CUSTOM_ENV_VAR).toBe('should-be-preserved')
       expect(config.permissions).toEqual({ allow: ['*'], deny: [] })
+      expect(config.model).toBe('sonnet')
       expect(config.customField).toBe('should-be-preserved')
     })
 
@@ -124,6 +126,7 @@ describe('Claude Writer', () => {
 
       expect(config.env.ANTHROPIC_AUTH_TOKEN).toBe('new-key')
       expect(config.env.ANTHROPIC_BASE_URL).toBe('https://new.anthropic.com')
+      expect(config.model).toBe('sonnet')
       expect(config.env.CUSTOM_ENV_VAR).toBeUndefined()
       expect(config.customField).toBeUndefined()
     })
@@ -141,6 +144,42 @@ describe('Claude Writer', () => {
       const content = fs.readFileSync(getClaudeConfigPath(), 'utf-8')
       const config = JSON.parse(content)
 
+      expect(config.env.ANTHROPIC_BASE_URL).toBe('https://api.anthropic.com')
+    })
+
+    it('should preserve existing Claude model when updating', () => {
+      const claudePath = getClaudeConfigPath()
+      fs.mkdirSync(path.dirname(claudePath), { recursive: true })
+      fs.writeFileSync(
+        claudePath,
+        JSON.stringify(
+          {
+            model: 'opus',
+            env: {
+              ANTHROPIC_AUTH_TOKEN: 'old-key',
+              ANTHROPIC_BASE_URL: 'https://old.anthropic.com',
+            },
+          },
+          null,
+          2
+        ),
+        'utf-8'
+      )
+
+      const provider: Provider = {
+        id: 'test',
+        name: 'Test',
+        baseUrl: 'https://api.anthropic.com',
+        apiKey: 'test-key',
+        createdAt: Date.now(),
+      }
+      writeClaudeConfig(provider)
+
+      const content = fs.readFileSync(getClaudeConfigPath(), 'utf-8')
+      const config = JSON.parse(content)
+
+      expect(config.model).toBe('opus')
+      expect(config.env.ANTHROPIC_AUTH_TOKEN).toBe('test-key')
       expect(config.env.ANTHROPIC_BASE_URL).toBe('https://api.anthropic.com')
     })
 

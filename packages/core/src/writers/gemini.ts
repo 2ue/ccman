@@ -67,6 +67,7 @@ const GEMINI_ENV_TEMPLATE = [
   '# Managed by ccman',
   'GOOGLE_GEMINI_BASE_URL={{baseUrl}}',
   'GEMINI_API_KEY={{apiKey}}',
+  'GEMINI_MODEL=gemini-3.5-flash',
 ].join('\n')
 
 /**
@@ -164,7 +165,7 @@ function saveEnvFile(envPath: string, env: Record<string, string>): void {
  * ~/.gemini/.env（官方配置）:
  * GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com
  * GEMINI_API_KEY=YOUR_API_KEY
- * GEMINI_MODEL=gemini-2.5-pro
+ * GEMINI_MODEL=gemini-3.5-flash
  */
 export function writeGeminiConfig(provider: Provider, options: WriteOptions = {}): void {
   const settingsPath = getGeminiSettingsPath()
@@ -231,6 +232,7 @@ export function writeGeminiConfig(provider: Provider, options: WriteOptions = {}
     ...existingEnv,
     ...templateEnv,
   }
+  const existingGeminiModel = existingEnv.GEMINI_MODEL
 
   // 模板变量为空时，显式移除对应键
   if (!templateEnv.GOOGLE_GEMINI_BASE_URL) {
@@ -238,6 +240,9 @@ export function writeGeminiConfig(provider: Provider, options: WriteOptions = {}
   }
   if (!templateEnv.GEMINI_API_KEY) {
     delete env.GEMINI_API_KEY
+  }
+  if (options.mode !== 'overwrite' && existingGeminiModel) {
+    env.GEMINI_MODEL = existingGeminiModel
   }
 
   // 解析 provider.model（可能是 JSON 元数据或纯字符串）
@@ -264,8 +269,8 @@ export function writeGeminiConfig(provider: Provider, options: WriteOptions = {}
         }
       }
     }
-    // fallback: 如果没有 GEMINI_MODEL，从 defaultModel 提取
-    if (!env.GEMINI_MODEL && modelMeta.defaultModel) {
+    // provider 元数据优先于模板默认值；已有用户自定义模型在非覆盖模式下保留
+    if (modelMeta.defaultModel && (!existingGeminiModel || options.mode === 'overwrite')) {
       env.GEMINI_MODEL = modelMeta.defaultModel
     }
   }

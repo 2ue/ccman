@@ -85,6 +85,7 @@ function configureClaudeCode(apiKey) {
 
   // 默认配置
   const defaultConfig = {
+    model: 'sonnet',
     env: {
       ANTHROPIC_AUTH_TOKEN: apiKey,
       ANTHROPIC_BASE_URL: GMN_BASE_URLS.claude,
@@ -141,7 +142,7 @@ function configureCodex(apiKey) {
   // 1. 处理 config.toml（先备份，再覆盖写入）
   const minimalConfig = [
     `model_provider = "${providerKey}"`,
-    'model = "gpt-5.2-codex"',
+    'model = "gpt-5.5"',
     'model_reasoning_effort = "high"',
     'network_access = "enabled"',
     'disable_response_storage = true',
@@ -216,7 +217,7 @@ function configureGeminiCLI(apiKey) {
   // 2. 处理 .env
   const env = {
     GEMINI_API_KEY: apiKey,
-    GEMINI_MODEL: 'gemini-2.5-pro',
+    GEMINI_MODEL: 'gemini-3.5-flash',
     GOOGLE_GEMINI_BASE_URL: GMN_BASE_URLS.gemini,
   }
 
@@ -262,7 +263,7 @@ function configureOpenCode(apiKey) {
       apiKey: apiKey,
     },
     models: {
-      'gpt-5.2-codex': {
+      'gpt-5.5': {
         variants: {
           xhigh: {
             reasoningEffort: 'xhigh',

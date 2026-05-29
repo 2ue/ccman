@@ -33,14 +33,14 @@ describe('ToolManager trim inputs', () => {
       desc: '  desc  ',
       baseUrl: '  https://ai.gmncode.com  ',
       apiKey: '  sk-abc  ',
-      model: '  gpt-5.3-codex  ',
+      model: '  gpt-5.5  ',
     })
 
     expect(added.name).toBe(seed + '-A')
     expect(added.desc).toBe('desc')
     expect(added.baseUrl).toBe('https://ai.gmncode.com')
     expect(added.apiKey).toBe('sk-abc')
-    expect(added.model).toBe('gpt-5.3-codex')
+    expect(added.model).toBe('gpt-5.5')
 
     const found = manager.findByName(`  ${seed.toUpperCase()}-a  `)
     expect(found?.id).toBe(added.id)

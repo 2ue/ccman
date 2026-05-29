@@ -299,6 +299,7 @@ function Write-ClaudeConfig {
   New-Item -ItemType Directory -Force -Path $claudeDir | Out-Null
 
   $config = [ordered]@{
+    model = 'sonnet'
     env = [ordered]@{
       ANTHROPIC_AUTH_TOKEN = $ApiKey
       ANTHROPIC_BASE_URL = $BaseUrl

@@ -11,6 +11,7 @@ import { replaceVariables, deepMerge } from '../utils/template.js'
  * Claude Code settings.json 结构
  */
 interface ClaudeSettings {
+  model?: string
   env?: ClaudeEnv
   permissions?: {
     allow?: string[]
@@ -58,6 +59,7 @@ function resolveTemplatePath(relativePath: string): string | null {
  * 版本迭代时直接在此对象中添加/修改字段即可
  */
 const CLAUDE_CONFIG_TEMPLATE: ClaudeSettings = {
+  model: 'sonnet',
   env: {
     ANTHROPIC_AUTH_TOKEN: '{{apiKey}}',
     ANTHROPIC_BASE_URL: '{{baseUrl}}',

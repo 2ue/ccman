@@ -835,7 +835,7 @@ ipcMain.handle(
               '# 也可以手动创建，例如：\n' +
               '# GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com\n' +
               '# GEMINI_API_KEY=YOUR_GMN_TOKEN_HERE\n' +
-              '# GEMINI_MODEL=gemini-2.5-pro\n',
+              '# GEMINI_MODEL=gemini-3.5-flash\n',
             language: 'env',
           })
         }

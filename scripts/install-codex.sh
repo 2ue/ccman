@@ -485,8 +485,8 @@ write_codex_config() {
   auth_backup="$(backup_file_if_exists "$auth_path" || true)"
 
   cat >"$config_path" <<EOF
-model = "gpt-5.4"
-review_model = "gpt-5.4"
+model = "gpt-5.5"
+review_model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
 plan_mode_reasoning_effort = "xhigh"
 model_reasoning_summary = "auto"
