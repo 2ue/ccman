@@ -1,3 +1,15 @@
+## [3.3.29](https://github.com/2ue/ccman/compare/v3.3.28...v3.3.29) (2026-05-29)
+
+### 🔧 其他变更
+
+* **release:** 3.3.29 (4bfb78c75e416fe5206df7814fbb82f10928bb78)
+### 🐛 问题修复
+
+* update AI tool default model templates (520a15c661d281b15a1e757fd742310a343a7275)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.28 [skip ci] (bfa31eb79f28ac70f7b24d09a10c7bc129e70018)
+
 ## [3.3.28](https://github.com/2ue/ccman/compare/v3.3.27...v3.3.28) (2026-05-29)
 
 ### 🔧 其他变更
