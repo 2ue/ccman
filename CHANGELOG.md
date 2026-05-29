@@ -1,3 +1,15 @@
+## [3.3.28](https://github.com/2ue/ccman/compare/v3.3.27...v3.3.28) (2026-05-29)
+
+### 🔧 其他变更
+
+* **release:** 3.3.28 (148318ebc6e960bbc70eeb23052af63927704660)
+### 🐛 问题修复
+
+* **ci:** disable auto package manager cache (885c998b44115c6989198ccf2386c4c6b92be8c3)* **ci:** stabilize release publishing workflow (9a81a25c0aa0ee82f9b9499842e0f8611d2867c1)* update GMN endpoint and Codex config template (be8d82f16ca6a10ef34b28adddc64ec9b0e7f9c6)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.25 [skip ci] (584a854fb0d72c418b05b8e94ec524254f1ce7c2)
+
 ## [3.3.25](https://github.com/2ue/ccman/compare/v3.3.24...v3.3.25) (2026-04-20)
 
 ### 🐛 问题修复
