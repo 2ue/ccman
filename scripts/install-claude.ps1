@@ -106,7 +106,7 @@ switch ($ProfileKey) {
   }
   'gmn' {
     $ProfileTitle = 'GMN'
-    if ([string]::IsNullOrWhiteSpace($BaseUrl)) { $BaseUrl = 'https://gmn.chuangzuoli.com' }
+    if ([string]::IsNullOrWhiteSpace($BaseUrl)) { $BaseUrl = 'https://ai.gmncode.com' }
   }
   'gmn1' {
     $ProfileTitle = 'GMN1'

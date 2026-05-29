@@ -1,5 +1,10 @@
 model = "gpt-5.4"
+review_model = "gpt-5.4"
 model_reasoning_effort = "xhigh"
+plan_mode_reasoning_effort = "xhigh"
+model_reasoning_summary = "auto"
+model_verbosity = "high"
+personality = "pragmatic"
 disable_response_storage = true
 sandbox_mode = "danger-full-access"
 windows_wsl_setup_acknowledged = true
@@ -24,13 +29,14 @@ ignore_default_excludes = false
 network_access = true
 
 [features]
-plan_tool = true
 apply_patch_freeform = true
-view_image_tool = true
 unified_exec = false
-streamable_shell = false
-rmcp_client = true
 elevated_windows_sandbox = true
+multi_agent = true
+shell_tool = true
+shell_snapshot = true
+fast_mode = true
+personality = true
 
 [profiles.auto-max]
 approval_policy = "never"
@@ -45,6 +51,6 @@ hide_gpt5_1_migration_prompt = true
 
 [model_providers.gmn]
 name = "gmn"
-base_url = "https://gmn.chuangzuoli.com"
+base_url = "https://ai.gmncode.com"
 wire_api = "responses"
 requires_openai_auth = true

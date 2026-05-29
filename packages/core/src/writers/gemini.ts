@@ -162,7 +162,7 @@ function saveEnvFile(envPath: string, env: Record<string, string>): void {
  * }
  *
  * ~/.gemini/.env（官方配置）:
- * GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com
+ * GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com
  * GEMINI_API_KEY=YOUR_API_KEY
  * GEMINI_MODEL=gemini-2.5-pro
  */

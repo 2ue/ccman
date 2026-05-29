@@ -14,8 +14,12 @@ import { deepMerge } from '../utils/template.js'
 interface CodexConfig {
   model_provider?: string
   model?: string
+  review_model?: string
   model_reasoning_effort?: string
+  plan_mode_reasoning_effort?: string
+  model_reasoning_summary?: string
   model_verbosity?: string
+  personality?: string
   web_search?: string
   network_access?: string
   disable_response_storage?: boolean
@@ -54,6 +58,12 @@ interface CodexShellEnvironmentPolicy {
 interface CodexFeatures {
   apply_patch_freeform?: boolean
   unified_exec?: boolean
+  elevated_windows_sandbox?: boolean
+  multi_agent?: boolean
+  shell_tool?: boolean
+  shell_snapshot?: boolean
+  fast_mode?: boolean
+  personality?: boolean
   suppress_unstable_features_warning?: boolean
   [key: string]: unknown
 }
@@ -122,7 +132,12 @@ function resolveTemplatePath(relativePath: string): string | null {
  */
 const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
   model: 'gpt-5.4',
+  review_model: 'gpt-5.4',
   model_reasoning_effort: 'xhigh',
+  plan_mode_reasoning_effort: 'xhigh',
+  model_reasoning_summary: 'auto',
+  model_verbosity: 'high',
+  personality: 'pragmatic',
   disable_response_storage: true,
   sandbox_mode: 'danger-full-access',
   windows_wsl_setup_acknowledged: true,
@@ -145,13 +160,14 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
     network_access: true,
   },
   features: {
-    plan_tool: true,
     apply_patch_freeform: true,
-    view_image_tool: true,
     unified_exec: false,
-    streamable_shell: false,
-    rmcp_client: true,
     elevated_windows_sandbox: true,
+    multi_agent: true,
+    shell_tool: true,
+    shell_snapshot: true,
+    fast_mode: true,
+    personality: true,
   },
   profiles: {
     'auto-max': {
@@ -169,7 +185,7 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
 }
 
 const GMN_PROVIDER_HOSTS = [
-  'gmn.chuangzuoli.com',
+  'ai.gmncode.com',
   'cdn-gmn.chuangzuoli.com',
   'gmncodex.com',
   'gmncode.cn',
@@ -206,16 +222,27 @@ function loadCodexTemplateConfig(): Partial<CodexConfig> {
 }
 
 function removeDeprecatedKeys(config: CodexConfig): void {
-  if (
-    config.features &&
-    typeof config.features === 'object' &&
-    !Array.isArray(config.features) &&
-    'web_search_request' in config.features
-  ) {
-    delete (config.features as Record<string, unknown>).web_search_request
+  const deprecatedFeatureKeys = [
+    'web_search_request',
+    'web_search_cached',
+    'web_search',
+    'plan_tool',
+    'view_image_tool',
+    'streamable_shell',
+    'rmcp_client',
+  ]
+
+  if (config.features && typeof config.features === 'object' && !Array.isArray(config.features)) {
+    const features = config.features as Record<string, unknown>
+    for (const key of deprecatedFeatureKeys) {
+      if (key in features) delete features[key]
+    }
   }
   if ('web_search_request' in config) {
     delete (config as Record<string, unknown>).web_search_request
+  }
+  if ('network_access' in config) {
+    delete (config as Record<string, unknown>).network_access
   }
 }
 

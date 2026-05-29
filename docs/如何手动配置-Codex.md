@@ -144,7 +144,7 @@ model = "gpt-5.3-codex"
 
 [model_providers.gmn]
 name = "gmn"
-base_url = "https://gmn.chuangzuoli.com"
+base_url = "https://ai.gmncode.com"
 wire_api = "responses"
 requires_openai_auth = true
 ```

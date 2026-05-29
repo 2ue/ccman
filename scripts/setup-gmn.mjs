@@ -23,10 +23,10 @@ import {
 
 const PROVIDER_NAME = 'GMN'
 const GMN_BASE_URLS = {
-  claude: 'https://gmn.chuangzuoli.com',
-  codex: 'https://gmn.chuangzuoli.com',
-  gemini: 'https://gmn.chuangzuoli.com',
-  opencode: 'https://gmn.chuangzuoli.com',
+  claude: 'https://ai.gmncode.com',
+  codex: 'https://ai.gmncode.com',
+  gemini: 'https://ai.gmncode.com',
+  opencode: 'https://ai.gmncode.com',
 }
 
 const tools = [

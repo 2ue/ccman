@@ -94,7 +94,7 @@ resolve_profile_defaults() {
       ;;
     gmn)
       PROFILE_TITLE="GMN"
-      [[ -z "$BASE_URL" ]] && BASE_URL="https://gmn.chuangzuoli.com"
+      [[ -z "$BASE_URL" ]] && BASE_URL="https://ai.gmncode.com"
       ;;
     gmn1)
       PROFILE_TITLE="GMN1"

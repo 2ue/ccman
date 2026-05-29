@@ -95,7 +95,7 @@ $ ccman cx list
      https://api.openai.com/v1
 
   ○  GMN
-     https://gmn.chuangzuoli.com
+     https://ai.gmncode.com
 ```
 
 ```bash
@@ -265,7 +265,7 @@ ccman sync upload --yes
 | 预设名称           | Base URL                    |
 | ------------------ | --------------------------- |
 | Anthropic Official | `https://api.anthropic.com` |
-| GMN                | `https://gmn.chuangzuoli.com` |
+| GMN                | `https://ai.gmncode.com` |
 | GMN1               | `https://gmncode.cn` |
 
 ### Gemini CLI 预设（3 个）
@@ -273,7 +273,7 @@ ccman sync upload --yes
 | 预设名称                | Base URL                      |
 | ----------------------- | ----------------------------- |
 | Google Gemini (API Key) | 官方默认                      |
-| GMN                     | `https://gmn.chuangzuoli.com` |
+| GMN                     | `https://ai.gmncode.com` |
 | GMN1                    | `https://gmncode.cn`          |
 
 ### Codex 预设（3 个）
@@ -281,14 +281,14 @@ ccman sync upload --yes
 | 预设名称        | Base URL                      |
 | --------------- | ----------------------------- |
 | OpenAI Official | `https://api.openai.com/v1`   |
-| GMN             | `https://gmn.chuangzuoli.com` |
+| GMN             | `https://ai.gmncode.com` |
 | GMN1            | `https://gmncode.cn`          |
 
 ### OpenCode 预设（2 个）
 
 | 预设名称 | Base URL                      |
 | -------- | ----------------------------- |
-| GMN      | `https://gmn.chuangzuoli.com` |
+| GMN      | `https://ai.gmncode.com` |
 | GMN1     | `https://gmncode.cn`          |
 
 ### MCP 预设（多个）
@@ -332,7 +332,7 @@ $ ccman cx current
 
   GMN
   ID: codex-1760178741529-abc123
-  URL: https://gmn.chuangzuoli.com
+  URL: https://ai.gmncode.com
   最后使用: 2025/10/11 18:32:25
 ```
 

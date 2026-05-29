@@ -6,7 +6,7 @@ import { resolveProviderAddInput, resolveProviderEditInput } from './provider-pa
 const presets = [
   {
     name: 'GMN',
-    baseUrl: 'https://gmn.chuangzuoli.com',
+    baseUrl: 'https://ai.gmncode.com',
     description: 'GMN 主站',
     isBuiltIn: true,
   },
@@ -27,7 +27,7 @@ test('resolveProviderAddInput should build non-interactive preset input', () => 
   assert.deepEqual(resolved.input, {
     name: 'GMN',
     desc: undefined,
-    baseUrl: 'https://gmn.chuangzuoli.com',
+    baseUrl: 'https://ai.gmncode.com',
     apiKey: 'sk-test',
   })
 })

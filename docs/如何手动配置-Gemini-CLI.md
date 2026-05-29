@@ -35,7 +35,7 @@
 ### 2) .env
 
 ```bash
-GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com
+GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com
 GEMINI_API_KEY=your_api_key_here
 ```
 

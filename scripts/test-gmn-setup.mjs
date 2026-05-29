@@ -17,10 +17,10 @@ import { execSync } from 'child_process'
 // 测试配置
 const TEST_API_KEY = 'sk-ant-test-key-123456'
 const GMN_BASE_URLS = {
-  claude: 'https://gmn.chuangzuoli.com',
-  codex: 'https://gmn.chuangzuoli.com',
-  gemini: 'https://gmn.chuangzuoli.com',
-  opencode: 'https://gmn.chuangzuoli.com',
+  claude: 'https://ai.gmncode.com',
+  codex: 'https://ai.gmncode.com',
+  gemini: 'https://ai.gmncode.com',
+  opencode: 'https://ai.gmncode.com',
 }
 
 // 创建临时测试目录

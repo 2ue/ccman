@@ -68,7 +68,7 @@ describe('Codex Writer', () => {
         id: 'test-id',
         name: 'GMN',
         type: 'codex',
-        baseUrl: 'https://gmn.chuangzuoli.com',
+        baseUrl: 'https://ai.gmncode.com',
         apiKey: 'test-api-key-123',
         createdAt: Date.now(),
       }
@@ -153,7 +153,7 @@ describe('Codex Writer', () => {
         id: 'test-id',
         name: 'GMN',
         type: 'codex',
-        baseUrl: 'https://gmn.chuangzuoli.com',
+        baseUrl: 'https://ai.gmncode.com',
         apiKey: 'test-api-key-123',
         createdAt: Date.now(),
       }

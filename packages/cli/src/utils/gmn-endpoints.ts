@@ -18,7 +18,7 @@ export const GMN_PROFILE: GmnProfile = {
   baseUrls: [
     {
       label: 'GMN 主站',
-      url: 'https://gmn.chuangzuoli.com',
+      url: 'https://ai.gmncode.com',
       description: 'GMN 主域名入口',
     },
     {

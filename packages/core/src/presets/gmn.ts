@@ -1,4 +1,4 @@
-export const GMN_ROOT_URL = 'https://gmn.chuangzuoli.com'
+export const GMN_ROOT_URL = 'https://ai.gmncode.com'
 export const GMN1_ROOT_URL = 'https://gmncode.cn'
 
 interface GmnPresetTemplate {
@@ -16,7 +16,7 @@ export function createDualGmnPresets(
     {
       name: 'GMN',
       baseUrl: transformBaseUrl(GMN_ROOT_URL),
-      description: 'GMN 主域名线路 (gmn.chuangzuoli.com)',
+      description: 'GMN 主域名线路 (ai.gmncode.com)',
     },
     {
       name: 'GMN1',

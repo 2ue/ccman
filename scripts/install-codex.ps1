@@ -103,7 +103,7 @@ switch ($ProfileKey) {
   'gmn' {
     $ProfileTitle = 'GMN'
     if ([string]::IsNullOrWhiteSpace($ProviderName)) { $ProviderName = 'gmn' }
-    if ([string]::IsNullOrWhiteSpace($BaseUrl)) { $BaseUrl = 'https://gmn.chuangzuoli.com' }
+    if ([string]::IsNullOrWhiteSpace($BaseUrl)) { $BaseUrl = 'https://ai.gmncode.com' }
   }
   'gmn1' {
     $ProfileTitle = 'GMN1'
@@ -380,7 +380,12 @@ function Write-CodexConfig {
 
   $configContent = @"
 model = "gpt-5.4"
+review_model = "gpt-5.4"
 model_reasoning_effort = "xhigh"
+plan_mode_reasoning_effort = "xhigh"
+model_reasoning_summary = "auto"
+model_verbosity = "high"
+personality = "pragmatic"
 disable_response_storage = true
 sandbox_mode = "danger-full-access"
 windows_wsl_setup_acknowledged = true
@@ -405,13 +410,14 @@ ignore_default_excludes = false
 network_access = true
 
 [features]
-plan_tool = true
 apply_patch_freeform = true
-view_image_tool = true
 unified_exec = false
-streamable_shell = false
-rmcp_client = true
 elevated_windows_sandbox = true
+multi_agent = true
+shell_tool = true
+shell_snapshot = true
+fast_mode = true
+personality = true
 
 [profiles.auto-max]
 approval_policy = "never"

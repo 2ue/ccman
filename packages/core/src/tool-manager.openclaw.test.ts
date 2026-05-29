@@ -28,7 +28,7 @@ describe('OpenClaw ToolManager', () => {
     const providerName = `GMN-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
     const provider = manager.add({
       name: providerName,
-      baseUrl: 'https://gmn.chuangzuoli.com/v1',
+      baseUrl: 'https://ai.gmncode.com/v1',
       apiKey: 'sk-openclaw-provider',
     })
 
@@ -45,7 +45,7 @@ describe('OpenClaw ToolManager', () => {
     const modelsConfig = JSON.parse(fs.readFileSync(modelsPath, 'utf-8'))
     expect(openclawConfig.agents.defaults.model.primary).toBe(`${providerName}/gpt-5.4`)
     expect(openclawConfig.agents.defaults.imageModel).toBe(`${providerName}/gpt-5.4`)
-    expect(modelsConfig.providers[providerName].baseUrl).toBe('https://gmn.chuangzuoli.com/v1')
+    expect(modelsConfig.providers[providerName].baseUrl).toBe('https://ai.gmncode.com/v1')
     expect(modelsConfig.providers[providerName].models[0].input).toEqual(['text', 'image'])
     expect(modelsConfig.providers[providerName].models[1].id).toBe('gpt-5.3-codex')
     expect(modelsConfig.providers[providerName].models[1].input).toEqual(['text', 'image'])

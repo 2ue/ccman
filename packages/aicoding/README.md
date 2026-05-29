@@ -63,7 +63,7 @@ npx @2ue/aicoding sk-ant-xxx -p all
 ### 指定 OpenAI Base URL
 
 ```bash
-npx @2ue/aicoding sk-ant-xxx --openai-base-url https://gmn.chuangzuoli.com
+npx @2ue/aicoding sk-ant-xxx --openai-base-url https://ai.gmncode.com
 ```
 
 ### 兼容旧参数

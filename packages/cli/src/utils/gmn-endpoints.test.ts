@@ -8,13 +8,12 @@ import {
   getEndpointHost,
 } from './gmn-endpoints.js'
 
-test('GMN should only include chuangzuoli domain endpoints', () => {
+test('GMN should include the current primary endpoint and legacy CDN endpoint', () => {
   assert.equal(GMN_PROFILE.defaultProviderName, 'gmn')
   assert.deepEqual(
     GMN_PROFILE.baseUrls.map((item) => item.url),
-    ['https://gmn.chuangzuoli.com', 'https://cdn-gmn.chuangzuoli.com']
+    ['https://ai.gmncode.com', 'https://cdn-gmn.chuangzuoli.com']
   )
-  assert.ok(GMN_PROFILE.baseUrls.every((item) => item.url.includes('chuangzuoli.com')))
 })
 
 test('GMN1 should include only non-chuangzuoli endpoints', () => {
@@ -33,18 +32,18 @@ test('GMN1 should include only non-chuangzuoli endpoints', () => {
 })
 
 test('endpoint choice label should use a compact numbered format', () => {
-  assert.equal(getEndpointHost('https://gmn.chuangzuoli.com'), 'gmn.chuangzuoli.com')
+  assert.equal(getEndpointHost('https://ai.gmncode.com'), 'ai.gmncode.com')
 
   assert.equal(
     formatEndpointChoiceLabel(
       {
         label: 'GMN 主站',
-        url: 'https://gmn.chuangzuoli.com',
+        url: 'https://ai.gmncode.com',
         latencyMs: 42,
       },
       0
     ),
-    '1. GMN 主站 | gmn.chuangzuoli.com | 42 ms'
+    '1. GMN 主站 | ai.gmncode.com | 42 ms'
   )
 
   assert.equal(

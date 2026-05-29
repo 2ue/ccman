@@ -43,7 +43,7 @@ describe('sync-v2 uploadToCloud', () => {
             {
               id: 'openclaw-1',
               name: 'GMN',
-              baseUrl: 'https://gmn.chuangzuoli.com/v1',
+              baseUrl: 'https://ai.gmncode.com/v1',
               apiKey: 'sk-sync-openclaw',
               createdAt: Date.now(),
               lastModified: Date.now(),

@@ -33,7 +33,7 @@ describe('OpenCode Writer', () => {
       const provider = {
         id: 'test-id',
         name: 'GMN',
-        baseUrl: 'https://gmn.chuangzuoli.com',
+        baseUrl: 'https://ai.gmncode.com',
         apiKey: 'test-api-key-123',
         createdAt: now,
         lastModified: now,

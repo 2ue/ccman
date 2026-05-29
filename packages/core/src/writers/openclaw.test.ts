@@ -29,7 +29,7 @@ describe('OpenClaw Writer', () => {
     return {
       id: 'openclaw-provider',
       name: 'GMN',
-      baseUrl: 'https://gmn.chuangzuoli.com/v1',
+      baseUrl: 'https://ai.gmncode.com/v1',
       apiKey: 'sk-openclaw-test',
       createdAt: Date.now(),
       lastModified: Date.now(),
@@ -54,7 +54,7 @@ describe('OpenClaw Writer', () => {
     expect(typeof openclawConfig.agents?.defaults?.workspace).toBe('string')
 
     const provider = modelsConfig.providers?.GMN
-    expect(provider.baseUrl).toBe('https://gmn.chuangzuoli.com/v1')
+    expect(provider.baseUrl).toBe('https://ai.gmncode.com/v1')
     expect(provider.apiKey).toBe('sk-openclaw-test')
     expect(provider.api).toBe('openai-responses')
     expect(provider.authHeader).toBe(true)
@@ -91,7 +91,7 @@ describe('OpenClaw Writer', () => {
                 apiKey: 'legacy-key',
               },
               gmn: {
-                baseUrl: 'https://gmn.chuangzuoli.com/',
+                baseUrl: 'https://ai.gmncode.com/',
                 apiKey: 'old-gmn-key',
                 api: 'openai-completions',
                 models: [
@@ -134,7 +134,7 @@ describe('OpenClaw Writer', () => {
               apiKey: 'old-key',
             },
             gMn: {
-              baseUrl: 'https://gmn.chuangzuoli.com/',
+              baseUrl: 'https://ai.gmncode.com/',
               apiKey: 'old-models-key',
               api: 'openai-completions',
               models: [

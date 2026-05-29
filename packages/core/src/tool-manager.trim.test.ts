@@ -31,14 +31,14 @@ describe('ToolManager trim inputs', () => {
     const added = manager.add({
       name: name1,
       desc: '  desc  ',
-      baseUrl: '  https://gmn.chuangzuoli.com  ',
+      baseUrl: '  https://ai.gmncode.com  ',
       apiKey: '  sk-abc  ',
       model: '  gpt-5.3-codex  ',
     })
 
     expect(added.name).toBe(seed + '-A')
     expect(added.desc).toBe('desc')
-    expect(added.baseUrl).toBe('https://gmn.chuangzuoli.com')
+    expect(added.baseUrl).toBe('https://ai.gmncode.com')
     expect(added.apiKey).toBe('sk-abc')
     expect(added.model).toBe('gpt-5.3-codex')
 
@@ -126,7 +126,7 @@ describe('ToolManager trim inputs', () => {
     const manager = createCodexManager()
     const mergeProvider = manager.add({
       name: `${seed}-merge`,
-      baseUrl: 'https://gmn.chuangzuoli.com',
+      baseUrl: 'https://ai.gmncode.com',
       apiKey: 'sk-merge',
     })
     manager.switch(mergeProvider.id)
@@ -136,7 +136,7 @@ describe('ToolManager trim inputs', () => {
 
     expect(mergedConfig.custom_field).toBe('keep-me')
     expect(mergedConfig.model_providers.legacy).toBeDefined()
-    expect(mergedConfig.model_providers.gmn.base_url).toBe('https://gmn.chuangzuoli.com')
+    expect(mergedConfig.model_providers.gmn.base_url).toBe('https://ai.gmncode.com')
     expect(mergedAuth.CUSTOM_FIELD).toBe('keep-me')
     expect(mergedAuth.OPENAI_API_KEY).toBe('sk-merge')
 

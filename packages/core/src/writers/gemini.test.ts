@@ -34,7 +34,7 @@ describe('Gemini Writer', () => {
     const provider: Provider = {
       id: 'gemini-1',
       name: 'GMN',
-      baseUrl: 'https://gmn.chuangzuoli.com',
+      baseUrl: 'https://ai.gmncode.com',
       apiKey: 'sk-test-123',
       createdAt: Date.now(),
       lastModified: Date.now(),
@@ -57,7 +57,7 @@ describe('Gemini Writer', () => {
     const envPath = getGeminiEnvPath()
     expect(fs.existsSync(envPath)).toBe(true)
     const envContent = fs.readFileSync(envPath, 'utf-8')
-    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
+    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com')
     expect(envContent).toContain('GEMINI_API_KEY=sk-test-123')
   })
 
@@ -154,7 +154,7 @@ describe('Gemini Writer', () => {
     const provider: Provider = {
       id: 'gemini-4',
       name: 'GMN',
-      baseUrl: 'https://gmn.chuangzuoli.com',
+      baseUrl: 'https://ai.gmncode.com',
       apiKey: 'sk-new',
       createdAt: Date.now(),
       lastModified: Date.now(),
@@ -165,7 +165,7 @@ describe('Gemini Writer', () => {
     const nextEnv = fs.readFileSync(envPath, 'utf-8')
     expect(nextEnv).toContain('CUSTOM_ENV=keep')
     expect(nextEnv).toContain('GEMINI_MODEL=gemini-2.0-flash-exp')
-    expect(nextEnv).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
+    expect(nextEnv).toContain('GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com')
     expect(nextEnv).toContain('GEMINI_API_KEY=sk-new')
   })
 
@@ -193,7 +193,7 @@ describe('Gemini Writer', () => {
     const provider: Provider = {
       id: 'gemini-overwrite',
       name: 'GMN',
-      baseUrl: 'https://gmn.chuangzuoli.com',
+      baseUrl: 'https://ai.gmncode.com',
       apiKey: 'sk-overwrite',
       createdAt: Date.now(),
       lastModified: Date.now(),
@@ -208,7 +208,7 @@ describe('Gemini Writer', () => {
     const envContent = fs.readFileSync(envPath, 'utf-8')
     expect(envContent).not.toContain('CUSTOM_ENV=remove-me')
     expect(envContent).not.toContain('GEMINI_MODEL=legacy-model')
-    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://gmn.chuangzuoli.com')
+    expect(envContent).toContain('GOOGLE_GEMINI_BASE_URL=https://ai.gmncode.com')
     expect(envContent).toContain('GEMINI_API_KEY=sk-overwrite')
   })
 })
