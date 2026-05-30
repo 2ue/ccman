@@ -496,7 +496,6 @@ disable_response_storage = true
 sandbox_mode = "danger-full-access"
 windows_wsl_setup_acknowledged = true
 approval_policy = "never"
-profile = "auto-max"
 file_opener = "vscode"
 model_provider = "${CODEX_PROVIDER_KEY}"
 web_search = "cached"
@@ -524,14 +523,6 @@ shell_tool = true
 shell_snapshot = true
 fast_mode = true
 personality = true
-
-[profiles.auto-max]
-approval_policy = "never"
-sandbox_mode = "workspace-write"
-
-[profiles.review]
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
 
 [notice]
 hide_gpt5_1_migration_prompt = true

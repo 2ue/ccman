@@ -52,6 +52,8 @@ describe('Codex Writer', () => {
       const config: any = TOML.parse(configContent)
 
       expect(config.model_provider).toBe(provider.name)
+      expect(config.profile).toBeUndefined()
+      expect(config.profiles).toBeUndefined()
       expect(config.model_providers[provider.name]).toBeDefined()
       expect(config.model_providers[provider.name].base_url).toBe(provider.baseUrl)
 
@@ -132,7 +134,18 @@ describe('Codex Writer', () => {
       const existingConfig = {
         model_provider: 'GMN',
         custom_field: 'should-be-removed',
+        profile: 'auto-max',
         web_search_request: true,
+        profiles: {
+          'auto-max': {
+            approval_policy: 'never',
+            sandbox_mode: 'workspace-write',
+          },
+          review: {
+            approval_policy: 'on-request',
+            sandbox_mode: 'workspace-write',
+          },
+        },
         model_providers: {
           GMN: {
             name: 'GMN',
@@ -164,6 +177,8 @@ describe('Codex Writer', () => {
 
       expect(config.features?.web_search_request).toBeUndefined()
       expect(config.web_search_request).toBeUndefined()
+      expect(config.profile).toBeUndefined()
+      expect(config.profiles).toBeUndefined()
       expect(config.custom_field).toBe('should-be-removed')
       expect(fs.existsSync(`${configPath}.bak`)).toBe(false)
     })

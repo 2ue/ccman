@@ -26,14 +26,12 @@ interface CodexConfig {
   sandbox_mode?: string
   windows_wsl_setup_acknowledged?: boolean
   approval_policy?: string
-  profile?: string
   file_opener?: string
   history?: CodexHistory
   tui?: CodexTui
   shell_environment_policy?: CodexShellEnvironmentPolicy
   features?: CodexFeatures
   sandbox_workspace_write?: CodexSandboxWorkspaceWrite
-  profiles?: Record<string, CodexProfile>
   notice?: CodexNotice
   model_providers?: Record<string, CodexModelProvider>
   [key: string]: unknown // 保留其他用户自定义字段
@@ -70,12 +68,6 @@ interface CodexFeatures {
 
 interface CodexSandboxWorkspaceWrite {
   network_access?: boolean
-  [key: string]: unknown
-}
-
-interface CodexProfile {
-  approval_policy?: string
-  sandbox_mode?: string
   [key: string]: unknown
 }
 
@@ -142,7 +134,6 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
   sandbox_mode: 'danger-full-access',
   windows_wsl_setup_acknowledged: true,
   approval_policy: 'never',
-  profile: 'auto-max',
   file_opener: 'vscode',
   web_search: 'cached',
   suppress_unstable_features_warning: true,
@@ -168,16 +159,6 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
     shell_snapshot: true,
     fast_mode: true,
     personality: true,
-  },
-  profiles: {
-    'auto-max': {
-      approval_policy: 'never',
-      sandbox_mode: 'workspace-write',
-    },
-    review: {
-      approval_policy: 'on-request',
-      sandbox_mode: 'workspace-write',
-    },
   },
   notice: {
     hide_gpt5_1_migration_prompt: true,
@@ -243,6 +224,12 @@ function removeDeprecatedKeys(config: CodexConfig): void {
   }
   if ('network_access' in config) {
     delete (config as Record<string, unknown>).network_access
+  }
+  if ('profile' in config) {
+    delete (config as Record<string, unknown>).profile
+  }
+  if ('profiles' in config) {
+    delete (config as Record<string, unknown>).profiles
   }
 }
 
