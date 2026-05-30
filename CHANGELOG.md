@@ -1,3 +1,15 @@
+## [3.3.30](https://github.com/2ue/ccman/compare/v3.3.29...v3.3.30) (2026-05-30)
+
+### 🔧 其他变更
+
+* **release:** 3.3.30 (1d984b7095bf806d020a8af2e38d94ea9006c102)
+### 🐛 问题修复
+
+* remove legacy Codex profile config (6a53b20eab8c0af83ed2dfd121d2456ec62ab88c)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.29 [skip ci] (9a9fdc417c44738d690dadf29bb23c7204056c84)
+
 ## [3.3.29](https://github.com/2ue/ccman/compare/v3.3.28...v3.3.29) (2026-05-29)
 
 ### 🔧 其他变更
