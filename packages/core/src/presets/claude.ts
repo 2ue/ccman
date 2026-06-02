@@ -1,4 +1,5 @@
 import { createDualGmnPresets } from './gmn.js'
+import { createSightPreset } from './sight.js'
 
 /**
  * Claude Code 预设模板(不包含 API Key 和 isBuiltIn)
@@ -23,4 +24,5 @@ export const CC_PRESETS: PresetTemplate[] = [
     description: 'Anthropic 官方 API',
   },
   ...createDualGmnPresets(),
+  ...createSightPreset(),
 ]

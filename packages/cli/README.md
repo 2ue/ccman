@@ -7,7 +7,7 @@
 ## ✨ 核心特性
 
 - 🔄 **一键切换**：一条命令切换服务商，自动修改配置文件
-- 📦 **内置预设**：提供常用预设（Claude: 1 个，Gemini: 2 个，Codex: 2 个，OpenCode: 1 个，MCP: 多个），只需填写 API Key
+- 📦 **内置预设**：提供常用预设（Claude: 1 个，Gemini: 2 个，Codex: 2 个，OpenCode: 1 个，Sight More: 全工具支持，MCP: 多个），只需填写 API Key
 - 🛠️ **自定义配置**：支持添加任意第三方服务商
 - 🔐 **安全写入**：常规管理命令默认增量更新；GMN/GMN1 等快捷配置命令对所涉及工具执行覆盖式写入
 - 🎯 **多工具支持**：同时管理 Codex、Claude Code、Gemini CLI、OpenCode 和 MCP 服务器
@@ -260,36 +260,40 @@ ccman sync upload --yes
 
 添加服务商时可以选择"使用预设模板"，只需填写 API Key：
 
-### Claude Code 预设（3 个）
+### Claude Code 预设（4 个）
 
 | 预设名称           | Base URL                    |
 | ------------------ | --------------------------- |
 | Anthropic Official | `https://api.anthropic.com` |
 | GMN                | `https://ai.gmncode.com` |
 | GMN1               | `https://gmncode.cn` |
+| Sight More         | `https://2api.sight-more.com` |
 
-### Gemini CLI 预设（3 个）
+### Gemini CLI 预设（4 个）
 
 | 预设名称                | Base URL                      |
 | ----------------------- | ----------------------------- |
 | Google Gemini (API Key) | 官方默认                      |
 | GMN                     | `https://ai.gmncode.com` |
 | GMN1                    | `https://gmncode.cn`          |
+| Sight More              | `https://2api.sight-more.com` |
 
-### Codex 预设（3 个）
+### Codex 预设（4 个）
 
 | 预设名称        | Base URL                      |
 | --------------- | ----------------------------- |
 | OpenAI Official | `https://api.openai.com/v1`   |
 | GMN             | `https://ai.gmncode.com` |
 | GMN1            | `https://gmncode.cn`          |
+| Sight More      | `https://2api.sight-more.com` |
 
-### OpenCode 预设（2 个）
+### OpenCode 预设（3 个）
 
 | 预设名称 | Base URL                      |
 | -------- | ----------------------------- |
 | GMN      | `https://ai.gmncode.com` |
 | GMN1     | `https://gmncode.cn`          |
+| Sight More | `https://2api.sight-more.com` |
 
 ### MCP 预设（多个）
 
