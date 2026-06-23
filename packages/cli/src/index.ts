@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander'
+import { Command, Option } from 'commander'
 import chalk from 'chalk'
 import { printLogo } from './utils/logo.js'
 import { createCodexCommands } from './commands/codex/index.js'
@@ -13,6 +13,7 @@ import { createSyncCommands, startSyncMenu } from './commands/sync/index.js'
 import { exportCommand } from './commands/export.js'
 import { importCommand } from './commands/import.js'
 import { gmn1Command, gmnCommand } from './commands/gmn.js'
+import { isRootVersionRequest } from './utils/version-args.js'
 import {
   startMainMenu,
   startClaudeMenu,
@@ -29,6 +30,11 @@ import {
   getOpenClawDir,
   VERSION,
 } from '@ccman/core'
+
+if (isRootVersionRequest(process.argv.slice(2))) {
+  console.log(VERSION)
+  process.exit(0)
+}
 
 // 开发模式：输出配置目录
 if (process.env.NODE_ENV === 'development') {
@@ -47,14 +53,8 @@ program
   .name('ccman')
   .description('Codex/Claude Code/Gemini/OpenCode/OpenClaw API 服务商配置管理工具')
   .version(VERSION)
+  .addOption(new Option('-v, --version', 'output the version number').hideHelp())
   .showHelpAfterError(false)
-  .exitOverride((err) => {
-    // 只拦截 commander.helpDisplayed 和 commander.version,让它们正常退出
-    if (err.code === 'commander.helpDisplayed' || err.code === 'commander.version') {
-      process.exit(0)
-    }
-    throw err
-  })
 
 // 自定义未知命令处理
 program.on('command:*', (operands) => {

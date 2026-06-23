@@ -12,11 +12,11 @@ test('GMN should include the current primary endpoint and legacy CDN endpoint', 
   assert.equal(GMN_PROFILE.defaultProviderName, 'gmn')
   assert.deepEqual(
     GMN_PROFILE.baseUrls.map((item) => item.url),
-    ['https://ai.gmncode.com', 'https://cdn-gmn.chuangzuoli.com']
+    ['https://ai.gmncode.com']
   )
 })
 
-test('GMN1 should include only non-chuangzuoli endpoints', () => {
+test('GMN1 should include only ai.gmncode.com endpoints', () => {
   assert.equal(GMN1_PROFILE.defaultProviderName, 'gmn1')
   assert.deepEqual(
     GMN1_PROFILE.baseUrls.map((item) => item.url),
@@ -28,7 +28,7 @@ test('GMN1 should include only non-chuangzuoli endpoints', () => {
       'https://cdn.gmncode.com',
     ]
   )
-  assert.ok(GMN1_PROFILE.baseUrls.every((item) => !item.url.includes('chuangzuoli.com')))
+  assert.ok(GMN1_PROFILE.baseUrls.every((item) => !item.url.includes('ai.gmncode.com')))
 })
 
 test('endpoint choice label should use a compact numbered format', () => {

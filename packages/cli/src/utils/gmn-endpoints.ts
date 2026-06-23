@@ -21,11 +21,6 @@ export const GMN_PROFILE: GmnProfile = {
       url: 'https://ai.gmncode.com',
       description: 'GMN 主域名入口',
     },
-    {
-      label: 'GMN CDN',
-      url: 'https://cdn-gmn.chuangzuoli.com',
-      description: 'GMN CDN 加速入口',
-    },
   ],
 }
 
@@ -34,7 +29,7 @@ export const GMN1_PROFILE: GmnProfile = {
   title: 'GMN1',
   defaultProviderName: 'gmn1',
   endpointGroupLabel: '扩展加速线路',
-  endpointGroupDescription: '包含除 chuangzuoli 之外的其余 5 条地址',
+  endpointGroupDescription: '包含除 gmn主站 之外的其余 5 条地址',
   baseUrls: [
     {
       label: '阿里云 CDN',

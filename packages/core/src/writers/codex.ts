@@ -167,7 +167,6 @@ const CODEX_DEFAULT_CONFIG: Partial<CodexConfig> = {
 
 const GMN_PROVIDER_HOSTS = [
   'ai.gmncode.com',
-  'cdn-gmn.chuangzuoli.com',
   'gmncodex.com',
   'gmncode.cn',
   'cdn.gmncode.cn',
