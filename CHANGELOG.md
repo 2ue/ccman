@@ -1,3 +1,15 @@
+## [3.3.31](https://github.com/2ue/ccman/compare/v3.3.30...v3.3.31) (2026-06-23)
+
+### 🔧 其他变更
+
+* **release:** 3.3.31 (1d85c3caa6cf6c4467936687cd8cc47b32cf261c)
+### 🐛 问题修复
+
+* update GMN endpoints and version flag (425d6654ef9b79f7122e312e2c16ee3e01c29a09)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.30 [skip ci] (d4045070cba63d0f9d4dd7244c159607a170f958)
+
 ## [3.3.30](https://github.com/2ue/ccman/compare/v3.3.29...v3.3.30) (2026-05-30)
 
 ### 🔧 其他变更
