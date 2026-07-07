@@ -1,5 +1,6 @@
 import type { InternalPresetTemplate } from '../tool-manager.types.js'
 import { createDualGmnPresets } from './gmn.js'
+import { createSightPreset } from './sight.js'
 
 /**
  * Gemini CLI 预置服务商
@@ -16,4 +17,5 @@ export const GEMINI_PRESETS: InternalPresetTemplate[] = [
     description: '使用官方 Gemini API（通过 GEMINI_API_KEY 或 GOOGLE_API_KEY 认证）',
   },
   ...createDualGmnPresets(),
+  ...createSightPreset(),
 ]
