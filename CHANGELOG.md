@@ -1,3 +1,15 @@
+## [3.3.32](https://github.com/2ue/ccman/compare/v3.3.31...v3.3.32) (2026-09-21)
+
+### 🔧 其他变更
+
+* **release:** 3.3.32 (edbece1e087f778720be46745ee53a6b7fba321e)
+### 🐛 问题修复
+
+* **codex:** preserve provider name across switches (c5ebbbd08f62e627da5d1983178fc1941ff0a448)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.31 [skip ci] (b8d58895f04460d7fcde7418584985c4ba9040d7)
+
 ## [3.3.31](https://github.com/2ue/ccman/compare/v3.3.30...v3.3.31) (2026-06-23)
 
 ### 🔧 其他变更
