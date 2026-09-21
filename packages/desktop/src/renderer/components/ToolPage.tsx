@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Provider } from '@ccman/types'
 import ProviderGrid from './ProviderGrid'
 import ConfigEditorModal from './ConfigEditorModal'
@@ -28,6 +28,7 @@ export interface ToolPageProps {
   onEdit: (provider: Provider) => void
   onDelete: (id: string, name: string) => void
   onClone: (provider: Provider) => void
+  headerActions?: ReactNode
 }
 
 export default function ToolPage({
@@ -41,6 +42,7 @@ export default function ToolPage({
   onEdit,
   onDelete,
   onClone,
+  headerActions,
 }: ToolPageProps) {
   const [showConfigEditor, setShowConfigEditor] = useState(false)
   const [configFiles, setConfigFiles] = useState<ConfigFile[]>([])
@@ -99,6 +101,7 @@ export default function ToolPage({
             </p>
           </div>
           <div className="flex gap-2">
+            {headerActions}
             <button onClick={handleEditConfig} className={BUTTON_STYLES.icon} title="编辑配置文件">
               <FileCode2 className="w-5 h-5" />
             </button>

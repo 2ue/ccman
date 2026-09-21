@@ -39,6 +39,13 @@ export {
   ProviderNotFoundError,
 } from './tool-manager.js'
 
+// Codex writer settings
+export {
+  getCodexSettings,
+  setCodexPreserveProviderName,
+  type CodexSettings,
+} from './codex-settings.js'
+
 // Presets (只导出预设数据，不导出类型)
 export { CODEX_PRESETS } from './presets/codex.js'
 export { CC_PRESETS } from './presets/claude.js'

@@ -238,4 +238,37 @@ describe('ToolManager trim inputs', () => {
     expect(overwrittenAuth.CUSTOM_FIELD).toBeUndefined()
     expect(overwrittenAuth.OPENAI_API_KEY).toBe('sk-after')
   })
+
+  it('should not persist a failed switch or edit when Codex config parsing fails', () => {
+    const configPath = getCodexConfigPath()
+    const manager = createCodexManager()
+    const provider = manager.add({
+      name: `transaction-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      baseUrl: 'https://before.example.com',
+      apiKey: 'sk-before',
+    })
+
+    fs.mkdirSync(path.dirname(configPath), { recursive: true })
+    const invalidConfig = 'model = "unterminated\n'
+    fs.writeFileSync(configPath, invalidConfig, 'utf-8')
+
+    expect(() => manager.switch(provider.id)).toThrow('已中止切换以避免覆盖')
+    expect(manager.getCurrent()).toBeNull()
+
+    // Start from a valid active configuration, then make the next write fail.
+    fs.rmSync(configPath, { force: true })
+    manager.switch(provider.id)
+    fs.writeFileSync(configPath, invalidConfig, 'utf-8')
+
+    expect(() =>
+      manager.edit(provider.id, {
+        baseUrl: 'https://after.example.com',
+        apiKey: 'sk-after',
+      })
+    ).toThrow('已中止切换以避免覆盖')
+
+    const restored = manager.get(provider.id)
+    expect(restored.baseUrl).toBe('https://before.example.com')
+    expect(restored.apiKey).toBe('sk-before')
+  })
 })

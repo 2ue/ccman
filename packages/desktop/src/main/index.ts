@@ -20,6 +20,8 @@ import {
   createGeminiManager,
   createOpenCodeManager,
   createOpenClawManager,
+  getCodexSettings,
+  setCodexPreserveProviderName,
   migrateConfig,
   getClaudeConfigPath,
   getCodexConfigPath,
@@ -61,6 +63,7 @@ import {
 } from '@ccman/core'
 import type {
   AddProviderInput,
+  CodexSettings,
   EditProviderInput,
   AddPresetInput,
   EditPresetInput,
@@ -319,6 +322,19 @@ ipcMain.handle('codex:find-by-name', async (_event, name: string) => {
   const manager = createCodexManager()
   return manager.findByName(name)
 })
+
+// 获取 Codex 写入设置
+ipcMain.handle('codex:get-settings', async (): Promise<CodexSettings> => {
+  return getCodexSettings()
+})
+
+// 设置 Codex 是否固定 model_provider 名称
+ipcMain.handle(
+  'codex:set-preserve-provider-name',
+  async (_event, enabled: boolean): Promise<CodexSettings> => {
+    return setCodexPreserveProviderName(enabled)
+  }
+)
 
 // ============================================================================
 // IPC 处理器 - Gemini

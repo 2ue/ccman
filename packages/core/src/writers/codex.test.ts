@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { writeCodexConfig } from './codex'
 import { getCodexConfigPath, getCodexAuthPath, __setTestPaths } from '../paths'
+import { setCodexPreserveProviderName } from '../codex-settings'
 import { fileExists } from '../utils/file'
 import type { Provider } from '../types'
 import * as path from 'path'
@@ -105,6 +106,134 @@ describe('Codex Writer', () => {
       expect(config.model_provider).toBe('gmn')
       expect(config.model_providers.gmn.base_url).toBe(provider.baseUrl)
       expect(config.model_providers['自定义 GMN']).toBeUndefined()
+    })
+
+    it('should not classify unrelated URLs that merely contain a GMN domain in the path', () => {
+      const provider: Provider = {
+        id: 'test-id-unrelated-gmn',
+        name: 'CustomProvider',
+        type: 'codex',
+        baseUrl: 'https://not-gmncode.com/gmncode.com/v1',
+        apiKey: 'test-api-key-123',
+        createdAt: Date.now(),
+      }
+
+      writeCodexConfig(provider)
+
+      const configContent = fs.readFileSync(getCodexConfigPath(), 'utf-8')
+      const config: any = TOML.parse(configContent)
+
+      expect(config.model_provider).toBe('CustomProvider')
+      expect(config.model_providers.CustomProvider.base_url).toBe(provider.baseUrl)
+    })
+
+    it('should preserve the existing top-level provider name by default', () => {
+      const configPath = getCodexConfigPath()
+      const authPath = getCodexAuthPath()
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+      fs.writeFileSync(
+        configPath,
+        TOML.stringify({
+          model_provider: 'StableSlot',
+          model_providers: {
+            StableSlot: {
+              name: 'StableSlot',
+              base_url: 'https://old.example.com',
+              http_headers: { 'X-Keep': 'preserved' },
+              env_key: 'STALE_API_KEY',
+            },
+            OtherProvider: {
+              name: 'OtherProvider',
+              base_url: 'https://other.example.com',
+            },
+          },
+        } as any),
+        'utf-8'
+      )
+      fs.writeFileSync(authPath, JSON.stringify({ OPENAI_API_KEY: 'old-key' }), 'utf-8')
+
+      const provider: Provider = {
+        id: 'preserved-slot',
+        name: 'NewProvider',
+        type: 'codex',
+        baseUrl: 'https://new.example.com',
+        apiKey: 'new-key',
+        createdAt: Date.now(),
+      }
+
+      writeCodexConfig(provider)
+
+      const config: any = TOML.parse(fs.readFileSync(configPath, 'utf-8'))
+      const auth = JSON.parse(fs.readFileSync(authPath, 'utf-8'))
+      expect(config.model_provider).toBe('StableSlot')
+      expect(config.model_providers.StableSlot.base_url).toBe(provider.baseUrl)
+      expect(config.model_providers.StableSlot.http_headers['X-Keep']).toBe('preserved')
+      expect(config.model_providers.StableSlot.env_key).toBeUndefined()
+      expect(config.model_providers.NewProvider).toBeUndefined()
+      expect(config.model_providers.OtherProvider.base_url).toBe('https://other.example.com')
+      expect(auth.OPENAI_API_KEY).toBe(provider.apiKey)
+    })
+
+    it('should initialize the fixed provider slot when the provider block is missing', () => {
+      const configPath = getCodexConfigPath()
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+      fs.writeFileSync(
+        configPath,
+        TOML.stringify({ model_provider: 'ExistingName', custom_field: 'keep' } as any),
+        'utf-8'
+      )
+
+      const provider: Provider = {
+        id: 'missing-block',
+        name: 'NewProvider',
+        type: 'codex',
+        baseUrl: 'https://new.example.com',
+        apiKey: 'new-key',
+        createdAt: Date.now(),
+      }
+
+      writeCodexConfig(provider)
+
+      const config: any = TOML.parse(fs.readFileSync(configPath, 'utf-8'))
+      expect(config.model_provider).toBe('ExistingName')
+      expect(config.model_providers.ExistingName.base_url).toBe(provider.baseUrl)
+      expect(config.model_providers.NewProvider).toBeUndefined()
+      expect(config.custom_field).toBe('keep')
+    })
+
+    it('should allow changing provider names when preservation is disabled', () => {
+      const configPath = getCodexConfigPath()
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+      fs.writeFileSync(
+        configPath,
+        TOML.stringify({
+          model_provider: 'StableSlot',
+          model_providers: {
+            StableSlot: {
+              name: 'StableSlot',
+              base_url: 'https://old.example.com',
+            },
+          },
+        } as any),
+        'utf-8'
+      )
+      setCodexPreserveProviderName(false)
+
+      const provider: Provider = {
+        id: 'unprotected-slot',
+        name: 'NewProvider',
+        type: 'codex',
+        baseUrl: 'https://new.example.com',
+        apiKey: 'new-key',
+        createdAt: Date.now(),
+      }
+
+      writeCodexConfig(provider)
+
+      const config: any = TOML.parse(fs.readFileSync(configPath, 'utf-8'))
+      expect(config.model_provider).toBe('NewProvider')
+      expect(config.model_providers.StableSlot.base_url).toBe('https://old.example.com')
+      expect(config.model_providers.NewProvider.base_url).toBe(provider.baseUrl)
     })
 
     it('should keep treating CDN GMN domains as gmn provider key', () => {
@@ -224,10 +353,9 @@ describe('Codex Writer', () => {
       const configContent = fs.readFileSync(configPath, 'utf-8')
       const config: any = TOML.parse(configContent)
 
-      expect(config.model_provider).toBe('NewProvider')
-      expect(config.model_providers.NewProvider.base_url).toBe('https://new.example.com')
+      expect(config.model_provider).toBe('OldProvider')
+      expect(config.model_providers.OldProvider.base_url).toBe('https://new.example.com')
       expect(config.custom_field).toBe('should-be-preserved')
-      expect(config.model_providers.OldProvider.base_url).toBe('https://old.example.com')
 
       // 验证 auth.json
       const authContent = fs.readFileSync(authPath, 'utf-8')
@@ -236,6 +364,52 @@ describe('Codex Writer', () => {
       expect(auth.CUSTOM_FIELD).toBe('should-be-preserved')
       expect(fs.existsSync(`${configPath}.bak`)).toBe(false)
       expect(fs.existsSync(`${authPath}.bak`)).toBe(false)
+    })
+
+    it('should fail closed when config.toml cannot be parsed', () => {
+      const configPath = getCodexConfigPath()
+      const authPath = getCodexAuthPath()
+      const invalidConfig = 'model = "unterminated\n'
+      const existingAuth = '{"OPENAI_API_KEY":"old-key","CUSTOM_FIELD":"keep-me"}'
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+      fs.writeFileSync(configPath, invalidConfig, 'utf-8')
+      fs.writeFileSync(authPath, existingAuth, 'utf-8')
+
+      const provider: Provider = {
+        id: 'invalid-config',
+        name: 'NewProvider',
+        type: 'codex',
+        baseUrl: 'https://new.example.com',
+        apiKey: 'new-key',
+        createdAt: Date.now(),
+      }
+
+      expect(() => writeCodexConfig(provider)).toThrow('已中止切换以避免覆盖')
+      expect(fs.readFileSync(configPath, 'utf-8')).toBe(invalidConfig)
+      expect(fs.readFileSync(authPath, 'utf-8')).toBe(existingAuth)
+    })
+
+    it('should fail closed before writing when auth.json cannot be parsed', () => {
+      const configPath = getCodexConfigPath()
+      const authPath = getCodexAuthPath()
+      const existingConfig = TOML.stringify({ custom_field: 'keep-me' } as any)
+      const invalidAuth = '{"OPENAI_API_KEY":'
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
+      fs.writeFileSync(configPath, existingConfig, 'utf-8')
+      fs.writeFileSync(authPath, invalidAuth, 'utf-8')
+
+      const provider: Provider = {
+        id: 'invalid-auth',
+        name: 'NewProvider',
+        type: 'codex',
+        baseUrl: 'https://new.example.com',
+        apiKey: 'new-key',
+        createdAt: Date.now(),
+      }
+
+      expect(() => writeCodexConfig(provider)).toThrow('auth.json')
+      expect(fs.readFileSync(configPath, 'utf-8')).toBe(existingConfig)
+      expect(fs.readFileSync(authPath, 'utf-8')).toBe(invalidAuth)
     })
 
     it('should overwrite config.toml and auth.json in overwrite mode', () => {

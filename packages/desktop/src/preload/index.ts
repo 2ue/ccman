@@ -25,6 +25,7 @@ import type {
   CleanResult,
   MCPServer,
   AppType,
+  CodexSettings,
 } from '@ccman/core'
 
 // ============================================================================
@@ -41,6 +42,8 @@ export interface CodexAPI {
   cloneProvider: (sourceId: string, newName: string) => Promise<Provider>
   getCurrent: () => Promise<Provider | undefined>
   findByName: (name: string) => Promise<Provider | undefined>
+  getSettings: () => Promise<CodexSettings>
+  setPreserveProviderName: (enabled: boolean) => Promise<CodexSettings>
 
   addPreset: (input: AddPresetInput) => Promise<PresetTemplate>
   listPresets: () => Promise<PresetTemplate[]>
@@ -59,6 +62,9 @@ const codexAPI: CodexAPI = {
     ipcRenderer.invoke('codex:clone-provider', sourceId, newName),
   getCurrent: () => ipcRenderer.invoke('codex:get-current'),
   findByName: (name) => ipcRenderer.invoke('codex:find-by-name', name),
+  getSettings: () => ipcRenderer.invoke('codex:get-settings'),
+  setPreserveProviderName: (enabled) =>
+    ipcRenderer.invoke('codex:set-preserve-provider-name', enabled),
 
   addPreset: (input) => ipcRenderer.invoke('codex:add-preset', input),
   listPresets: () => ipcRenderer.invoke('codex:list-presets'),

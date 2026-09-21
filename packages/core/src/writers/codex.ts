@@ -5,6 +5,7 @@ import { parse as parseToml, stringify as stringifyToml } from '@iarna/toml'
 import type { Provider } from '../tool-manager.js'
 import type { WriteOptions } from '../tool-manager.types.js'
 import { getCodexConfigPath, getCodexAuthPath, getCodexDir } from '../paths.js'
+import { getCodexSettings } from '../codex-settings.js'
 import { ensureDir, fileExists, readJSON, writeJSON } from '../utils/file.js'
 import { deepMerge } from '../utils/template.js'
 
@@ -81,6 +82,7 @@ interface CodexModelProvider {
   base_url: string
   wire_api: string
   requires_openai_auth: boolean
+  [key: string]: unknown
 }
 
 /**
@@ -177,8 +179,15 @@ const GMN_PROVIDER_HOSTS = [
 ]
 
 function resolveCodexProviderKey(provider: Provider): string {
-  const baseUrl = (provider.baseUrl || '').toLowerCase()
-  if (GMN_PROVIDER_HOSTS.some((host) => baseUrl.includes(host))) return 'gmn'
+  try {
+    const hostname = new URL(provider.baseUrl).hostname.toLowerCase()
+    if (GMN_PROVIDER_HOSTS.some((host) => hostname === host || hostname.endsWith(`.${host}`))) {
+      return 'gmn'
+    }
+  } catch {
+    // Invalid URLs are validated by callers; retain the provider name as a
+    // safe fallback so the writer does not invent a different key.
+  }
   return provider.name
 }
 
@@ -205,11 +214,11 @@ function removeDeprecatedKeys(config: CodexConfig): void {
   const deprecatedFeatureKeys = [
     'web_search_request',
     'web_search_cached',
-    'web_search',
     'plan_tool',
     'view_image_tool',
     'streamable_shell',
     'rmcp_client',
+    'experimental_use_exec_command_tool',
   ]
 
   if (config.features && typeof config.features === 'object' && !Array.isArray(config.features)) {
@@ -240,13 +249,49 @@ function loadExistingCodexConfig(configPath: string): CodexConfig {
   try {
     const content = fs.readFileSync(configPath, 'utf-8')
     return parseToml(content) as CodexConfig
-  } catch {
-    return {}
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`无法解析现有 Codex config.toml，已中止切换以避免覆盖: ${message}`)
   }
 }
 
-function buildManagedProvider(provider: Provider, providerKey: string): CodexModelProvider {
+function loadExistingCodexAuth(authPath: string): CodexAuth {
+  if (!fileExists(authPath)) {
+    return { OPENAI_API_KEY: '' }
+  }
+
+  try {
+    return readJSON<CodexAuth>(authPath)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`无法解析现有 Codex auth.json，已中止切换以避免覆盖: ${message}`)
+  }
+}
+
+const CONFLICTING_PROVIDER_AUTH_KEYS = [
+  'env_key',
+  'env_key_instructions',
+  'experimental_bearer_token',
+  'auth',
+  'aws',
+] as const
+
+function buildManagedProvider(
+  provider: Provider,
+  providerKey: string,
+  existingProvider?: CodexModelProvider
+): CodexModelProvider {
+  const preservedProvider: Record<string, unknown> =
+    existingProvider && typeof existingProvider === 'object' && !Array.isArray(existingProvider)
+      ? { ...existingProvider }
+      : {}
+
+  for (const key of CONFLICTING_PROVIDER_AUTH_KEYS) {
+    delete preservedProvider[key]
+  }
+
   return {
+    ...preservedProvider,
     name: providerKey,
     base_url: provider.baseUrl,
     wire_api: 'responses',
@@ -283,9 +328,20 @@ function writeCodexConfigMerge(provider: Provider): void {
 
   const configPath = getCodexConfigPath()
   const existingConfig = loadExistingCodexConfig(configPath)
+  const authPath = getCodexAuthPath()
+  const existingAuth = loadExistingCodexAuth(authPath)
   const templateConfig = loadCodexTemplateConfig()
+  removeDeprecatedKeys(existingConfig)
   const nextConfig = deepMerge<CodexConfig>(templateConfig as CodexConfig, existingConfig)
-  const providerKey = resolveCodexProviderKey(provider)
+  const resolvedProviderKey = resolveCodexProviderKey(provider)
+  const existingProviderKey =
+    typeof existingConfig.model_provider === 'string' && existingConfig.model_provider.trim()
+      ? existingConfig.model_provider.trim()
+      : undefined
+  const providerKey =
+    getCodexSettings().preserveProviderName && existingProviderKey
+      ? existingProviderKey
+      : resolvedProviderKey
 
   removeDeprecatedKeys(nextConfig)
 
@@ -298,7 +354,16 @@ function writeCodexConfigMerge(provider: Provider): void {
     !Array.isArray(nextConfig.model_providers)
       ? { ...nextConfig.model_providers }
       : {}
+  const userProviders =
+    existingConfig.model_providers &&
+    typeof existingConfig.model_providers === 'object' &&
+    !Array.isArray(existingConfig.model_providers)
+      ? existingConfig.model_providers
+      : {}
   const lowerProviderKey = providerKey.toLowerCase()
+  const existingManagedProvider =
+    userProviders[providerKey] ||
+    Object.entries(userProviders).find(([key]) => key.toLowerCase() === lowerProviderKey)?.[1]
 
   for (const key of Object.keys(existingProviders)) {
     if (key.toLowerCase() === lowerProviderKey) {
@@ -308,21 +373,12 @@ function writeCodexConfigMerge(provider: Provider): void {
 
   nextConfig.model_providers = {
     ...existingProviders,
-    [providerKey]: buildManagedProvider(provider, providerKey),
+    [providerKey]: buildManagedProvider(provider, providerKey, existingManagedProvider),
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fs.writeFileSync(configPath, stringifyToml(nextConfig as any), { mode: 0o600 })
 
-  const authPath = getCodexAuthPath()
-  let existingAuth: CodexAuth = { OPENAI_API_KEY: '' }
-  if (fileExists(authPath)) {
-    try {
-      existingAuth = readJSON<CodexAuth>(authPath)
-    } catch {
-      existingAuth = { OPENAI_API_KEY: '' }
-    }
-  }
   const nextAuth: CodexAuth = {
     ...existingAuth,
     OPENAI_API_KEY: provider.apiKey,

@@ -76,7 +76,7 @@ export { ProviderNotFoundError, ProviderNameConflictError, PresetNameConflictErr
  * 扩展性：添加新工具只需在此添加配置项
  */
 interface ToolConfigMapping {
-  configPath: string
+  configFilename: string
   builtinPresets: InternalPresetTemplate[]
   writer: (provider: Provider, options?: WriteOptions) => void
   /** 是否在每个操作（add/edit/remove）后自动同步配置 */
@@ -89,17 +89,17 @@ interface ToolConfigMapping {
 
 const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
   codex: {
-    configPath: path.join(getCcmanDir(), 'codex.json'),
+    configFilename: 'codex.json',
     builtinPresets: CODEX_PRESETS,
     writer: writeCodexConfig,
   },
   claude: {
-    configPath: path.join(getCcmanDir(), 'claude.json'),
+    configFilename: 'claude.json',
     builtinPresets: CC_PRESETS,
     writer: writeClaudeConfig,
   },
   mcp: {
-    configPath: path.join(getCcmanDir(), 'mcp.json'),
+    configFilename: 'mcp.json',
     builtinPresets: MCP_PRESETS,
     writer: writeMCPConfig,
     autoSync: true, // MCP 需要在每个操作后自动同步到 ~/.claude.json
@@ -135,17 +135,17 @@ const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
     },
   },
   gemini: {
-    configPath: path.join(getCcmanDir(), 'gemini.json'),
+    configFilename: 'gemini.json',
     builtinPresets: GEMINI_PRESETS,
     writer: writeGeminiConfig,
   },
   opencode: {
-    configPath: path.join(getCcmanDir(), 'opencode.json'),
+    configFilename: 'opencode.json',
     builtinPresets: OPENCODE_PRESETS,
     writer: writeOpenCodeConfig,
   },
   openclaw: {
-    configPath: path.join(getCcmanDir(), 'openclaw.json'),
+    configFilename: 'openclaw.json',
     builtinPresets: OPENCLAW_PRESETS,
     writer: writeOpenClawConfig,
   },
@@ -165,7 +165,7 @@ const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
 // eslint-disable-next-line max-lines-per-function
 function createToolManager(tool: ToolType): ToolManager {
   const toolConfig = TOOL_CONFIGS[tool]
-  const configPath = toolConfig.configPath
+  const configPath = path.join(getCcmanDir(), toolConfig.configFilename)
 
   /**
    * 生成唯一 ID
@@ -310,12 +310,14 @@ function createToolManager(tool: ToolType): ToolManager {
         throw new ProviderNotFoundError(id)
       }
 
+      // Write the target configuration first. If a writer rejects (for
+      // example because an existing config is malformed), keep ccman's
+      // currentProviderId aligned with the configuration on disk.
+      toolConfig.writer(provider, options)
+
       config.currentProviderId = id
       provider.lastUsedAt = Date.now()
       saveConfig(config)
-
-      // 使用配置映射的 writer（零 if-else）
-      toolConfig.writer(provider, options)
     },
 
     getCurrent(): Provider | null {
@@ -342,6 +344,8 @@ function createToolManager(tool: ToolType): ToolManager {
         throw new ProviderNotFoundError(id)
       }
 
+      const originalProvider = { ...provider }
+
       if (normalizedUpdates.name !== undefined && !normalizedUpdates.name) {
         throw new Error('服务商名称不能为空')
       }
@@ -366,14 +370,20 @@ function createToolManager(tool: ToolType): ToolManager {
       provider.lastModified = Date.now()
       saveConfig(config)
 
-      // 如果是当前激活的 provider,重新写入配置
-      if (shouldApplyWrite && config.currentProviderId === id) {
-        toolConfig.writer(provider)
-      }
+      try {
+        // 如果是当前激活的 provider,重新写入配置
+        if (shouldApplyWrite && config.currentProviderId === id) {
+          toolConfig.writer(provider)
+        }
 
-      // 如果配置了自动同步，则立即同步配置（即使不是当前激活的）
-      if (shouldApplyWrite && toolConfig.autoSync) {
-        toolConfig.writer(provider)
+        // 如果配置了自动同步，则立即同步配置（即使不是当前激活的）
+        if (shouldApplyWrite && toolConfig.autoSync) {
+          toolConfig.writer(provider)
+        }
+      } catch (error) {
+        Object.assign(provider, originalProvider)
+        saveConfig(config)
+        throw error
       }
 
       return provider
