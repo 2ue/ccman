@@ -253,6 +253,17 @@ export function writeMCPConfigForApp(app: AppType, _provider: Provider): void {
     mode: 0o600,
   })
   fs.renameSync(tempPath, configPath)
+
+  // A managed MCP rename temporarily carries the old key as an alias so it
+  // can be removed from the application config. Persist only canonical names
+  // after the cleanup to avoid treating the old key as a user-managed server
+  // on the next sync.
+  const currentNames = new Set(enabledServers.map((server) => server.name))
+  const canonicalManagedNames = managedNames.filter((name) => currentNames.has(name))
+  if (canonicalManagedNames.length !== managedNames.length) {
+    mcpConfig.managedServerNames[app] = canonicalManagedNames
+    saveMCPConfig(mcpConfig)
+  }
 }
 
 /**

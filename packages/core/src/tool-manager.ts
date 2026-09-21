@@ -114,6 +114,13 @@ const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
     },
     customSaver: (config: ToolConfig): void => {
       const mcpConfig = loadMCPConfig()
+      const previousManagedNames = Object.fromEntries(
+        (['claude', 'codex', 'gemini'] as const).map((app) => [
+          app,
+          [...(mcpConfig.managedServerNames[app] || [])],
+        ])
+      ) as typeof mcpConfig.managedServerNames
+
       // 将 Provider[] 转换为 MCPServer[]，保留 enabledApps 等字段
       mcpConfig.servers = config.providers.map((provider) => {
         // 查找原有的 server 以保留 enabledApps
@@ -127,9 +134,15 @@ const TOOL_CONFIGS: Record<ToolType, ToolConfigMapping> = {
       })
       // 更新 managedServerNames（仅支持 claude/codex/gemini）
       for (const app of ['claude', 'codex', 'gemini'] as const) {
-        mcpConfig.managedServerNames[app] = mcpConfig.servers
+        const currentNames = mcpConfig.servers
           .filter((s) => s.enabledApps.includes(app))
           .map((s) => s.name)
+        // Keep all previous managed keys as one-write cleanup aliases. This
+        // covers renames, removals, and disabling a server for one app. The
+        // application writer removes aliases, then persists canonical names.
+        const names = new Set([...currentNames, ...previousManagedNames[app]])
+
+        mcpConfig.managedServerNames[app] = [...names]
       }
       saveMCPConfig(mcpConfig)
     },

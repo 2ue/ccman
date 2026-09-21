@@ -83,10 +83,37 @@ describe('Gemini Writer', () => {
 
     writeGeminiConfig(provider)
 
+    const settings = JSON.parse(fs.readFileSync(getGeminiSettingsPath(), 'utf-8'))
+    expect(settings.security?.auth?.selectedType).toBe('oauth-personal')
+
     const envPath = getGeminiEnvPath()
     const envContent = fs.readFileSync(envPath, 'utf-8')
     // 合并 meta.env 中的 GEMINI_MODEL
     expect(envContent).toContain('GEMINI_MODEL=gemini-2.5-flash')
+  })
+
+  it('should switch auth mode when replacing an existing OAuth provider with an API key provider', () => {
+    const settingsPath = getGeminiSettingsPath()
+    fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+    fs.writeFileSync(
+      settingsPath,
+      JSON.stringify({ security: { auth: { selectedType: 'oauth-personal' } } }),
+      'utf-8'
+    )
+
+    const provider: Provider = {
+      id: 'gemini-api-key-switch',
+      name: 'API Key',
+      baseUrl: 'https://example.com',
+      apiKey: 'sk-api-key',
+      createdAt: Date.now(),
+      lastModified: Date.now(),
+    }
+
+    writeGeminiConfig(provider)
+
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
+    expect(settings.security?.auth?.selectedType).toBe('gemini-api-key')
   })
 
   it('should fallback GEMINI_MODEL from defaultModel when not provided in env', () => {
