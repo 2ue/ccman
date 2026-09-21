@@ -1,3 +1,15 @@
+## [3.3.33](https://github.com/2ue/ccman/compare/v3.3.32...v3.3.33) (2026-09-21)
+
+### 🔧 其他变更
+
+* **release:** 3.3.33 (bea95343f4631f44cda2993be404c6f887f1fb88)
+### 🐛 问题修复
+
+* preserve provider identities across tool switches (9330d38206f0d7c4b3a956978373fa77d97d7f6b)
+### 📝 文档更新
+
+* **changelog:** update for v3.3.32 [skip ci] (09a5d281020d23c45fe5294ebed58d43aa00b53d)
+
 ## [3.3.32](https://github.com/2ue/ccman/compare/v3.3.31...v3.3.32) (2026-09-21)
 
 ### 🔧 其他变更
