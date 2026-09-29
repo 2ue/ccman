@@ -1,4 +1,5 @@
 import { createDualGmnPresets } from './gmn.js'
+import { createSightPreset } from './sight.js'
 
 /**
  * Codex 预设模板(不包含 API Key 和 isBuiltIn)
@@ -23,4 +24,5 @@ export const CODEX_PRESETS: PresetTemplate[] = [
     description: 'OpenAI 官方 API',
   },
   ...createDualGmnPresets(),
+  ...createSightPreset(),
 ]
